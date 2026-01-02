@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CheckCircle, User, XCircle } from "lucide-react";
+import DiscordIcon from "@/assets/discord-icon.png";
 import {
   STATUS_OPTIONS,
   PRIORITY_OPTIONS,
@@ -63,6 +64,15 @@ export function TicketHeader({
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
               {getCategoryName(ticket.category)}
             </Badge>
+            {ticket.discord_channel && !ticket.discord_channel.closed_at && (
+              <Badge
+                variant="outline"
+                className="text-[10px] px-1.5 py-0 bg-[#5865F2]/10 text-[#5865F2] border-[#5865F2]/20"
+              >
+                <img src={DiscordIcon} alt="" className="h-2.5 w-2.5 mr-0.5" />
+                Discord
+              </Badge>
+            )}
           </div>
           <h2 className="text-sm font-semibold tracking-tight line-clamp-1">
             {ticket.subject}

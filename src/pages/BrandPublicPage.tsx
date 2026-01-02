@@ -4,10 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicNavbar from "@/components/PublicNavbar";
-import { Globe, Instagram, DollarSign, CheckCircle, Clock } from "lucide-react";
+import { Globe, Instagram, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SEOHead } from "@/components/SEOHead";
 import { getCanonicalUrl, truncateDescription } from "@/lib/seo";
+import { CampaignCard } from "@/components/dashboard/CampaignCard";
+import { BoostDiscoverCard } from "@/components/dashboard/BoostDiscoverCard";
+import { PitchToBrandDialog } from "@/components/PitchToBrandDialog";
+import { useAuth } from "@/contexts/AuthContext";
 interface Brand {
   id: string;
   name: string;
@@ -30,6 +35,10 @@ interface Campaign {
   rpm_rate: number;
   status: string;
   slug: string;
+  budget: number;
+  budget_used: number;
+  is_infinite_budget: boolean;
+  allowed_platforms: string[] | null;
 }
 interface Boost {
   id: string;
@@ -37,7 +46,13 @@ interface Boost {
   description: string | null;
   banner_url: string | null;
   monthly_retainer: number;
+  videos_per_month: number;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
   status: string;
+  slug: string;
+  created_at: string;
+  tags: string[] | null;
 }
 interface CampaignStats {
   totalPaidOut: number;
@@ -73,6 +88,7 @@ export default function BrandPublicPage() {
     slug: string;
   }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [boosts, setBoosts] = useState<Boost[]>([]);
@@ -80,6 +96,7 @@ export default function BrandPublicPage() {
   const [boostStats, setBoostStats] = useState<Record<string, CampaignStats>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"active" | "ended">("active");
+  const [pitchDialogOpen, setPitchDialogOpen] = useState(false);
   useEffect(() => {
     const fetchBrandData = async () => {
       if (!slug) return;
@@ -95,11 +112,18 @@ export default function BrandPublicPage() {
         setBrand(brandData);
 
         // Fetch campaigns and boosts
-        const [campaignsResult, boostsResult] = await Promise.all([supabase.from("campaigns").select("id, title, description, banner_url, rpm_rate, status, slug").eq("brand_id", brandData.id).eq("is_private", false).order("created_at", {
-          ascending: false
-        }), supabase.from("bounty_campaigns").select("id, title, description, banner_url, monthly_retainer, status").eq("brand_id", brandData.id).eq("is_private", false).order("created_at", {
-          ascending: false
-        })]);
+        const [campaignsResult, boostsResult] = await Promise.all([
+          supabase.from("campaigns")
+            .select("id, title, description, banner_url, rpm_rate, status, slug, budget, budget_used, is_infinite_budget, allowed_platforms")
+            .eq("brand_id", brandData.id)
+            .eq("is_private", false)
+            .order("created_at", { ascending: false }),
+          supabase.from("bounty_campaigns")
+            .select("id, title, description, banner_url, monthly_retainer, videos_per_month, max_accepted_creators, accepted_creators_count, status, slug, created_at, tags")
+            .eq("brand_id", brandData.id)
+            .eq("is_private", false)
+            .order("created_at", { ascending: false })
+        ]);
         const campaignsData = campaignsResult.data || [];
         const boostsData = boostsResult.data || [];
         setCampaigns(campaignsData);
@@ -317,6 +341,18 @@ export default function BrandPublicPage() {
                   </svg>
                 </a>}
             </div>
+
+            {/* Pitch Button */}
+            {user && activeItems.length > 0 && (
+              <Button
+                onClick={() => setPitchDialogOpen(true)}
+                className="mt-4 gap-2"
+                variant="outline"
+              >
+                <Send className="h-4 w-4" />
+                Pitch to Work
+              </Button>
+            )}
           </div>
 
           {/* Tabs */}
@@ -336,66 +372,79 @@ export default function BrandPublicPage() {
             <div className="h-px bg-border -mt-px" />
           </div>
 
-          {/* Content List */}
-          {currentItems.length > 0 ? <div className="space-y-4">
+          {/* Content Grid */}
+          {currentItems.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {currentItems.map(item => {
-            const id = item.data.id;
-            const title = item.data.title;
-            const description = item.data.description;
-            const banner = item.data.banner_url;
-            const label = item.type === "campaign" ? `$${(item.data as Campaign).rpm_rate} RPM` : `$${(item.data as Boost).monthly_retainer}/mo`;
-            const stats = item.stats;
-            return <div key={id} onClick={() => handleItemClick(item)} className="group relative bg-card/50 border border-border/50 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:bg-card hover:border-border hover:shadow-lg">
-                    <div className="flex gap-4">
-                      {/* Banner - wider */}
-                      {banner ? <img src={banner} alt={title} className="w-24 h-24 sm:w-32 sm:h-20 object-cover rounded-lg flex-shrink-0" /> : <div className="w-24 h-24 sm:w-32 sm:h-20 bg-muted rounded-lg flex-shrink-0" />}
-                      
-                      <div className="flex-1 min-w-0 flex flex-col justify-between">
-                        {/* Title and description */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium text-sm truncate font-inter tracking-[-0.5px] group-hover:underline transition-all">
-                              {title}
-                            </h3>
-                            
-                            {item.type === "boost"}
-                          </div>
-                          {description && <p className="text-xs text-muted-foreground line-clamp-2 font-inter tracking-[-0.5px]">
-                              {description}
-                            </p>}
-                        </div>
-                        
-                        {/* Stats row */}
-                        <div className="flex items-center gap-4 mt-3">
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <DollarSign className="w-3.5 h-3.5" />
-                            <span className="text-xs font-inter tracking-[-0.5px]">
-                              {stats ? formatCurrency(stats.totalPaidOut) : '$0'} paid
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            <span className="text-xs font-inter tracking-[-0.5px]">
-                              {stats ? `${Math.round(stats.approvalPercentage)}%` : '—'} approved
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Clock className="w-3.5 h-3.5" />
-                            <span className="text-xs font-inter tracking-[-0.5px]">
-                              {stats ? formatApprovalTime(stats.avgApprovalTimeHours) : '—'} avg
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>;
-          })}
-            </div> : <div className="py-20 text-center">
+                if (item.type === "campaign") {
+                  const campaign = item.data as Campaign;
+                  const isEnded = campaign.status === "ended";
+                  return (
+                    <CampaignCard
+                      key={campaign.id}
+                      id={campaign.id}
+                      title={campaign.title}
+                      brand_name={brand.name}
+                      brand_logo_url={brand.logo_url}
+                      brand_is_verified={brand.is_verified}
+                      brand_color={brand.brand_color}
+                      brand_slug={brand.slug}
+                      banner_url={campaign.banner_url}
+                      budget={campaign.budget}
+                      budget_used={campaign.budget_used}
+                      is_infinite_budget={campaign.is_infinite_budget}
+                      platforms={campaign.allowed_platforms || []}
+                      isEnded={isEnded}
+                      slug={campaign.slug}
+                      onClick={() => navigate(`/c/${campaign.slug}`)}
+                      showBookmark={false}
+                    />
+                  );
+                } else {
+                  const boost = item.data as Boost;
+                  const isEnded = boost.status === "ended";
+                  return (
+                    <BoostDiscoverCard
+                      key={boost.id}
+                      id={boost.id}
+                      title={boost.title}
+                      description={boost.description}
+                      brand_name={brand.name}
+                      brand_logo_url={brand.logo_url}
+                      brand_is_verified={brand.is_verified}
+                      brand_slug={brand.slug}
+                      monthly_retainer={boost.monthly_retainer}
+                      videos_per_month={boost.videos_per_month}
+                      max_accepted_creators={boost.max_accepted_creators}
+                      accepted_creators_count={boost.accepted_creators_count}
+                      isEnded={isEnded}
+                      slug={boost.slug}
+                      created_at={boost.created_at}
+                      tags={boost.tags}
+                      onClick={() => navigate(`/c/${boost.slug}`)}
+                    />
+                  );
+                }
+              })}
+            </div>
+          ) : (
+            <div className="py-20 text-center">
               <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                 {activeTab === "active" ? "No active opportunities" : "No ended opportunities"}
               </p>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Pitch Dialog */}
+      {brand && (
+        <PitchToBrandDialog
+          open={pitchDialogOpen}
+          onOpenChange={setPitchDialogOpen}
+          brandId={brand.id}
+          brandName={brand.name}
+        />
+      )}
     </>;
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Sparkles, TrendingUp, Flame, Clock, DollarSign, Gamepad2, Heart, Cpu, Palette, Music, Camera, BookOpen, Globe, Dumbbell, UtensilsCrossed, Shirt, Baby, Dog, Home, Car, Gem, Coins, ShoppingBag, Layers } from "lucide-react";
+import { Search, X, Sparkles, TrendingUp, Flame, Clock, DollarSign, Gamepad2, Heart, Cpu, Palette, Music, Camera, BookOpen, Globe, Dumbbell, UtensilsCrossed, Shirt, Baby, Dog, Home, Car, Gem, Coins, ShoppingBag, Layers, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
@@ -76,6 +77,24 @@ export function SearchOverlay({
   const overlayRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Local state for filters (only applied on submit)
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [localTypeFilter, setLocalTypeFilter] = useState(activeTypeFilter);
+  const [localNicheFilter, setLocalNicheFilter] = useState(activeNicheFilter);
+  const [localBrowseFilter, setLocalBrowseFilter] = useState(activeBrowseFilter);
+  const [localPlatformFilter, setLocalPlatformFilter] = useState(activePlatformFilter);
+
+  // Sync local state when overlay opens
+  useEffect(() => {
+    if (isOpen) {
+      setLocalSearchQuery(searchQuery);
+      setLocalTypeFilter(activeTypeFilter);
+      setLocalNicheFilter(activeNicheFilter);
+      setLocalBrowseFilter(activeBrowseFilter);
+      setLocalPlatformFilter(activePlatformFilter);
+    }
+  }, [isOpen, searchQuery, activeTypeFilter, activeNicheFilter, activeBrowseFilter, activePlatformFilter]);
+
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
@@ -108,7 +127,24 @@ export function SearchOverlay({
 
   if (!isOpen) return null;
 
-  const hasActiveFilters = searchQuery || activeTypeFilter !== 'all' || activeNicheFilter || activeBrowseFilter || activePlatformFilter;
+  const hasLocalFilters = localSearchQuery || localTypeFilter !== 'all' || localNicheFilter || localBrowseFilter || localPlatformFilter;
+
+  const handleSearch = () => {
+    onSearchChange(localSearchQuery);
+    onTypeFilter(localTypeFilter);
+    onNicheFilter(localNicheFilter);
+    onBrowseFilter(localBrowseFilter);
+    onPlatformFilter(localPlatformFilter);
+    onClose();
+  };
+
+  const handleReset = () => {
+    setLocalSearchQuery('');
+    setLocalTypeFilter('all');
+    setLocalNicheFilter(null);
+    setLocalBrowseFilter(null);
+    setLocalPlatformFilter(null);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -121,8 +157,13 @@ export function SearchOverlay({
           <Input
             ref={inputRef}
             placeholder="Search campaigns & boosts..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearchQuery}
+            onChange={(e) => setLocalSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch();
+              }
+            }}
             className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 focus-visible:border-transparent font-['Inter'] tracking-[-0.5px]"
           />
         </div>
@@ -142,9 +183,9 @@ export function SearchOverlay({
               ].map((type) => (
                 <button
                   key={type.id}
-                  onClick={() => onTypeFilter(type.id as 'all' | 'campaigns' | 'boosts')}
+                  onClick={() => setLocalTypeFilter(type.id as 'all' | 'campaigns' | 'boosts')}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                    activeTypeFilter === type.id
+                    localTypeFilter === type.id
                       ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
                       : 'bg-muted/50 hover:bg-muted text-foreground'
                   }`}
@@ -162,11 +203,11 @@ export function SearchOverlay({
             </h3>
             <div className="flex flex-wrap gap-2">
               {PLATFORM_FILTERS.map((platform) => {
-                const isActive = (activePlatformFilter === null && platform.id === 'all') || activePlatformFilter === platform.id;
+                const isActive = (localPlatformFilter === null && platform.id === 'all') || localPlatformFilter === platform.id;
                 return (
                   <button
                     key={platform.id}
-                    onClick={() => onPlatformFilter(platform.id === 'all' ? null : (activePlatformFilter === platform.id ? null : platform.id))}
+                    onClick={() => setLocalPlatformFilter(platform.id === 'all' ? null : (localPlatformFilter === platform.id ? null : platform.id))}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
                       isActive
                         ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
@@ -198,9 +239,9 @@ export function SearchOverlay({
                 return (
                   <button
                     key={filter.id}
-                    onClick={() => onBrowseFilter(activeBrowseFilter === filter.id ? null : filter.id)}
+                    onClick={() => setLocalBrowseFilter(localBrowseFilter === filter.id ? null : filter.id)}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                      activeBrowseFilter === filter.id
+                      localBrowseFilter === filter.id
                         ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
                     }`}
@@ -215,25 +256,30 @@ export function SearchOverlay({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-muted/20">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">ESC</kbd> to close
-            </span>
-            {hasActiveFilters && (
-              <button
-                onClick={() => {
-                  onSearchChange('');
-                  onTypeFilter('all');
-                  onNicheFilter(null);
-                  onBrowseFilter(null);
-                  onPlatformFilter(null);
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter'] tracking-[-0.5px]"
-              >
-                Clear all filters
-              </button>
-            )}
+        <div className="p-4 bg-muted/20 border-t border-border/50">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">ESC</kbd> to close
+              </span>
+              {hasLocalFilters && (
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter'] tracking-[-0.5px]"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reset
+                </button>
+              )}
+            </div>
+            <Button
+              onClick={handleSearch}
+              size="sm"
+              className="gap-2"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
           </div>
         </div>
       </div>

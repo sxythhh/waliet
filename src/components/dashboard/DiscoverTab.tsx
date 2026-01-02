@@ -31,6 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CampaignCard } from "./CampaignCard";
 import { RecentActivity } from "./RecentActivity";
 import { BoostDiscoverCard } from "./BoostDiscoverCard";
+import { BrandCard } from "./BrandCard";
 interface Campaign {
   id: string;
   title: string;
@@ -103,6 +104,20 @@ export function DiscoverTab({
   } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
+  const [brands, setBrands] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    is_verified: boolean;
+    brand_color: string | null;
+    description: string | null;
+    campaign_count: number;
+    boost_count: number;
+    website_url: string | null;
+    instagram_handle: string | null;
+    tiktok_handle: string | null;
+  }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("newest");
@@ -381,6 +396,54 @@ export function DiscoverTab({
       const availableBounties = bountiesData.filter(bounty => !appliedBountyIds.includes(bounty.id));
       setBounties(availableBounties as BountyCampaign[]);
     }
+
+    // Fetch brands with active campaigns/boosts
+    const { data: brandsData } = await supabase
+      .from("brands")
+      .select(`
+        id,
+        name,
+        slug,
+        logo_url,
+        is_verified,
+        brand_color,
+        description,
+        website_url,
+        instagram_handle,
+        tiktok_handle,
+        campaigns!inner(id, status, is_private),
+        bounty_campaigns(id, status, is_private)
+      `)
+      .eq("is_active", true)
+      .eq("campaigns.is_private", false)
+      .in("campaigns.status", ["active"])
+      .limit(12);
+
+    if (brandsData) {
+      // Process brands to get campaign and boost counts
+      const processedBrands = brandsData.map(brand => {
+        const activeCampaigns = (brand.campaigns || []).filter((c: any) => c.status === "active" && !c.is_private);
+        const activeBoosts = (brand.bounty_campaigns || []).filter((b: any) => b.status === "active" && !b.is_private);
+        return {
+          id: brand.id,
+          name: brand.name,
+          slug: brand.slug,
+          logo_url: brand.logo_url,
+          is_verified: brand.is_verified,
+          brand_color: brand.brand_color,
+          description: brand.description,
+          website_url: brand.website_url,
+          instagram_handle: brand.instagram_handle,
+          tiktok_handle: brand.tiktok_handle,
+          campaign_count: activeCampaigns.length,
+          boost_count: activeBoosts.length,
+        };
+      }).filter(b => b.campaign_count > 0 || b.boost_count > 0)
+        .sort((a, b) => (b.campaign_count + b.boost_count) - (a.campaign_count + a.boost_count));
+
+      setBrands(processedBrands);
+    }
+
     setLoading(false);
   };
   const filteredCampaigns = campaigns.filter(campaign => {
@@ -721,6 +784,61 @@ export function DiscoverTab({
               </div>
             )}
 
+            {/* Brands Section */}
+            {typeFilter === 'all' && brands.length > 0 && !searchQuery && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                    Brands
+                  </h2>
+                  <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('brands-scroll');
+                        if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
+                      }}
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <div className="w-px h-5 bg-border/50" />
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('brands-scroll');
+                        if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
+                      }}
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="brands-scroll"
+                  className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-6 px-6"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {brands.map(brand => (
+                    <div key={brand.id} className="flex-shrink-0 w-[220px]">
+                      <BrandCard
+                        id={brand.id}
+                        name={brand.name}
+                        slug={brand.slug}
+                        logo_url={brand.logo_url}
+                        is_verified={brand.is_verified}
+                        brand_color={brand.brand_color}
+                        description={brand.description}
+                        website_url={brand.website_url}
+                        instagram_handle={brand.instagram_handle}
+                        tiktok_handle={brand.tiktok_handle}
+                        campaign_count={brand.campaign_count}
+                        boost_count={brand.boost_count}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Recent Activity */}
             <RecentActivity />

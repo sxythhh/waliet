@@ -404,10 +404,26 @@ export function AppSidebar() {
   return <>
       {/* Mobile Header - Top */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4">
-        <Link to="/" className="flex items-center gap-0 hover:opacity-80 transition-opacity">
-          <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
-          <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
-        </Link>
+        {!isCreatorMode && currentBrandName ? (
+          <Link to={`/dashboard?workspace=${workspace}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            {currentBrandLogo ? (
+              <img src={currentBrandLogo} alt={currentBrandName} className="h-7 w-7 rounded object-cover" />
+            ) : (
+              <div
+                className="h-7 w-7 rounded flex items-center justify-center"
+                style={{ backgroundColor: currentBrandColor || '#8B5CF6' }}
+              >
+                <span className="text-xs font-bold text-white">{currentBrandName.charAt(0).toUpperCase()}</span>
+              </div>
+            )}
+            <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground uppercase truncate max-w-[120px]">{currentBrandName}</span>
+          </Link>
+        ) : (
+          <Link to="/" className="flex items-center gap-0 hover:opacity-80 transition-opacity">
+            <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
+            <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
+          </Link>
+        )}
         <div className="flex items-center gap-2">
           {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
           {(isCreatorMode || !isCreatorMode && currentBrandSubscriptionStatus === "active") && <WalletDropdown variant="header" />}

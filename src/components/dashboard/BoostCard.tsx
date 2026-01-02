@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
-import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Trash2 } from "lucide-react";
+import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Trash2, PenLine } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -25,6 +25,14 @@ interface VideoSubmission {
   submitted_at: string;
   reviewed_at: string | null;
   rejection_reason: string | null;
+}
+
+interface CreatorContract {
+  id: string;
+  status: 'pending' | 'sent' | 'signed' | 'declined' | 'expired';
+  contract_url: string | null;
+  signed_at: string | null;
+  sent_at: string | null;
 }
 const platformIcons: Record<string, string> = {
   tiktok: tiktokLogo,
@@ -61,11 +69,13 @@ export function BoostCard({
 }: BoostCardProps) {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VideoSubmission[]>([]);
+  const [contract, setContract] = useState<CreatorContract | null>(null);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [postsDialogOpen, setPostsDialogOpen] = useState(false);
   const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
   useEffect(() => {
     fetchSubmissions();
+    fetchContract();
   }, [boost.id]);
   const fetchSubmissions = async () => {
     try {
@@ -98,6 +108,29 @@ export function BoostCard({
       }
     } catch (error) {
       console.error("Error fetching submissions:", error);
+    }
+  };
+  const fetchContract = async () => {
+    try {
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("creator_contracts")
+        .select("id, status, contract_url, signed_at, sent_at")
+        .eq("boost_id", boost.id)
+        .eq("creator_id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setContract(data as CreatorContract);
+      }
+    } catch (error) {
+      console.error("Error fetching contract:", error);
     }
   };
   const handleWithdrawSubmission = async (submissionId: string) => {
@@ -206,6 +239,68 @@ export function BoostCard({
               <p className="text-[10px] text-muted-foreground">Max monthly</p>
             </div>
           </div>
+
+          {/* Contract Section */}
+          {contract && (
+            <div className={`rounded-xl border p-3 flex items-center justify-between ${
+              contract.status === 'signed'
+                ? 'border-green-500/30 bg-green-500/5'
+                : contract.status === 'sent' || contract.status === 'pending'
+                  ? 'border-amber-500/30 bg-amber-500/5'
+                  : 'border-border/50 bg-muted/30'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
+                  contract.status === 'signed'
+                    ? 'bg-green-500/10'
+                    : 'bg-muted'
+                }`}>
+                  <FileText className={`h-4 w-4 ${
+                    contract.status === 'signed'
+                      ? 'text-green-500'
+                      : 'text-muted-foreground'
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Creator Contract</p>
+                  <p className="text-xs text-muted-foreground">
+                    {contract.status === 'signed'
+                      ? `Signed ${contract.signed_at ? format(new Date(contract.signed_at), 'MMM d, yyyy') : ''}`
+                      : contract.status === 'sent'
+                        ? 'Awaiting your signature'
+                        : contract.status === 'pending'
+                          ? 'Contract pending'
+                          : contract.status === 'declined'
+                            ? 'Contract declined'
+                            : 'Contract expired'
+                    }
+                  </p>
+                </div>
+              </div>
+              {contract.status === 'sent' && contract.contract_url && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs"
+                  onClick={() => window.open(contract.contract_url!, '_blank')}
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  Review & Sign
+                </Button>
+              )}
+              {contract.status === 'signed' && contract.contract_url && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="gap-1.5 text-xs text-muted-foreground"
+                  onClick={() => window.open(contract.contract_url!, '_blank')}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  View
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Progress Section with Semi-circle */}
           <div className="bg-muted/30 rounded-xl p-4">

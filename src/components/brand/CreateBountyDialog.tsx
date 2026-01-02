@@ -32,13 +32,21 @@ interface CreateBountyDialogProps {
   onSuccess?: () => void;
   initialBlueprintId?: string;
 }
-const STEPS = [{
-  id: 1,
-  label: "Compensation"
-}, {
-  id: 2,
-  label: "Details"
-}];
+const STEPS = [
+  { id: 1, label: "Position" },
+  { id: 2, label: "Compensation" },
+  { id: 3, label: "Targeting" },
+  { id: 4, label: "Details" },
+  { id: 5, label: "Review" },
+];
+
+const POSITION_TYPES = [
+  { value: "content_creator", label: "Content Creator", description: "Creates and posts content on their own channels" },
+  { value: "ugc_creator", label: "UGC Creator", description: "Creates content for your brand's channels" },
+  { value: "ambassador", label: "Brand Ambassador", description: "Long-term partnership representing your brand" },
+  { value: "affiliate", label: "Affiliate Partner", description: "Promotes products with commission-based earnings" },
+  { value: "other", label: "Other", description: "Custom position type" },
+];
 export function CreateBountyDialog({
   open,
   onOpenChange,
@@ -190,6 +198,18 @@ export function CreateBountyDialog({
   };
   const handleNext = async () => {
     if (currentStep === 1) {
+      // Position step - validate position type is selected
+      if (!formData.position_type) {
+        toast.error("Please select a position type");
+        return;
+      }
+      if (formData.position_type === "other" && !formData.custom_position) {
+        toast.error("Please enter a custom position name");
+        return;
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // Compensation step
       if (!formData.monthly_retainer || !formData.videos_per_month || !formData.max_accepted_creators) {
         toast.error("Please fill in all required fields");
         return;
@@ -207,7 +227,17 @@ export function CreateBountyDialog({
         })}`);
         return;
       }
-      setCurrentStep(2);
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
+      // Targeting step - no required fields
+      setCurrentStep(4);
+    } else if (currentStep === 4) {
+      // Details step - validate title
+      if (!formData.title) {
+        toast.error("Please enter a title for your boost");
+        return;
+      }
+      setCurrentStep(5);
     }
   };
   const handleBack = () => {
@@ -364,10 +394,132 @@ export function CreateBountyDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[540px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
 
+        {/* Stepper Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border/50">
+          <div className="flex items-center justify-between">
+            {STEPS.map((step, index) => (
+              <div key={step.id} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all",
+                    currentStep > step.id
+                      ? "bg-primary text-primary-foreground"
+                      : currentStep === step.id
+                        ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                        : "bg-muted text-muted-foreground"
+                  )}>
+                    {currentStep > step.id ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      step.id
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[10px] mt-1.5 font-medium font-inter tracking-[-0.3px]",
+                    currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                  )}>
+                    {step.label}
+                  </span>
+                </div>
+                {index < STEPS.length - 1 && (
+                  <div className={cn(
+                    "flex-1 h-0.5 mx-2 transition-colors",
+                    currentStep > step.id ? "bg-primary" : "bg-muted"
+                  )} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6 py-0">
-          {/* Step 1: Compensation & Settings */}
+        <div className="flex-1 overflow-y-auto p-6 py-4">
+          {/* Step 1: Position Type */}
           {currentStep === 1 && <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">What type of position is this?</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Select the type of creator you're looking for</p>
+              </div>
+
+              <div className="space-y-3">
+                {POSITION_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setFormData({...formData, position_type: type.value})}
+                    className={cn(
+                      "w-full p-4 rounded-xl border-2 text-left transition-all",
+                      formData.position_type === type.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border/50 hover:border-border hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm font-inter tracking-[-0.3px]">{type.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.3px]">{type.description}</p>
+                      </div>
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                        formData.position_type === type.value
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/40"
+                      )}>
+                        {formData.position_type === type.value && (
+                          <Check className="h-3 w-3 text-primary-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {formData.position_type === "other" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Custom Position Name</Label>
+                  <Input
+                    value={formData.custom_position}
+                    onChange={e => setFormData({...formData, custom_position: e.target.value})}
+                    placeholder="e.g., Social Media Manager"
+                    className="h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]"
+                  />
+                </div>
+              )}
+
+              {/* Content Distribution */}
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Where will content be posted?</Label>
+                <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, content_distribution: "creators_own_page"})}
+                    className={cn(
+                      "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                      formData.content_distribution === "creators_own_page"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    Creator's Page
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, content_distribution: "branded_accounts"})}
+                    className={cn(
+                      "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                      formData.content_distribution === "branded_accounts"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    Brand's Channels
+                  </button>
+                </div>
+              </div>
+            </div>}
+
+          {/* Step 2: Compensation */}
+          {currentStep === 2 && <div className="space-y-6">
               {/* Selected Blueprint Preview */}
               {selectedBlueprint && <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
                   <div className="flex items-center gap-3">
@@ -514,40 +666,8 @@ export function CreateBountyDialog({
                   </div>
                 </div>
 
-                {/* Right Column - Settings & Dates */}
+                {/* Additional Settings */}
                 <div className="space-y-5">
-                  {/* Content Distribution - Moved to top with redesign */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Distribution</Label>
-                    <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
-                      <button
-                        type="button"
-                        onClick={() => setFormData({...formData, content_distribution: "creators_own_page"})}
-                        className={cn(
-                          "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
-                          formData.content_distribution === "creators_own_page"
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        Creator's Page
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({...formData, content_distribution: "branded_accounts"})}
-                        className={cn(
-                          "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
-                          formData.content_distribution === "branded_accounts"
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        Branded Accounts
-                      </button>
-                    </div>
-                  </div>
-
-
                   {/* Blueprint Selection */}
                   <div className="space-y-1.5">
                     <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
@@ -689,8 +809,196 @@ export function CreateBountyDialog({
               </div>
             </div>}
 
-          {/* Step 2: Details */}
-          {currentStep === 2 && <div className="space-y-6">
+          {/* Step 3: Targeting */}
+          {currentStep === 3 && <div className="space-y-6">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Target your ideal creators</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Define the type of creators you're looking for</p>
+              </div>
+
+              {/* Experience Level & Content Type Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground font-inter tracking-[-0.3px]">Experience Level</Label>
+                  <Select value={formData.experience_level} onValueChange={(value: any) => setFormData({...formData, experience_level: value})}>
+                    <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.3px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any" className="font-inter tracking-[-0.3px]">Any Level</SelectItem>
+                      <SelectItem value="beginner" className="font-inter tracking-[-0.3px]">Beginner</SelectItem>
+                      <SelectItem value="intermediate" className="font-inter tracking-[-0.3px]">Intermediate</SelectItem>
+                      <SelectItem value="advanced" className="font-inter tracking-[-0.3px]">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground font-inter tracking-[-0.3px]">Content Format</Label>
+                  <Select value={formData.content_type} onValueChange={(value: any) => setFormData({...formData, content_type: value})}>
+                    <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.3px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="both" className="font-inter tracking-[-0.3px]">Any Format</SelectItem>
+                      <SelectItem value="short_form" className="font-inter tracking-[-0.3px]">Short Form</SelectItem>
+                      <SelectItem value="long_form" className="font-inter tracking-[-0.3px]">Long Form</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div className="space-y-2">
+                <Label className="text-xs text-foreground font-inter tracking-[-0.3px]">Categories / Niches</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={categoryInput}
+                    onChange={(e) => setCategoryInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const trimmed = categoryInput.trim();
+                        if (trimmed && !formData.categories.includes(trimmed)) {
+                          setFormData({...formData, categories: [...formData.categories, trimmed]});
+                          setCategoryInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Add category..."
+                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.3px] flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-10 px-3"
+                    disabled={!categoryInput.trim()}
+                    onClick={() => {
+                      const trimmed = categoryInput.trim();
+                      if (trimmed && !formData.categories.includes(trimmed)) {
+                        setFormData({...formData, categories: [...formData.categories, trimmed]});
+                        setCategoryInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {/* Quick add suggestions */}
+                <div className="flex flex-wrap gap-1.5">
+                  {CATEGORY_SUGGESTIONS.filter(c => !formData.categories.includes(c)).slice(0, 8).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setFormData({...formData, categories: [...formData.categories, cat]})}
+                      className="px-2.5 py-1 text-xs rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.3px]"
+                    >
+                      + {cat}
+                    </button>
+                  ))}
+                </div>
+                {formData.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {formData.categories.map((cat, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="pl-2.5 pr-1 py-1 gap-1 text-xs font-inter tracking-[-0.3px]"
+                      >
+                        {cat}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, categories: formData.categories.filter((_, i) => i !== index)})}
+                          className="ml-0.5 hover:bg-muted rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-2">
+                <Label className="text-xs text-foreground font-inter tracking-[-0.3px]">Skills Needed</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const trimmed = skillInput.trim();
+                        if (trimmed && !formData.skills.includes(trimmed)) {
+                          setFormData({...formData, skills: [...formData.skills, trimmed]});
+                          setSkillInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Add skill..."
+                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.3px] flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-10 px-3"
+                    disabled={!skillInput.trim()}
+                    onClick={() => {
+                      const trimmed = skillInput.trim();
+                      if (trimmed && !formData.skills.includes(trimmed)) {
+                        setFormData({...formData, skills: [...formData.skills, trimmed]});
+                        setSkillInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {/* Quick add suggestions */}
+                <div className="flex flex-wrap gap-1.5">
+                  {SKILL_SUGGESTIONS.filter(s => !formData.skills.includes(s)).slice(0, 6).map((skill) => (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => setFormData({...formData, skills: [...formData.skills, skill]})}
+                      className="px-2.5 py-1 text-xs rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.3px]"
+                    >
+                      + {skill}
+                    </button>
+                  ))}
+                </div>
+                {formData.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {formData.skills.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="pl-2.5 pr-1 py-1 gap-1 text-xs font-inter tracking-[-0.3px]"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, skills: formData.skills.filter((_, i) => i !== index)})}
+                          className="ml-0.5 hover:bg-muted rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>}
+
+          {/* Step 4: Details */}
+          {currentStep === 4 && <div className="space-y-6">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Add the details</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Give your boost a name and description</p>
+              </div>
+
               {/* Title */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Boost Title</Label>
@@ -789,189 +1097,25 @@ export function CreateBountyDialog({
                 </p>
               </div>
 
-              {/* Creator Requirements Section */}
-              <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
-                <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
-                  <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Creator Requirements</h3>
-                </div>
+            </div>}
 
-                <div className="p-4 space-y-4">
-                  {/* Experience Level & Content Type Row */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Experience Level</Label>
-                      <Select value={formData.experience_level} onValueChange={(value: any) => setFormData({...formData, experience_level: value})}>
-                        <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="any" className="font-inter tracking-[-0.3px]">Any Level</SelectItem>
-                          <SelectItem value="beginner" className="font-inter tracking-[-0.3px]">Beginner</SelectItem>
-                          <SelectItem value="intermediate" className="font-inter tracking-[-0.3px]">Intermediate</SelectItem>
-                          <SelectItem value="advanced" className="font-inter tracking-[-0.3px]">Advanced</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Content Type</Label>
-                      <Select value={formData.content_type} onValueChange={(value: any) => setFormData({...formData, content_type: value})}>
-                        <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="both" className="font-inter tracking-[-0.3px]">Any Format</SelectItem>
-                          <SelectItem value="short_form" className="font-inter tracking-[-0.3px]">Short Form</SelectItem>
-                          <SelectItem value="long_form" className="font-inter tracking-[-0.3px]">Long Form</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Categories */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Categories / Niches</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={categoryInput}
-                        onChange={(e) => setCategoryInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const trimmed = categoryInput.trim();
-                            if (trimmed && !formData.categories.includes(trimmed)) {
-                              setFormData({...formData, categories: [...formData.categories, trimmed]});
-                              setCategoryInput("");
-                            }
-                          }
-                        }}
-                        placeholder="Add category..."
-                        className="h-9 bg-background border border-border/50 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.3px] flex-1 text-sm"
-                      />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 px-2.5"
-                        disabled={!categoryInput.trim()}
-                        onClick={() => {
-                          const trimmed = categoryInput.trim();
-                          if (trimmed && !formData.categories.includes(trimmed)) {
-                            setFormData({...formData, categories: [...formData.categories, trimmed]});
-                            setCategoryInput("");
-                          }
-                        }}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    {/* Quick add suggestions */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {CATEGORY_SUGGESTIONS.filter(c => !formData.categories.includes(c)).slice(0, 6).map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => setFormData({...formData, categories: [...formData.categories, cat]})}
-                          className="px-2 py-0.5 text-[10px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.3px]"
-                        >
-                          + {cat}
-                        </button>
-                      ))}
-                    </div>
-                    {formData.categories.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {formData.categories.map((cat, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="pl-2 pr-1 py-0.5 gap-1 text-xs font-inter tracking-[-0.3px]"
-                          >
-                            {cat}
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, categories: formData.categories.filter((_, i) => i !== index)})}
-                              className="ml-0.5 hover:bg-muted rounded-full p-0.5"
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Skills */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Skills Needed</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={skillInput}
-                        onChange={(e) => setSkillInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const trimmed = skillInput.trim();
-                            if (trimmed && !formData.skills.includes(trimmed)) {
-                              setFormData({...formData, skills: [...formData.skills, trimmed]});
-                              setSkillInput("");
-                            }
-                          }
-                        }}
-                        placeholder="Add skill..."
-                        className="h-9 bg-background border border-border/50 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.3px] flex-1 text-sm"
-                      />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 px-2.5"
-                        disabled={!skillInput.trim()}
-                        onClick={() => {
-                          const trimmed = skillInput.trim();
-                          if (trimmed && !formData.skills.includes(trimmed)) {
-                            setFormData({...formData, skills: [...formData.skills, trimmed]});
-                            setSkillInput("");
-                          }
-                        }}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    {/* Quick add suggestions */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {SKILL_SUGGESTIONS.filter(s => !formData.skills.includes(s)).slice(0, 5).map((skill) => (
-                        <button
-                          key={skill}
-                          type="button"
-                          onClick={() => setFormData({...formData, skills: [...formData.skills, skill]})}
-                          className="px-2 py-0.5 text-[10px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.3px]"
-                        >
-                          + {skill}
-                        </button>
-                      ))}
-                    </div>
-                    {formData.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {formData.skills.map((skill, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="pl-2 pr-1 py-0.5 gap-1 text-xs font-inter tracking-[-0.3px]"
-                          >
-                            {skill}
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, skills: formData.skills.filter((_, i) => i !== index)})}
-                              className="ml-0.5 hover:bg-muted rounded-full p-0.5"
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {/* Step 5: Review */}
+          {currentStep === 5 && <div className="space-y-6">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Review your boost</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Make sure everything looks good before creating</p>
               </div>
+
+              {/* Boost Title Preview */}
+              {formData.title && (
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Boost Title</p>
+                  <p className="text-lg font-semibold font-geist tracking-[-0.5px]">{formData.title}</p>
+                  {formData.description && (
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2 font-inter tracking-[-0.3px]">{formData.description}</p>
+                  )}
+                </div>
+              )}
 
               {/* Boost Summary Card */}
               <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
@@ -1033,18 +1177,22 @@ export function CreateBountyDialog({
             </div>}
         </div>
 
-        <div className="px-6 py-4 flex items-center justify-between bg-background">
+        <div className="px-6 py-4 flex items-center justify-between bg-background border-t border-border/50">
           <Button type="button" variant="ghost" size="sm" onClick={currentStep === 1 ? () => onOpenChange(false) : handleBack} className="font-inter tracking-[-0.5px]">
             {currentStep === 1 ? "Cancel" : "Back"}
           </Button>
 
           <div className="flex items-center gap-2">
-            {currentStep < 2 ? <Button type="button" size="sm" onClick={handleNext} className="min-w-[100px] gap-2 font-inter tracking-[-0.5px]">
+            {currentStep < 5 ? (
+              <Button type="button" size="sm" onClick={handleNext} className="min-w-[100px] gap-2 font-inter tracking-[-0.5px]">
                 Continue
                 <ArrowRight className="h-3.5 w-3.5" />
-              </Button> : <Button type="button" size="sm" onClick={handleSubmit} disabled={creating} className="min-w-[100px] font-inter tracking-[-0.5px]">
+              </Button>
+            ) : (
+              <Button type="button" size="sm" onClick={handleSubmit} disabled={creating} className="min-w-[100px] font-inter tracking-[-0.5px]">
                 {creating ? "Creating..." : "Create Boost"}
-              </Button>}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

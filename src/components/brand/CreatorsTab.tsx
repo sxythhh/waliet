@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Megaphone } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Megaphone, Briefcase } from "lucide-react";
 import { BrandBroadcastsTab } from "@/components/brand/BrandBroadcastsTab";
+import { BrandPitchesPanel } from "@/components/brand/BrandPitchesPanel";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -82,7 +83,7 @@ const getPlatformLogos = (isDark: boolean): Record<string, string> => ({
   x: isDark ? xLogoWhite : xLogoBlack
 });
 type MobileView = 'messages' | 'conversation' | 'creators';
-type MessageFilter = 'all' | 'unread' | 'bookmarked';
+type MessageFilter = 'all' | 'unread' | 'bookmarked' | 'pitches';
 type MembershipFilter = 'all' | 'active' | 'applied';
 interface Campaign {
   id: string;
@@ -705,8 +706,16 @@ export function CreatorsTab({
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
+          <button className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'pitches' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('pitches')}>
+            <Briefcase className="h-3 w-3" />
+            Pitches
+          </button>
         </div>
 
+        {/* Pitches Panel or Messages List */}
+        {messageFilter === 'pitches' ? (
+          <BrandPitchesPanel brandId={brandId} />
+        ) : (
         <ScrollArea className="flex-1">
           {conversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
               <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
@@ -779,6 +788,7 @@ export function CreatorsTab({
             })}
             </div>}
         </ScrollArea>
+        )}
       </div>
 
       {/* Middle Column - Active Conversation + Broadcasts Panel */}

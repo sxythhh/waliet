@@ -36,6 +36,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
+import { CreatorPitchesWidget } from "@/components/dashboard/CreatorPitchesWidget";
 interface Campaign {
   id: string;
   title: string;
@@ -692,6 +693,9 @@ export function CampaignsTab({
           </div>
         </div>
       )}
+
+      {/* Pitches Widget */}
+      <CreatorPitchesWidget />
 
       {/* Submissions Section */}
       <SubmissionsTab />

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Lock, MessageSquare } from "lucide-react";
+import DiscordIcon from "@/assets/discord-icon.png";
 
 interface TicketMessageThreadProps {
   messages: TicketMessage[];
@@ -108,6 +109,14 @@ export function TicketMessageThread({
                       <Lock className="h-2.5 w-2.5 mr-0.5" />
                       Internal
                     </Badge>
+                  )}
+                  {message.discord_message?.source === "discord" && (
+                    <img
+                      src={DiscordIcon}
+                      alt="From Discord"
+                      title="Sent via Discord"
+                      className="h-3 w-3 opacity-60"
+                    />
                   )}
                   <span className="text-[10px] text-muted-foreground">
                     {format(new Date(message.created_at), "MMM d, h:mm a")}

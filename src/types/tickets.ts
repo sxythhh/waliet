@@ -19,6 +19,12 @@ export interface SupportTicket {
   user?: TicketUser;
   assigned_admin?: AdminUser;
   message_count?: number;
+  discord_channel?: {
+    id: string;
+    channel_id: string;
+    channel_name: string | null;
+    closed_at: string | null;
+  };
 }
 
 export interface TicketUser {
@@ -42,10 +48,14 @@ export interface TicketMessage {
   content: string;
   is_internal: boolean;
   created_at: string;
+  discord_synced?: boolean;
   sender?: {
     username: string;
     full_name: string | null;
     avatar_url: string | null;
+  };
+  discord_message?: {
+    source: "discord" | "web";
   };
 }
 

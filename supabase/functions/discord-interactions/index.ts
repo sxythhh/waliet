@@ -55,6 +55,15 @@ const Colors = {
 // Site URL
 const SITE_URL = Deno.env.get("SITE_URL") || "https://virality.gg";
 
+// Discord API base URL
+const DISCORD_API = "https://discord.com/api/v10";
+
+// Channel types
+const ChannelType = {
+  GUILD_TEXT: 0,
+  GUILD_CATEGORY: 4,
+};
+
 function hexToUint8Array(hex: string): Uint8Array {
   const matches = hex.match(/.{1,2}/g);
   if (!matches) return new Uint8Array();
@@ -239,6 +248,92 @@ function createSelectMenu(options: {
       })),
     }],
   };
+}
+
+// Discord API helpers
+async function discordApiRequest(endpoint: string, method: string, body?: any) {
+  const botToken = Deno.env.get("DISCORD_BOT_TOKEN");
+  if (!botToken) throw new Error("DISCORD_BOT_TOKEN not set");
+
+  const response = await fetch(`${DISCORD_API}${endpoint}`, {
+    method,
+    headers: {
+      "Authorization": `Bot ${botToken}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error(`Discord API error: ${response.status} - ${error}`);
+    throw new Error(`Discord API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function createTicketChannel(
+  guildId: string,
+  categoryId: string | null,
+  userId: string,
+  username: string,
+  supportRoleId: string | null,
+  ticketNumber: string
+) {
+  // Create permission overwrites
+  const permissionOverwrites: any[] = [
+    // Deny everyone
+    {
+      id: guildId,
+      type: 0, // role
+      deny: "1024", // VIEW_CHANNEL
+    },
+    // Allow the ticket creator
+    {
+      id: userId,
+      type: 1, // member
+      allow: "3072", // VIEW_CHANNEL + SEND_MESSAGES
+    },
+  ];
+
+  // Allow support role if configured
+  if (supportRoleId) {
+    permissionOverwrites.push({
+      id: supportRoleId,
+      type: 0, // role
+      allow: "3072", // VIEW_CHANNEL + SEND_MESSAGES
+    });
+  }
+
+  const channelName = `ticket-${ticketNumber.toLowerCase().replace("tkt-", "")}`;
+
+  const channel = await discordApiRequest(`/guilds/${guildId}/channels`, "POST", {
+    name: channelName,
+    type: ChannelType.GUILD_TEXT,
+    parent_id: categoryId,
+    permission_overwrites: permissionOverwrites,
+    topic: `Support ticket ${ticketNumber} for @${username}`,
+  });
+
+  return channel;
+}
+
+async function sendDiscordChannelMessage(channelId: string, content: string | object) {
+  const body = typeof content === "string" ? { content } : content;
+  return discordApiRequest(`/channels/${channelId}/messages`, "POST", body);
+}
+
+async function archiveTicketChannel(channelId: string) {
+  // Archive by removing send permissions
+  return discordApiRequest(`/channels/${channelId}`, "PATCH", {
+    name: `closed-${Date.now()}`,
+    permission_overwrites: [],
+  });
+}
+
+async function deleteChannel(channelId: string) {
+  return discordApiRequest(`/channels/${channelId}`, "DELETE");
 }
 
 // Get linked user from Discord ID
@@ -1223,6 +1318,316 @@ async function handleHelpCommand(commandName?: string) {
   return componentResponse(embed, [buttons], true);
 }
 
+// Handle setup-tickets command (admin only)
+async function handleSetupTicketsCommand(supabase: any, interaction: any) {
+  const guildId = interaction.guild_id;
+  const options = interaction.data.options || [];
+  const discordId = interaction.member?.user?.id;
+
+  // Check if user has admin/manage_guild permission
+  const memberPermissions = BigInt(interaction.member?.permissions || "0");
+  const MANAGE_GUILD = BigInt(0x20); // MANAGE_GUILD permission flag
+
+  if ((memberPermissions & MANAGE_GUILD) === BigInt(0)) {
+    return textResponse("You need **Manage Server** permission to configure tickets.", true);
+  }
+
+  const getOption = (name: string) => options.find((o: any) => o.name === name)?.value;
+
+  const categoryId = getOption("category");
+  const supportRoleId = getOption("support_role");
+  const panelChannelId = getOption("panel_channel");
+  const welcomeMessage = getOption("welcome_message") || "Thanks for creating a ticket! Our team will be with you shortly.";
+
+  if (!panelChannelId) {
+    return textResponse("Please specify a channel for the ticket panel.", true);
+  }
+
+  try {
+    // Check if config exists for this guild
+    const { data: existingConfig } = await supabase
+      .from("discord_ticket_config")
+      .select("id, brand_id")
+      .eq("guild_id", guildId)
+      .single();
+
+    // Find brand associated with this guild (if any)
+    const { data: linkedBrand } = await supabase
+      .from("brands")
+      .select("id, name")
+      .eq("discord_guild_id", guildId)
+      .single();
+
+    const brandId = linkedBrand?.id || existingConfig?.brand_id || null;
+
+    // Upsert config
+    const { error: configError } = await supabase
+      .from("discord_ticket_config")
+      .upsert({
+        guild_id: guildId,
+        brand_id: brandId,
+        ticket_category_id: categoryId,
+        support_role_id: supportRoleId,
+        panel_channel_id: panelChannelId,
+        welcome_message: welcomeMessage,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: "guild_id",
+      });
+
+    if (configError) {
+      console.error("Error saving ticket config:", configError);
+      return textResponse("Failed to save ticket configuration.", true);
+    }
+
+    // Create the ticket panel message
+    const panelEmbed = {
+      title: "🎫 Support Tickets",
+      description: "Need help? Click the button below to create a support ticket.\n\nOur team will assist you as soon as possible.",
+      color: Colors.BRAND,
+      footer: {
+        text: "Powered by Virality",
+        icon_url: `${SITE_URL}/logo.png`,
+      },
+    };
+
+    const panelMessage = await sendDiscordChannelMessage(panelChannelId, {
+      embeds: [panelEmbed],
+      components: [{
+        type: ComponentType.ACTION_ROW,
+        components: [{
+          type: ComponentType.BUTTON,
+          style: ButtonStyle.PRIMARY,
+          label: "Create Ticket",
+          custom_id: "ticket:create",
+          emoji: { name: "🎫" },
+        }],
+      }],
+    });
+
+    // Save panel message ID
+    await supabase
+      .from("discord_ticket_config")
+      .update({ panel_message_id: panelMessage.id })
+      .eq("guild_id", guildId);
+
+    const embed = createEmbed({
+      title: "✅ Ticket System Configured",
+      description: "The ticket system has been set up successfully!",
+      fields: [
+        { name: "Panel Channel", value: `<#${panelChannelId}>`, inline: true },
+        { name: "Category", value: categoryId ? `<#${categoryId}>` : "None", inline: true },
+        { name: "Support Role", value: supportRoleId ? `<@&${supportRoleId}>` : "None", inline: true },
+      ],
+      color: Colors.SUCCESS,
+    });
+
+    return componentResponse(embed, [], true);
+  } catch (error: any) {
+    console.error("Error setting up tickets:", error);
+    return textResponse(`Failed to setup tickets: ${error.message}`, true);
+  }
+}
+
+// Handle create ticket button
+async function handleCreateTicketButton(supabase: any, interaction: any) {
+  const guildId = interaction.guild_id;
+  const discordId = interaction.member?.user?.id;
+  const username = interaction.member?.user?.username || "user";
+
+  try {
+    // Get ticket config for this guild
+    const { data: config, error: configError } = await supabase
+      .from("discord_ticket_config")
+      .select("*")
+      .eq("guild_id", guildId)
+      .single();
+
+    if (configError || !config) {
+      return textResponse("Ticket system is not configured for this server.", true);
+    }
+
+    // Check if user already has an open ticket
+    const { data: existingTicket } = await supabase
+      .from("discord_ticket_channels")
+      .select("id, channel_id, ticket_id, support_tickets(status)")
+      .eq("guild_id", guildId)
+      .eq("discord_user_id", discordId)
+      .is("closed_at", null)
+      .single();
+
+    if (existingTicket && existingTicket.support_tickets?.status !== "closed") {
+      return textResponse(`You already have an open ticket: <#${existingTicket.channel_id}>`, true);
+    }
+
+    // Get or create linked user (optional - tickets can work without linking)
+    const linkedUser = await getLinkedUser(supabase, discordId);
+
+    // Create support ticket in database
+    const { data: ticket, error: ticketError } = await supabase
+      .from("support_tickets")
+      .insert({
+        user_id: linkedUser?.id || null,
+        subject: `Discord Ticket from @${username}`,
+        category: "other",
+        priority: "medium",
+        status: "open",
+      })
+      .select()
+      .single();
+
+    if (ticketError) {
+      console.error("Error creating ticket:", ticketError);
+      return textResponse("Failed to create ticket. Please try again.", true);
+    }
+
+    // Create Discord channel
+    const channel = await createTicketChannel(
+      guildId,
+      config.ticket_category_id,
+      discordId,
+      username,
+      config.support_role_id,
+      ticket.ticket_number
+    );
+
+    // Link channel to ticket
+    const { error: linkError } = await supabase
+      .from("discord_ticket_channels")
+      .insert({
+        ticket_id: ticket.id,
+        channel_id: channel.id,
+        guild_id: guildId,
+        discord_user_id: discordId,
+        channel_name: channel.name,
+      });
+
+    if (linkError) {
+      console.error("Error linking channel:", linkError);
+      // Try to clean up the channel
+      try {
+        await deleteChannel(channel.id);
+      } catch {}
+      return textResponse("Failed to create ticket channel.", true);
+    }
+
+    // Send welcome message in the ticket channel
+    const welcomeEmbed = {
+      title: `🎫 Ticket ${ticket.ticket_number}`,
+      description: config.welcome_message,
+      fields: [
+        { name: "Created by", value: `<@${discordId}>`, inline: true },
+        { name: "Status", value: "🟢 Open", inline: true },
+      ],
+      color: Colors.SUCCESS,
+      footer: {
+        text: "Type your message below to get started",
+      },
+    };
+
+    await sendDiscordChannelMessage(channel.id, {
+      content: `<@${discordId}>${config.support_role_id ? ` <@&${config.support_role_id}>` : ""}`,
+      embeds: [welcomeEmbed],
+      components: [{
+        type: ComponentType.ACTION_ROW,
+        components: [
+          {
+            type: ComponentType.BUTTON,
+            style: ButtonStyle.DANGER,
+            label: "Close Ticket",
+            custom_id: `ticket:close:${ticket.id}`,
+            emoji: { name: "🔒" },
+          },
+          {
+            type: ComponentType.BUTTON,
+            style: ButtonStyle.LINK,
+            label: "View on Web",
+            url: `${SITE_URL}/support/tickets/${ticket.id}`,
+            emoji: { name: "🌐" },
+          },
+        ],
+      }],
+    });
+
+    return textResponse(`Ticket created! Head to <#${channel.id}> to continue.`, true);
+  } catch (error: any) {
+    console.error("Error creating ticket:", error);
+    return textResponse(`Failed to create ticket: ${error.message}`, true);
+  }
+}
+
+// Handle close ticket button
+async function handleCloseTicketButton(supabase: any, interaction: any, ticketId: string) {
+  const channelId = interaction.channel_id;
+  const discordId = interaction.member?.user?.id;
+
+  try {
+    // Get ticket and channel info
+    const { data: ticketChannel, error } = await supabase
+      .from("discord_ticket_channels")
+      .select("*, support_tickets(*)")
+      .eq("ticket_id", ticketId)
+      .single();
+
+    if (error || !ticketChannel) {
+      return textResponse("Ticket not found.", true);
+    }
+
+    // Check if user is ticket creator or has support role
+    const isCreator = ticketChannel.discord_user_id === discordId;
+    const memberPermissions = BigInt(interaction.member?.permissions || "0");
+    const MANAGE_CHANNELS = BigInt(0x10);
+    const isStaff = (memberPermissions & MANAGE_CHANNELS) !== BigInt(0);
+
+    if (!isCreator && !isStaff) {
+      return textResponse("You don't have permission to close this ticket.", true);
+    }
+
+    // Update ticket status
+    await supabase
+      .from("support_tickets")
+      .update({
+        status: "closed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ticketId);
+
+    // Mark channel as closed
+    await supabase
+      .from("discord_ticket_channels")
+      .update({ closed_at: new Date().toISOString() })
+      .eq("ticket_id", ticketId);
+
+    // Send closure message
+    const closeEmbed = {
+      title: "🔒 Ticket Closed",
+      description: `This ticket was closed by <@${discordId}>.\n\nThis channel will be deleted in 10 seconds.`,
+      color: Colors.ERROR,
+    };
+
+    await sendDiscordChannelMessage(channelId, { embeds: [closeEmbed] });
+
+    // Schedule channel deletion (10 seconds)
+    setTimeout(async () => {
+      try {
+        await deleteChannel(channelId);
+      } catch (e) {
+        console.error("Error deleting channel:", e);
+      }
+    }, 10000);
+
+    return jsonResponse({
+      type: InteractionResponseType.UPDATE_MESSAGE,
+      data: {
+        components: [], // Remove buttons
+      },
+    });
+  } catch (error: any) {
+    console.error("Error closing ticket:", error);
+    return textResponse(`Failed to close ticket: ${error.message}`, true);
+  }
+}
+
 // Detect platform from URL
 function detectPlatform(url: string): string {
   const lowercaseUrl = url.toLowerCase();
@@ -1497,6 +1902,19 @@ async function handleComponentInteraction(supabase: any, interaction: any) {
         type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
       });
     }
+
+    // Ticket button handlers
+    if (action === "ticket") {
+      const [ticketAction, ...ticketParams] = params;
+
+      if (ticketAction === "create") {
+        return handleCreateTicketButton(supabase, interaction);
+      }
+
+      if (ticketAction === "close" && ticketParams[0]) {
+        return handleCloseTicketButton(supabase, interaction, ticketParams[0]);
+      }
+    }
   }
 
   console.log(`Unknown component interaction: ${customId}`);
@@ -1600,6 +2018,9 @@ Deno.serve(async (req: Request) => {
         const commandName = getOption("command");
         return handleHelpCommand(commandName);
       }
+
+      case "setup-tickets":
+        return handleSetupTicketsCommand(supabase, interaction);
 
       default:
         return textResponse(`Unknown command: ${name}`, true);

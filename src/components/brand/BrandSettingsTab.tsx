@@ -18,6 +18,17 @@ interface BrandSettingsTabProps {
   brandId: string;
 }
 
+interface BrandSettings {
+  auto_approve_applications: boolean;
+  auto_approve_min_followers: number | null;
+  payout_clearing_days: number;
+  require_contract_signature: boolean;
+  application_questions_required: boolean;
+  email_on_new_application: boolean;
+  email_on_submission: boolean;
+  email_on_payout_request: boolean;
+}
+
 // Types
 interface MilestoneConfig {
   id: string;
@@ -68,8 +79,21 @@ const SEVERITY_LEVELS = [
   { value: 3, label: "Severe", color: "text-red-500 bg-red-500/10" },
 ];
 
+const DEFAULT_SETTINGS: BrandSettings = {
+  auto_approve_applications: false,
+  auto_approve_min_followers: null,
+  payout_clearing_days: 7,
+  require_contract_signature: false,
+  application_questions_required: true,
+  email_on_new_application: true,
+  email_on_submission: true,
+  email_on_payout_request: true,
+};
+
 export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState<BrandSettings>(DEFAULT_SETTINGS);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   // Milestones state
   const [milestones, setMilestones] = useState<MilestoneConfig[]>([]);
@@ -103,12 +127,18 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
-      const [milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
+      const [brandResult, milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
+        supabase.from("brands").select("settings").eq("id", brandId).single(),
         (supabase.from("milestone_configs" as any).select("*").eq("brand_id", brandId).order("threshold") as any),
         (supabase.from("creator_tiers" as any).select("*").eq("brand_id", brandId).order("tier_order") as any),
         (supabase.from("creator_strikes" as any).select("*, creator:creator_id(username, full_name, avatar_url)").eq("brand_id", brandId).order("created_at", { ascending: false }).limit(10) as any),
         (supabase.from("campaign_participants" as any).select("user_id, profiles:user_id(id, username, full_name)").eq("brand_id", brandId).eq("status", "accepted") as any)
       ]);
+
+      // Parse brand settings from JSONB column
+      if (brandResult.data?.settings) {
+        setSettings({ ...DEFAULT_SETTINGS, ...brandResult.data.settings });
+      }
 
       setMilestones((milestonesResult.data || []) as MilestoneConfig[]);
       setTiers((tiersResult.data || []) as CreatorTier[]);
@@ -126,6 +156,27 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from("brands")
+        .update({ settings })
+        .eq("id", brandId);
+      if (error) throw error;
+      toast.success("Settings saved");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error("Failed to save settings");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const updateSetting = <K extends keyof BrandSettings>(key: K, value: BrandSettings[K]) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
   // Milestone handlers
@@ -293,6 +344,149 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
 
   return (
     <div className="p-6 space-y-10 max-w-4xl mx-auto">
+      {/* Application Settings */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Application Settings</h2>
+            <p className="text-xs text-muted-foreground">Configure how creators can apply to your campaigns</p>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleSaveSettings}
+            disabled={savingSettings}
+            className="font-inter tracking-[-0.5px]"
+          >
+            {savingSettings ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div>
+              <p className="text-sm font-medium">Auto-approve Applications</p>
+              <p className="text-xs text-muted-foreground">Automatically accept creators who meet your criteria</p>
+            </div>
+            <Switch
+              checked={settings.auto_approve_applications}
+              onCheckedChange={(checked) => updateSetting("auto_approve_applications", checked)}
+            />
+          </div>
+
+          {settings.auto_approve_applications && (
+            <div className="p-4 rounded-lg border bg-muted/30 ml-4">
+              <Label className="text-xs text-muted-foreground">Minimum follower count for auto-approval</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 1000 (leave empty for any)"
+                value={settings.auto_approve_min_followers || ""}
+                onChange={(e) => updateSetting("auto_approve_min_followers", e.target.value ? parseInt(e.target.value) : null)}
+                className="mt-1.5 h-9"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div>
+              <p className="text-sm font-medium">Require Application Questions</p>
+              <p className="text-xs text-muted-foreground">Creators must answer your custom questions when applying</p>
+            </div>
+            <Switch
+              checked={settings.application_questions_required}
+              onCheckedChange={(checked) => updateSetting("application_questions_required", checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div>
+              <p className="text-sm font-medium">Require Contract Signature</p>
+              <p className="text-xs text-muted-foreground">Creators must sign a contract before they can submit content</p>
+            </div>
+            <Switch
+              checked={settings.require_contract_signature}
+              onCheckedChange={(checked) => updateSetting("require_contract_signature", checked)}
+            />
+          </div>
+        </div>
+      </section>
+
+      <hr className="border-border/50" />
+
+      {/* Payout Settings */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Payout Settings</h2>
+          <p className="text-xs text-muted-foreground">Configure payout timing and review periods</p>
+        </div>
+
+        <div className="p-4 rounded-lg border bg-card">
+          <Label className="text-xs text-muted-foreground">Payout Clearing Period (days)</Label>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-2">Time to review submissions before payouts are released</p>
+          <Select
+            value={settings.payout_clearing_days.toString()}
+            onValueChange={(v) => updateSetting("payout_clearing_days", parseInt(v))}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">3 days</SelectItem>
+              <SelectItem value="5">5 days</SelectItem>
+              <SelectItem value="7">7 days</SelectItem>
+              <SelectItem value="14">14 days</SelectItem>
+              <SelectItem value="30">30 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      <hr className="border-border/50" />
+
+      {/* Notification Settings */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Notification Preferences</h2>
+          <p className="text-xs text-muted-foreground">Choose when to receive email notifications</p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div>
+              <p className="text-sm font-medium">New Application</p>
+              <p className="text-xs text-muted-foreground">Email when a creator applies to your campaign</p>
+            </div>
+            <Switch
+              checked={settings.email_on_new_application}
+              onCheckedChange={(checked) => updateSetting("email_on_new_application", checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div>
+              <p className="text-sm font-medium">Content Submission</p>
+              <p className="text-xs text-muted-foreground">Email when a creator submits new content</p>
+            </div>
+            <Switch
+              checked={settings.email_on_submission}
+              onCheckedChange={(checked) => updateSetting("email_on_submission", checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div>
+              <p className="text-sm font-medium">Payout Request</p>
+              <p className="text-xs text-muted-foreground">Email when a creator requests a payout</p>
+            </div>
+            <Switch
+              checked={settings.email_on_payout_request}
+              onCheckedChange={(checked) => updateSetting("email_on_payout_request", checked)}
+            />
+          </div>
+        </div>
+      </section>
+
+      <hr className="border-border/50" />
+
       {/* Milestones */}
       <section>
         <div className="flex items-center justify-between mb-4">

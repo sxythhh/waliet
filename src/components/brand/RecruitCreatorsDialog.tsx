@@ -1,17 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MessageSquare, Users, Filter, X } from "lucide-react";
+import { Search, MessageSquare, Users, Check, ArrowRight, X } from "lucide-react";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { useTheme } from "@/components/ThemeProvider";
+import { cn } from "@/lib/utils";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
@@ -20,6 +19,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
+
 interface DiscoverableCreator {
   id: string;
   username: string;
@@ -36,110 +36,127 @@ interface DiscoverableCreator {
     follower_count: number | null;
   }[];
 }
+
 interface RecruitCreatorsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   brandId: string;
   onStartConversation?: (creatorId: string, creatorName: string) => void;
 }
-const PLATFORMS = ['tiktok', 'instagram', 'youtube', 'x'] as const;
-const FOLLOWER_RANGES = [{
-  value: 'any',
-  label: 'Any followers'
-}, {
-  value: '1k',
-  label: '1K+'
-}, {
-  value: '10k',
-  label: '10K+'
-}, {
-  value: '50k',
-  label: '50K+'
-}, {
-  value: '100k',
-  label: '100K+'
-}, {
-  value: '500k',
-  label: '500K+'
-}, {
-  value: '1m',
-  label: '1M+'
-}];
-const COUNTRIES = ['United States', 'United Kingdom', 'Canada', 'India', 'Germany', 'France', 'Australia', 'Brazil', 'Pakistan', 'Indonesia'];
+
+const STEPS = [
+  { id: 1, label: "Niche" },
+  { id: 2, label: "Platform" },
+  { id: 3, label: "Followers" },
+  { id: 4, label: "Country" },
+  { id: 5, label: "Style" },
+  { id: 6, label: "Results" },
+];
+
+const NICHES = [
+  "Gaming", "Tech", "Lifestyle", "Fashion", "Beauty", "Fitness", "Food",
+  "Travel", "Music", "Education", "Finance", "Entertainment", "Sports",
+  "Health", "Comedy", "Vlog", "DIY", "Automotive", "Art", "Photography"
+];
+
+const PLATFORMS = [
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'youtube', label: 'YouTube' },
+  { id: 'x', label: 'X (Twitter)' },
+];
+
+const FOLLOWER_RANGES = [
+  { value: 'any', label: 'Any size', description: 'All creators' },
+  { value: '1k', label: '1K+', description: 'Nano influencers' },
+  { value: '10k', label: '10K+', description: 'Micro influencers' },
+  { value: '50k', label: '50K+', description: 'Mid-tier creators' },
+  { value: '100k', label: '100K+', description: 'Macro influencers' },
+  { value: '500k', label: '500K+', description: 'Top creators' },
+  { value: '1m', label: '1M+', description: 'Celebrity level' },
+];
+
+const COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
+  'France', 'Brazil', 'India', 'Indonesia', 'Mexico', 'Spain', 'Italy',
+  'Netherlands', 'Japan', 'South Korea', 'Philippines', 'Pakistan'
+];
+
+const CONTENT_STYLES = [
+  "Educational", "Entertainment", "Reviews", "Tutorials", "Vlogs",
+  "Comedy/Humor", "Lifestyle", "Behind-the-scenes", "Challenges",
+  "Storytelling", "ASMR", "Live Streams", "Shorts/Reels", "Long-form"
+];
+
 const getPlatformLogos = (isDark: boolean): Record<string, string> => ({
   tiktok: isDark ? tiktokLogoWhite : tiktokLogoBlack,
   instagram: isDark ? instagramLogoWhite : instagramLogoBlack,
   youtube: isDark ? youtubeLogoWhite : youtubeLogoBlack,
   x: isDark ? xLogoWhite : xLogoBlack
 });
+
 export function RecruitCreatorsDialog({
   open,
   onOpenChange,
   brandId,
   onStartConversation
 }: RecruitCreatorsDialogProps) {
-  const {
-    resolvedTheme
-  } = useTheme();
+  const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
+
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [selectedFollowerRange, setSelectedFollowerRange] = useState<string>('any');
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+
+  // Data state
   const [creators, setCreators] = useState<DiscoverableCreator[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Filters
-  const [platformFilter, setPlatformFilter] = useState<string>('all');
-  const [followerFilter, setFollowerFilter] = useState<string>('any');
-  const [countryFilter, setCountryFilter] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
   useEffect(() => {
     if (open) {
       checkSubscription();
+    } else {
+      // Reset wizard when dialog closes
+      setCurrentStep(1);
+      setSelectedNiches([]);
+      setSelectedPlatforms([]);
+      setSelectedFollowerRange('any');
+      setSelectedCountries([]);
+      setSelectedStyles([]);
+      setCreators([]);
     }
   }, [open, brandId]);
 
-  // Fetch creators when dialog opens or search/filters change
+  // Fetch creators when reaching results step
   useEffect(() => {
-    if (open && hasActivePlan) {
+    if (open && hasActivePlan && currentStep === 6) {
       fetchDiscoverableCreators();
     }
-  }, [open, hasActivePlan, debouncedSearch, platformFilter, followerFilter, countryFilter]);
+  }, [open, hasActivePlan, currentStep]);
+
   const checkSubscription = async () => {
-    const {
-      data
-    } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
+    const { data } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
     setHasActivePlan(data?.subscription_status === 'active');
   };
+
   const fetchDiscoverableCreators = async () => {
     setLoading(true);
     try {
-      // Build query with search and filters
       let query = supabase.from("profiles").select("id, username, full_name, avatar_url, bio, city, country, content_niches").eq("onboarding_completed", true);
 
-      // Apply search filter at database level - use * for wildcards in or() filter strings
-      if (debouncedSearch) {
-        query = query.or(`username.ilike.*${debouncedSearch}*,full_name.ilike.*${debouncedSearch}*,bio.ilike.*${debouncedSearch}*`);
+      // Apply country filter
+      if (selectedCountries.length > 0) {
+        query = query.in('country', selectedCountries);
       }
 
-      // Apply country filter
-      if (countryFilter !== 'all') {
-        query = query.eq('country', countryFilter);
-      }
-      const {
-        data: profiles,
-        error
-      } = await query.limit(100);
+      const { data: profiles, error } = await query.limit(100);
       if (error) throw error;
       if (!profiles || profiles.length === 0) {
         setCreators([]);
@@ -149,13 +166,13 @@ export function RecruitCreatorsDialog({
 
       // Fetch social accounts with platform filter
       let socialQuery = supabase.from("social_accounts").select("user_id, platform, username, account_link, follower_count").in("user_id", profiles.map(p => p.id)).eq("is_verified", true);
-      if (platformFilter !== 'all') {
-        socialQuery = socialQuery.eq('platform', platformFilter);
+
+      if (selectedPlatforms.length > 0) {
+        socialQuery = socialQuery.in('platform', selectedPlatforms);
       }
-      const {
-        data: socialAccounts
-      } = await socialQuery;
-      const creatorsWithSocial: DiscoverableCreator[] = profiles.map(profile => ({
+
+      const { data: socialAccounts } = await socialQuery;
+      let creatorsWithSocial: DiscoverableCreator[] = profiles.map(profile => ({
         ...profile,
         social_accounts: (socialAccounts || []).filter(sa => sa.user_id === profile.id).map(sa => ({
           platform: sa.platform,
@@ -165,286 +182,475 @@ export function RecruitCreatorsDialog({
         }))
       }));
 
-      // When searching, show all matching profiles; otherwise only those with social accounts
-      let filtered = debouncedSearch ? creatorsWithSocial : creatorsWithSocial.filter(c => c.social_accounts.length > 0);
-      if (followerFilter !== 'any' && !debouncedSearch) {
-        const minFollowers = getMinFollowers(followerFilter);
-        filtered = filtered.filter(c => {
+      // Filter by social accounts
+      creatorsWithSocial = creatorsWithSocial.filter(c => c.social_accounts.length > 0);
+
+      // Filter by niches
+      if (selectedNiches.length > 0) {
+        creatorsWithSocial = creatorsWithSocial.filter(c =>
+          c.content_niches?.some(niche => selectedNiches.includes(niche))
+        );
+      }
+
+      // Filter by follower count
+      if (selectedFollowerRange !== 'any') {
+        const minFollowers = getMinFollowers(selectedFollowerRange);
+        creatorsWithSocial = creatorsWithSocial.filter(c => {
           const maxFollowers = Math.max(...c.social_accounts.map(a => a.follower_count || 0), 0);
           return maxFollowers >= minFollowers;
         });
       }
-      setCreators(filtered);
+
+      setCreators(creatorsWithSocial);
     } catch (error) {
       console.error("Error fetching discoverable creators:", error);
     } finally {
       setLoading(false);
     }
   };
+
   const getMinFollowers = (range: string): number => {
     switch (range) {
-      case '1k':
-        return 1000;
-      case '10k':
-        return 10000;
-      case '50k':
-        return 50000;
-      case '100k':
-        return 100000;
-      case '500k':
-        return 500000;
-      case '1m':
-        return 1000000;
-      default:
-        return 0;
+      case '1k': return 1000;
+      case '10k': return 10000;
+      case '50k': return 50000;
+      case '100k': return 100000;
+      case '500k': return 500000;
+      case '1m': return 1000000;
+      default: return 0;
     }
   };
 
-  // Creators are now filtered at database level, just use the array directly
-  const filteredCreators = creators;
-  const hasActiveFilters = platformFilter !== 'all' || followerFilter !== 'any' || countryFilter !== 'all';
-  const clearFilters = () => {
-    setPlatformFilter('all');
-    setFollowerFilter('any');
-    setCountryFilter('all');
-  };
   const formatFollowerCount = (count: number | null) => {
     if (!count) return null;
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
     if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
     return count.toString();
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] p-0 gap-0 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-border/10">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold tracking-[-0.5px]">
-              Recruit Creators
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
-            Discover and reach out to creators for your campaigns
-          </p>
-          
-          {/* Search & Filters */}
-          {hasActivePlan && <div className="mt-4 space-y-3">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by name, niche, or username..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 h-10 bg-muted/30 border-0 font-inter tracking-[-0.5px]" />
+
+  const toggleSelection = (item: string, selected: string[], setSelected: (items: string[]) => void) => {
+    if (selected.includes(item)) {
+      setSelected(selected.filter(i => i !== item));
+    } else {
+      setSelected([...selected, item]);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep < 6) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (selectedNiches.length > 0) count++;
+    if (selectedPlatforms.length > 0) count++;
+    if (selectedFollowerRange !== 'any') count++;
+    if (selectedCountries.length > 0) count++;
+    if (selectedStyles.length > 0) count++;
+    return count;
+  };
+
+  // Subscription gate check
+  if (hasActivePlan === false) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-muted/80 flex items-center justify-center mb-5">
+              <img src={vpnKeyIcon} alt="Key" className="h-8 w-8" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2 tracking-[-0.5px]">
+              Upgrade to Access
+            </h3>
+            <p className="text-sm text-muted-foreground mb-5 font-inter tracking-[-0.5px]">
+              Subscribe to browse and message creators for your campaigns
+            </p>
+            <button
+              onClick={() => setSubscriptionGateOpen(true)}
+              className="py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
+            >
+              <img src={vpnKeyIcon} alt="" className="h-4 w-4" />
+              Upgrade Plan
+            </button>
+          </div>
+          <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[600px] w-[95vw] max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col">
+        {/* Stepper Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border/50">
+          <div className="flex items-center justify-between">
+            {STEPS.map((step, index) => (
+              <div key={step.id} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={cn(
+                    "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all",
+                    currentStep > step.id
+                      ? "bg-primary text-primary-foreground"
+                      : currentStep === step.id
+                        ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                        : "bg-muted text-muted-foreground"
+                  )}>
+                    {currentStep > step.id ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      step.id
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-[9px] mt-1 font-medium font-inter tracking-[-0.3px]",
+                    currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                  )}>
+                    {step.label}
+                  </span>
                 </div>
-                <Button variant={showFilters ? "secondary" : "outline"} size="icon" className="h-10 w-10 shrink-0" onClick={() => setShowFilters(!showFilters)}>
-                  <Filter className="h-4 w-4" />
+                {index < STEPS.length - 1 && (
+                  <div className={cn(
+                    "flex-1 h-0.5 mx-1.5 transition-colors",
+                    currentStep > step.id ? "bg-primary" : "bg-muted"
+                  )} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Step 1: Niche Selection */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">What niches are you looking for?</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Select one or more content categories</p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {NICHES.map((niche) => (
+                  <button
+                    key={niche}
+                    type="button"
+                    onClick={() => toggleSelection(niche, selectedNiches, setSelectedNiches)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-sm font-medium transition-all border",
+                      selectedNiches.includes(niche)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border hover:bg-muted/50"
+                    )}
+                  >
+                    {niche}
+                  </button>
+                ))}
+              </div>
+              {selectedNiches.length > 0 && (
+                <p className="text-center text-xs text-muted-foreground">
+                  {selectedNiches.length} selected
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Platform Selection */}
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Which platforms?</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Select the platforms you want creators on</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                {PLATFORMS.map((platform) => (
+                  <button
+                    key={platform.id}
+                    type="button"
+                    onClick={() => toggleSelection(platform.id, selectedPlatforms, setSelectedPlatforms)}
+                    className={cn(
+                      "p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                      selectedPlatforms.includes(platform.id)
+                        ? "border-primary bg-primary/5"
+                        : "border-border/50 hover:border-border hover:bg-muted/30"
+                    )}
+                  >
+                    <img src={PLATFORM_LOGOS[platform.id]} alt={platform.label} className="h-6 w-6 object-contain" />
+                    <span className="font-medium text-sm">{platform.label}</span>
+                    {selectedPlatforms.includes(platform.id) && (
+                      <Check className="h-4 w-4 text-primary ml-auto" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Follower Range */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Minimum follower count?</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Choose the creator size that fits your needs</p>
+              </div>
+              <div className="space-y-2 max-w-sm mx-auto">
+                {FOLLOWER_RANGES.map((range) => (
+                  <button
+                    key={range.value}
+                    type="button"
+                    onClick={() => setSelectedFollowerRange(range.value)}
+                    className={cn(
+                      "w-full p-3 rounded-xl border-2 text-left transition-all flex items-center justify-between",
+                      selectedFollowerRange === range.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border/50 hover:border-border hover:bg-muted/30"
+                    )}
+                  >
+                    <div>
+                      <p className="font-medium text-sm">{range.label}</p>
+                      <p className="text-xs text-muted-foreground">{range.description}</p>
+                    </div>
+                    <div className={cn(
+                      "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                      selectedFollowerRange === range.value
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground/40"
+                    )}>
+                      {selectedFollowerRange === range.value && (
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Country Selection */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Target countries?</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">Select where your target audience is (optional)</p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {COUNTRIES.map((country) => (
+                  <button
+                    key={country}
+                    type="button"
+                    onClick={() => toggleSelection(country, selectedCountries, setSelectedCountries)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                      selectedCountries.includes(country)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border hover:bg-muted/50"
+                    )}
+                  >
+                    {country}
+                  </button>
+                ))}
+              </div>
+              {selectedCountries.length > 0 && (
+                <p className="text-center text-xs text-muted-foreground">
+                  {selectedCountries.length} selected
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 5: Content Style */}
+          {currentStep === 5 && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Content style preferences?</h3>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">What type of content works best for you (optional)</p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {CONTENT_STYLES.map((style) => (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => toggleSelection(style, selectedStyles, setSelectedStyles)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all border",
+                      selectedStyles.includes(style)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/30 text-muted-foreground border-border/50 hover:border-border hover:bg-muted/50"
+                    )}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+              {selectedStyles.length > 0 && (
+                <p className="text-center text-xs text-muted-foreground">
+                  {selectedStyles.length} selected
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 6: Results */}
+          {currentStep === 6 && (
+            <div className="space-y-4">
+              {/* Filter Summary */}
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">
+                    {loading ? 'Searching...' : `${creators.length} creators found`}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {getActiveFiltersCount()} filters applied
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setCurrentStep(1)}>
+                  Modify Filters
                 </Button>
               </div>
 
-              {/* Filter Row */}
-              {showFilters && <div className="flex flex-wrap gap-2 items-center">
-                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                    <SelectTrigger className="w-[130px] h-9 text-xs bg-muted/30 border-0">
-                      <SelectValue placeholder="Platform" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Platforms</SelectItem>
-                      {PLATFORMS.map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={followerFilter} onValueChange={setFollowerFilter}>
-                    <SelectTrigger className="w-[120px] h-9 text-xs bg-muted/30 border-0">
-                      <SelectValue placeholder="Followers" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FOLLOWER_RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={countryFilter} onValueChange={setCountryFilter}>
-                    <SelectTrigger className="w-[140px] h-9 text-xs bg-muted/30 border-0">
-                      <SelectValue placeholder="Country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Countries</SelectItem>
-                      {COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-
-                  {hasActiveFilters && <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={clearFilters}>
-                      <X className="h-3 w-3 mr-1" />
-                      Clear
-                    </Button>}
-                </div>}
-            </div>}
-        </div>
-
-        {/* Content */}
-        <ScrollArea className="flex-1 h-full">
-          <div className="p-0">
-            {/* Subscription Gate */}
-            {hasActivePlan === false && <div className="relative">
-                {/* Blurred Preview */}
-                <div className="p-6 blur-sm pointer-events-none select-none">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[...Array(6)].map((_, i) => <div key={i} className="rounded-xl border border-border/50 bg-card/30 p-5">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="h-4 w-20 bg-muted rounded" />
-                          <div className="flex gap-2">
-                            <div className="h-5 w-5 bg-muted rounded" />
-                            <div className="h-5 w-5 bg-muted rounded" />
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3 mb-4">
-                          <div className="h-12 w-12 bg-muted rounded-full" />
-                          <div className="flex-1">
-                            <div className="h-5 w-28 bg-muted rounded mb-1.5" />
-                            <div className="h-3 w-36 bg-muted rounded" />
-                          </div>
-                        </div>
-                        <div className="h-12 w-full bg-muted rounded mb-4" />
-                        <div className="h-9 w-full bg-muted rounded-full" />
-                      </div>)}
-                  </div>
-                </div>
-
-                {/* Upgrade Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-                  <div className="text-center p-8 max-w-sm">
-                    <div className="w-16 h-16 rounded-2xl bg-muted/80 flex items-center justify-center mx-auto mb-5">
-                      <img src={vpnKeyIcon} alt="Key" className="h-8 w-8" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 tracking-[-0.5px]">
-                      Upgrade to Access
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-5 font-inter tracking-[-0.5px]">
-                      Subscribe to browse and message creators for your campaigns
-                    </p>
-                    <button 
-                      onClick={() => setSubscriptionGateOpen(true)} 
-                      className="mx-auto py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
-                    >
-                      <img src={vpnKeyIcon} alt="" className="h-4 w-4" />
-                      Upgrade Plan
-                    </button>
-                  </div>
-                </div>
-              </div>}
-
-            {/* Loading State */}
-            {hasActivePlan && loading && <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[...Array(6)].map((_, i) => <div key={i} className="rounded-xl border border-border/50 bg-card/30 p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <Skeleton className="h-4 w-20 rounded-full" />
-                        <div className="flex gap-2">
-                          <Skeleton className="h-5 w-5 rounded" />
-                          <Skeleton className="h-5 w-5 rounded" />
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 mb-4">
-                        <Skeleton className="h-12 w-12 rounded-full" />
+              {/* Loading */}
+              {loading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="rounded-xl border border-border/50 bg-card/30 p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <Skeleton className="h-10 w-10 rounded-full" />
                         <div className="flex-1">
-                          <Skeleton className="h-5 w-28 mb-1.5 rounded" />
-                          <Skeleton className="h-3 w-36 rounded" />
+                          <Skeleton className="h-4 w-24 mb-1.5" />
+                          <Skeleton className="h-3 w-32" />
                         </div>
                       </div>
-                      <Skeleton className="h-12 w-full mb-4 rounded" />
-                      <div className="flex gap-2 mb-4">
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                        <Skeleton className="h-6 w-20 rounded-full" />
-                      </div>
-                      <Skeleton className="h-9 w-full rounded-full" />
-                    </div>)}
+                      <Skeleton className="h-8 w-full rounded-full" />
+                    </div>
+                  ))}
                 </div>
-              </div>}
+              )}
 
-            {/* Empty State */}
-            {hasActivePlan && !loading && filteredCreators.length === 0 && <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
-                  <Users className="h-8 w-8 text-muted-foreground/60" />
+              {/* Empty State */}
+              {!loading && creators.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                    <Users className="h-7 w-7 text-muted-foreground/60" />
+                  </div>
+                  <h3 className="font-semibold text-sm mb-1">No creators found</h3>
+                  <p className="text-xs text-muted-foreground max-w-[240px] mb-4">
+                    Try adjusting your filters to find more creators
+                  </p>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentStep(1)}>
+                    Modify Filters
+                  </Button>
                 </div>
-                <h3 className="font-semibold text-base mb-2">No creators found</h3>
-                <p className="text-sm text-muted-foreground max-w-[280px] font-inter tracking-[-0.5px]">
-                  {searchQuery || hasActiveFilters ? "Try adjusting your search or filters" : "No verified creators are available yet"}
-                </p>
-                {hasActiveFilters && <Button variant="outline" size="sm" className="mt-4" onClick={clearFilters}>
-                    Clear Filters
-                  </Button>}
-              </div>}
+              )}
 
-            {/* Creator Grid */}
-            {hasActivePlan && !loading && filteredCreators.length > 0 && <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredCreators.map(creator => <div key={creator.id} className="rounded-xl border border-border/50 bg-card/30 hover:bg-muted/30 transition-all duration-200 overflow-hidden">
-                      {/* Status & Platforms Row */}
-                      <div className="px-5 pt-4 flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                          Active now
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {creator.social_accounts.slice(0, 3).map(account => <a key={`${account.platform}-${account.username}`} href={account.account_link || "#"} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                              <img src={PLATFORM_LOGOS[account.platform]} alt={account.platform} className="h-4 w-4 object-contain" />
-                            </a>)}
-                        </div>
-                      </div>
-
-                      {/* Creator Info */}
-                      <div className="px-5 py-4">
+              {/* Results Grid */}
+              {!loading && creators.length > 0 && (
+                <ScrollArea className="h-[350px]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-2">
+                    {creators.map(creator => (
+                      <div key={creator.id} className="rounded-xl border border-border/50 bg-card/30 hover:bg-muted/30 transition-all p-4">
                         <div className="flex items-start gap-3 mb-3">
-                          <Avatar className="h-12 w-12 ring-1 ring-border">
+                          <Avatar className="h-10 w-10 ring-1 ring-border">
                             <AvatarImage src={creator.avatar_url || undefined} />
-                            <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                            <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                               {creator.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm truncate">
-                              {creator.full_name || creator.username}
-                            </h4>
-                            <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-sm truncate">
+                                {creator.full_name || creator.username}
+                              </h4>
+                              <div className="flex items-center gap-1">
+                                {creator.social_accounts.slice(0, 2).map(account => (
+                                  <img key={account.platform} src={PLATFORM_LOGOS[account.platform]} alt={account.platform} className="h-3 w-3 object-contain opacity-60" />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
                               {[creator.city, creator.country].filter(Boolean).join(" • ") || `@${creator.username}`}
                             </p>
                           </div>
                         </div>
 
-                        {/* Bio */}
-                        {creator.bio && <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3 font-inter tracking-[-0.5px]">
-                            {creator.bio}
-                          </p>}
-
-                        {/* Niches/Tags */}
-                        {creator.content_niches && creator.content_niches.length > 0 && <div className="flex flex-wrap gap-1.5 mb-4">
-                            {creator.content_niches.slice(0, 2).map(niche => <Badge key={niche} variant="secondary" className="text-[10px] px-2.5 py-0.5 rounded-full bg-muted/50 text-foreground font-inter tracking-[-0.5px]">
+                        {/* Niches */}
+                        {creator.content_niches && creator.content_niches.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {creator.content_niches.slice(0, 2).map(niche => (
+                              <Badge key={niche} variant="secondary" className="text-[10px] px-2 py-0 rounded-full bg-muted/50">
                                 {niche}
-                              </Badge>)}
-                          </div>}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
 
-                        {/* Follower Count Summary */}
-                        {creator.social_accounts.some(a => a.follower_count) && <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                            {creator.social_accounts.filter(a => a.follower_count).slice(0, 2).map(account => <span key={account.platform} className="flex items-center gap-1">
-                                  <img src={PLATFORM_LOGOS[account.platform]} alt={account.platform} className="h-3 w-3 object-contain" />
-                                  {formatFollowerCount(account.follower_count)}
-                                </span>)}
-                          </div>}
+                        {/* Follower counts */}
+                        {creator.social_accounts.some(a => a.follower_count) && (
+                          <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
+                            {creator.social_accounts.filter(a => a.follower_count).slice(0, 2).map(account => (
+                              <span key={account.platform} className="flex items-center gap-1">
+                                <img src={PLATFORM_LOGOS[account.platform]} alt={account.platform} className="h-3 w-3 object-contain" />
+                                {formatFollowerCount(account.follower_count)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
-                        {/* CTA Button */}
-                        <Button size="sm" className="w-full h-9 rounded-full text-xs font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90" onClick={() => {
-                    if (onStartConversation) {
-                      onStartConversation(creator.id, creator.full_name || creator.username);
-                      onOpenChange(false);
-                    }
-                  }}>
-                          <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                          Send Message
+                        <Button
+                          size="sm"
+                          className="w-full h-8 rounded-full text-xs bg-foreground text-background hover:bg-foreground/90"
+                          onClick={() => {
+                            if (onStartConversation) {
+                              onStartConversation(creator.id, creator.full_name || creator.username);
+                              onOpenChange(false);
+                            }
+                          }}
+                        >
+                          <MessageSquare className="h-3 w-3 mr-1.5" />
+                          Message
                         </Button>
                       </div>
-                    </div>)}
-                </div>
-              </div>}
-          </div>
-        </ScrollArea>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 flex items-center justify-between bg-background border-t border-border/50">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={currentStep === 1 ? () => onOpenChange(false) : handleBack}
+            className="font-inter tracking-[-0.5px]"
+          >
+            {currentStep === 1 ? "Cancel" : "Back"}
+          </Button>
+
+          {currentStep < 6 && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleNext}
+              className="min-w-[100px] gap-2 font-inter tracking-[-0.5px]"
+            >
+              {currentStep === 5 ? 'Find Creators' : 'Continue'}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       </DialogContent>
-      
+
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
-    </Dialog>;
+    </Dialog>
+  );
 }
