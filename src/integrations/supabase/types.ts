@@ -4321,7 +4321,7 @@ export type Database = {
       discord_ticket_config: {
         Row: {
           auto_close_hours: number | null
-          brand_id: string
+          brand_id: string | null
           created_at: string
           guild_id: string
           id: string
@@ -4336,7 +4336,7 @@ export type Database = {
         }
         Insert: {
           auto_close_hours?: number | null
-          brand_id: string
+          brand_id?: string | null
           created_at?: string
           guild_id: string
           id?: string
@@ -4351,7 +4351,7 @@ export type Database = {
         }
         Update: {
           auto_close_hours?: number | null
-          brand_id?: string
+          brand_id?: string | null
           created_at?: string
           guild_id?: string
           id?: string
@@ -4368,7 +4368,7 @@ export type Database = {
           {
             foreignKeyName: "discord_ticket_config_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
