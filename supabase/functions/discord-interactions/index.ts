@@ -386,7 +386,7 @@ async function handleBalanceCommand(supabase: any, discordId: string) {
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -413,7 +413,7 @@ async function handleBalanceCommand(supabase: any, discordId: string) {
     {
       label: "View Wallet",
       style: ButtonStyle.LINK,
-      url: `${SITE_URL}/dashboard/wallet`,
+      url: `${SITE_URL}/dashboard?tab=wallet`,
       emoji: "💳",
     },
     {
@@ -448,7 +448,7 @@ async function handleCampaignsCommand(supabase: any, discordId: string, page = 0
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -515,7 +515,7 @@ async function handleCampaignsCommand(supabase: any, discordId: string, page = 0
       {
         label: "Discover Campaigns",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/campaigns`,
+        url: `${SITE_URL}/dashboard?tab=campaigns`,
         emoji: "🔍",
       },
     ]);
@@ -582,7 +582,7 @@ async function handleCampaignsCommand(supabase: any, discordId: string, page = 0
     {
       label: "View All",
       style: ButtonStyle.LINK,
-      url: `${SITE_URL}/dashboard/campaigns`,
+      url: `${SITE_URL}/dashboard?tab=campaigns`,
       emoji: "🌐",
     },
     {
@@ -611,7 +611,7 @@ async function handleStatsCommand(supabase: any, discordId: string, period = "al
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -750,13 +750,13 @@ async function handleLinkCommand(discordId: string) {
     {
       label: "Open Settings",
       style: ButtonStyle.LINK,
-      url: `${SITE_URL}/dashboard/settings`,
+      url: `${SITE_URL}/dashboard?tab=settings`,
       emoji: "⚙️",
     },
     {
       label: "Create Account",
       style: ButtonStyle.LINK,
-      url: `${SITE_URL}/signup`,
+      url: `${SITE_URL}/auth`,
       emoji: "✨",
     },
   ]);
@@ -915,7 +915,7 @@ async function handleSubmitCommand(supabase: any, discordId: string) {
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -949,7 +949,7 @@ async function handleSubmitCommand(supabase: any, discordId: string) {
       {
         label: "Discover Campaigns",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/campaigns`,
+        url: `${SITE_URL}/dashboard?tab=campaigns`,
         emoji: "🔍",
       },
     ]);
@@ -1022,7 +1022,7 @@ async function handleTicketCommand(supabase: any, discordId: string, options: an
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -1089,7 +1089,7 @@ async function handleWithdrawCommand(supabase: any, discordId: string) {
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -1112,7 +1112,7 @@ async function handleWithdrawCommand(supabase: any, discordId: string) {
       {
         label: "View Campaigns",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/campaigns`,
+        url: `${SITE_URL}/dashboard?tab=campaigns`,
         emoji: "📋",
       },
     ]);
@@ -1150,7 +1150,7 @@ async function handleWithdrawCommand(supabase: any, discordId: string) {
     {
       label: "Manage Payout Methods",
       style: ButtonStyle.LINK,
-      url: `${SITE_URL}/dashboard/wallet`,
+      url: `${SITE_URL}/dashboard?tab=wallet`,
       emoji: "⚙️",
     },
   ]);
@@ -1188,7 +1188,7 @@ async function handleProfileCommand(supabase: any, discordId: string, targetUser
       {
         label: "Link Account",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/settings`,
+        url: `${SITE_URL}/dashboard?tab=settings`,
         emoji: "🔗",
       },
     ]);
@@ -1239,13 +1239,13 @@ async function handleProfileCommand(supabase: any, discordId: string, targetUser
     {
       label: "View Full Profile",
       style: ButtonStyle.LINK,
-      url: `${SITE_URL}/creators/${user.username}`,
+      url: `${SITE_URL}/${user.username}`,
       emoji: "🌐",
     },
     ...(isOwnProfile ? [{
       label: "Edit Profile",
       style: ButtonStyle.SECONDARY,
-      url: `${SITE_URL}/dashboard/settings`,
+      url: `${SITE_URL}/dashboard?tab=settings`,
       emoji: "✏️",
     }] : []),
   ]);
@@ -1542,7 +1542,7 @@ async function handleCreateTicketButton(supabase: any, interaction: any) {
             type: ComponentType.BUTTON,
             style: ButtonStyle.LINK,
             label: "View on Web",
-            url: `${SITE_URL}/support/tickets/${ticket.id}`,
+            url: `${SITE_URL}/support`,
             emoji: { name: "🌐" },
           },
         ],
@@ -1733,7 +1733,7 @@ async function handleModalSubmit(supabase: any, interaction: any) {
       {
         label: "View Submissions",
         style: ButtonStyle.LINK,
-        url: `${SITE_URL}/dashboard/submissions`,
+        url: `${SITE_URL}/dashboard?tab=campaigns`,
         emoji: "📋",
       },
       {
@@ -1874,7 +1874,7 @@ async function handleComponentInteraction(supabase: any, interaction: any) {
           {
             label: "Continue Withdrawal",
             style: ButtonStyle.LINK,
-            url: `${SITE_URL}/dashboard/wallet?method=${method}`,
+            url: `${SITE_URL}/dashboard?tab=wallet`,
             emoji: method === "crypto" ? "💳" : "🏦",
           },
         ]);
