@@ -21,22 +21,63 @@ if (!DISCORD_BOT_TOKEN) {
   process.exit(1);
 }
 
+// Command option types
+const OptionType = {
+  SUB_COMMAND: 1,
+  SUB_COMMAND_GROUP: 2,
+  STRING: 3,
+  INTEGER: 4,
+  BOOLEAN: 5,
+  USER: 6,
+  CHANNEL: 7,
+  ROLE: 8,
+  MENTIONABLE: 9,
+  NUMBER: 10,
+  ATTACHMENT: 11,
+};
+
 const commands = [
   {
     name: "balance",
-    description: "View your current wallet balance",
+    description: "View your wallet balance and earnings",
   },
   {
     name: "campaigns",
-    description: "List your active campaigns",
+    description: "Browse your campaigns",
+    options: [
+      {
+        name: "status",
+        description: "Filter by campaign status",
+        type: OptionType.STRING,
+        required: false,
+        choices: [
+          { name: "Active", value: "active" },
+          { name: "Completed", value: "completed" },
+          { name: "All", value: "all" },
+        ],
+      },
+    ],
   },
   {
     name: "stats",
-    description: "View your creator statistics",
+    description: "View your performance statistics",
+    options: [
+      {
+        name: "period",
+        description: "Time period to show stats for",
+        type: OptionType.STRING,
+        required: false,
+        choices: [
+          { name: "Last 7 Days", value: "7d" },
+          { name: "Last 30 Days", value: "30d" },
+          { name: "All Time", value: "all" },
+        ],
+      },
+    ],
   },
   {
     name: "link",
-    description: "Get instructions to link your Virality account",
+    description: "Link your Virality account to Discord",
   },
   {
     name: "leaderboard",
@@ -44,7 +85,7 @@ const commands = [
   },
   {
     name: "submit",
-    description: "Submit a video to a campaign",
+    description: "Submit content to a campaign",
   },
   {
     name: "ticket",
@@ -53,14 +94,53 @@ const commands = [
       {
         name: "subject",
         description: "Brief subject of your issue",
-        type: 3, // STRING
+        type: OptionType.STRING,
         required: true,
       },
       {
         name: "description",
         description: "Detailed description of your issue",
-        type: 3, // STRING
+        type: OptionType.STRING,
         required: true,
+      },
+    ],
+  },
+  {
+    name: "withdraw",
+    description: "Request a payout from your balance",
+  },
+  {
+    name: "profile",
+    description: "View your or another user's profile",
+    options: [
+      {
+        name: "user",
+        description: "User to view (leave empty for your own profile)",
+        type: OptionType.USER,
+        required: false,
+      },
+    ],
+  },
+  {
+    name: "help",
+    description: "Get help with bot commands",
+    options: [
+      {
+        name: "command",
+        description: "Get help for a specific command",
+        type: OptionType.STRING,
+        required: false,
+        choices: [
+          { name: "balance", value: "balance" },
+          { name: "campaigns", value: "campaigns" },
+          { name: "stats", value: "stats" },
+          { name: "submit", value: "submit" },
+          { name: "withdraw", value: "withdraw" },
+          { name: "profile", value: "profile" },
+          { name: "leaderboard", value: "leaderboard" },
+          { name: "link", value: "link" },
+          { name: "ticket", value: "ticket" },
+        ],
       },
     ],
   },
