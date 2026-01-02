@@ -151,7 +151,8 @@ export default function CampaignJoin() {
         .single();
 
       if (error) throw error;
-      setBlueprint(data as Blueprint);
+      // Map database blueprint to local Blueprint interface
+      setBlueprint(data as unknown as Blueprint);
     } catch (error) {
       console.error("Error loading blueprint:", error);
       setBlueprint(null);

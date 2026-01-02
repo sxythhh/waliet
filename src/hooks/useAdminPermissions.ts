@@ -12,6 +12,7 @@ export const ADMIN_RESOURCES = [
   { id: "resources", name: "Resources", description: "Templates, blog posts, courses" },
   { id: "permissions", name: "Permissions", description: "Manage admin permissions" },
   { id: "reports", name: "Reports", description: "View reports and disputes" },
+  { id: "finance", name: "Finance", description: "Financial overview and transactions" },
 ] as const;
 
 export type AdminResource = typeof ADMIN_RESOURCES[number]["id"];

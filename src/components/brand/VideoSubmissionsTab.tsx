@@ -279,8 +279,8 @@ export function VideoSubmissionsTab({
         .eq("is_active", true)
         .single();
 
-      if (data?.rule_config?.threshold) {
-        setMinimumViewsThreshold(parseInt(data.rule_config.threshold, 10));
+      if (data?.rule_config && typeof data.rule_config === 'object' && 'threshold' in data.rule_config) {
+        setMinimumViewsThreshold(parseInt(String((data.rule_config as { threshold: unknown }).threshold), 10));
       }
     };
 
