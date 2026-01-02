@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
 
@@ -31,6 +30,12 @@ const Colors = {
   INFO: 0x5865F2,       // Blurple
 };
 
+function hexToUint8Array(hex: string): Uint8Array {
+  const matches = hex.match(/.{1,2}/g);
+  if (!matches) return new Uint8Array();
+  return new Uint8Array(matches.map((byte) => parseInt(byte, 16)));
+}
+
 // Verify Discord signature using tweetnacl
 async function verifyDiscordSignature(
   request: Request,
@@ -39,6 +44,11 @@ async function verifyDiscordSignature(
   const signature = request.headers.get("x-signature-ed25519");
   const timestamp = request.headers.get("x-signature-timestamp");
   const body = await request.text();
+
+  console.log("Verifying signature...");
+  console.log("Has signature header:", !!signature);
+  console.log("Has timestamp header:", !!timestamp);
+  console.log("Public key length:", publicKey?.length);
 
   if (!signature || !timestamp) {
     console.log("Missing signature or timestamp headers");
@@ -52,17 +62,12 @@ async function verifyDiscordSignature(
       hexToUint8Array(publicKey)
     );
 
+    console.log("Signature valid:", isValid);
     return { valid: isValid, body };
   } catch (error) {
     console.error("Signature verification error:", error);
     return { valid: false, body };
   }
-}
-
-function hexToUint8Array(hex: string): Uint8Array {
-  const matches = hex.match(/.{1,2}/g);
-  if (!matches) return new Uint8Array();
-  return new Uint8Array(matches.map((byte) => parseInt(byte, 16)));
 }
 
 // Response helpers
@@ -504,7 +509,7 @@ async function handleModalSubmit(supabase: any, interaction: any) {
 }
 
 // Main handler
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, {
