@@ -1,6 +1,6 @@
-import { Connection, PublicKey, Keypair } from 'https://esm.sh/@solana/web3.js@1.95.4';
-import { getAssociatedTokenAddress, getAccount } from 'https://esm.sh/@solana/spl-token@0.4.9';
-import { decode as bs58Decode } from 'https://esm.sh/bs58@6.0.0';
+import { Connection, PublicKey, Keypair } from 'https://esm.sh/@solana/web3.js@1.98.0';
+import { getAssociatedTokenAddress, getAccount } from 'https://esm.sh/@solana/spl-token@0.4.9?deps=@solana/web3.js@1.98.0';
+import bs58 from 'https://esm.sh/bs58@6.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const connection = new Connection(rpcUrl, 'confirmed');
 
     // Load treasury keypair (only to get public key)
-    const treasurySecretKey = bs58Decode(treasuryPrivateKey);
+    const treasurySecretKey = bs58.decode(treasuryPrivateKey);
     const treasuryKeypair = Keypair.fromSecretKey(treasurySecretKey);
     const treasuryPubkey = treasuryKeypair.publicKey;
 
