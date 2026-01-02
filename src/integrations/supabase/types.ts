@@ -681,6 +681,7 @@ export type Database = {
       }
       bounty_applications: {
         Row: {
+          application_answers: Json | null
           application_text: string | null
           applied_at: string
           bounty_campaign_id: string
@@ -694,6 +695,7 @@ export type Database = {
           video_url: string
         }
         Insert: {
+          application_answers?: Json | null
           application_text?: string | null
           applied_at?: string
           bounty_campaign_id: string
@@ -707,6 +709,7 @@ export type Database = {
           video_url: string
         }
         Update: {
+          application_answers?: Json | null
           application_text?: string | null
           applied_at?: string
           bounty_campaign_id?: string

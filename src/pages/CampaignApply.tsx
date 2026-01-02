@@ -30,6 +30,8 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
+import { ApplicationQuestionsRenderer, validateApplicationAnswers } from "@/components/ApplicationQuestionsRenderer";
+import { ApplicationAnswer, parseApplicationQuestions } from "@/types/applicationQuestions";
 interface Blueprint {
   id: string;
   title: string;
@@ -128,9 +130,7 @@ export default function CampaignApply() {
   const [loading, setLoading] = useState(true);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
-  const [answers, setAnswers] = useState<{
-    [key: string]: string;
-  }>({});
+  const [answers, setAnswers] = useState<Record<string, ApplicationAnswer>>({});
   const [submitting, setSubmitting] = useState(false);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -379,11 +379,11 @@ export default function CampaignApply() {
       toast.error("Please sign in to join campaigns");
       return;
     }
-    const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
-    if (campaign.requires_application !== false && questions.length > 0) {
-      const unansweredQuestions = questions.filter((_, idx) => !answers[idx]?.trim());
-      if (unansweredQuestions.length > 0) {
-        toast.error("Please answer all application questions");
+    const parsedQuestions = parseApplicationQuestions(campaign.application_questions);
+    if (campaign.requires_application !== false && parsedQuestions.length > 0) {
+      const validation = validateApplicationAnswers(campaign.application_questions, answers);
+      if (!validation.valid) {
+        toast.error(`Please answer required questions: ${validation.missingRequired.join(', ')}`);
         return;
       }
     }
@@ -404,10 +404,8 @@ export default function CampaignApply() {
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
         if (existingPlatforms.has(account.platform)) continue;
-        const formattedAnswers = campaign.application_questions?.map((question: string, index: number) => ({
-          question,
-          answer: answers[index] || ""
-        })) || [];
+        // Store answers in new format
+        const answersToStore = Object.keys(answers).length > 0 ? answers : null;
         const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
         const {
           error: submissionError
@@ -417,7 +415,7 @@ export default function CampaignApply() {
           platform: account.platform,
           content_url: contentUrl,
           status: submissionStatus,
-          application_answers: formattedAnswers
+          application_answers: answersToStore as any
         });
         if (submissionError) throw submissionError;
         const {
@@ -696,7 +694,7 @@ export default function CampaignApply() {
       setShowMobileApplySheet(true);
     }
   };
-  const questions = campaign ? Array.isArray(campaign.application_questions) ? campaign.application_questions : [] : [];
+  const questions = parseApplicationQuestions(campaign?.application_questions);
   const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
   const isEnded = status === "ended";
   return <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
@@ -1205,18 +1203,17 @@ export default function CampaignApply() {
                   </div>
 
                   {/* Application Questions */}
-                  {questions.length > 0 && campaign?.requires_application !== false && <div className="space-y-4">
+                  {questions.length > 0 && campaign?.requires_application !== false && (
+                    <div className="space-y-4">
                       <div className="h-px bg-border" />
-                      {questions.map((question: string, idx: number) => <div key={idx} className="space-y-2">
-                          <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
-                            {question} <span className="text-destructive">*</span>
-                          </Label>
-                          <Textarea value={answers[idx] || ""} onChange={e => setAnswers(prev => ({
-                    ...prev,
-                    [idx]: e.target.value
-                  }))} placeholder="Your answer..." className="min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]" />
-                        </div>)}
-                    </div>}
+                      <ApplicationQuestionsRenderer
+                        questions={campaign?.application_questions}
+                        answers={answers}
+                        onChange={setAnswers}
+                        campaignId={campaign?.id}
+                      />
+                    </div>
+                  )}
 
                   {/* Submit Button */}
                   <div className="pt-2">
@@ -1331,19 +1328,12 @@ export default function CampaignApply() {
               {questions.length > 0 && campaign?.requires_application !== false && (
                 <div className="space-y-4">
                   <div className="h-px bg-border" />
-                  {questions.map((question: string, idx: number) => (
-                    <div key={idx} className="space-y-2">
-                      <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
-                        {question} <span className="text-destructive">*</span>
-                      </Label>
-                      <Textarea
-                        value={answers[idx] || ""}
-                        onChange={e => setAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
-                        placeholder="Your answer..."
-                        className="min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]"
-                      />
-                    </div>
-                  ))}
+                  <ApplicationQuestionsRenderer
+                    questions={campaign?.application_questions}
+                    answers={answers}
+                    onChange={setAnswers}
+                    campaignId={campaign?.id}
+                  />
                 </div>
               )}
 

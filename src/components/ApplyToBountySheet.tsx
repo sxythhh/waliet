@@ -155,6 +155,13 @@ export function ApplyToBountySheet({
       return;
     }
 
+    // Validate required application questions
+    const validation = validateApplicationAnswers(bounty?.application_questions, questionAnswers);
+    if (!validation.valid) {
+      toast.error(`Please answer required questions: ${validation.missingRequired.join(', ')}`);
+      return;
+    }
+
     // Basic URL validation if URL is provided
     if (videoUrl.trim()) {
       try {
@@ -208,6 +215,9 @@ export function ApplyToBountySheet({
       // Check if boost is full - if so, add to waitlist
       const applicationStatus = isFull ? 'waitlisted' : 'pending';
 
+      // Prepare application answers for storage
+      const answersToStore = Object.keys(questionAnswers).length > 0 ? questionAnswers : null;
+
       const {
         error
       } = await supabase.from('bounty_applications').insert({
@@ -215,8 +225,9 @@ export function ApplyToBountySheet({
         user_id: session.user.id,
         video_url: finalVideoUrl,
         application_text: applicationText.trim() || null,
+        application_answers: answersToStore as any,
         status: applicationStatus
-      });
+      } as any);
       if (error) throw error;
       toast.success(isFull ? "You've been added to the waitlist!" : "Application submitted successfully!");
       onSuccess();
@@ -225,6 +236,7 @@ export function ApplyToBountySheet({
       // Reset form
       setVideoUrl("");
       setApplicationText("");
+      setQuestionAnswers({});
       removeUploadedVideo();
     } catch (error: any) {
       console.error("Error submitting application:", error);
