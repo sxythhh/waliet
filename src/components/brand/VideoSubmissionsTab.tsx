@@ -30,6 +30,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import flagIcon from "@/assets/flag-icon.svg";
 import { DemographicScoreIndicator } from "./DemographicScoreIndicator";
+import { VideoPreview } from "@/components/ui/VideoPreview";
 
 // Helper to extract platform video ID from URL
 const extractPlatformVideoId = (url: string, platform: string): string | null => {
@@ -84,6 +85,7 @@ interface UnifiedVideo {
   is_flagged: boolean | null;
   video_description: string | null;
   video_thumbnail_url: string | null;
+  video_playback_url: string | null;
   video_author_username: string | null;
   video_author_avatar: string | null;
   video_title: string | null;
@@ -91,6 +93,7 @@ interface UnifiedVideo {
   likes: number | null;
   comments: number | null;
   shares: number | null;
+  bot_score: number | null;
   // Source tracking
   source: "submitted" | "tracked";
   // Tracked video specific fields
@@ -288,6 +291,7 @@ export function VideoSubmissionsTab({
         is_flagged: v.is_flagged,
         video_description: v.video_description,
         video_thumbnail_url: v.video_thumbnail_url,
+        video_playback_url: (v as any).video_playback_url || null,
         video_author_username: v.video_author_username,
         video_author_avatar: v.video_author_avatar,
         video_title: v.video_title,
@@ -295,6 +299,7 @@ export function VideoSubmissionsTab({
         likes: v.likes,
         comments: v.comments,
         shares: v.shares,
+        bot_score: (v as any).bot_score || null,
         // Use the source field from database, default to 'submitted' for legacy records
         source: (v.source === "tracked" ? "tracked" : "submitted") as "submitted" | "tracked",
         uploaded_at: v.video_upload_date
@@ -397,6 +402,7 @@ export function VideoSubmissionsTab({
         is_flagged: null,
         video_description: v.caption || v.description,
         video_thumbnail_url: v.thumbnail_url,
+        video_playback_url: null, // Tracked videos don't have playback URLs cached
         video_author_username: v.username,
         video_author_avatar: null,
         video_title: v.title,
@@ -404,6 +410,7 @@ export function VideoSubmissionsTab({
         likes: v.likes,
         comments: v.comments,
         shares: v.shares,
+        bot_score: null, // Tracked videos don't have bot scores yet
         source: "tracked" as const,
         estimatedPayout: v.user_id ? (v.views || 0) / 1000 * rpmRate : 0,
         weeklyViews: 0,
@@ -1613,29 +1620,22 @@ export function VideoSubmissionsTab({
                               video.status === "approved" && "opacity-60"
                             )}
                           >
-                            {/* Thumbnail */}
-                            {thumbnailUrl ? (
-                              <img
-                                src={thumbnailUrl}
-                                alt=""
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                                <Video className="h-8 w-8 text-muted-foreground/30" />
-                              </div>
-                            )}
+                            {/* Video Preview with hover-to-play */}
+                            <VideoPreview
+                              thumbnailUrl={thumbnailUrl}
+                              videoUrl={video.video_playback_url}
+                              originalUrl={video.video_url}
+                              platform={video.platform as "tiktok" | "instagram" | "youtube"}
+                              fill
+                              showMuteButton={false}
+                            />
 
-                            {/* Gradient overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                            {/* Gradient overlay - pointer-events-none to allow video hover */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
                             {/* Status indicator */}
                             <div className={cn(
-                              "absolute top-2 left-2 h-2 w-2 rounded-full",
+                              "absolute top-2 left-2 h-2 w-2 rounded-full pointer-events-none",
                               video.status === "pending" && "bg-yellow-500",
                               video.status === "approved" && "bg-green-500",
                               video.status === "rejected" && "bg-red-500",
@@ -1643,30 +1643,42 @@ export function VideoSubmissionsTab({
                             )} />
 
                             {/* Platform badge */}
-                            <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                            <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center pointer-events-none">
                               <img src={getPlatformLogo(video.platform)} alt="" className="h-3 w-3" />
                             </div>
 
+                            {/* Bot score indicator */}
+                            {video.bot_score !== null && video.bot_score > 0 && (
+                              <div className={cn(
+                                "absolute top-2 right-9 px-1.5 py-0.5 rounded text-[9px] font-bold backdrop-blur-sm pointer-events-none",
+                                video.bot_score >= 60 && "bg-red-500/80 text-white",
+                                video.bot_score >= 30 && video.bot_score < 60 && "bg-yellow-500/80 text-black",
+                                video.bot_score < 30 && "bg-green-500/80 text-white"
+                              )}>
+                                {video.bot_score.toFixed(0)}%
+                              </div>
+                            )}
+
                             {/* Views */}
-                            <div className="absolute bottom-12 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm">
+                            <div className="absolute bottom-12 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm pointer-events-none">
                               <span className="text-[10px] font-medium text-white">{formatNumber(video.views)} views</span>
                             </div>
 
                             {/* Payout */}
-                            <div className="absolute bottom-12 right-2 px-1.5 py-0.5 rounded bg-green-500/80 backdrop-blur-sm">
+                            <div className="absolute bottom-12 right-2 px-1.5 py-0.5 rounded bg-green-500/80 backdrop-blur-sm pointer-events-none">
                               <span className="text-[10px] font-bold text-white">${getPayoutForSubmission(video).toFixed(0)}</span>
                             </div>
 
                             {/* Bottom info */}
-                            <div className="absolute bottom-0 left-0 right-0 p-2">
+                            <div className="absolute bottom-0 left-0 right-0 p-2 pointer-events-none">
                               <p className="text-[11px] font-medium text-white truncate">
                                 @{video.video_author_username || "Unknown"}
                               </p>
                             </div>
 
-                            {/* Focus indicator with action buttons */}
+                            {/* Focus indicator with action buttons - keeps pointer events for buttons */}
                             {isFocused && video.status === "pending" && (
-                              <div className="absolute inset-x-0 bottom-8 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                              <div className="absolute inset-x-0 bottom-8 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200 z-10">
                                 <Button
                                   size="sm"
                                   className="h-8 px-3 text-xs gap-1 bg-green-600 hover:bg-green-700 text-white shadow-lg"
@@ -1694,12 +1706,12 @@ export function VideoSubmissionsTab({
 
                             {/* Approved/Rejected overlay */}
                             {video.status === "approved" && (
-                              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center pointer-events-none">
                                 <Check className="h-8 w-8 text-green-500" />
                               </div>
                             )}
                             {video.status === "rejected" && (
-                              <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                              <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                 <X className="h-8 w-8 text-red-500" />
                               </div>
                             )}
@@ -1736,19 +1748,15 @@ export function VideoSubmissionsTab({
                       <div className="flex gap-3 p-3">
                         {/* Thumbnail with overlay */}
                         <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb">
-                          {(() => {
-                        const thumbnailUrl = video.source === "tracked" ? getTrackedThumbnailUrl(video) || video.video_thumbnail_url : video.video_thumbnail_url;
-                        return thumbnailUrl ? <img src={thumbnailUrl} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105" onError={e => {
-                          const target = e.target as HTMLImageElement;
-                          if (video.video_thumbnail_url && target.src !== video.video_thumbnail_url) {
-                            target.src = video.video_thumbnail_url;
-                          } else {
-                            target.style.display = 'none';
-                          }
-                        }} /> : <div className="w-full h-full flex items-center justify-center bg-muted/50">
-                                <Video className="h-5 w-5 text-muted-foreground/50" />
-                              </div>;
-                      })()}
+                          {/* Video Preview with hover-to-play */}
+                          <VideoPreview
+                            thumbnailUrl={video.source === "tracked" ? getTrackedThumbnailUrl(video) || video.video_thumbnail_url : video.video_thumbnail_url}
+                            videoUrl={video.video_playback_url}
+                            originalUrl={video.video_url}
+                            platform={video.platform as "tiktok" | "instagram" | "youtube"}
+                            fill
+                            showMuteButton={false}
+                          />
                           {/* Platform badge - bottom left */}
                           <div className="absolute bottom-1.5 left-1.5 h-5 w-5 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
                             <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />

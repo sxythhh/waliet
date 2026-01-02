@@ -212,6 +212,44 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 5.5 Run ML-based bot scoring
+    let avgBotScore = 0;
+    let botScoringFlags: string[] = [];
+    try {
+      const botScoringResponse = await fetch(`${supabaseUrl}/functions/v1/calculate-bot-score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({ payoutRequestId }),
+      });
+
+      if (botScoringResponse.ok) {
+        const botResult = await botScoringResponse.json();
+        avgBotScore = botResult.summary?.avg_score || 0;
+
+        // Add high-risk bot scores as flags
+        if (avgBotScore >= 60) {
+          flags.push({
+            type: 'engagement' as const,
+            reason: `High bot score detected: ${avgBotScore.toFixed(1)}/100`,
+            detectedValue: avgBotScore,
+            thresholdValue: 60,
+          });
+        }
+
+        // Collect unique flags from bot scoring
+        botScoringFlags = [...new Set(
+          (botResult.scores || []).flatMap((s: any) => s.flags || [])
+        )];
+
+        console.log('Bot scoring completed', { avgBotScore, flagCount: botScoringFlags.length });
+      }
+    } catch (botError) {
+      console.error('Bot scoring failed (non-blocking):', botError);
+    }
+
     // 6. Determine auto-approval
     const trustScore = creator.trust_score || 0;
     const { data: successfulPayouts } = await supabase
@@ -242,6 +280,10 @@ Deno.serve(async (req) => {
         successfulPayoutCount,
       },
       fraudSensitivity,
+      botScoring: {
+        avgScore: avgBotScore,
+        flags: botScoringFlags,
+      },
       checkedAt: new Date().toISOString(),
     };
 

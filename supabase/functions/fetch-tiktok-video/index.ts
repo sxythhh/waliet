@@ -115,11 +115,23 @@ Deno.serve(async (req) => {
       ? new Date(parseInt(item.createTime) * 1000).toISOString()
       : null;
 
+    // Extract video playback URL (watermark-free when available)
+    // Priority: downloadAddr (no watermark) > playAddr > bitrateInfo
+    let videoPlaybackUrl: string | null = null;
+    if (video?.downloadAddr) {
+      videoPlaybackUrl = video.downloadAddr;
+    } else if (video?.playAddr) {
+      videoPlaybackUrl = video.playAddr;
+    } else if (video?.bitrateInfo?.[0]?.PlayAddr?.UrlList?.[0]) {
+      videoPlaybackUrl = video.bitrateInfo[0].PlayAddr.UrlList[0];
+    }
+
     // Extract the relevant data
     const videoDetails = {
       videoId: item.id,
       description: item.desc || '',
       coverUrl: video?.cover || video?.originCover || null,
+      videoUrl: videoPlaybackUrl,
       authorUsername: author?.uniqueId || null,
       authorNickname: author?.nickname || null,
       authorAvatar: author?.avatarMedium || author?.avatarThumb || null,

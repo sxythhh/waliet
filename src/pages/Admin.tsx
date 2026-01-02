@@ -24,7 +24,7 @@ import {
 const OverviewContent = lazy(() => import("./admin/Overview"));
 const UsersContent = lazy(() => import("./admin/Users"));
 const BrandsContent = lazy(() => import("./admin/Brands"));
-const PayoutsContent = lazy(() => import("./admin/Payouts"));
+const FinanceContent = lazy(() => import("./admin/Finance"));
 const ResourcesContent = lazy(() => import("./admin/Resources"));
 const FeedbackContent = lazy(() => import("./admin/Feedback"));
 const TicketsContent = lazy(() => import("./admin/Tickets"));
@@ -187,7 +187,7 @@ export default function Admin() {
 
           <TabsContent value="finance" className="m-0 h-full">
             <Suspense fallback={<TabLoader />}>
-              <PayoutsContent />
+              <FinanceContent />
             </Suspense>
           </TabsContent>
 

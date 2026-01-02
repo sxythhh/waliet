@@ -765,6 +765,62 @@ export function CreateCampaignDialog({
               <span className="text-sm font-medium">Preview</span>
             </div>
 
+            {/* Campaign Summary Card */}
+            <div className="rounded-xl border border-white/10 bg-[#0a0a0a] p-4 mb-6">
+              <h4 className="text-sm font-medium text-white/60 mb-4">Campaign Summary</h4>
+              <div className="space-y-3">
+                {/* Budget */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/40">Budget</span>
+                  <span className="text-sm font-semibold text-white font-['Geist']">
+                    {form.watch("is_infinite_budget") ? "∞ Unlimited" : form.watch("budget") ? `$${Number(form.watch("budget")).toLocaleString()}` : "—"}
+                  </span>
+                </div>
+                {/* RPM Rate */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/40">RPM Rate</span>
+                  <span className="text-sm font-semibold text-white font-['Geist']">
+                    {form.watch("rpm_rate") ? `$${Number(form.watch("rpm_rate")).toFixed(2)}` : "—"}
+                  </span>
+                </div>
+                {/* Platforms */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/40">Platforms</span>
+                  <span className="text-sm font-medium text-white">
+                    {form.watch("allowed_platforms")?.length || 0} selected
+                  </span>
+                </div>
+                {/* Divider */}
+                <div className="border-t border-white/10 my-2" />
+                {/* Estimated Views */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/40">Est. Views</span>
+                  <span className="text-sm font-bold text-primary font-['Geist']">
+                    {(() => {
+                      const budget = Number(form.watch("budget")) || 0;
+                      const rpm = Number(form.watch("rpm_rate")) || 0;
+                      const isInfinite = form.watch("is_infinite_budget");
+                      if (isInfinite) return "∞";
+                      if (!budget || !rpm) return "—";
+                      const views = (budget / rpm) * 1000;
+                      if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
+                      if (views >= 1000) return `${(views / 1000).toFixed(0)}K`;
+                      return views.toFixed(0);
+                    })()}
+                  </span>
+                </div>
+                {/* Cost per View */}
+                {!form.watch("is_infinite_budget") && form.watch("budget") && form.watch("rpm_rate") && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white/40">Cost per View</span>
+                    <span className="text-xs font-medium text-white/60 font-['Geist']">
+                      ${(Number(form.watch("rpm_rate")) / 1000).toFixed(4)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Campaign Preview Card */}
             <div className="rounded-xl overflow-hidden bg-[#111111]">
               {/* Banner */}

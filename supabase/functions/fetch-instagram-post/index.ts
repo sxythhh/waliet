@@ -85,12 +85,19 @@ Deno.serve(async (req) => {
     const likesCount = data.edge_media_preview_like?.count || 0;
     const commentsCount = data.edge_media_to_parent_comment?.count || 0;
 
+    // Extract video playback URL for reels/videos
+    let videoPlaybackUrl: string | null = null;
+    if (data.is_video) {
+      videoPlaybackUrl = data.video_url || null;
+    }
+
     // Extract the relevant data
     const postDetails = {
       postId: data.id,
       shortcode: data.shortcode,
       description: caption,
       coverUrl: data.thumbnail_src || data.display_url || null,
+      videoUrl: videoPlaybackUrl,
       authorUsername: data.owner?.username || null,
       authorFullName: data.owner?.full_name || null,
       authorAvatar: data.owner?.profile_pic_url || null,

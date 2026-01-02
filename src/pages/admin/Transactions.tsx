@@ -30,6 +30,8 @@ interface Transaction {
   avatar_url?: string;
   campaign_name?: string;
   campaign_logo_url?: string;
+  campaign_budget?: number;
+  campaign_budget_used?: number;
 }
 
 const ITEMS_PER_PAGE = 25;
@@ -166,20 +168,26 @@ export default function Transactions() {
       }
 
       const campaignIds = allTransactions?.filter(tx => tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata).map(tx => (tx.metadata as any).campaign_id) || [];
-      let campaignsMap: Record<string, { title: string; brand_logo_url?: string }> = {};
+      let campaignsMap: Record<string, { title: string; brand_logo_url?: string; budget?: number; budget_used?: number }> = {};
       if (campaignIds.length > 0) {
         const { data: campaignData } = await supabase
           .from("campaigns")
-          .select("id, title, brand_logo_url")
+          .select("id, title, brand_logo_url, budget, budget_used")
           .in("id", campaignIds);
         campaignsMap = campaignData?.reduce((acc, camp) => ({
           ...acc,
-          [camp.id]: { title: camp.title, brand_logo_url: camp.brand_logo_url }
+          [camp.id]: {
+            title: camp.title,
+            brand_logo_url: camp.brand_logo_url,
+            budget: camp.budget,
+            budget_used: camp.budget_used
+          }
         }), {}) || {};
       }
 
       const formattedTransactions = allTransactions?.map((tx: any) => {
         const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as any).campaign_id : undefined;
+        const campaign = campaignId ? campaignsMap[campaignId] : undefined;
         return {
           id: tx.id,
           user_id: tx.user_id,
@@ -192,8 +200,10 @@ export default function Transactions() {
           username: profilesMap[tx.user_id]?.username,
           email: profilesMap[tx.user_id]?.email,
           avatar_url: profilesMap[tx.user_id]?.avatar_url,
-          campaign_name: campaignId ? campaignsMap[campaignId]?.title : undefined,
-          campaign_logo_url: campaignId ? campaignsMap[campaignId]?.brand_logo_url : undefined
+          campaign_name: campaign?.title,
+          campaign_logo_url: campaign?.brand_logo_url,
+          campaign_budget: campaign?.budget,
+          campaign_budget_used: campaign?.budget_used
         };
       }) || [];
 
@@ -620,9 +630,27 @@ export default function Transactions() {
                           </div>
                         )}
                         {tx.campaign_name && (
-                          <div className="flex items-center gap-2">
-                            {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt="" className="h-4 w-4 rounded object-cover" />}
-                            <span className="text-sm text-white/50 font-inter truncate">{tx.campaign_name}</span>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              {tx.campaign_logo_url && <OptimizedImage src={tx.campaign_logo_url} alt="" className="h-4 w-4 rounded object-cover" />}
+                              <span className="text-sm text-white/50 font-inter truncate">{tx.campaign_name}</span>
+                            </div>
+                            {tx.campaign_budget !== undefined && tx.campaign_budget > 0 && tx.type === 'earning' && (
+                              <div className="flex items-center gap-1 text-[11px] bg-white/[0.03] rounded px-2 py-1">
+                                <span className="text-white/30 font-inter">Budget:</span>
+                                <span className="text-white/40 font-mono">
+                                  ${Math.max(0, (tx.campaign_budget_used || 0) - tx.amount).toFixed(0)}
+                                </span>
+                                <span className="text-white/20">→</span>
+                                <span className="text-white/60 font-mono">
+                                  ${(tx.campaign_budget_used || 0).toFixed(0)}
+                                </span>
+                                <span className="text-white/20">/</span>
+                                <span className="text-white/40 font-mono">
+                                  ${tx.campaign_budget.toFixed(0)}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         )}
                         {tx.type === "withdrawal" && tx.metadata?.payout_method && (

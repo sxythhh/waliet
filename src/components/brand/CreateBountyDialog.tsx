@@ -973,31 +973,60 @@ export function CreateBountyDialog({
                 </div>
               </div>
 
-              <div className="rounded-xl bg-muted/20 p-5">
-                <div className="flex items-center gap-2 mb-4">
+              {/* Boost Summary Card */}
+              <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border/50 flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">Summary</span>
+                  <span className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">Boost Summary</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                  <div className="p-3 rounded-lg bg-background">
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Retainer</p>
-                    <p className="text-sm font-semibold font-geist tracking-[-0.5px]">${formData.monthly_retainer || '0'}/mo</p>
+                <div className="p-4">
+                  {/* Key Metrics Grid */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="p-3 rounded-lg bg-muted/30">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Retainer</p>
+                      <p className="text-sm font-semibold font-geist tracking-[-0.5px]">${formData.monthly_retainer || '0'}/mo</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/30">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos</p>
+                      <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.videos_per_month || '0'}/mo</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/30">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Creators</p>
+                      <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.max_accepted_creators || '0'} max</p>
+                    </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-background">
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos</p>
-                    <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.videos_per_month || '0'}/mo</p>
+
+                  {/* Secondary Info */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="p-3 rounded-lg bg-muted/30">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</p>
+                      <p className="text-sm font-semibold font-geist tracking-[-0.5px] truncate">{selectedBlueprint?.title || 'None'}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/30">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Questions</p>
+                      <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.application_questions.length} question{formData.application_questions.length !== 1 ? 's' : ''}</p>
+                    </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-background">
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Creators</p>
-                    <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.max_accepted_creators || '0'} max</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-background">
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</p>
-                    <p className="text-sm font-semibold font-geist tracking-[-0.5px] truncate">{selectedBlueprint?.title || 'None'}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-background">
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Questions</p>
-                    <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.application_questions.length}</p>
+
+                  {/* Divider */}
+                  <div className="h-px bg-border/50 my-3" />
+
+                  {/* Budget Calculation */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video rate</span>
+                      <span className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">
+                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0
+                          ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)
+                          : '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Total monthly budget</span>
+                      <span className="text-base font-bold text-primary font-geist tracking-[-0.5px]">
+                        ${((parseFloat(formData.monthly_retainer) || 0) * (parseInt(formData.max_accepted_creators) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
