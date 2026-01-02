@@ -167,6 +167,8 @@ export function VideoSubmissionsTab({
   const [sortBy, setSortBy] = useState<"date" | "views" | "payout">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected" | "flagged">("all");
   const [filterSource, setFilterSource] = useState<"all" | "submitted" | "tracked">("all");
+  const [filterMinViews, setFilterMinViews] = useState<"all" | "met" | "not_met">("all");
+  const [minimumViewsThreshold, setMinimumViewsThreshold] = useState<number | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table" | "grid">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
@@ -263,6 +265,27 @@ export function VideoSubmissionsTab({
       }
     }
   }, [entityId, brandId]);
+
+  // Fetch minimum views threshold from auto_rejection_rules
+  useEffect(() => {
+    const fetchMinViewsThreshold = async () => {
+      if (!brandId) return;
+
+      const { data } = await supabase
+        .from("auto_rejection_rules")
+        .select("rule_config")
+        .eq("brand_id", brandId)
+        .eq("rule_type", "minimum_views")
+        .eq("is_active", true)
+        .single();
+
+      if (data?.rule_config?.threshold) {
+        setMinimumViewsThreshold(parseInt(data.rule_config.threshold, 10));
+      }
+    };
+
+    fetchMinViewsThreshold();
+  }, [brandId]);
   const fetchSubmissions = async () => {
     if (!entityId) return;
     setLoading(true);
@@ -986,6 +1009,14 @@ export function VideoSubmissionsTab({
     } else if (filterStatus !== "all") {
       filteredVids = filteredVids.filter(v => v.status === filterStatus);
     }
+    // Filter by minimum views threshold
+    if (filterMinViews !== "all" && minimumViewsThreshold !== null) {
+      if (filterMinViews === "met") {
+        filteredVids = filteredVids.filter(v => (v.views || 0) >= minimumViewsThreshold);
+      } else if (filterMinViews === "not_met") {
+        filteredVids = filteredVids.filter(v => (v.views || 0) < minimumViewsThreshold);
+      }
+    }
     if (selectedDateFilter) {
       filteredVids = filteredVids.filter(v => isSameDay(new Date(v.submitted_at), selectedDateFilter));
     } else if (dateRange?.from) {
@@ -1012,7 +1043,7 @@ export function VideoSubmissionsTab({
       }
       return 0;
     });
-  }, [allVideos, selectedCreator, filterSource, filterStatus, selectedDateFilter, dateRange, sortBy, rpmRate]);
+  }, [allVideos, selectedCreator, filterSource, filterStatus, filterMinViews, minimumViewsThreshold, selectedDateFilter, dateRange, sortBy, rpmRate]);
 
   // Handle keyboard navigation in grid view
   useEffect(() => {
@@ -1285,6 +1316,34 @@ export function VideoSubmissionsTab({
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Min Views Filter - only show if threshold is configured */}
+              {minimumViewsThreshold !== null && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 bg-muted/30 rounded-md px-2.5 py-1.5 text-xs tracking-[-0.5px] transition-colors">
+                      <span className={filterMinViews === "all" ? "text-muted-foreground" : "text-foreground"}>
+                        {filterMinViews === "all" ? `Min ${minimumViewsThreshold.toLocaleString()} Views` : filterMinViews === "met" ? "Met Threshold" : "Below Threshold"}
+                      </span>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="bg-background border border-border min-w-[140px]">
+                    {[{
+                    value: "all",
+                    label: `All (Min ${minimumViewsThreshold.toLocaleString()})`
+                  }, {
+                    value: "met",
+                    label: "Met Threshold"
+                  }, {
+                    value: "not_met",
+                    label: "Below Threshold"
+                  }].map(option => <DropdownMenuItem key={option.value} onClick={() => setFilterMinViews(option.value as typeof filterMinViews)} className={`text-xs tracking-[-0.5px] cursor-pointer ${filterMinViews === option.value ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}>
+                        {option.label}
+                      </DropdownMenuItem>)}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
               {/* Sort By Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1416,6 +1475,15 @@ export function VideoSubmissionsTab({
                 filteredVids = filteredVids.filter(v => v.is_flagged === true);
               } else if (filterStatus !== "all") {
                 filteredVids = filteredVids.filter(v => v.status === filterStatus);
+              }
+
+              // Apply minimum views filter
+              if (filterMinViews !== "all" && minimumViewsThreshold !== null) {
+                if (filterMinViews === "met") {
+                  filteredVids = filteredVids.filter(v => (v.views || 0) >= minimumViewsThreshold);
+                } else if (filterMinViews === "not_met") {
+                  filteredVids = filteredVids.filter(v => (v.views || 0) < minimumViewsThreshold);
+                }
               }
 
               // Apply date filter
@@ -1620,14 +1688,11 @@ export function VideoSubmissionsTab({
                               video.status === "approved" && "opacity-60"
                             )}
                           >
-                            {/* Video Preview with hover-to-play */}
+                            {/* Video Thumbnail */}
                             <VideoPreview
                               thumbnailUrl={thumbnailUrl}
-                              videoUrl={video.video_playback_url}
-                              originalUrl={video.video_url}
-                              platform={video.platform as "tiktok" | "instagram" | "youtube"}
                               fill
-                              showMuteButton={false}
+                              showPlayIcon={false}
                             />
 
                             {/* Gradient overlay - pointer-events-none to allow video hover */}
@@ -1748,14 +1813,11 @@ export function VideoSubmissionsTab({
                       <div className="flex gap-3 p-3">
                         {/* Thumbnail with overlay */}
                         <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb">
-                          {/* Video Preview with hover-to-play */}
+                          {/* Video Thumbnail */}
                           <VideoPreview
                             thumbnailUrl={video.source === "tracked" ? getTrackedThumbnailUrl(video) || video.video_thumbnail_url : video.video_thumbnail_url}
-                            videoUrl={video.video_playback_url}
-                            originalUrl={video.video_url}
-                            platform={video.platform as "tiktok" | "instagram" | "youtube"}
                             fill
-                            showMuteButton={false}
+                            showPlayIcon={false}
                           />
                           {/* Platform badge - bottom left */}
                           <div className="absolute bottom-1.5 left-1.5 h-5 w-5 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-sm">

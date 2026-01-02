@@ -11,8 +11,11 @@ import { Input } from "@/components/ui/input";
 import {
   DollarSign, Clock, CheckCircle2, XCircle, Wallet, TrendingUp,
   ChevronDown, ChevronUp, RotateCcw, Copy, Search, X, ArrowUpRight,
-  ArrowDownRight, Loader2, Calendar, CreditCard, AlertTriangle
+  ArrowDownRight, Loader2, Calendar, CreditCard, AlertTriangle,
+  Coins, ExternalLink
 } from "lucide-react";
+import { CryptoPayoutDialog } from "@/components/admin/CryptoPayoutDialog";
+import { useTreasuryBalance, formatUsdcBalance } from "@/hooks/useTreasuryBalance";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -36,6 +39,12 @@ interface PayoutRequest {
   rejection_reason: string | null;
   transaction_id: string | null;
   notes: string | null;
+  // Crypto payout fields
+  tx_signature: string | null;
+  tx_confirmed_at: string | null;
+  blockchain_network: string | null;
+  crypto_amount: number | null;
+  wallet_address: string | null;
   profiles: {
     username: string;
     full_name: string;
@@ -101,7 +110,10 @@ export default function AdminPayouts() {
   const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<PayoutRequest['profiles'] | null>(null);
+  const [cryptoPayoutDialogOpen, setCryptoPayoutDialogOpen] = useState(false);
+  const [selectedCryptoRequest, setSelectedCryptoRequest] = useState<PayoutRequest | null>(null);
   const { toast } = useToast();
+  const { usdcBalance, solBalance, treasuryAddress, loading: treasuryLoading } = useTreasuryBalance();
 
   useEffect(() => {
     fetchPayoutRequests();
@@ -262,6 +274,11 @@ export default function AdminPayouts() {
   const openPayoutDetails = (request: PayoutRequest) => {
     setSelectedRequest(request);
     setDetailsOpen(true);
+  };
+
+  const openCryptoPayoutDialog = (request: PayoutRequest) => {
+    setSelectedCryptoRequest(request);
+    setCryptoPayoutDialogOpen(true);
   };
 
   const openActionDialog = (request: PayoutRequest, actionType: 'approve' | 'reject' | 'complete' | 'revert') => {
@@ -454,7 +471,7 @@ export default function AdminPayouts() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-card/50 rounded-xl p-4 border border-border/50">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-muted-foreground font-inter">Total Processed</span>
@@ -509,6 +526,19 @@ export default function AdminPayouts() {
                   ${stats.avgPayoutAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </p>
                 <p className="text-xs text-muted-foreground font-inter">{stats.rejectedCount} rejected</p>
+              </div>
+
+              <div className="bg-card/50 rounded-xl p-4 border border-amber-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-inter">Treasury</span>
+                  <Coins className="h-4 w-4 text-amber-500" />
+                </div>
+                <p className="text-2xl font-bold font-inter tracking-[-0.5px] text-amber-500">
+                  {treasuryLoading ? "..." : formatUsdcBalance(usdcBalance)}
+                </p>
+                <p className="text-xs text-muted-foreground font-inter">
+                  USDC on Solana
+                </p>
               </div>
             </div>
           </div>
@@ -668,14 +698,26 @@ export default function AdminPayouts() {
                       <div className="col-span-2 flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         {request.status === 'pending' && (
                           <>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleCompleteDirectly(request)}
-                              className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                            </Button>
+                            {request.payout_method === 'crypto' ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openCryptoPayoutDialog(request)}
+                                className="h-8 px-2 gap-1 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+                              >
+                                <Coins className="h-4 w-4" />
+                                <span className="text-xs">USDC</span>
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleCompleteDirectly(request)}
+                                className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="ghost"
@@ -876,17 +918,57 @@ export default function AdminPayouts() {
                     )}
                   </div>
 
+                  {/* Transaction Signature (for crypto payouts) */}
+                  {selectedRequest.tx_signature && (
+                    <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-emerald-500">Transaction Confirmed</span>
+                        <a
+                          href={`https://solscan.io/tx/${selectedRequest.tx_signature}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-500 hover:text-emerald-400"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-xs bg-background p-2 rounded font-mono truncate">
+                          {selectedRequest.tx_signature}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 shrink-0"
+                          onClick={() => copyToClipboard(selectedRequest.tx_signature!)}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="flex gap-2 pt-4 border-t border-border/50">
                     {selectedRequest.status === 'pending' && (
                       <>
-                        <Button
-                          onClick={() => handleCompleteDirectly(selectedRequest)}
-                          className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Complete
-                        </Button>
+                        {selectedRequest.payout_method === 'crypto' ? (
+                          <Button
+                            onClick={() => openCryptoPayoutDialog(selectedRequest)}
+                            className="flex-1 gap-2 bg-amber-600 hover:bg-amber-700"
+                          >
+                            <Coins className="h-4 w-4" />
+                            Send USDC
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleCompleteDirectly(selectedRequest)}
+                            className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Complete
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           onClick={() => openActionDialog(selectedRequest, 'reject')}
@@ -1032,6 +1114,17 @@ export default function AdminPayouts() {
           onTransactionsOpenChange={setTransactionsOpen}
           paymentMethodsOpen={paymentMethodsOpen}
           onPaymentMethodsOpenChange={setPaymentMethodsOpen}
+        />
+
+        {/* Crypto Payout Dialog */}
+        <CryptoPayoutDialog
+          open={cryptoPayoutDialogOpen}
+          onOpenChange={setCryptoPayoutDialogOpen}
+          payoutRequest={selectedCryptoRequest}
+          onSuccess={() => {
+            fetchPayoutRequests();
+            setDetailsOpen(false);
+          }}
         />
       </div>
     </AdminPermissionGuard>

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import nacl from "https://esm.sh/tweetnacl@1.0.3";
 
 // Discord interaction types
 const InteractionType = {
@@ -30,7 +31,7 @@ const Colors = {
   INFO: 0x5865F2,       // Blurple
 };
 
-// Verify Discord signature
+// Verify Discord signature using tweetnacl
 async function verifyDiscordSignature(
   request: Request,
   publicKey: string
@@ -40,25 +41,15 @@ async function verifyDiscordSignature(
   const body = await request.text();
 
   if (!signature || !timestamp) {
+    console.log("Missing signature or timestamp headers");
     return { valid: false, body };
   }
 
   try {
-    const keyData = hexToUint8Array(publicKey);
-    const cryptoKey = await crypto.subtle.importKey(
-      "raw",
-      keyData.buffer as ArrayBuffer,
-      { name: "Ed25519", namedCurve: "Ed25519" },
-      false,
-      ["verify"]
-    );
-
-    const sigData = hexToUint8Array(signature);
-    const isValid = await crypto.subtle.verify(
-      "Ed25519",
-      cryptoKey,
-      sigData.buffer as ArrayBuffer,
-      new TextEncoder().encode(timestamp + body)
+    const isValid = nacl.sign.detached.verify(
+      new TextEncoder().encode(timestamp + body),
+      hexToUint8Array(signature),
+      hexToUint8Array(publicKey)
     );
 
     return { valid: isValid, body };
@@ -514,25 +505,43 @@ async function handleModalSubmit(supabase: any, interaction: any) {
 
 // Main handler
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, X-Signature-Ed25519, X-Signature-Timestamp",
+      },
+    });
+  }
+
   const DISCORD_PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY");
 
   if (!DISCORD_PUBLIC_KEY) {
-    console.error("DISCORD_PUBLIC_KEY is not set");
-    return jsonResponse({ error: "Server configuration error" }, 500);
+    console.error("DISCORD_PUBLIC_KEY is not set in environment variables");
+    return jsonResponse({ error: "Server configuration error - missing public key" }, 500);
   }
+
+  console.log("Received Discord interaction request");
 
   // Verify Discord signature
   const { valid, body } = await verifyDiscordSignature(req, DISCORD_PUBLIC_KEY);
 
   if (!valid) {
-    console.error("Invalid Discord signature");
+    console.error("Invalid Discord signature - verification failed");
     return jsonResponse({ error: "Invalid request signature" }, 401);
   }
 
-  const interaction = JSON.parse(body);
+  console.log("Signature verified successfully");
 
-  // Handle PING (Discord verification)
+  const interaction = JSON.parse(body);
+  console.log("Interaction type:", interaction.type);
+
+  // Handle PING (Discord verification) - this MUST be fast and simple
   if (interaction.type === InteractionType.PING) {
+    console.log("Responding to PING with PONG");
     return jsonResponse({ type: InteractionResponseType.PONG });
   }
 

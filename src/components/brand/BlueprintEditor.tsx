@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link as LinkIcon, Plus, Trash2, X, Upload, Video, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Users, Mic, Sparkles, GraduationCap } from "lucide-react";
+import { Link as LinkIcon, Plus, Trash2, X, Upload, Video, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Users, Mic, Sparkles, GraduationCap, HelpCircle } from "lucide-react";
 import playArrowIcon from "@/assets/play-arrow-icon.svg";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,11 @@ interface ExampleVideo {
   url: string;
   description: string;
 }
+interface FAQ {
+  question: string;
+  answer: string;
+}
+
 interface Blueprint {
   id: string;
   brand_id: string;
@@ -67,6 +72,7 @@ interface Blueprint {
   brand_voice: string | null;
   status: string;
   training_modules: TrainingModule[];
+  faqs: FAQ[];
 }
 interface Brand {
   id: string;
@@ -164,7 +170,8 @@ export function BlueprintEditor({
       hashtags: data.hashtags || [],
       example_videos: data.example_videos as ExampleVideo[] || [],
       talking_points: data.talking_points as string[] || [],
-      training_modules: data.training_modules as TrainingModule[] || []
+      training_modules: data.training_modules as TrainingModule[] || [],
+      faqs: data.faqs as FAQ[] || []
     });
 
     // Load saved section order if it exists
@@ -455,6 +462,21 @@ export function BlueprintEditor({
     });
   };
 
+  // FAQ functions
+  const addFAQ = () => {
+    const newFAQs = [...(blueprint?.faqs || []), { question: "", answer: "" }];
+    updateBlueprint({ faqs: newFAQs });
+  };
+  const updateFAQ = (index: number, field: keyof FAQ, value: string) => {
+    const newFAQs = [...(blueprint?.faqs || [])];
+    newFAQs[index] = { ...newFAQs[index], [field]: value };
+    updateBlueprint({ faqs: newFAQs });
+  };
+  const removeFAQ = (index: number) => {
+    const newFAQs = blueprint?.faqs.filter((_, i) => i !== index) || [];
+    updateBlueprint({ faqs: newFAQs });
+  };
+
   // Example video functions
   const addExampleVideo = () => {
     const newVideos = [...(blueprint?.example_videos || []), {
@@ -615,6 +637,13 @@ export function BlueprintEditor({
         } : {
           status: "unfilled"
         };
+      case "faqs":
+        return blueprint.faqs.length > 0 ? {
+          status: "filled",
+          count: blueprint.faqs.length
+        } : {
+          status: "unfilled"
+        };
       default:
         return {};
     }
@@ -630,7 +659,8 @@ export function BlueprintEditor({
       call_to_action: <MessageSquare className="h-4 w-4" />,
       assets: <Folder className="h-4 w-4" />,
       example_videos: <Video className="h-4 w-4" />,
-      training: <GraduationCap className="h-4 w-4" />
+      training: <GraduationCap className="h-4 w-4" />,
+      faqs: <HelpCircle className="h-4 w-4" />
     };
     return iconMap[sectionId];
   };
@@ -833,6 +863,43 @@ export function BlueprintEditor({
               modules={blueprint.training_modules}
               onChange={(modules) => updateBlueprint({ training_modules: modules })}
             />
+          </BlueprintSection>;
+      case "faqs":
+        return <BlueprintSection key="faqs" id="faqs" title="FAQs" icon={<HelpCircle className="h-4 w-4" />} status={getSectionStatus("faqs").status} statusCount={getSectionStatus("faqs").count} onRemove={() => toggleSection("faqs")}>
+            <div className="space-y-3">
+              {blueprint.faqs.length === 0 ? <div className="rounded-xl bg-muted/20 py-8 text-center">
+                  <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add frequently asked questions for creators</p>
+                </div> : blueprint.faqs.map((faq, index) => (
+                  <div key={`faq-${index}-${blueprint.id}`} className="rounded-xl bg-muted/20 p-4 space-y-3 group relative">
+                    <div className="space-y-2">
+                      <Input
+                        value={faq.question}
+                        onChange={e => updateFAQ(index, "question", e.target.value)}
+                        placeholder="Question"
+                        className="flex-1 h-10 rounded-xl bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm font-medium placeholder:text-muted-foreground/50 transition-colors"
+                      />
+                      <Textarea
+                        value={faq.answer}
+                        onChange={e => updateFAQ(index, "answer", e.target.value)}
+                        placeholder="Answer"
+                        className="min-h-[80px] resize-none rounded-xl bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFAQ(index)}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              <Button variant="ghost" size="sm" onClick={addFAQ} className="h-9 px-4 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 mt-1 transition-colors">
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Add FAQ
+              </Button>
+            </div>
           </BlueprintSection>;
       default:
         return null;

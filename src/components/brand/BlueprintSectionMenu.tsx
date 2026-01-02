@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic, MinusCircle, GraduationCap } from "lucide-react";
+import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic, MinusCircle, GraduationCap, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SectionType =
@@ -12,7 +12,8 @@ export type SectionType =
   | "call_to_action"
   | "assets"
   | "example_videos"
-  | "training";
+  | "training"
+  | "faqs";
 
 interface SectionDefinition {
   id: SectionType;
@@ -81,6 +82,12 @@ const ALL_SECTIONS: SectionDefinition[] = [
     title: "Creator Training",
     description: "Training modules for creators",
     icon: <GraduationCap className="h-4 w-4" />,
+  },
+  {
+    id: "faqs",
+    title: "FAQs",
+    description: "Frequently asked questions",
+    icon: <HelpCircle className="h-4 w-4" />,
   },
 ];
 

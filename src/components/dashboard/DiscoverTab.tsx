@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2 } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2, Loader2 } from "lucide-react";
 import videosIcon from "@/assets/videos-icon.svg";
 import personIcon from "@/assets/person-icon.svg";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
@@ -22,7 +22,6 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -560,56 +559,8 @@ export function DiscoverTab({
         {/* Scrollable Campaigns Section */}
         <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
-        {loading ? <div className="space-y-8">
-            {/* Boosts Section Skeleton */}
-            <div className="space-y-3">
-              <Skeleton className="h-6 w-20" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="rounded-xl border border-border/60 overflow-hidden">
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <div className="space-y-1.5">
-                        <Skeleton className="h-3.5 w-full" />
-                      </div>
-                      <Skeleton className="h-4 w-20" />
-                    </div>
-                    <div className="px-3 py-2 bg-muted/40 dark:bg-[#111111] border-t border-border/40 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="w-5 h-5 rounded-md" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                      <Skeleton className="h-3 w-14" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Campaigns Section Skeleton */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-9 w-20 rounded-full" />
-              </div>
-              <div className="flex gap-3 overflow-hidden">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[160px] flex flex-col gap-1.5">
-                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
-                      <Skeleton className="absolute inset-0 w-full h-full" />
-                    </div>
-                    <div className="flex flex-col gap-1 px-0.5">
-                      <Skeleton className="h-2.5 w-20" />
-                      <Skeleton className="h-1.5 w-full rounded-full" />
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Skeleton className="w-3.5 h-3.5 rounded-full" />
-                        <Skeleton className="h-2.5 w-12" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {loading ? <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
