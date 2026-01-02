@@ -775,6 +775,7 @@ export type Database = {
           brand_id: string
           budget: number | null
           budget_used: number | null
+          categories: string[] | null
           content_distribution: string | null
           content_style_requirements: string
           created_at: string
@@ -811,6 +812,7 @@ export type Database = {
           brand_id: string
           budget?: number | null
           budget_used?: number | null
+          categories?: string[] | null
           content_distribution?: string | null
           content_style_requirements: string
           created_at?: string
@@ -847,6 +849,7 @@ export type Database = {
           brand_id?: string
           budget?: number | null
           budget_used?: number | null
+          categories?: string[] | null
           content_distribution?: string | null
           content_style_requirements?: string
           created_at?: string
