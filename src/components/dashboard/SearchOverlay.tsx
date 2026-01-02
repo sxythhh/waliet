@@ -145,7 +145,7 @@ export function SearchOverlay({
                   onClick={() => onTypeFilter(type.id as 'all' | 'campaigns' | 'boosts')}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
                     activeTypeFilter === type.id
-                      ? 'bg-foreground text-background'
+                      ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
                       : 'bg-muted/50 hover:bg-muted text-foreground'
                   }`}
                 >
@@ -201,7 +201,7 @@ export function SearchOverlay({
                     onClick={() => onBrowseFilter(activeBrowseFilter === filter.id ? null : filter.id)}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
                       activeBrowseFilter === filter.id
-                        ? 'bg-foreground text-background'
+                        ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
                     }`}
                   >
