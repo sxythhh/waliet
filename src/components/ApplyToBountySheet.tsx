@@ -18,6 +18,8 @@ import alternateEmailIcon from "@/assets/alternate-email-icon.svg";
 import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 import fullscreenIconDark from "@/assets/fullscreen-icon-dark.svg";
 import { useTheme } from "@/components/ThemeProvider";
+import { ApplicationQuestionsRenderer, validateApplicationAnswers } from "@/components/ApplicationQuestionsRenderer";
+import { ApplicationAnswer, parseApplicationQuestions } from "@/types/applicationQuestions";
 interface BountyCampaign {
   id: string;
   title: string;
@@ -33,6 +35,7 @@ interface BountyCampaign {
   status: string;
   blueprint_id?: string | null;
   slug?: string | null;
+  application_questions?: any;
   brands?: {
     name: string;
     logo_url: string;
@@ -67,7 +70,10 @@ export function ApplyToBountySheet({
   const [showAddSocialDialog, setShowAddSocialDialog] = useState(false);
   const [showDiscordDialog, setShowDiscordDialog] = useState(false);
   const [blueprint, setBlueprint] = useState<any>(null);
+  const [questionAnswers, setQuestionAnswers] = useState<Record<string, ApplicationAnswer>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const questions = parseApplicationQuestions(bounty?.application_questions);
 
   // Check for connected accounts and fetch blueprint when sheet opens
   useEffect(() => {
@@ -328,6 +334,19 @@ export function ApplyToBountySheet({
                 </Label>
                 <Textarea id="application_text" value={applicationText} onChange={e => setApplicationText(e.target.value)} placeholder="Tell the brand why you'd be perfect for this boost..." className="bg-muted/50 border-0 text-foreground placeholder:text-muted-foreground min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]" />
               </div>
+
+              {/* Custom Application Questions */}
+              {questions.length > 0 && (
+                <div className="space-y-4 pt-2">
+                  <div className="h-px bg-border" />
+                  <ApplicationQuestionsRenderer
+                    questions={bounty?.application_questions}
+                    answers={questionAnswers}
+                    onChange={setQuestionAnswers}
+                    campaignId={bounty?.id}
+                  />
+                </div>
+              )}
 
               <div className="flex gap-3 fixed bottom-0 left-0 right-0 bg-background py-4 px-6 border-t border-border sm:left-auto sm:right-0 sm:w-full sm:max-w-xl">
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-['Inter'] tracking-[-0.5px]" disabled={submitting || isUploading}>
