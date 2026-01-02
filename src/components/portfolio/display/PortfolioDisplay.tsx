@@ -30,9 +30,12 @@ const SECTION_TITLES: Record<PortfolioSectionType, string> = {
 };
 
 export function PortfolioDisplay({ portfolio }: PortfolioDisplayProps) {
-  const sectionOrder = portfolio.section_order.length > 0
-    ? portfolio.section_order as PortfolioSectionType[]
-    : ["resume", "skills", "media", "platforms", "creator_info"];
+  const defaultOrder: PortfolioSectionType[] = ["resume", "skills", "media", "platforms", "creator_info"];
+  const sectionOrder: PortfolioSectionType[] = portfolio.section_order.length > 0
+    ? portfolio.section_order.filter((s): s is PortfolioSectionType => 
+        ["resume", "skills", "media", "platforms", "creator_info", "custom"].includes(s)
+      )
+    : defaultOrder;
 
   const renderSection = (sectionId: PortfolioSectionType) => {
     switch (sectionId) {

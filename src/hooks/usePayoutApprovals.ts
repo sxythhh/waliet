@@ -38,10 +38,10 @@ export function usePendingApprovals() {
             approve_count: votes?.filter(v => v.approval_id === approval.id && v.vote === "approve").length || 0,
             reject_count: votes?.filter(v => v.approval_id === approval.id && v.vote === "reject").length || 0,
           }
-        })) as PayoutApproval[];
+        })) as unknown as PayoutApproval[];
       }
 
-      return data as PayoutApproval[];
+      return data as unknown as PayoutApproval[];
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });
@@ -66,7 +66,7 @@ export function useApprovalAuditLog(approvalId?: string) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as PayoutAuditLog[];
+      return data as unknown as PayoutAuditLog[];
     },
     enabled: !!approvalId || true,
   });

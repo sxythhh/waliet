@@ -1640,6 +1640,7 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_step: number | null
           renewal_date: string | null
+          settings: Json | null
           shortimize_api_key: string | null
           show_account_tab: boolean
           slack_webhook_url: string | null
@@ -1704,6 +1705,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           renewal_date?: string | null
+          settings?: Json | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
           slack_webhook_url?: string | null
@@ -1768,6 +1770,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
           renewal_date?: string | null
+          settings?: Json | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
           slack_webhook_url?: string | null
@@ -3240,6 +3243,7 @@ export type Database = {
         Row: {
           boost_id: string | null
           brand_id: string
+          contract_url: string | null
           created_at: string
           creator_email: string
           creator_id: string | null
@@ -3248,6 +3252,7 @@ export type Database = {
           end_date: string | null
           id: string
           monthly_rate: number
+          sent_at: string | null
           signature_url: string | null
           signed_at: string | null
           start_date: string
@@ -3260,6 +3265,7 @@ export type Database = {
         Insert: {
           boost_id?: string | null
           brand_id: string
+          contract_url?: string | null
           created_at?: string
           creator_email: string
           creator_id?: string | null
@@ -3268,6 +3274,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           monthly_rate?: number
+          sent_at?: string | null
           signature_url?: string | null
           signed_at?: string | null
           start_date: string
@@ -3280,6 +3287,7 @@ export type Database = {
         Update: {
           boost_id?: string | null
           brand_id?: string
+          contract_url?: string | null
           created_at?: string
           creator_email?: string
           creator_id?: string | null
@@ -3288,6 +3296,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           monthly_rate?: number
+          sent_at?: string | null
           signature_url?: string | null
           signed_at?: string | null
           start_date?: string
@@ -3410,6 +3419,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creator_portfolios: {
+        Row: {
+          availability: string | null
+          certifications: Json | null
+          content_niches: string[] | null
+          created_at: string | null
+          custom_sections: Json | null
+          education: Json | null
+          equipment: string[] | null
+          featured_videos: Json | null
+          id: string
+          is_public: boolean | null
+          languages: string[] | null
+          platforms: Json | null
+          rate_range: Json | null
+          section_order: string[] | null
+          showcase_items: Json | null
+          skills: string[] | null
+          updated_at: string | null
+          user_id: string
+          work_experience: Json | null
+        }
+        Insert: {
+          availability?: string | null
+          certifications?: Json | null
+          content_niches?: string[] | null
+          created_at?: string | null
+          custom_sections?: Json | null
+          education?: Json | null
+          equipment?: string[] | null
+          featured_videos?: Json | null
+          id?: string
+          is_public?: boolean | null
+          languages?: string[] | null
+          platforms?: Json | null
+          rate_range?: Json | null
+          section_order?: string[] | null
+          showcase_items?: Json | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          work_experience?: Json | null
+        }
+        Update: {
+          availability?: string | null
+          certifications?: Json | null
+          content_niches?: string[] | null
+          created_at?: string | null
+          custom_sections?: Json | null
+          education?: Json | null
+          equipment?: string[] | null
+          featured_videos?: Json | null
+          id?: string
+          is_public?: boolean | null
+          languages?: string[] | null
+          platforms?: Json | null
+          rate_range?: Json | null
+          section_order?: string[] | null
+          showcase_items?: Json | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          work_experience?: Json | null
+        }
+        Relationships: []
       }
       creator_reliability_scores: {
         Row: {
@@ -5246,6 +5321,148 @@ export type Database = {
           },
         ]
       }
+      payout_approval_votes: {
+        Row: {
+          admin_id: string | null
+          approval_id: string | null
+          comment: string | null
+          created_at: string | null
+          id: string
+          vote: string
+          voted_at: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          approval_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          vote: string
+          voted_at?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          approval_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          vote?: string
+          voted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_approval_votes_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "payout_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_approvals: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          executed_at: string | null
+          executed_by: string | null
+          expires_at: string | null
+          id: string
+          payout_request_id: string
+          payout_type: string
+          rejection_reason: string | null
+          requested_at: string | null
+          requested_by: string | null
+          required_approvals: number | null
+          status: string | null
+          tx_signature: string | null
+          updated_at: string | null
+          user_id: string | null
+          wallet_address: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          expires_at?: string | null
+          id?: string
+          payout_request_id: string
+          payout_type?: string
+          rejection_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          required_approvals?: number | null
+          status?: string | null
+          tx_signature?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_address?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          expires_at?: string | null
+          id?: string
+          payout_request_id?: string
+          payout_type?: string
+          rejection_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          required_approvals?: number | null
+          status?: string | null
+          tx_signature?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      payout_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          approval_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          payout_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          approval_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          payout_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          approval_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          payout_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_audit_log_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "payout_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_requests: {
         Row: {
           amount: number
@@ -5314,47 +5531,89 @@ export type Database = {
       }
       pitches: {
         Row: {
+          boost_id: string | null
           brand_id: string
+          campaign_id: string | null
           created_at: string
           creator_id: string
+          expires_at: string | null
           id: string
           message: string
+          portfolio_links: string[] | null
+          proposed_rate: number | null
           responded_at: string | null
           response: string | null
+          response_message: string | null
           status: string
           subject: string
+          type: string | null
           updated_at: string
         }
         Insert: {
+          boost_id?: string | null
           brand_id: string
+          campaign_id?: string | null
           created_at?: string
           creator_id: string
+          expires_at?: string | null
           id?: string
           message: string
+          portfolio_links?: string[] | null
+          proposed_rate?: number | null
           responded_at?: string | null
           response?: string | null
+          response_message?: string | null
           status?: string
           subject: string
+          type?: string | null
           updated_at?: string
         }
         Update: {
+          boost_id?: string | null
           brand_id?: string
+          campaign_id?: string | null
           created_at?: string
           creator_id?: string
+          expires_at?: string | null
           id?: string
           message?: string
+          portfolio_links?: string[] | null
+          proposed_rate?: number | null
           responded_at?: string | null
           response?: string | null
+          response_message?: string | null
           status?: string
           subject?: string
+          type?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pitches_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pitches_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitches_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitches_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
           {
@@ -6745,6 +7004,8 @@ export type Database = {
           status: string | null
           submission_notes: string | null
           submitted_at: string | null
+          thumbnail_url: string | null
+          title: string | null
           updated_at: string | null
           video_author_avatar: string | null
           video_author_username: string | null
@@ -6787,6 +7048,8 @@ export type Database = {
           status?: string | null
           submission_notes?: string | null
           submitted_at?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
           updated_at?: string | null
           video_author_avatar?: string | null
           video_author_username?: string | null
@@ -6829,6 +7092,8 @@ export type Database = {
           status?: string | null
           submission_notes?: string | null
           submitted_at?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
           updated_at?: string | null
           video_author_avatar?: string | null
           video_author_username?: string | null

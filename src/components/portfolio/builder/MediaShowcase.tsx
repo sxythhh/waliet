@@ -32,11 +32,12 @@ export function MediaShowcase({
   const { data: approvedVideos } = useApprovedVideos();
 
   // Add video from approved submissions
-  const handleSelectVideo = (video: typeof approvedVideos extends (infer T)[] ? T : never) => {
+  const handleSelectVideo = (video: NonNullable<typeof approvedVideos>[number]) => {
+    const campaignTitle = (video.campaigns as any)?.title || "Untitled";
     const featured: FeaturedVideo = {
       id: crypto.randomUUID(),
       submissionId: video.id,
-      title: video.title || video.campaigns?.title || "Untitled",
+      title: video.title || campaignTitle,
       thumbnailUrl: video.thumbnail_url || undefined,
       views: video.views || 0,
       platform: video.platform || undefined,
@@ -265,7 +266,7 @@ export function MediaShowcase({
                   )}
                   <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <p className="text-xs mt-1 truncate">{video.title || video.campaigns?.title || "Untitled"}</p>
+                <p className="text-xs mt-1 truncate">{video.title || (video.campaigns as any)?.title || "Untitled"}</p>
                 {video.views && (
                   <p className="text-xs text-muted-foreground">{video.views.toLocaleString()} views</p>
                 )}
