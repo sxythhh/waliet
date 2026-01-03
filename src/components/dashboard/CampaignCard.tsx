@@ -5,6 +5,7 @@ import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
+
 export interface CampaignCardProps {
   id: string;
   title: string;
@@ -27,6 +28,7 @@ export interface CampaignCardProps {
   showBookmark?: boolean;
   showFullscreen?: boolean;
 }
+
 export const CampaignCard = memo(function CampaignCard({
   id,
   title,
@@ -50,55 +52,140 @@ export const CampaignCard = memo(function CampaignCard({
   showFullscreen = true
 }: CampaignCardProps) {
   const navigate = useNavigate();
-  return <div className="flex flex-col gap-1.5">
-      <Card className="group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1.5 hover:shadow-xl border-0" onClick={onClick}>
-        {/* Banner Background */}
-        <div className="relative aspect-[3/4]">
-          {banner_url ? <OptimizedImage src={banner_url} alt={title} className="absolute inset-0 w-full h-full object-cover rounded-[3px]" /> : <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{
-          backgroundColor: brand_color || undefined
-        }}>
-            {brand_logo_url && <div className="w-14 h-14 rounded-xl overflow-hidden shadow-lg">
-                <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-contain rounded-xl" />
-              </div>}
-          </div>}
+  const budgetPercentage = is_infinite_budget ? 100 : Math.min((budget_used / budget) * 100, 100);
 
-          {/* Action Buttons */}
-          {(showBookmark || showFullscreen) && <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {showFullscreen && onFullscreenClick && <button onClick={onFullscreenClick} aria-label="View fullscreen" className="md:hidden p-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all">
-                  <Maximize2 className="h-3.5 w-3.5" />
-                </button>}
-              {showBookmark && onBookmarkClick && <button onClick={onBookmarkClick} aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"} className={`p-1.5 rounded-lg backdrop-blur-sm transition-all ${isBookmarked ? "bg-blue-500 text-white" : "bg-black/40 text-white hover:bg-black/60"}`}>
-                  <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? "fill-current" : ""}`} />
-                </button>}
-            </div>}
+  return (
+    <div className="group flex flex-col gap-2">
+      <Card
+        className="relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg border border-border/50 bg-card"
+        onClick={onClick}
+      >
+        {/* Horizontal Layout */}
+        <div className="flex">
+          {/* Banner Image - Left Side */}
+          <div className="relative w-24 h-28 flex-shrink-0">
+            {banner_url ? (
+              <OptimizedImage
+                src={banner_url}
+                alt={title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="absolute inset-0 w-full h-full flex items-center justify-center"
+                style={{ backgroundColor: brand_color || '#1a1a1a' }}
+              >
+                {brand_logo_url && (
+                  <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg">
+                    <OptimizedImage
+                      src={brand_logo_url}
+                      alt={brand_name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Status Badge - Overlaid on banner */}
+            <div className="absolute top-2 left-2">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase ${
+                isEnded
+                  ? 'bg-red-500/90 text-white'
+                  : 'bg-emerald-500/90 text-white'
+              }`}>
+                {isEnded ? 'Ended' : 'Live'}
+              </span>
+            </div>
+          </div>
+
+          {/* Content - Right Side */}
+          <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+            {/* Top: Title and Actions */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                {/* Campaign Title */}
+                <h3 className="font-semibold text-sm text-foreground leading-tight line-clamp-2 tracking-[-0.3px]">
+                  {title}
+                </h3>
+
+                {/* Brand Info */}
+                <div className="flex items-center gap-1.5 mt-1">
+                  {brand_logo_url && (
+                    <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                      <OptimizedImage
+                        src={brand_logo_url}
+                        alt={brand_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (brand_slug) navigate(`/b/${brand_slug}`);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground hover:underline truncate"
+                  >
+                    {brand_name}
+                  </button>
+                  {brand_is_verified && <VerifiedBadge size="sm" />}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {(showBookmark || showFullscreen) && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {showFullscreen && onFullscreenClick && (
+                    <button
+                      onClick={onFullscreenClick}
+                      aria-label="View fullscreen"
+                      className="p-1.5 rounded-lg bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  {showBookmark && onBookmarkClick && (
+                    <button
+                      onClick={onBookmarkClick}
+                      aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        isBookmarked
+                          ? "bg-blue-500 text-white"
+                          : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? "fill-current" : ""}`} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Bottom: Budget Progress */}
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {is_infinite_budget ? (
+                    <span className="text-emerald-500">∞ Unlimited Budget</span>
+                  ) : (
+                    <>
+                      <span className="text-foreground font-semibold">${budget_used.toLocaleString()}</span>
+                      <span className="text-muted-foreground"> / ${budget.toLocaleString()}</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              {!is_infinite_budget && (
+                <Progress
+                  value={budgetPercentage}
+                  className="h-1.5 rounded-full"
+                />
+              )}
+            </div>
+          </div>
         </div>
       </Card>
-
-      {/* Budget progress below the card */}
-      <div className="flex flex-col gap-1 px-0.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Inter',sans-serif]">
-            {is_infinite_budget ? '∞ unlimited' : <><span className="text-[11px] text-foreground font-semibold">${budget_used.toLocaleString()}</span>/${budget.toLocaleString()}</>}
-          </span>
-        </div>
-        {!is_infinite_budget && <Progress value={budget_used / budget * 100} className="h-1.5 rounded-full" />}
-        
-        {/* Brand Badge */}
-        <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[10px] text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-            Created by
-          </span>
-          {brand_logo_url && <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
-              <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-cover" />
-            </div>}
-          <button onClick={e => {
-          e.stopPropagation();
-          if (brand_slug) navigate(`/b/${brand_slug}`);
-        }} className="text-[10px] font-medium text-foreground tracking-[-0.3px] font-['Geist',sans-serif] hover:underline cursor-pointer bg-transparent border-none p-0">
-            {brand_name}
-          </button>
-          {brand_is_verified && <VerifiedBadge size="sm" />}
-        </div>
-      </div>
-    </div>;
+    </div>
+  );
 });

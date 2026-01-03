@@ -682,7 +682,7 @@ export function DiscoverTab({
                 </div>
                 <div
                   id="campaigns-scroll"
-                  className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide"
+                  className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide -mx-6 px-6"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {sortedCampaigns.map(campaign => {
@@ -697,7 +697,7 @@ export function DiscoverTab({
                     const isEnded = campaign.status === "ended";
                     const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
                     return (
-                      <div key={campaign.id} className="flex-shrink-0 w-[160px]">
+                      <div key={campaign.id} className="flex-shrink-0 w-[280px] sm:w-[320px]">
                         <CampaignCard
                           id={campaign.id}
                           title={campaign.title}
