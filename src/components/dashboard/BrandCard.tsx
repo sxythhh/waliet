@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { cn } from "@/lib/utils";
-import { Briefcase, Zap, ArrowRight } from "lucide-react";
+import { Briefcase, Zap } from "lucide-react";
 
 export interface BrandCardProps {
   id: string;
@@ -51,30 +51,19 @@ export const BrandCard = memo(function BrandCard({
   return (
     <div
       className={cn(
-        "group relative rounded-xl overflow-hidden transition-all duration-300",
-        "bg-card border border-border/50",
-        "hover:-translate-y-1 hover:shadow-lg",
+        "group relative rounded-xl overflow-hidden transition-colors duration-200",
+        "bg-card border border-border/50 hover:border-border",
         "cursor-pointer font-['Inter',sans-serif]"
       )}
       style={{ letterSpacing: '-0.5px' }}
       onClick={handleClick}
     >
-      {/* Background glow effect using brand color */}
-      <div
-        className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity"
-        style={{
-          background: brand_color
-            ? `radial-gradient(circle at top right, ${brand_color}, transparent 70%)`
-            : undefined,
-        }}
-      />
-
-      <div className="relative p-4">
+      <div className="p-4">
         {/* Header: Logo + Brand Info */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3">
           {/* Logo */}
           <div
-            className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border/50 group-hover:ring-border transition-all"
+            className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
             style={{ backgroundColor: brand_color || "#1a1a1a" }}
           >
             {logo_url ? (
@@ -85,7 +74,7 @@ export const BrandCard = memo(function BrandCard({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-base font-bold text-white">
+                <span className="text-sm font-bold text-white">
                   {name?.charAt(0) || "B"}
                 </span>
               </div>
@@ -107,16 +96,11 @@ export const BrandCard = memo(function BrandCard({
                 : 'No active opportunities'}
             </p>
           </div>
-
-          {/* Arrow */}
-          <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-primary group-hover:text-white transition-all">
-            <ArrowRight className="h-4 w-4" />
-          </div>
         </div>
 
         {/* Stats Row */}
         {totalOpportunities > 0 && (
-          <div className="flex items-center gap-3 pt-3 border-t border-border/50">
+          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/50">
             {campaign_count > 0 && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Briefcase className="h-3.5 w-3.5" />
