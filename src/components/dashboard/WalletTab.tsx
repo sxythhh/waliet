@@ -1488,82 +1488,7 @@ export function WalletTab() {
         />
       )}
 
-      {/* Stats Cards */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
-        <div className="grid grid-cols-5 gap-3">
-          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-emerald-500 font-['Geist'] tracking-[-0.5px]">
-              ${(onboardingProfile?.total_earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
-              Total Earned
-            </p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
-            <p className={`text-2xl font-bold font-['Geist'] tracking-[-0.5px] ${
-              (onboardingProfile?.trust_score || 100) >= 80 ? 'text-green-500' :
-              (onboardingProfile?.trust_score || 100) >= 60 ? 'text-yellow-500' : 'text-red-500'
-            }`}>
-              {onboardingProfile?.trust_score || 100}
-            </p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
-              Trust Score
-            </p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">
-              {campaignParticipations.length}
-            </p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
-              Campaigns
-            </p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">
-              {boostParticipations.length}
-            </p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
-              Boosts
-            </p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
-            {(() => {
-              const ratedTestimonials = testimonials.filter(t => t.rating !== null);
-              const avgRating = ratedTestimonials.length > 0
-                ? ratedTestimonials.reduce((sum, t) => sum + (t.rating || 0), 0) / ratedTestimonials.length
-                : 0;
-              return (
-                <>
-                  <p className="text-2xl font-bold text-yellow-500 font-['Geist'] tracking-[-0.5px]">
-                    {avgRating > 0 ? avgRating.toFixed(1) : '—'}
-                  </p>
-                  <div className="flex items-center justify-center gap-0.5 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`h-3 w-3 ${
-                          i < Math.round(avgRating)
-                            ? "text-yellow-500 fill-yellow-500"
-                            : "text-muted-foreground/30"
-                        }`}
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
-                    {testimonials.length} {testimonials.length === 1 ? 'Review' : 'Reviews'}
-                  </p>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      </div>
+      {/* Stats Cards - Hidden for now */}
 
       {/* Get Discovered Onboarding Checklist - Dismissible Banner */}
       {onboardingProfile && !onboardingTasks.every(t => t.completed) && (
@@ -1572,67 +1497,7 @@ export function WalletTab() {
         </div>
       )}
 
-      {/* Tabs Section */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
-        <Tabs value={profileActiveTab} onValueChange={setProfileActiveTab} className="w-full">
-          <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
-            <TabsTrigger
-              value="portfolio"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
-            >
-              Portfolio
-            </TabsTrigger>
-            <TabsTrigger
-              value="history"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
-            >
-              History
-            </TabsTrigger>
-            <TabsTrigger
-              value="reviews"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
-            >
-              Reviews {testimonials.length > 0 && `(${testimonials.length})`}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="portfolio" className="mt-6">
-            <PortfolioBuilder />
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-6">
-            <DashboardHistorySection
-              items={[
-                ...campaignParticipations.map((p) => ({
-                  id: p.campaign?.slug || p.campaign_id,
-                  type: "campaign" as const,
-                  title: p.campaign?.title || "Campaign",
-                  brandName: p.campaign?.brand_name || "",
-                  brandLogoUrl: p.campaign?.brands?.logo_url || p.campaign?.brand_logo_url || null,
-                  brandIsVerified: p.campaign?.brands?.is_verified,
-                  joinedAt: p.submitted_at,
-                  earnings: p.earnings,
-                })),
-                ...boostParticipations.map((p) => ({
-                  id: p.boost?.slug || p.bounty_campaign_id,
-                  type: "boost" as const,
-                  title: p.boost?.title || "Boost",
-                  brandName: p.boost?.brands?.name || "",
-                  brandLogoUrl: p.boost?.brands?.logo_url || null,
-                  brandIsVerified: p.boost?.brands?.is_verified,
-                  joinedAt: p.applied_at,
-                  earnings: p.total_earned,
-                })),
-              ]}
-              onItemClick={(slug) => navigate(`/c/${slug}`)}
-            />
-          </TabsContent>
-
-          <TabsContent value="reviews" className="mt-6">
-            <DashboardReviewsSection testimonials={testimonials} />
-          </TabsContent>
-        </Tabs>
-      </div>
+      {/* Tabs Section - Hidden for now */}
 
       {/* Edit Profile Dialog */}
       <EditProfileDialog

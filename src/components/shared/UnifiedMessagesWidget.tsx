@@ -496,9 +496,8 @@ export function UnifiedMessagesWidget() {
       {/* Floating Button - Desktop (Card) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-[#222] transition-all duration-200 shadow-lg hover:shadow-xl border border-gray-200 dark:border-white/10"
+        className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-2 px-5 py-3 rounded-2xl bg-white dark:bg-[#0a0a0a] hover:bg-gray-50 dark:hover:bg-[#111] transition-all duration-200 shadow-lg hover:shadow-xl"
       >
-        <MessageCircle className="w-5 h-5 text-foreground" />
         <span className="font-medium text-sm text-foreground font-['Inter'] tracking-[-0.5px]">Messages</span>
         {totalUnread > 0 && (
           <span className="w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
