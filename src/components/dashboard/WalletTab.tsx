@@ -342,12 +342,12 @@ export function WalletTab() {
     setSocialAccounts(socialData || []);
     setSocialAccountsCount(socialData?.length || 0);
 
-    // Check for approved demographics
+    // Check for approved demographics (via social_accounts since demographic_submissions uses social_account_id)
     const { data: demographics } = await supabase
-      .from("demographic_submissions")
-      .select("id")
+      .from("social_accounts")
+      .select("demographic_submissions!inner(id, status)")
       .eq("user_id", session.user.id)
-      .eq("status", "approved")
+      .eq("demographic_submissions.status", "approved")
       .limit(1);
 
     setHasDemographicsApproved((demographics?.length || 0) > 0);
