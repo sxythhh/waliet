@@ -5,7 +5,6 @@ import { LiveActivityFeed } from "./LiveActivityFeed";
 import { QuickActions } from "./QuickActions";
 import { SendAnnouncementDialog } from "../SendAnnouncementDialog";
 import { FraudAnalyticsCard } from "../FraudAnalyticsCard";
-import { PlatformHealthMetrics } from "./PlatformHealthMetrics";
 import { PostHogAnalytics } from "./PostHogAnalytics";
 
 export function CommandCenter() {
@@ -27,9 +26,6 @@ export function CommandCenter() {
 
         {/* Metrics Grid */}
         <MetricsGrid />
-
-        {/* Platform Health Metrics */}
-        <PlatformHealthMetrics />
 
         {/* PostHog Site Analytics */}
         <PostHogAnalytics />
