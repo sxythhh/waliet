@@ -11,7 +11,7 @@ export const getSubdomainSlug = (): string | null => {
   if (parts.length === 3 && parts[1] === 'virality' && parts[2] === 'gg') {
     const subdomain = parts[0];
     // Ignore common subdomains that aren't brand slugs
-    const ignoredSubdomains = ['www', 'app', 'api', 'admin', 'staging', 'dev'];
+    const ignoredSubdomains = ['www', 'app', 'api', 'admin', 'staging', 'dev', 'join'];
     if (!ignoredSubdomains.includes(subdomain.toLowerCase())) {
       return subdomain;
     }
