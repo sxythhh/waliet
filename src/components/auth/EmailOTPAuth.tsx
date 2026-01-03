@@ -185,9 +185,9 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Mail className="h-6 w-6 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold text-white">Check your email</h2>
+          <h2 className="text-xl font-semibold text-foreground">Check your email</h2>
           <p className="text-sm text-muted-foreground">
-            We sent a 6-digit code to <span className="text-white font-medium">{email}</span>
+            We sent a 6-digit code to <span className="text-foreground font-medium">{email}</span>
           </p>
         </div>
 
@@ -204,12 +204,12 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
             disabled={loading}
           >
             <InputOTPGroup>
-              <InputOTPSlot index={0} className="bg-white/10 border-white/20 text-white" />
-              <InputOTPSlot index={1} className="bg-white/10 border-white/20 text-white" />
-              <InputOTPSlot index={2} className="bg-white/10 border-white/20 text-white" />
-              <InputOTPSlot index={3} className="bg-white/10 border-white/20 text-white" />
-              <InputOTPSlot index={4} className="bg-white/10 border-white/20 text-white" />
-              <InputOTPSlot index={5} className="bg-white/10 border-white/20 text-white" />
+              <InputOTPSlot index={0} className="bg-muted/50 dark:bg-white/10 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={1} className="bg-muted/50 dark:bg-white/10 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={2} className="bg-muted/50 dark:bg-white/10 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={3} className="bg-muted/50 dark:bg-white/10 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={4} className="bg-muted/50 dark:bg-white/10 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={5} className="bg-muted/50 dark:bg-white/10 border-border dark:border-white/20 text-foreground" />
             </InputOTPGroup>
           </InputOTP>
 
@@ -250,7 +250,7 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
       </button>
 
       <div className="text-center space-y-2">
-        <h2 className="text-xl font-semibold text-white">Sign in with email</h2>
+        <h2 className="text-xl font-semibold text-foreground">Sign in with email</h2>
         <p className="text-sm text-muted-foreground">
           We'll send you a verification code
         </p>
@@ -258,7 +258,7 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
 
       <form onSubmit={handleSendOTP} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="otp-email" className="text-sm font-medium text-white">
+          <Label htmlFor="otp-email" className="text-sm font-medium text-foreground">
             Email
           </Label>
           <Input
@@ -269,7 +269,7 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
-            className="h-12 bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-gray-400"
+            className="h-12 bg-muted/50 dark:bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
