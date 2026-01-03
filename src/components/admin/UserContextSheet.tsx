@@ -11,6 +11,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Ban, LogIn } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -102,15 +103,27 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [transactionContextOpen, setTransactionContextOpen] = useState(false);
 
+  // IP ban state
+  const [ipBanReason, setIpBanReason] = useState("");
+  const [isBanning, setIsBanning] = useState(false);
+  const [existingBan, setExistingBan] = useState<any>(null);
+  const [loadingBan, setLoadingBan] = useState(false);
+
+  // Impersonation state
+  const [isImpersonating, setIsImpersonating] = useState(false);
+
   useEffect(() => {
     if (user && open) {
       fetchUserData(user.id);
+      fetchExistingBan(user.id);
       setTrustScore(user.trust_score ?? 0);
       setActiveTab("overview");
       setShowBalanceAdjust(false);
       setShowLinkAccount(false);
       setLinkUsername("");
       setLinkAccountUrl("");
+      setIpBanReason("");
+      setExistingBan(null);
     }
   }, [user, open]);
 
@@ -162,6 +175,95 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
       console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExistingBan = async (userId: string) => {
+    setLoadingBan(true);
+    try {
+      const { data, error } = await supabase
+        .from("ip_bans")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (!error && data) {
+        setExistingBan(data);
+      } else {
+        setExistingBan(null);
+      }
+    } catch (error) {
+      console.error("Error fetching ban status:", error);
+    } finally {
+      setLoadingBan(false);
+    }
+  };
+
+  const handleIpBan = async () => {
+    if (!user?.id) return;
+    setIsBanning(true);
+    try {
+      const { error } = await supabase.from("ip_bans").insert({
+        user_id: user.id,
+        ip_address: "pending",
+        reason: ipBanReason || "Banned by admin",
+        is_active: true
+      });
+
+      if (error) throw error;
+
+      toast.success("User has been IP banned");
+      setIpBanReason("");
+      fetchExistingBan(user.id);
+    } catch (error) {
+      console.error("Error banning user:", error);
+      toast.error("Failed to ban user");
+    } finally {
+      setIsBanning(false);
+    }
+  };
+
+  const handleUnban = async () => {
+    if (!existingBan?.id) return;
+    setIsBanning(true);
+    try {
+      const { error } = await supabase
+        .from("ip_bans")
+        .update({ is_active: false })
+        .eq("id", existingBan.id);
+
+      if (error) throw error;
+
+      toast.success("IP ban has been removed");
+      setExistingBan(null);
+    } catch (error) {
+      console.error("Error unbanning user:", error);
+      toast.error("Failed to unban user");
+    } finally {
+      setIsBanning(false);
+    }
+  };
+
+  const handleImpersonateUser = async () => {
+    if (!user?.id) return;
+    setIsImpersonating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("impersonate-user", {
+        body: { userId: user.id }
+      });
+
+      if (error) throw error;
+      if (!data?.magicLink) throw new Error("No magic link received");
+
+      onOpenChange(false);
+      toast.success(`Signing in as ${user.username}...`);
+      window.location.href = data.magicLink;
+    } catch (error: any) {
+      console.error("Error impersonating user:", error);
+      toast.error(error.message || "Failed to impersonate user");
+    } finally {
+      setIsImpersonating(false);
     }
   };
 
@@ -827,6 +929,92 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                         {socialAccounts.length} linked
                       </span>
                     </div>
+                  </div>
+                </section>
+
+                {/* Impersonate User */}
+                <section>
+                  <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
+                    Impersonate User
+                  </h3>
+                  <div className="p-3 bg-muted/30 rounded-lg space-y-3">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <LogIn className="h-4 w-4" />
+                      <p className="text-xs font-inter tracking-[-0.5px]">
+                        Sign in as this user to view their dashboard
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleImpersonateUser}
+                      disabled={isImpersonating}
+                      className="w-full h-9 text-sm font-inter tracking-[-0.5px] bg-muted hover:bg-muted/80 text-foreground"
+                    >
+                      {isImpersonating ? "Signing in..." : "View as User"}
+                    </Button>
+                  </div>
+                </section>
+
+                {/* IP Ban */}
+                <section>
+                  <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
+                    IP Ban
+                  </h3>
+                  <div className="p-3 bg-muted/30 rounded-lg space-y-3">
+                    {loadingBan ? (
+                      <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] text-center py-2">
+                        Loading...
+                      </p>
+                    ) : existingBan ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Ban className="h-4 w-4 text-red-500" />
+                          <span className="text-sm font-medium text-red-500 font-inter tracking-[-0.5px]">
+                            User is banned
+                          </span>
+                        </div>
+                        {existingBan.reason && existingBan.reason !== "pending" && (
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                            Reason: {existingBan.reason}
+                          </p>
+                        )}
+                        {existingBan.banned_at && (
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                            Banned on {format(new Date(existingBan.banned_at), 'MMM d, yyyy')}
+                          </p>
+                        )}
+                        <Button
+                          onClick={handleUnban}
+                          disabled={isBanning}
+                          variant="outline"
+                          className="w-full h-9 text-sm font-inter tracking-[-0.5px] border-border/50"
+                        >
+                          {isBanning ? "Removing..." : "Remove Ban"}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Ban className="h-4 w-4" />
+                          <p className="text-xs font-inter tracking-[-0.5px]">
+                            Ban this user from the platform
+                          </p>
+                        </div>
+                        <Input
+                          placeholder="Ban reason (optional)"
+                          value={ipBanReason}
+                          onChange={(e) => setIpBanReason(e.target.value)}
+                          className="h-9 text-sm font-inter tracking-[-0.5px] bg-background border-0"
+                        />
+                        <Button
+                          onClick={handleIpBan}
+                          disabled={isBanning}
+                          variant="destructive"
+                          className="w-full h-9 text-sm font-inter tracking-[-0.5px]"
+                        >
+                          {isBanning ? "Banning..." : "Ban User"}
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </section>
               </div>
