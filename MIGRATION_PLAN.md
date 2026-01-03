@@ -219,6 +219,49 @@ In Supabase Dashboard → Edge Functions → Manage Secrets, add all secrets lis
 
 ## Phase 4: Authentication Migration
 
+### 4.0 Email OTP Strategy (Recommended - Avoids Password Resets!)
+
+**The password hash problem can be completely avoided** by using Email OTP (one-time password) authentication. This has been implemented in the codebase.
+
+#### How It Works:
+1. User enters their email
+2. Supabase sends a 6-digit code to their email
+3. User enters the code to authenticate
+4. No password required = no password hash problem!
+
+#### Implementation Added:
+- **New Component**: `src/components/auth/EmailOTPAuth.tsx`
+- **Updated Auth Page**: `src/pages/Auth.tsx` now offers OTP as an option
+
+#### Migration Strategy with OTP:
+
+**Option A: OTP-First Migration (Smoothest)**
+1. Before migration, communicate to users that login will use email codes
+2. After migration, users simply use "Sign in with email code" option
+3. Optionally, let users set a password later in their profile settings
+
+**Option B: Hybrid Approach**
+1. Keep password login for OAuth users (Google, Discord) - no change needed
+2. Email/password users see "Sign in with email code instead" option
+3. No forced password resets required
+
+#### User Communication Template:
+```
+Subject: Important: Login Update for Virality
+
+Hi [Name],
+
+We've upgraded our authentication system. You can now sign in using:
+- Google or Discord (no changes)
+- Email code: Enter your email, receive a 6-digit code, and you're in!
+
+No password reset required. Just use the email code option on the login page.
+
+Questions? Reply to this email.
+
+The Virality Team
+```
+
 ### 4.1 OAuth Provider Configuration
 
 **Google OAuth:**
@@ -246,7 +289,10 @@ In Supabase Dashboard → Edge Functions → Manage Secrets, add all secrets lis
 
 **CRITICAL: Password hashes cannot be exported from Lovable Cloud.**
 
-**Required Steps:**
+#### Recommended: Use Email OTP (No Password Resets!)
+
+With the Email OTP implementation added to the codebase, you can avoid the password reset problem entirely:
+
 1. Export user emails from `auth.users` table (via profiles or direct export)
 2. Create users in new Supabase using admin API:
    ```typescript
@@ -256,11 +302,19 @@ In Supabase Dashboard → Edge Functions → Manage Secrets, add all secrets lis
      user_metadata: { /* preserved metadata */ }
    })
    ```
-3. Trigger password reset for all users:
+3. **No password reset needed!** Users simply use "Sign in with email code" option
+4. Optionally, users can set a new password later if they prefer
+
+#### Alternative: Traditional Password Reset
+
+If you prefer to keep password-based authentication:
+
+1. Create users as above (without passwords)
+2. Trigger password reset for all users:
    ```typescript
    await supabase.auth.resetPasswordForEmail(email)
    ```
-4. Add prominent notice on login page about password reset requirement
+3. Add prominent notice on login page about password reset requirement
 
 ### 4.3 Session Continuity (Optional)
 

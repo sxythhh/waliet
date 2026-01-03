@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SEOHead } from "@/components/SEOHead";
+import { EmailOTPAuth } from "@/components/auth/EmailOTPAuth";
 import discordIcon from "@/assets/discord-icon-new.png";
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -27,6 +28,7 @@ export default function Auth() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [useOTPLogin, setUseOTPLogin] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -285,9 +287,9 @@ export default function Auth() {
               {/* Creator Sign In Section */}
               <div className="space-y-4">
                 <div className="text-center">
-                  
+
                 </div>
-                
+
                 <div className="space-y-3">
                   <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
@@ -307,7 +309,7 @@ export default function Auth() {
                     <img alt="Discord" className="h-5 w-5" src="/lovable-uploads/22519b01-406d-4fcc-a7c7-14444c183410.webp" />
                     Continue with Discord
                   </Button>
-                  
+
                   <Button variant="outline" className="w-full h-12 bg-white/10 hover:bg-white/20 text-white hover:text-white border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
               }} onClick={() => setShowEmailForm(true)} disabled={loading}>
@@ -316,33 +318,50 @@ export default function Auth() {
                   </Button>
                 </div>
               </div>
-              
+
               {/* Divider */}
               <div className="relative my-8">
-                
-                
+
+
               </div>
-              
+
               {/* Client Sign In Section */}
               <div className="space-y-4">
                 <div className="text-center">
-                  
+
                 </div>
-                
-                
+
+
               </div>
-            </> : (/* Email Form */
+            </> : useOTPLogin ? (
+              /* Email OTP Login */
+              <EmailOTPAuth
+                onBack={() => {
+                  setUseOTPLogin(false);
+                  setShowEmailForm(false);
+                }}
+                onSuccess={() => {
+                  const returnUrl = sessionStorage.getItem('applyReturnUrl');
+                  navigate(returnUrl || "/dashboard");
+                }}
+              />
+            ) : (/* Email Password Form */
         <div className="space-y-4">
-              
-              
-              
-              
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(false)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+
               <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
                   <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-gray-400" />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium text-white">Password</Label>
                   <div className="relative">
@@ -355,11 +374,29 @@ export default function Auth() {
                     Forgot password?
                   </button>
                 </div>
-                
+
                 <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-inter tracking-[-0.5px]">
                   {loading ? "Please wait..." : "Continue"}
                 </Button>
               </form>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-[#111111] px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUseOTPLogin(true)}
+                className="w-full h-12 bg-white/5 hover:bg-white/10 text-white hover:text-white border-white/10 font-medium"
+              >
+                Sign in with email code instead
+              </Button>
             </div>)}
           
           {/* Terms and Conditions */}
