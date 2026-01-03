@@ -61,7 +61,7 @@ export const CampaignCard = memo(function CampaignCard({
         onClick={onClick}
       >
         {/* Full-width Banner - Top */}
-        <div className="relative w-full aspect-[16/9]">
+        <div className="relative w-full aspect-[21/9]">
           {banner_url ? (
             <OptimizedImage
               src={banner_url}
