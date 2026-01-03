@@ -79,6 +79,7 @@ interface Brand {
   name: string;
   logo_url: string | null;
   brand_color: string | null;
+  subscription_plan: string | null;
 }
 interface BlueprintEditorProps {
   blueprintId: string;
@@ -146,7 +147,7 @@ export function BlueprintEditor({
   }, [blueprintId, brandId]);
   const fetchBlueprintAndBrand = async () => {
     setLoading(true);
-    const [blueprintRes, brandRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url, brand_color").eq("id", brandId).single()]);
+    const [blueprintRes, brandRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url, brand_color, subscription_plan").eq("id", brandId).single()]);
     if (blueprintRes.error) {
       console.error("Error fetching blueprint:", blueprintRes.error);
       toast.error("Failed to load blueprint");
@@ -986,12 +987,12 @@ export function BlueprintEditor({
   </div>
 
       {/* Campaign Type Selection Dialog */}
-      <CreateCampaignTypeDialog open={showCampaignTypeDialog} onOpenChange={setShowCampaignTypeDialog} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} brandId={brandId} defaultBlueprintId={blueprintId} />
+      <CreateCampaignTypeDialog open={showCampaignTypeDialog} onOpenChange={setShowCampaignTypeDialog} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} brandId={brandId} subscriptionPlan={brand?.subscription_plan} defaultBlueprintId={blueprintId} />
 
       {/* Campaign Creation Wizard */}
-      {showCampaignWizard && <CampaignCreationWizard open={showCampaignWizard} onOpenChange={setShowCampaignWizard} brandId={brandId} brandName={brand?.name || ""} brandLogoUrl={brand?.logo_url || undefined} initialBlueprintId={blueprintId} />}
+      {showCampaignWizard && <CampaignCreationWizard open={showCampaignWizard} onOpenChange={setShowCampaignWizard} brandId={brandId} brandName={brand?.name || ""} brandLogoUrl={brand?.logo_url || undefined} subscriptionPlan={brand?.subscription_plan} initialBlueprintId={blueprintId} />}
 
       {/* Boost Creation Dialog */}
-      {showBoostDialog && <CreateBountyDialog open={showBoostDialog} onOpenChange={setShowBoostDialog} brandId={brandId} initialBlueprintId={blueprintId} />}
+      {showBoostDialog && <CreateBountyDialog open={showBoostDialog} onOpenChange={setShowBoostDialog} brandId={brandId} subscriptionPlan={brand?.subscription_plan} initialBlueprintId={blueprintId} />}
     </>;
 }

@@ -1,4 +1,3 @@
-import { Briefcase, Camera, Globe, Clock, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CURRENCY_OPTIONS, RATE_TYPE_OPTIONS, AVAILABILITY_OPTIONS } from "@/types/portfolio";
 import type { RateRange } from "@/types/portfolio";
@@ -27,13 +26,10 @@ export function CreatorStats({
       {/* Content Niches */}
       {contentNiches.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Briefcase className="h-4 w-4" />
-            <span className="text-sm font-medium">Content Niches</span>
-          </div>
+          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Content Niches</span>
           <div className="flex flex-wrap gap-2">
             {contentNiches.map((niche) => (
-              <Badge key={niche} variant="secondary" className="px-2.5 py-1">
+              <Badge key={niche} variant="secondary" className="px-2.5 py-1 font-['Inter']">
                 {niche}
               </Badge>
             ))}
@@ -44,13 +40,10 @@ export function CreatorStats({
       {/* Equipment */}
       {equipment.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Camera className="h-4 w-4" />
-            <span className="text-sm font-medium">Equipment</span>
-          </div>
+          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Equipment</span>
           <div className="flex flex-wrap gap-2">
             {equipment.map((item) => (
-              <Badge key={item} variant="outline" className="px-2.5 py-1">
+              <Badge key={item} variant="secondary" className="px-2.5 py-1 font-['Inter']">
                 {item}
               </Badge>
             ))}
@@ -61,13 +54,10 @@ export function CreatorStats({
       {/* Languages */}
       {languages.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Globe className="h-4 w-4" />
-            <span className="text-sm font-medium">Languages</span>
-          </div>
+          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Languages</span>
           <div className="flex flex-wrap gap-2">
             {languages.map((lang) => (
-              <Badge key={lang} variant="outline" className="px-2.5 py-1">
+              <Badge key={lang} variant="secondary" className="px-2.5 py-1 font-['Inter']">
                 {lang}
               </Badge>
             ))}
@@ -79,13 +69,10 @@ export function CreatorStats({
       <div className="space-y-4">
         {availability && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">Availability</span>
-            </div>
+            <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Availability</span>
             <Badge
               variant={availability === "not-available" ? "destructive" : "secondary"}
-              className="px-3 py-1.5"
+              className="px-3 py-1.5 font-['Inter']"
             >
               {availabilityLabel}
             </Badge>
@@ -94,11 +81,8 @@ export function CreatorStats({
 
         {rateRange && rateRange.min > 0 && rateRange.max > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <DollarSign className="h-4 w-4" />
-              <span className="text-sm font-medium">Rate Range</span>
-            </div>
-            <p className="text-lg font-semibold">
+            <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Rate Range</span>
+            <p className="text-lg font-semibold font-['Inter'] tracking-[-0.3px]">
               {currencySymbol}{rateRange.min.toLocaleString()} - {currencySymbol}{rateRange.max.toLocaleString()}
               <span className="text-sm font-normal text-muted-foreground ml-1">
                 {rateTypeLabel}

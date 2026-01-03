@@ -22,6 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_permissions_resource ON admin_permissions(r
 ALTER TABLE admin_permissions ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Only admins can view permissions
+DROP POLICY IF EXISTS "Admins can view all permissions" ON admin_permissions;
 CREATE POLICY "Admins can view all permissions" ON admin_permissions
   FOR SELECT
   USING (
@@ -33,6 +34,7 @@ CREATE POLICY "Admins can view all permissions" ON admin_permissions
   );
 
 -- Policy: Only admins can insert permissions
+DROP POLICY IF EXISTS "Admins can insert permissions" ON admin_permissions;
 CREATE POLICY "Admins can insert permissions" ON admin_permissions
   FOR INSERT
   WITH CHECK (
@@ -44,6 +46,7 @@ CREATE POLICY "Admins can insert permissions" ON admin_permissions
   );
 
 -- Policy: Only admins can update permissions
+DROP POLICY IF EXISTS "Admins can update permissions" ON admin_permissions;
 CREATE POLICY "Admins can update permissions" ON admin_permissions
   FOR UPDATE
   USING (
@@ -55,6 +58,7 @@ CREATE POLICY "Admins can update permissions" ON admin_permissions
   );
 
 -- Policy: Only admins can delete permissions
+DROP POLICY IF EXISTS "Admins can delete permissions" ON admin_permissions;
 CREATE POLICY "Admins can delete permissions" ON admin_permissions
   FOR DELETE
   USING (
@@ -116,6 +120,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_admin_permissions_updated_at ON admin_permissions;
 CREATE TRIGGER update_admin_permissions_updated_at
   BEFORE UPDATE ON admin_permissions
   FOR EACH ROW

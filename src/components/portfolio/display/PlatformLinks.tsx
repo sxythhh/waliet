@@ -1,4 +1,4 @@
-import { ExternalLink, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import type { PlatformInfo } from "@/types/portfolio";
 
 interface PlatformLinksProps {
@@ -53,7 +53,7 @@ export function PlatformLinks({ platforms }: PlatformLinksProps) {
           href={platform.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${getPlatformColor(platform.platform)}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors font-['Inter'] ${getPlatformColor(platform.platform)}`}
         >
           <span className="font-medium text-sm">
             {getPlatformName(platform.platform)}
@@ -64,10 +64,9 @@ export function PlatformLinks({ platforms }: PlatformLinksProps) {
           )}
           {platform.followers && (
             <span className="text-xs opacity-70">
-              \u2022 {formatFollowers(platform.followers)}
+              • {formatFollowers(platform.followers)}
             </span>
           )}
-          <ExternalLink className="h-3.5 w-3.5 opacity-70" />
         </a>
       ))}
     </div>

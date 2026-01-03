@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, ChevronDown, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronDown, CreditCard, ChevronLeft, ChevronRight, Wallet, Building2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
@@ -12,6 +12,8 @@ import { BrandToPersonalTransferDialog } from "./BrandToPersonalTransferDialog";
 import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
 import { PersonalToBrandTransferDialog } from "./PersonalToBrandTransferDialog";
 import { BrandDepositInfoDialog } from "./BrandDepositInfoDialog";
+import { CryptoDepositDialog } from "./CryptoDepositDialog";
+import { CoinbaseOnrampWidget } from "./CoinbaseOnrampWidget";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 interface BrandWalletTabProps {
@@ -51,6 +53,8 @@ export function BrandWalletTab({
   const [transferOpen, setTransferOpen] = useState(false);
   const [personalTransferOpen, setPersonalTransferOpen] = useState(false);
   const [depositInfoOpen, setDepositInfoOpen] = useState(false);
+  const [cryptoDepositOpen, setCryptoDepositOpen] = useState(false);
+  const [coinbaseOnrampOpen, setCoinbaseOnrampOpen] = useState(false);
   const [brandName, setBrandName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -227,6 +231,10 @@ export function BrandWalletTab({
         return 'Transfer In';
       case 'transfer_out':
         return 'Transfer Out';
+      case 'crypto_deposit':
+        return 'Crypto Deposit';
+      case 'coinbase_onramp':
+        return 'Coinbase Purchase';
       default:
         return type;
     }
@@ -311,14 +319,24 @@ export function BrandWalletTab({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-popover border-border">
                   <DropdownMenuItem onClick={() => setAddFundsOpen(true)}>
+                    <CreditCard className="w-4 h-4 mr-2" />
                     Pay with Card
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setPersonalTransferOpen(true)}>
+                    <Wallet className="w-4 h-4 mr-2" />
                     From Personal Wallet
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setCryptoDepositOpen(true)}>
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3" />
+                    </svg>
+                    Crypto Deposit
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setDepositInfoOpen(true)}>
-                    Wire / Crypto Deposit
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Wire Transfer
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -467,11 +485,33 @@ export function BrandWalletTab({
         }} 
       />
 
-      <BrandDepositInfoDialog 
-        open={depositInfoOpen} 
-        onOpenChange={setDepositInfoOpen} 
-        brandId={brandId} 
+      <BrandDepositInfoDialog
+        open={depositInfoOpen}
+        onOpenChange={setDepositInfoOpen}
+        brandId={brandId}
         brandName={brandName}
+      />
+
+      <CryptoDepositDialog
+        open={cryptoDepositOpen}
+        onOpenChange={setCryptoDepositOpen}
+        brandId={brandId}
+        brandName={brandName}
+        onCoinbaseOnramp={() => {
+          setCryptoDepositOpen(false);
+          setCoinbaseOnrampOpen(true);
+        }}
+      />
+
+      <CoinbaseOnrampWidget
+        open={coinbaseOnrampOpen}
+        onOpenChange={setCoinbaseOnrampOpen}
+        brandId={brandId}
+        brandName={brandName}
+        onSuccess={() => {
+          fetchWalletData();
+          fetchTransactions();
+        }}
       />
     </div>;
 }

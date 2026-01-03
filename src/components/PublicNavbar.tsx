@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import HelpIcon from "@mui/icons-material/Help";
 import searchIcon from "@/assets/search-icon.svg";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import forBrandsIcon from "@/assets/for-brands-icon.png";
 import forBrandsIconLight from "@/assets/for-brands-icon-light.svg";
 import exploreIconDark from "@/assets/explore-icon-dark.svg";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface PublicNavbarProps {
   searchQuery?: string;
   onSearchClick?: () => void;
@@ -25,6 +26,7 @@ export default function PublicNavbar({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const handleSearchClick = useCallback(() => {
@@ -48,12 +50,26 @@ export default function PublicNavbar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSearchClick]);
   useEffect(() => {
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", userId)
+        .single();
+      if (data) {
+        setUserProfile(data);
+      }
+    };
+
     supabase.auth.getSession().then(({
       data: {
         session
       }
     }) => {
       setIsAuthenticated(!!session);
+      if (session?.user?.id) {
+        fetchProfile(session.user.id);
+      }
     });
     const {
       data: {
@@ -61,6 +77,11 @@ export default function PublicNavbar({
       }
     } = supabase.auth.onAuthStateChange((_, session) => {
       setIsAuthenticated(!!session);
+      if (session?.user?.id) {
+        fetchProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -145,19 +166,23 @@ export default function PublicNavbar({
             
             <div className="flex items-center gap-3">
               {/* Desktop Auth Buttons */}
-              <div className="hidden md:flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2">
                 {isAuthenticated === null ? <div className="w-24 h-8" /> : isAuthenticated ? <>
                     <Link to="/dashboard">
                       <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
                         Dashboard
                       </Button>
                     </Link>
-                    <Button variant="ghost" size="sm" onClick={async () => {
-                  await supabase.auth.signOut();
-                }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl" aria-label="Sign out">
-                      <LogOut className="h-4 w-4" aria-hidden="true" />
-                      Sign Out
-                    </Button>
+                    {userProfile?.username && (
+                      <Link to={`/@${userProfile.username}`} className="group flex items-center">
+                        <Avatar className="h-[32px] w-[32px] ring-2 ring-transparent group-hover:ring-primary/50 transition-all">
+                          <AvatarImage src={userProfile.avatar_url || ''} alt={userProfile.username} />
+                          <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                            {userProfile.username[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+                    )}
                   </> : <>
                     <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-transparent hover:text-foreground px-[10px] rounded-3xl text-foreground/80" onClick={() => setShowAuthDialog(true)}>
                       Sign In
@@ -212,13 +237,17 @@ export default function PublicNavbar({
                               Dashboard
                             </Button>
                           </Link>
-                          <Button variant="ghost" size="sm" onClick={async () => {
-                        await supabase.auth.signOut();
-                        setMobileMenuOpen(false);
-                      }} className="w-full font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5">
-                            <LogOut className="h-4 w-4" />
-                            Sign Out
-                          </Button>
+                          {userProfile?.username && (
+                            <Link to={`/@${userProfile.username}`} onClick={handleMobileNavClick} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 rounded-lg transition-colors">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={userProfile.avatar_url || ''} alt={userProfile.username} />
+                                <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                                  {userProfile.username[0]?.toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-semibold font-['Inter'] tracking-[-0.3px] text-foreground">View Profile</span>
+                            </Link>
+                          )}
                         </> : <>
                           <Button variant="ghost" size="sm" className="w-full font-geist font-medium tracking-[-0.5px]" onClick={() => {
                         setShowAuthDialog(true);

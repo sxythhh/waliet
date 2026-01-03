@@ -94,8 +94,8 @@ export const useAdminPermissions = () => {
     // Not an admin = no permission
     if (!isAdmin) return false;
 
-    // If no specific permissions are set, admin has full access (legacy behavior)
-    if (permissions.length === 0) return true;
+    // If no specific permissions are set, deny access (secure by default)
+    if (permissions.length === 0) return false;
 
     // Find the permission for this resource
     const permission = permissions.find(p => p.resource === resource);
@@ -119,7 +119,7 @@ export const useAdminPermissions = () => {
   // Check if user can access any admin resource (for sidebar visibility)
   const canAccessAdmin = useCallback((): boolean => {
     if (!isAdmin) return false;
-    if (permissions.length === 0) return true; // Full access
+    if (permissions.length === 0) return false; // No permissions = no access
     return permissions.some(p => p.can_view);
   }, [isAdmin, permissions]);
 
@@ -307,6 +307,107 @@ export const useManageAdminPermissions = () => {
     }
   };
 
+  // Add a new admin user
+  const addAdmin = async (userId: string, accessLevel: 'full' | 'restricted' = 'restricted'): Promise<boolean> => {
+    setSaving(true);
+    try {
+      // Check if already an admin
+      const { data: existing } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (existing) {
+        // Already an admin
+        return false;
+      }
+
+      // Add admin role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: "admin" });
+
+      if (roleError) throw roleError;
+
+      // If restricted access, set view-only permissions for all resources
+      if (accessLevel === 'restricted') {
+        const permissions = ADMIN_RESOURCES.map(resource => ({
+          user_id: userId,
+          resource: resource.id,
+          can_view: true,
+          can_edit: false,
+          can_delete: false,
+        }));
+
+        await (supabase
+          .from("admin_permissions" as any)
+          .insert(permissions) as any);
+      }
+      // For 'full' access, we don't add any permissions (no restrictions)
+
+      await fetchAdminUsers();
+      return true;
+    } catch (error) {
+      console.error("Error adding admin:", error);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Remove admin user
+  const removeAdmin = async (userId: string): Promise<boolean> => {
+    setSaving(true);
+    try {
+      // Delete admin role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", "admin");
+
+      if (roleError) throw roleError;
+
+      // Delete all permissions for this user
+      await (supabase
+        .from("admin_permissions" as any)
+        .delete()
+        .eq("user_id", userId) as any);
+
+      await fetchAdminUsers();
+      return true;
+    } catch (error) {
+      console.error("Error removing admin:", error);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Search users by email or username
+  const searchUsers = async (query: string): Promise<Array<{ id: string; email: string; full_name: string | null; avatar_url: string | null; username: string | null }>> => {
+    if (!query || query.length < 2) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_url, username")
+        .or(`email.ilike.%${query}%,username.ilike.%${query}%,full_name.ilike.%${query}%`)
+        .limit(10);
+
+      if (error) throw error;
+
+      // Filter out existing admins
+      const adminIds = adminUsers.map(u => u.id);
+      return (data || []).filter(u => !adminIds.includes(u.id));
+    } catch (error) {
+      console.error("Error searching users:", error);
+      return [];
+    }
+  };
+
   return {
     adminUsers,
     loading,
@@ -314,6 +415,9 @@ export const useManageAdminPermissions = () => {
     updatePermission,
     grantFullAccess,
     setRestrictedAccess,
+    addAdmin,
+    removeAdmin,
+    searchUsers,
     refreshUsers: fetchAdminUsers,
   };
 };

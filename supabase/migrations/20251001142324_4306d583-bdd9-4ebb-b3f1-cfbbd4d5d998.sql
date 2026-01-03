@@ -1,6 +1,7 @@
 -- Create storage bucket for campaign banners
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('campaign-banners', 'campaign-banners', true);
+VALUES ('campaign-banners', 'campaign-banners', true)
+ON CONFLICT (id) DO NOTHING;
 
 -- Create RLS policies for campaign banners
 CREATE POLICY "Anyone can view campaign banners"

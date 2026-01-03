@@ -1,6 +1,7 @@
 -- Create storage bucket for brand application logos
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('brand-application-logos', 'brand-application-logos', true);
+VALUES ('brand-application-logos', 'brand-application-logos', true)
+ON CONFLICT (id) DO NOTHING;
 
 -- Allow anyone to upload brand application logos
 CREATE POLICY "Anyone can upload brand application logos"

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS brand_webhooks (
   brand_id UUID REFERENCES brands(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   endpoint_url TEXT NOT NULL,
-  secret_key TEXT DEFAULT encode(gen_random_bytes(32), 'hex'),
+  secret_key TEXT DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
   api_version TEXT DEFAULT 'v1',
   events TEXT[] NOT NULL DEFAULT '{}',
   is_active BOOLEAN DEFAULT true,
@@ -37,23 +37,28 @@ ALTER TABLE brand_webhooks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhook_logs ENABLE ROW LEVEL SECURITY;
 
 -- 4. RLS Policies for brand_webhooks
+DROP POLICY IF EXISTS "Brand members can view their brand's webhooks" ON brand_webhooks;
 CREATE POLICY "Brand members can view their brand's webhooks"
   ON brand_webhooks FOR SELECT
   USING (brand_id IN (SELECT brand_id FROM brand_members WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Brand members can insert webhooks for their brand" ON brand_webhooks;
 CREATE POLICY "Brand members can insert webhooks for their brand"
   ON brand_webhooks FOR INSERT
   WITH CHECK (brand_id IN (SELECT brand_id FROM brand_members WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Brand members can update their brand's webhooks" ON brand_webhooks;
 CREATE POLICY "Brand members can update their brand's webhooks"
   ON brand_webhooks FOR UPDATE
   USING (brand_id IN (SELECT brand_id FROM brand_members WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Brand members can delete their brand's webhooks" ON brand_webhooks;
 CREATE POLICY "Brand members can delete their brand's webhooks"
   ON brand_webhooks FOR DELETE
   USING (brand_id IN (SELECT brand_id FROM brand_members WHERE user_id = auth.uid()));
 
 -- 5. RLS Policies for webhook_logs
+DROP POLICY IF EXISTS "Brand members can view their webhook logs" ON webhook_logs;
 CREATE POLICY "Brand members can view their webhook logs"
   ON webhook_logs FOR SELECT
   USING (webhook_id IN (

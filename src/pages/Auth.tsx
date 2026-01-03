@@ -241,7 +241,7 @@ export default function Auth() {
     }
   };
   if (isRecoveryMode) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
+    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5f5f5] dark:bg-[#0a0a0a]">
         <SEOHead title="Reset Password" description="Reset your Virality account password" noIndex={true} />
         <Card className="w-full max-w-md border-0 bg-card/50 backdrop-blur-sm shadow-xl">
           <CardHeader className="text-center space-y-4 pb-2">
@@ -272,13 +272,13 @@ export default function Auth() {
         </Card>
       </div>;
   }
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
+  return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5f5f5] dark:bg-[#0a0a0a]">
       <SEOHead title="Sign In" description="Sign in to your Virality account" noIndex={true} />
-      <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
+      <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-white dark:bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">
             <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/05566301-7c21-4e5b-9e22-a097cbaf1442.png" />
-            <span className="font-clash font-bold tracking-tight text-lg text-white">VIRALITY</span>
+            <span className="font-clash font-bold tracking-tight text-lg text-foreground">VIRALITY</span>
           </div>
         </CardHeader>
         
@@ -291,7 +291,7 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-0 font-semibold font-geist gap-3" style={{
+                  <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-gray-200 dark:border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
               }} onClick={handleGoogleSignIn} disabled={loading}>
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -310,10 +310,10 @@ export default function Auth() {
                     Continue with Discord
                   </Button>
 
-                  <Button variant="outline" className="w-full h-12 bg-white/10 hover:bg-white/20 text-white hover:text-white border-0 font-semibold font-geist gap-3" style={{
+<Button variant="outline" className="w-full h-12 bg-black/5 hover:bg-black hover:text-white dark:bg-white/10 dark:hover:bg-white/20 text-foreground dark:text-white border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
               }} onClick={() => setShowEmailForm(true)} disabled={loading}>
-                    <Mail className="h-5 w-5 text-white" />
+                    <Mail className="h-5 w-5" />
                     Continue with Email
                   </Button>
                 </div>
@@ -358,15 +358,15 @@ export default function Auth() {
 
               <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-gray-400" />
+                  <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
+                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 dark:bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground" />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-white">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 pr-10 text-white placeholder:text-gray-400" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted/50 dark:bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 pr-10 text-foreground placeholder:text-muted-foreground" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -403,7 +403,7 @@ export default function Auth() {
           <div className="mt-8 text-center" style={{
           letterSpacing: '-0.3px'
         }}>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               By logging in, you agree to our{" "}
               <a href="https://virality.gg/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                 Creator Terms & Conditions

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { cn } from "@/lib/utils";
-import { Briefcase, Zap, Globe, Instagram } from "lucide-react";
+import { Briefcase, Zap, ArrowUpRight } from "lucide-react";
 
 export interface BrandCardProps {
   id: string;
@@ -47,89 +47,83 @@ export const BrandCard = memo(function BrandCard({
   };
 
   const totalOpportunities = campaign_count + boost_count;
-  const hasSocials = website_url || instagram_handle || tiktok_handle;
 
   return (
     <div
       className={cn(
-        "group relative rounded-xl overflow-hidden transition-all duration-200",
-        "border border-border/60 hover:border-border",
-        "bg-card/50 hover:bg-card",
-        "cursor-pointer p-4"
+        "group relative rounded-2xl overflow-hidden transition-all duration-300",
+        "bg-gradient-to-b from-card to-card/80",
+        "border border-border/40 hover:border-border/80",
+        "hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20",
+        "cursor-pointer"
       )}
       onClick={handleClick}
     >
-      {/* Logo and Name Row */}
-      <div className="flex items-center gap-3">
-        <div
-          className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 shadow-sm"
-          style={{ backgroundColor: brand_color || "#1a1a1a" }}
-        >
-          {logo_url ? (
-            <OptimizedImage
-              src={logo_url}
-              alt={name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-sm font-bold text-white">
-                {name?.charAt(0) || "B"}
-              </span>
+      {/* Accent bar at top */}
+      <div
+        className="h-1 w-full"
+        style={{ backgroundColor: brand_color || "#6366f1" }}
+      />
+
+      <div className="p-4">
+        {/* Logo and Arrow */}
+        <div className="flex items-start justify-between mb-3">
+          <div
+            className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-md ring-1 ring-black/5"
+            style={{ backgroundColor: brand_color || "#1a1a1a" }}
+          >
+            {logo_url ? (
+              <OptimizedImage
+                src={logo_url}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-lg font-bold text-white">
+                  {name?.charAt(0) || "B"}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="w-7 h-7 rounded-full bg-muted/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+        </div>
+
+        {/* Name and Verified */}
+        <div className="flex items-center gap-1.5 mb-1">
+          <h3 className="text-sm font-semibold text-foreground truncate tracking-[-0.3px]">
+            {name}
+          </h3>
+          {is_verified && <VerifiedBadge size="sm" />}
+        </div>
+
+        {/* Description */}
+        {description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">
+            {description}
+          </p>
+        )}
+
+        {/* Stats Pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {campaign_count > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+              <Briefcase className="h-3 w-3" />
+              <span className="text-xs font-medium">{campaign_count} {campaign_count === 1 ? 'Campaign' : 'Campaigns'}</span>
             </div>
           )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-sm font-semibold text-foreground truncate group-hover:underline">
-              {name}
-            </h3>
-            {is_verified && <VerifiedBadge size="sm" />}
-          </div>
-
-          {/* Social Icons */}
-          {hasSocials && (
-            <div className="flex items-center gap-2 mt-1">
-              {website_url && (
-                <Globe className="h-3 w-3 text-muted-foreground" />
-              )}
-              {instagram_handle && (
-                <Instagram className="h-3 w-3 text-muted-foreground" />
-              )}
-              {tiktok_handle && (
-                <svg className="h-3 w-3 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-                </svg>
-              )}
+          {boost_count > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500">
+              <Zap className="h-3 w-3" />
+              <span className="text-xs font-medium">{boost_count} {boost_count === 1 ? 'Boost' : 'Boosts'}</span>
             </div>
           )}
+          {totalOpportunities === 0 && (
+            <span className="text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-muted/50">No active opportunities</span>
+          )}
         </div>
-      </div>
-
-      {/* Description */}
-      {description && (
-        <p className="text-xs text-muted-foreground line-clamp-2 mt-2">
-          {description}
-        </p>
-      )}
-
-      {/* Stats */}
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/50">
-        {campaign_count > 0 && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Briefcase className="h-3 w-3" />
-            <span className="font-medium text-foreground">{campaign_count}</span>
-          </div>
-        )}
-        {boost_count > 0 && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Zap className="h-3 w-3 text-amber-500" />
-            <span className="font-medium text-foreground">{boost_count}</span>
-          </div>
-        )}
-        {totalOpportunities === 0 && (
-          <span className="text-xs text-muted-foreground">No active opportunities</span>
-        )}
       </div>
     </div>
   );

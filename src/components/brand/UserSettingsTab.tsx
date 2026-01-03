@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
 import { BrandWalletTab } from "./BrandWalletTab";
-import { LowBalanceSettingsTab } from "./LowBalanceSettingsTab";
+import { LowBalanceSettingsTab, LowBalanceSettingsHandle } from "./LowBalanceSettingsTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -28,6 +28,7 @@ import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
 import { CustomWebhooksTab } from "./CustomWebhooksTab";
 import { BillingUsageCard } from "./BillingUsageCard";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
+import { DataExportDialog, AccountDeletionDialog } from "@/components/dashboard/settings";
 
 // Plan ID to display name mapping
 const PLAN_DISPLAY_NAMES: Record<string, string> = {
@@ -697,6 +698,8 @@ export function UserSettingsTab() {
   const [savingIntegrations, setSavingIntegrations] = useState(false);
   const [showDubKey, setShowDubKey] = useState(false);
   const [showShortimizeKey, setShowShortimizeKey] = useState(false);
+  const [savingLowBalance, setSavingLowBalance] = useState(false);
+  const lowBalanceRef = useRef<LowBalanceSettingsHandle>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -1007,14 +1010,20 @@ export function UserSettingsTab() {
                 Manage your workspace and billing
               </p>
             </div>
-            {isBrandMode && brand && <Button onClick={() => {
+            {isBrandMode && brand && <Button onClick={async () => {
               if (activeTab === 'general') {
                 handleSaveBrand();
               } else if (activeTab === 'integrations') {
                 handleSaveIntegrations();
+              } else if (activeTab === 'wallet') {
+                if (lowBalanceRef.current) {
+                  setSavingLowBalance(true);
+                  await lowBalanceRef.current.save();
+                  setSavingLowBalance(false);
+                }
               }
-            }} disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false} className="h-9 px-6 tracking-[-0.5px] bg-black dark:bg-white text-white dark:text-black border-0 hover:bg-black/90 dark:hover:bg-white/90">
-                  {activeTab === 'general' && savingBrand || activeTab === 'integrations' && savingIntegrations ? "Saving..." : "Save Changes"}
+            }} disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : activeTab === 'wallet' ? savingLowBalance : false} className="h-9 px-6 tracking-[-0.5px] bg-black dark:bg-white text-white dark:text-black border-0 hover:bg-black/90 dark:hover:bg-white/90">
+                  {(activeTab === 'general' && savingBrand) || (activeTab === 'integrations' && savingIntegrations) || (activeTab === 'wallet' && savingLowBalance) ? "Saving..." : "Save Changes"}
                 </Button>}
           </div>
 
@@ -1032,6 +1041,9 @@ export function UserSettingsTab() {
             }, {
               key: "team",
               label: "Team"
+            }, {
+              key: "privacy",
+              label: "Privacy"
             }].map(tab => <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab.key ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                   {tab.label}
                 </button>)}
@@ -1049,7 +1061,7 @@ export function UserSettingsTab() {
               {/* Left Column - Brand Identity & Business Info */}
               <div className="space-y-6">
                 {/* Brand Identity Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-white dark:bg-muted/20 space-y-4">
                   <h3 className="text-sm font-medium tracking-[-0.5px]">Brand Identity</h3>
 
                   {/* Icon Section */}
@@ -1107,7 +1119,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Business Information Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-white dark:bg-muted/20 space-y-4">
                   <h3 className="text-sm font-medium tracking-[-0.5px]">Business Information</h3>
 
                   {/* Legal Business Name */}
@@ -1160,7 +1172,7 @@ export function UserSettingsTab() {
               {/* Right Column - Social Media & Danger Zone */}
               <div className="space-y-6">
                 {/* Social Media Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
                   <h3 className="text-sm font-medium tracking-[-0.5px]">Social Media</h3>
 
                   {/* Instagram */}
@@ -1274,7 +1286,7 @@ export function UserSettingsTab() {
               {/* Left Column - Analytics Integrations */}
               <div className="space-y-6">
                 {/* Shortimize API Key */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
                   <div className="flex items-center gap-3">
                     <img src={shortimizeLogo} alt="Shortimize" className="w-10 h-10 rounded-lg object-cover" />
                     <div>
@@ -1294,7 +1306,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Dub.co Link Tracking */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
                   <div className="flex items-center gap-3">
                     <img src={dubLogo} alt="Dub" className="w-10 h-10 rounded-lg object-cover bg-white p-1" />
                     <div>
@@ -1317,7 +1329,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Slack Webhook */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
                   <div className="flex items-center gap-3">
                     <img alt="Slack" className="w-10 h-10 rounded-lg object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
                     <div>
@@ -1332,7 +1344,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Discord Webhook */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
                   <div className="flex items-center gap-3">
                     <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover" />
                     <div>
@@ -1353,7 +1365,7 @@ export function UserSettingsTab() {
                 <CustomWebhooksTab brandId={brand.id} />
 
                 {/* Notifications Section */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive webhook and email alerts</p>
@@ -1422,7 +1434,7 @@ export function UserSettingsTab() {
               {/* Left Column - Subscription & Usage */}
               <div className="space-y-6">
                 {/* Subscription Info */}
-                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
                     {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
@@ -1471,7 +1483,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Usage Tracking */}
-                <div className="p-4 rounded-xl border border-border/50 bg-muted/20">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20">
                   <BillingUsageCard
                     brandId={brand.id}
                     subscriptionPlan={brand.subscription_plan}
@@ -1480,8 +1492,8 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Low Balance Protection */}
-                {currentBrand && <div className="p-4 rounded-xl border border-border/50 bg-muted/20">
-                    <LowBalanceSettingsTab brandId={currentBrand.id} />
+                {currentBrand && <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20">
+                    <LowBalanceSettingsTab ref={lowBalanceRef} brandId={currentBrand.id} />
                   </div>}
               </div>
 
@@ -1504,6 +1516,52 @@ export function UserSettingsTab() {
             fetchBrand();
             toast.success("Subscription activated!");
           }} />}
+        </TabsContent>
+
+        {/* Privacy Tab */}
+        <TabsContent value="privacy" className="mt-6">
+          <div className="max-w-2xl space-y-6">
+            {/* Privacy & Data Section */}
+            <div className="p-5 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
+              <div>
+                <h3 className="text-sm font-medium tracking-[-0.5px]">Privacy & Data</h3>
+                <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-1">
+                  Manage your personal data and privacy settings
+                </p>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                {/* Data Export */}
+                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border/30">
+                  <div>
+                    <h4 className="text-sm font-medium tracking-[-0.5px]">Export Your Data</h4>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-1">
+                      Download a copy of all your personal data stored on Virality, including your profile, transactions, and submissions.
+                    </p>
+                  </div>
+                  <DataExportDialog />
+                </div>
+
+                {/* Account Deletion */}
+                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <div>
+                    <h4 className="text-sm font-medium tracking-[-0.5px] text-destructive">Delete Account</h4>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-1">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                  </div>
+                  <AccountDeletionDialog />
+                </div>
+              </div>
+            </div>
+
+            {/* GDPR Info */}
+            <div className="p-4 rounded-lg bg-muted/20 border border-border/30">
+              <p className="text-xs text-muted-foreground tracking-[-0.3px]">
+                <span className="font-medium text-foreground">Your Privacy Rights:</span> Under GDPR and CCPA, you have the right to access, export, and delete your personal data at any time. We process your data in accordance with our Privacy Policy.
+              </p>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 

@@ -1166,7 +1166,7 @@ export default function CampaignApply() {
               )}
 
               {!isLoggedIn ? <>
-                <div className="text-center py-10 px-8 rounded-2xl bg-[#0e0e0e]">
+                <div className="text-center py-10 px-8 rounded-2xl bg-[#f5f5f5] dark:bg-[#0e0e0e]">
                   <h3 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px] mb-2">Join to Apply</h3>
                   <p className="text-muted-foreground text-sm font-['Inter'] tracking-[-0.5px] mb-8 max-w-[260px] mx-auto leading-relaxed">
                     Create an account or sign in to apply for this {isBoost ? 'boost' : 'campaign'}
@@ -1175,7 +1175,7 @@ export default function CampaignApply() {
                     <Button onClick={() => setShowAuthDialog(true)} className="w-full font-['Inter'] tracking-[-0.5px] font-medium" size="lg">
                       Create Account
                     </Button>
-                    
+
                   </div>
                 </div>
                 <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
@@ -1219,7 +1219,7 @@ export default function CampaignApply() {
                               <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
                             </button>;
                   })}
-                        <button onClick={() => setShowAddAccountDialog(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-transparent hover:bg-[#0e0e0e] transition-colors text-muted-foreground hover:text-foreground">
+                        <button onClick={() => setShowAddAccountDialog(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-transparent hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground">
                           <Plus className="h-4 w-4" />
                           <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
                         </button>

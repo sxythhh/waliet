@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.rate_limits (
 ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
 
 -- Service role can manage all rate limits
+DROP POLICY IF EXISTS "Service role manages rate limits" ON public.rate_limits;
 CREATE POLICY "Service role manages rate limits"
   ON public.rate_limits
   FOR ALL
@@ -24,8 +25,8 @@ CREATE POLICY "Service role manages rate limits"
   WITH CHECK (true);
 
 -- Create index for fast lookups
-CREATE INDEX idx_rate_limits_user_action ON public.rate_limits(user_id, action_type);
-CREATE INDEX idx_rate_limits_window ON public.rate_limits(window_start);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_user_action ON public.rate_limits(user_id, action_type);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_window ON public.rate_limits(window_start);
 
 -- 2. Create rate limit check function
 CREATE OR REPLACE FUNCTION public.check_rate_limit(

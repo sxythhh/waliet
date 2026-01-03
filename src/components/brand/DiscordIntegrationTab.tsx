@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -146,13 +147,7 @@ export function DiscordIntegrationTab({ brandId }: DiscordIntegrationTabProps) {
   const isWebhookConfigured = !!webhookUrl && webhookUrl.startsWith("https://discord.com/api/webhooks/");
 
   if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    );
+    return <PageLoading />;
   }
 
   return (

@@ -116,8 +116,19 @@ CREATE POLICY "Admins can update incidents"
     )
   );
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_alerts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_incidents;
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_alerts;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_incidents;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 COMMENT ON TABLE public.admin_alerts IS 'Platform alerts for admin monitoring';
 COMMENT ON TABLE public.admin_incidents IS 'Incident tracking for platform issues';

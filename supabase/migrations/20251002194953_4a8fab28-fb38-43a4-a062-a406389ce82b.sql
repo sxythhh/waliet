@@ -76,7 +76,7 @@ WITH CHECK (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- Initialize encryption key (admins should rotate this)
 INSERT INTO public.encryption_keys (key_name, key_value)
-VALUES ('payout_details_key', encode(gen_random_bytes(32), 'hex'))
+VALUES ('payout_details_key', encode(extensions.gen_random_bytes(32), 'hex'))
 ON CONFLICT (key_name) DO NOTHING;
 
 -- Function to encrypt payout details

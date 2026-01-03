@@ -70,6 +70,7 @@ ALTER TABLE discord_ticket_messages ENABLE ROW LEVEL SECURITY;
 -- RLS Policies for discord_ticket_config
 
 -- Brand admins can view their config
+DROP POLICY IF EXISTS "Brand admins can view their discord config" ON discord_ticket_config;
 CREATE POLICY "Brand admins can view their discord config"
   ON discord_ticket_config FOR SELECT
   USING (
@@ -82,6 +83,7 @@ CREATE POLICY "Brand admins can view their discord config"
   );
 
 -- Brand owners can manage config
+DROP POLICY IF EXISTS "Brand owners can manage discord config" ON discord_ticket_config;
 CREATE POLICY "Brand owners can manage discord config"
   ON discord_ticket_config FOR ALL
   USING (
@@ -94,6 +96,7 @@ CREATE POLICY "Brand owners can manage discord config"
   );
 
 -- System admins can manage all configs
+DROP POLICY IF EXISTS "System admins can manage all discord configs" ON discord_ticket_config;
 CREATE POLICY "System admins can manage all discord configs"
   ON discord_ticket_config FOR ALL
   USING (
@@ -103,6 +106,7 @@ CREATE POLICY "System admins can manage all discord configs"
 -- RLS Policies for discord_ticket_channels
 
 -- Users can view channels for their tickets
+DROP POLICY IF EXISTS "Users can view their ticket channels" ON discord_ticket_channels;
 CREATE POLICY "Users can view their ticket channels"
   ON discord_ticket_channels FOR SELECT
   USING (
@@ -114,6 +118,7 @@ CREATE POLICY "Users can view their ticket channels"
   );
 
 -- Admins can view all channels
+DROP POLICY IF EXISTS "Admins can view all ticket channels" ON discord_ticket_channels;
 CREATE POLICY "Admins can view all ticket channels"
   ON discord_ticket_channels FOR SELECT
   USING (
@@ -121,6 +126,7 @@ CREATE POLICY "Admins can view all ticket channels"
   );
 
 -- Service role can manage (for edge functions)
+DROP POLICY IF EXISTS "Service can manage ticket channels" ON discord_ticket_channels;
 CREATE POLICY "Service can manage ticket channels"
   ON discord_ticket_channels FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
@@ -128,6 +134,7 @@ CREATE POLICY "Service can manage ticket channels"
 -- RLS Policies for discord_ticket_messages
 
 -- Users can view message sync records for their tickets
+DROP POLICY IF EXISTS "Users can view their message syncs" ON discord_ticket_messages;
 CREATE POLICY "Users can view their message syncs"
   ON discord_ticket_messages FOR SELECT
   USING (
@@ -139,6 +146,7 @@ CREATE POLICY "Users can view their message syncs"
   );
 
 -- Admins can view all syncs
+DROP POLICY IF EXISTS "Admins can view all message syncs" ON discord_ticket_messages;
 CREATE POLICY "Admins can view all message syncs"
   ON discord_ticket_messages FOR SELECT
   USING (
@@ -146,12 +154,18 @@ CREATE POLICY "Admins can view all message syncs"
   );
 
 -- Service role can manage (for edge functions)
+DROP POLICY IF EXISTS "Service can manage message syncs" ON discord_ticket_messages;
 CREATE POLICY "Service can manage message syncs"
   ON discord_ticket_messages FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
 
 -- Enable realtime for ticket channel updates
-ALTER PUBLICATION supabase_realtime ADD TABLE discord_ticket_channels;
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE discord_ticket_channels;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Add helper column to ticket_messages to track discord sync status
 ALTER TABLE ticket_messages ADD COLUMN IF NOT EXISTS discord_synced BOOLEAN DEFAULT false;

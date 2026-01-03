@@ -64,10 +64,10 @@ export const CampaignCard = memo(function CampaignCard({
 
           {/* Action Buttons */}
           {(showBookmark || showFullscreen) && <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {showFullscreen && onFullscreenClick && <button onClick={onFullscreenClick} className="md:hidden p-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all">
+              {showFullscreen && onFullscreenClick && <button onClick={onFullscreenClick} aria-label="View fullscreen" className="md:hidden p-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all">
                   <Maximize2 className="h-3.5 w-3.5" />
                 </button>}
-              {showBookmark && onBookmarkClick && <button onClick={onBookmarkClick} className={`p-1.5 rounded-lg backdrop-blur-sm transition-all ${isBookmarked ? "bg-blue-500 text-white" : "bg-black/40 text-white hover:bg-black/60"}`}>
+              {showBookmark && onBookmarkClick && <button onClick={onBookmarkClick} aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"} className={`p-1.5 rounded-lg backdrop-blur-sm transition-all ${isBookmarked ? "bg-blue-500 text-white" : "bg-black/40 text-white hover:bg-black/60"}`}>
                   <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? "fill-current" : ""}`} />
                 </button>}
             </div>}

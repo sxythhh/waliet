@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronRight, ChevronLeft, Zap } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, Zap, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import clippingIcon from "@/assets/clipping-icon.svg";
@@ -11,6 +11,7 @@ import boostIcon from "@/assets/boost-icon.svg";
 import blueprintsIcon from "@/assets/blueprints-inactive.svg";
 import noteStackIcon from "@/assets/icons/note-stack.svg";
 import { CAMPAIGN_TEMPLATES, CampaignTemplate } from "./CampaignCreationWizard";
+import { useBrandUsage } from "@/hooks/useBrandUsage";
 interface Blueprint {
   id: string;
   title: string;
@@ -22,6 +23,7 @@ interface CreateCampaignTypeDialogProps {
   onSelectJobPost?: () => void;
   trigger?: React.ReactNode;
   brandId?: string;
+  subscriptionPlan?: string | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   defaultBlueprintId?: string;
@@ -33,11 +35,13 @@ export function CreateCampaignTypeDialog({
   onSelectJobPost,
   trigger,
   brandId,
+  subscriptionPlan,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   defaultBlueprintId
 }: CreateCampaignTypeDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const { canCreateCampaign, canCreateBoost, campaignsUsed, campaignsLimit, boostsUsed, boostsLimit } = useBrandUsage(brandId, subscriptionPlan);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
   const [selectedBlueprint, setSelectedBlueprint] = useState(defaultBlueprintId || "");
@@ -217,7 +221,7 @@ export function CreateCampaignTypeDialog({
 
                 <div className="space-y-2">
                   {/* Clipping Option */}
-                  <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
+                  <button onClick={handleClippingClick} disabled={!hasBlueprints || !canCreateCampaign} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
                       backgroundColor: '#a7751e'
                     }}>
@@ -227,14 +231,21 @@ export function CreateCampaignTypeDialog({
                       <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
                         Clipping
                       </span>
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
-                        Pay per view with fixed CPM rates
-                      </p>
+                      {!canCreateCampaign ? (
+                        <p className="text-xs text-amber-500 font-inter tracking-[-0.5px] mt-0.5 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Limit reached ({campaignsUsed}/{campaignsLimit})
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                          Pay per view with fixed CPM rates
+                        </p>
+                      )}
                     </div>
                   </button>
 
                   {/* Boost Option */}
-                  <button onClick={handleBoostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
+                  <button onClick={handleBoostClick} disabled={!canCreateBoost} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
                       backgroundColor: '#1ea75e'
                     }}>
@@ -244,9 +255,16 @@ export function CreateCampaignTypeDialog({
                       <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
                         Boost
                       </span>
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
-                        Monthly retainer with fixed creator slots
-                  </p>
+                      {!canCreateBoost ? (
+                        <p className="text-xs text-amber-500 font-inter tracking-[-0.5px] mt-0.5 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Limit reached ({boostsUsed}/{boostsLimit})
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                          Monthly retainer with fixed creator slots
+                        </p>
+                      )}
                 </div>
               </button>
 
@@ -278,7 +296,7 @@ export function CreateCampaignTypeDialog({
   }
   return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7]">
+        {trigger || <Button className="gap-2 font-geist font-normal tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7]">
             <Plus className="h-4 w-4" />
             Create Campaign
           </Button>}
@@ -328,7 +346,7 @@ export function CreateCampaignTypeDialog({
             
             <div className="space-y-2">
               {/* Clipping Option */}
-              <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
+              <button onClick={handleClippingClick} disabled={!hasBlueprints || !canCreateCampaign} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
                 backgroundColor: '#a7751e'
               }}>
@@ -338,14 +356,21 @@ export function CreateCampaignTypeDialog({
                   <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
                     Clipping
                   </span>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
-                    Pay per view with fixed CPM rates
-                  </p>
+                  {!canCreateCampaign ? (
+                    <p className="text-xs text-amber-500 font-inter tracking-[-0.5px] mt-0.5 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Limit reached ({campaignsUsed}/{campaignsLimit})
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                      Pay per view with fixed CPM rates
+                    </p>
+                  )}
                 </div>
               </button>
 
               {/* Boost Option */}
-              <button onClick={handleBoostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
+              <button onClick={handleBoostClick} disabled={!canCreateBoost} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
                 backgroundColor: '#1ea75e'
               }}>
@@ -355,9 +380,16 @@ export function CreateCampaignTypeDialog({
                   <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
                     Boost
                   </span>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
-                    Monthly retainer with fixed creator slots
-                  </p>
+                  {!canCreateBoost ? (
+                    <p className="text-xs text-amber-500 font-inter tracking-[-0.5px] mt-0.5 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Limit reached ({boostsUsed}/{boostsLimit})
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                      Monthly retainer with fixed creator slots
+                    </p>
+                  )}
                 </div>
               </button>
 

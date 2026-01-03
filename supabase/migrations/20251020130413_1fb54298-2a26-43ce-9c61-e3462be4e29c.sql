@@ -1,6 +1,7 @@
 -- Create storage bucket for campaign videos
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('campaign-videos', 'campaign-videos', true);
+VALUES ('campaign-videos', 'campaign-videos', true)
+ON CONFLICT (id) DO NOTHING;
 
 -- Create RLS policies for campaign videos bucket
 CREATE POLICY "Admins can upload videos"

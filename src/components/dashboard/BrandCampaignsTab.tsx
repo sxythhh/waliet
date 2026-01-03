@@ -88,6 +88,7 @@ export function BrandCampaignsTab({
   const [brandColor, setBrandColor] = useState<string | undefined>(undefined);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
@@ -124,7 +125,7 @@ export function BrandCampaignsTab({
       // Fetch brand info for logo, color and subscription status
       const {
         data: brandData
-      } = await supabase.from("brands").select("logo_url, brand_color, subscription_status").eq("id", brandId).single();
+      } = await supabase.from("brands").select("logo_url, brand_color, subscription_status, subscription_plan").eq("id", brandId).single();
       if (brandData?.logo_url) {
         setBrandLogoUrl(brandData.logo_url);
       }
@@ -132,6 +133,7 @@ export function BrandCampaignsTab({
         setBrandColor(brandData.brand_color);
       }
       setSubscriptionStatus(brandData?.subscription_status || null);
+      setSubscriptionPlan(brandData?.subscription_plan || null);
 
       // Fetch campaigns
       const {
@@ -388,7 +390,7 @@ export function BrandCampaignsTab({
               <span className="hidden sm:inline">Create Campaign</span>
               <span className="sm:hidden">Create</span>
             </Button>
-            <CreateCampaignTypeDialog brandId={brandId} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={(blueprintId, template) => {
+            <CreateCampaignTypeDialog brandId={brandId} subscriptionPlan={subscriptionPlan} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={(blueprintId, template) => {
           setSelectedTemplate(template);
           setCreateCampaignOpen(true);
         }} onSelectManaged={() => {
@@ -465,13 +467,13 @@ export function BrandCampaignsTab({
 
 
       {/* Create Campaign Wizard (Clipping) */}
-      <CampaignCreationWizard brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={(open) => {
+      <CampaignCreationWizard brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} subscriptionPlan={subscriptionPlan} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={(open) => {
         setCreateCampaignOpen(open);
         if (!open) setSelectedTemplate(undefined);
       }} template={selectedTemplate} />
 
       {/* Create Bounty Dialog (Managed) */}
-      <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} onSuccess={fetchBrandData} />
+      <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} subscriptionPlan={subscriptionPlan} onSuccess={fetchBrandData} />
 
       {/* Create Job Post Dialog */}
       <CreateJobPostDialog open={createJobPostOpen} onOpenChange={setCreateJobPostOpen} brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} />

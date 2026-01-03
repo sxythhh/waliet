@@ -6,6 +6,7 @@ import { Trash2, Shield, User, Crown, Users, Clock, Link2, Copy, Check } from "l
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { formatDistanceToNow } from "date-fns";
+import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 
 interface Member {
   id: string;
@@ -56,6 +57,11 @@ export function TeamMembersTab({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    type: "member" | "link" | "invitation" | null;
+    id: string;
+    name?: string;
+  }>({ type: null, id: "" });
   useEffect(() => {
     if (brandId) {
       fetchTeamData();
@@ -138,35 +144,32 @@ export function TeamMembersTab({
       setLoading(false);
     }
   };
-  const handleRemoveMember = async (memberId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from("brand_members").delete().eq("id", memberId);
-      if (error) throw error;
-      toast.success("Member removed successfully");
-      fetchTeamData();
-    } catch (error) {
-      console.error("Error removing member:", error);
-      toast.error("Failed to remove member");
-    }
-  };
-  const handleCancelInvitation = async (invitationId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from("brand_invitations").update({
-        status: "cancelled"
-      }).eq("id", invitationId);
-      if (error) throw error;
-      toast.success("Invitation cancelled");
-      fetchTeamData();
-    } catch (error) {
-      console.error("Error cancelling invitation:", error);
-      toast.error("Failed to cancel invitation");
-    }
-  };
+  const handleConfirmAction = async () => {
+    const { type, id } = confirmDialog;
+    if (!type || !id) return;
 
+    try {
+      if (type === "member") {
+        const { error } = await supabase.from("brand_members").delete().eq("id", id);
+        if (error) throw error;
+        toast.success("Member removed successfully");
+      } else if (type === "link") {
+        const { error } = await supabase.from("brand_invitations").update({ status: "cancelled" }).eq("id", id);
+        if (error) throw error;
+        toast.success("Link revoked");
+      } else if (type === "invitation") {
+        const { error } = await supabase.from("brand_invitations").update({ status: "cancelled" }).eq("id", id);
+        if (error) throw error;
+        toast.success("Invitation cancelled");
+      }
+      fetchTeamData();
+    } catch (error) {
+      console.error(`Error handling ${type}:`, error);
+      toast.error(`Failed to ${type === "member" ? "remove member" : type === "link" ? "revoke link" : "cancel invitation"}`);
+    } finally {
+      setConfirmDialog({ type: null, id: "" });
+    }
+  };
   const generateNewLink = async () => {
     if (!currentUserId) return;
 
@@ -207,23 +210,6 @@ export function TeamMembersTab({
     }
   };
 
-  const revokeLink = async (inviteId: string) => {
-    try {
-      const { error } = await supabase
-        .from("brand_invitations")
-        .update({ status: "cancelled" })
-        .eq("id", inviteId);
-
-      if (error) throw error;
-
-      fetchTeamData();
-      toast.success("Link revoked");
-    } catch (error) {
-      console.error("Error revoking link:", error);
-      toast.error("Failed to revoke link");
-    }
-  };
-
   const getInviteUrl = (token: string) => {
     return `${window.location.origin}/brand/${brandSlug}/join/${token}`;
   };
@@ -243,14 +229,11 @@ export function TeamMembersTab({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column - Active Members */}
-      <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+      <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium tracking-[-0.5px]">
-              Team Members ({members.length})
-            </h3>
-          </div>
+          <h3 className="text-sm font-medium tracking-[-0.5px]">
+            Team Members ({members.length})
+          </h3>
           {canManageTeam && (
             <button
               onClick={() => setInviteDialogOpen(true)}
@@ -306,8 +289,9 @@ export function TeamMembersTab({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveMember(member.id)}
+                      onClick={() => setConfirmDialog({ type: "member", id: member.id, name: member.profiles.full_name })}
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      aria-label="Remove member"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -323,14 +307,11 @@ export function TeamMembersTab({
       <div className="space-y-6">
         {/* Invite Links Card */}
         {canManageTeam && (
-          <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+          <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium tracking-[-0.5px]">
-                  Invite Links
-                </h3>
-              </div>
+              <h3 className="text-sm font-medium tracking-[-0.5px]">
+                Invite Links
+              </h3>
               <button
                 onClick={generateNewLink}
                 disabled={generatingLink}
@@ -380,8 +361,9 @@ export function TeamMembersTab({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => revokeLink(invite.id)}
+                        onClick={() => setConfirmDialog({ type: "link", id: invite.id })}
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        aria-label="Revoke link"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -394,13 +376,10 @@ export function TeamMembersTab({
         )}
 
         {/* Pending Invitations Card */}
-        <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium tracking-[-0.5px]">
-              Pending Invitations ({invitations.length})
-            </h3>
-          </div>
+        <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
+          <h3 className="text-sm font-medium tracking-[-0.5px]">
+            Pending Invitations ({invitations.length})
+          </h3>
 
           <div className="space-y-1">
             {invitations.length === 0 ? (
@@ -429,7 +408,7 @@ export function TeamMembersTab({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCancelInvitation(invitation.id)}
+                        onClick={() => setConfirmDialog({ type: "invitation", id: invitation.id, name: invitation.email })}
                         className="h-7 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                       >
                         Cancel
@@ -449,6 +428,33 @@ export function TeamMembersTab({
         brandId={brandId}
         brandSlug={brandSlug}
         onInviteSent={fetchTeamData}
+      />
+
+      <ConfirmDeleteDialog
+        open={confirmDialog.type !== null}
+        onOpenChange={(open) => !open && setConfirmDialog({ type: null, id: "" })}
+        title={
+          confirmDialog.type === "member"
+            ? "Remove Team Member"
+            : confirmDialog.type === "link"
+            ? "Revoke Invite Link"
+            : "Cancel Invitation"
+        }
+        description={
+          confirmDialog.type === "member"
+            ? `Are you sure you want to remove ${confirmDialog.name || "this member"} from the team? They will lose access to this workspace.`
+            : confirmDialog.type === "link"
+            ? "Are you sure you want to revoke this invite link? Anyone with this link will no longer be able to join."
+            : `Are you sure you want to cancel the invitation to ${confirmDialog.name || "this email"}?`
+        }
+        onConfirm={handleConfirmAction}
+        confirmText={
+          confirmDialog.type === "member"
+            ? "Remove"
+            : confirmDialog.type === "link"
+            ? "Revoke"
+            : "Cancel Invitation"
+        }
       />
     </div>
   );

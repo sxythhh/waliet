@@ -42,6 +42,15 @@ import { TransactionShareDialog } from "./TransactionShareDialog";
 import { EarningsChart } from "./EarningsChart";
 import { addDays } from "date-fns";
 import { UsdWithLocal } from "@/components/LocalCurrencyAmount";
+import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
+import { TransactionsTable, Transaction as TransactionType } from "@/components/dashboard/TransactionsTable";
+import { DashboardProfileHeader } from "@/components/dashboard/DashboardProfileHeader";
+import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
+import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviewsSection";
+import { PortfolioBuilder } from "@/components/portfolio/builder";
+import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface UserProfile {
   username?: string;
   avatar_url?: string;
@@ -155,6 +164,88 @@ export function WalletTab() {
   const [filterSubmenu, setFilterSubmenu] = useState<'main' | 'type' | 'status' | 'program'>('main');
   const [filterSearch, setFilterSearch] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfile | undefined>(undefined);
+  const [onboardingProfile, setOnboardingProfile] = useState<{
+    id: string;
+    full_name: string | null;
+    username: string | null;
+    content_styles: string[] | null;
+    content_languages: string[] | null;
+    country: string | null;
+    city: string | null;
+    show_location: boolean;
+    bio: string | null;
+    phone_number: string | null;
+    total_earnings: number | null;
+    trust_score: number | null;
+    avatar_url: string | null;
+    banner_url: string | null;
+    created_at: string;
+  } | null>(null);
+  const [performanceStats, setPerformanceStats] = useState({
+    totalEarnings: 0,
+    trustScore: 0,
+    campaignsJoined: 0,
+    approvalRate: 0
+  });
+  const [socialAccountsCount, setSocialAccountsCount] = useState(0);
+  const [hasDemographicsApproved, setHasDemographicsApproved] = useState(false);
+  const [joinedCampaignsCount, setJoinedCampaignsCount] = useState(0);
+  const [profileActiveTab, setProfileActiveTab] = useState("portfolio");
+  const [editProfileDialogOpen, setEditProfileDialogOpen] = useState(false);
+  const [addSocialDialogOpen, setAddSocialDialogOpen] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState<Array<{
+    id: string;
+    platform: string;
+    username: string;
+    is_verified: boolean;
+    account_link: string | null;
+  }>>([]);
+  const [campaignParticipations, setCampaignParticipations] = useState<Array<{
+    id: string;
+    campaign_id: string;
+    status: string;
+    submitted_at: string;
+    views?: number;
+    earnings?: number;
+    campaign: {
+      id: string;
+      title: string;
+      slug: string;
+      brand_name: string;
+      brand_logo_url: string | null;
+      banner_url: string | null;
+      rpm_rate: number;
+      brands?: { logo_url: string; is_verified?: boolean } | null;
+    };
+  }>>([]);
+  const [boostParticipations, setBoostParticipations] = useState<Array<{
+    id: string;
+    bounty_campaign_id: string;
+    status: string;
+    applied_at: string;
+    boost: {
+      id: string;
+      title: string;
+      slug: string;
+      monthly_retainer: number;
+      videos_per_month: number;
+      brands?: { name: string; logo_url: string; is_verified?: boolean } | null;
+    };
+    videos_submitted?: number;
+    total_earned?: number;
+  }>>([]);
+  const [testimonials, setTestimonials] = useState<Array<{
+    id: string;
+    content: string;
+    rating: number | null;
+    created_at: string;
+    brand: {
+      id: string;
+      name: string;
+      logo_url: string | null;
+      is_verified: boolean;
+    } | null;
+  }>>([]);
   const {
     toast
   } = useToast();
@@ -225,10 +316,149 @@ export function WalletTab() {
       setIsRequestingEarningsPayout(false);
     }
   };
+  // Fetch onboarding data for the Get Discovered checklist
+  const fetchOnboardingData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Fetch profile data with extended fields
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, content_styles, content_languages, country, city, show_location, bio, phone_number, total_earnings, trust_score, avatar_url, banner_url, created_at")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileData) {
+      setOnboardingProfile(profileData);
+    }
+
+    // Fetch social accounts
+    const { data: socialData } = await supabase
+      .from("social_accounts")
+      .select("id, platform, username, is_verified, account_link")
+      .eq("user_id", session.user.id)
+      .eq("hidden_from_public", false);
+
+    setSocialAccounts(socialData || []);
+    setSocialAccountsCount(socialData?.length || 0);
+
+    // Check for approved demographics
+    const { data: demographics } = await supabase
+      .from("demographic_submissions")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .eq("status", "approved")
+      .limit(1);
+
+    setHasDemographicsApproved((demographics?.length || 0) > 0);
+
+    // Fetch campaign participations (approved submissions)
+    const { data: campaigns } = await supabase
+      .from("campaign_submissions")
+      .select(`
+        id, campaign_id, status, submitted_at, views, earnings,
+        campaigns (id, title, slug, brand_name, brand_logo_url, banner_url, rpm_rate, brands (logo_url, is_verified))
+      `)
+      .eq("creator_id", session.user.id)
+      .eq("status", "approved")
+      .order("submitted_at", { ascending: false });
+
+    // Deduplicate by campaign_id
+    const uniqueCampaigns = campaigns ? [...new Map(campaigns.map((c: any) => [c.campaign_id, c])).values()] : [];
+    setCampaignParticipations(uniqueCampaigns.map((c: any) => ({
+      id: c.id,
+      campaign_id: c.campaign_id,
+      status: c.status,
+      submitted_at: c.submitted_at,
+      views: c.views,
+      earnings: c.earnings,
+      campaign: c.campaigns
+    })));
+
+    const approvedCount = uniqueCampaigns.length;
+    setJoinedCampaignsCount(approvedCount);
+
+    // Fetch boost participations
+    const { data: boosts } = await supabase
+      .from("bounty_applications")
+      .select(`
+        id, bounty_campaign_id, status, applied_at,
+        bounty_campaigns (id, title, slug, monthly_retainer, videos_per_month, brands (name, logo_url, is_verified))
+      `)
+      .eq("user_id", session.user.id)
+      .eq("status", "accepted")
+      .order("applied_at", { ascending: false });
+
+    if (boosts) {
+      // Fetch video counts and earnings for each boost
+      const boostsWithStats = await Promise.all(boosts.map(async (app: any) => {
+        const { data: videoSubmissions } = await supabase
+          .from("video_submissions")
+          .select("id, payout_amount, status")
+          .eq("source_type", "boost")
+          .eq("source_id", app.bounty_campaign_id)
+          .eq("creator_id", session.user.id);
+
+        const approvedVideos = videoSubmissions?.filter(s => s.status === "approved") || [];
+        const totalEarned = approvedVideos.reduce((acc, s) => acc + (s.payout_amount || 0), 0);
+
+        return {
+          id: app.id,
+          bounty_campaign_id: app.bounty_campaign_id,
+          status: app.status,
+          applied_at: app.applied_at,
+          boost: app.bounty_campaigns,
+          videos_submitted: videoSubmissions?.length || 0,
+          total_earned: totalEarned
+        };
+      }));
+      setBoostParticipations(boostsWithStats);
+    }
+
+    // Fetch testimonials
+    const { data: testimonialData } = await supabase
+      .from("creator_testimonials")
+      .select(`
+        id, content, rating, created_at,
+        brands:brand_id (id, name, logo_url, is_verified)
+      `)
+      .eq("creator_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+    if (testimonialData) {
+      setTestimonials(testimonialData.map((t: any) => ({
+        id: t.id,
+        content: t.content,
+        rating: t.rating,
+        created_at: t.created_at,
+        brand: t.brands
+      })));
+    }
+
+    // Calculate approval rate
+    const { data: allSubmissions } = await supabase
+      .from("campaign_submissions")
+      .select("status")
+      .eq("creator_id", session.user.id);
+
+    const declinedCount = allSubmissions?.filter(s => s.status === "declined").length || 0;
+    const totalDecided = approvedCount + declinedCount;
+    const approvalRate = totalDecided > 0 ? (approvedCount / totalDecided) * 100 : 100;
+
+    // Update performance stats
+    setPerformanceStats({
+      totalEarnings: profileData?.total_earnings || 0,
+      trustScore: profileData?.trust_score || 100,
+      campaignsJoined: approvedCount,
+      approvalRate: approvalRate
+    });
+  };
+
   useEffect(() => {
     fetchWallet();
     fetchPendingBoostEarnings();
     fetchClearingPayouts();
+    fetchOnboardingData();
 
     // Set up real-time listener for payout requests
     const channel = supabase.channel('payout-updates').on('postgres_changes', {
@@ -1194,39 +1424,232 @@ export function WalletTab() {
     '1Y': '1 Year',
     'TW': 'This Week'
   };
-  return <div className="space-y-6 pt-6 font-inter tracking-[-0.5px]">
 
-      {/* Profile Header Section - Keep max-width */}
-      <div className="max-w-[650px] mx-auto">
-        <ProfileHeader totalViews={0} totalPosts={transactions.filter(t => t.type === 'earning' || t.type === 'boost_earning').length} />
-      </div>
+  // Generate onboarding tasks for Get Discovered checklist
+  const onboardingTasks = [{
+    id: 'profile_info',
+    label: 'Add basic profile info',
+    completed: !!(onboardingProfile?.full_name && onboardingProfile?.username),
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'content_preferences',
+    label: 'Choose content preferences',
+    completed: !!(onboardingProfile?.content_styles && onboardingProfile.content_styles.length > 0),
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'location',
+    label: 'Add your location',
+    completed: !!onboardingProfile?.country,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'phone',
+    label: 'Add phone number',
+    completed: !!onboardingProfile?.phone_number,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'social_account',
+    label: 'Connect a social account',
+    completed: socialAccountsCount > 0,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'demographics',
+    label: 'Submit demographics',
+    completed: hasDemographicsApproved,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'join_campaign',
+    label: 'Join your first campaign',
+    completed: joinedCampaignsCount > 0,
+    onClick: () => navigate('/dashboard?tab=discover')
+  }, {
+    id: 'earn_first',
+    label: 'Earn your first payout',
+    completed: (onboardingProfile?.total_earnings || 0) > 0,
+    onClick: () => navigate('/dashboard?tab=discover')
+  }];
 
-      {/* Earnings Chart */}
-      <div className="max-w-[650px] mx-auto">
-        <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
-            </div>
-            <div className="text-right">
-              <p className="text-lg font-bold text-emerald-500 font-inter tracking-[-0.5px]">
-                <UsdWithLocal amount={wallet?.total_earned || 0} />
-              </p>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
-            </div>
+  return <div className="h-full overflow-y-auto bg-background">
+      {/* Dashboard Profile Header */}
+      {onboardingProfile && (
+        <DashboardProfileHeader
+          profile={{
+            id: onboardingProfile.id,
+            username: onboardingProfile.username,
+            full_name: onboardingProfile.full_name,
+            bio: onboardingProfile.bio,
+            avatar_url: onboardingProfile.avatar_url,
+            banner_url: onboardingProfile.banner_url,
+            created_at: onboardingProfile.created_at,
+          }}
+          socialAccounts={socialAccounts}
+          onEditProfile={() => setEditProfileDialogOpen(true)}
+          onAddAccount={() => setAddSocialDialogOpen(true)}
+          onAvatarUpdated={fetchOnboardingData}
+        />
+      )}
+
+      {/* Stats Cards */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+        <div className="grid grid-cols-5 gap-3">
+          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
+            <p className="text-2xl font-bold text-emerald-500 font-['Geist'] tracking-[-0.5px]">
+              ${(onboardingProfile?.total_earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
+              Total Earned
+            </p>
           </div>
-          <EarningsChart transactions={transactions} totalEarned={wallet?.total_earned || 0} />
+          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
+            <p className={`text-2xl font-bold font-['Geist'] tracking-[-0.5px] ${
+              (onboardingProfile?.trust_score || 100) >= 80 ? 'text-green-500' :
+              (onboardingProfile?.trust_score || 100) >= 60 ? 'text-yellow-500' : 'text-red-500'
+            }`}>
+              {onboardingProfile?.trust_score || 100}
+            </p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
+              Trust Score
+            </p>
+          </div>
+          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
+            <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">
+              {campaignParticipations.length}
+            </p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
+              Campaigns
+            </p>
+          </div>
+          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
+            <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">
+              {boostParticipations.length}
+            </p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
+              Boosts
+            </p>
+          </div>
+          <div className="bg-card/50 border border-border/50 rounded-xl p-4 text-center">
+            {(() => {
+              const ratedTestimonials = testimonials.filter(t => t.rating !== null);
+              const avgRating = ratedTestimonials.length > 0
+                ? ratedTestimonials.reduce((sum, t) => sum + (t.rating || 0), 0) / ratedTestimonials.length
+                : 0;
+              return (
+                <>
+                  <p className="text-2xl font-bold text-yellow-500 font-['Geist'] tracking-[-0.5px]">
+                    {avgRating > 0 ? avgRating.toFixed(1) : '—'}
+                  </p>
+                  <div className="flex items-center justify-center gap-0.5 mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className={`h-3 w-3 ${
+                          i < Math.round(avgRating)
+                            ? "text-yellow-500 fill-yellow-500"
+                            : "text-muted-foreground/30"
+                        }`}
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">
+                    {testimonials.length} {testimonials.length === 1 ? 'Review' : 'Reviews'}
+                  </p>
+                </>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
-      {/* Balance Cards - Hidden */}
+      {/* Get Discovered Onboarding Checklist - Dismissible Banner */}
+      {onboardingProfile && !onboardingTasks.every(t => t.completed) && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+          <ProfileOnboardingChecklist tasks={onboardingTasks} />
+        </div>
+      )}
 
-      {/* Payout Pipeline Section - Hidden */}
+      {/* Tabs Section */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
+        <Tabs value={profileActiveTab} onValueChange={setProfileActiveTab} className="w-full">
+          <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
+            <TabsTrigger
+              value="portfolio"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
+            >
+              Portfolio
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
+            >
+              History
+            </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
+            >
+              Reviews {testimonials.length > 0 && `(${testimonials.length})`}
+            </TabsTrigger>
+          </TabsList>
 
-    {/* Team & Affiliate Earnings Charts - Hidden */}
+          <TabsContent value="portfolio" className="mt-6">
+            <PortfolioBuilder />
+          </TabsContent>
 
-      {/* Transactions Table - Full width with max-w-[900px] */}
-      <div className="max-w-[900px] mx-auto">
+          <TabsContent value="history" className="mt-6">
+            <DashboardHistorySection
+              items={[
+                ...campaignParticipations.map((p) => ({
+                  id: p.campaign?.slug || p.campaign_id,
+                  type: "campaign" as const,
+                  title: p.campaign?.title || "Campaign",
+                  brandName: p.campaign?.brand_name || "",
+                  brandLogoUrl: p.campaign?.brands?.logo_url || p.campaign?.brand_logo_url || null,
+                  brandIsVerified: p.campaign?.brands?.is_verified,
+                  joinedAt: p.submitted_at,
+                  earnings: p.earnings,
+                })),
+                ...boostParticipations.map((p) => ({
+                  id: p.boost?.slug || p.bounty_campaign_id,
+                  type: "boost" as const,
+                  title: p.boost?.title || "Boost",
+                  brandName: p.boost?.brands?.name || "",
+                  brandLogoUrl: p.boost?.brands?.logo_url || null,
+                  brandIsVerified: p.boost?.brands?.is_verified,
+                  joinedAt: p.applied_at,
+                  earnings: p.total_earned,
+                })),
+              ]}
+              onItemClick={(slug) => navigate(`/c/${slug}`)}
+            />
+          </TabsContent>
+
+          <TabsContent value="reviews" className="mt-6">
+            <DashboardReviewsSection testimonials={testimonials} />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Edit Profile Dialog */}
+      <EditProfileDialog
+        open={editProfileDialogOpen}
+        onOpenChange={setEditProfileDialogOpen}
+        onSave={fetchOnboardingData}
+      />
+
+      {/* Add Social Account Dialog */}
+      <AddSocialAccountDialog
+        open={addSocialDialogOpen}
+        onOpenChange={setAddSocialDialogOpen}
+        onSuccess={fetchOnboardingData}
+      />
+
+      {/* Hidden legacy content below - kept for potential future use */}
+      <div className="hidden">
       <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
         {/* Filter Button */}
         <div className="pt-5 pb-4 px-0">

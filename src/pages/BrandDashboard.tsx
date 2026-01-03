@@ -474,10 +474,11 @@ export default function BrandDashboard() {
         </AlertDialog>
 
         {/* Bounty Creation Dialog */}
-        <CreateBountyDialog 
+        <CreateBountyDialog
           open={createBountyOpen}
           onOpenChange={setCreateBountyOpen}
           brandId={brand.id}
+          subscriptionPlan={brand.subscription_plan}
           onSuccess={fetchBrandData}
         />
         </div>

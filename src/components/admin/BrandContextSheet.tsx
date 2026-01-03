@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Crown } from "lucide-react";
+import { CustomPlanManager } from "./CustomPlanManager";
 
 interface Brand {
   id: string;
@@ -117,6 +120,11 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
   const [walletAction, setWalletAction] = useState<"add" | "remove">("add");
   const [isAdjustingWallet, setIsAdjustingWallet] = useState(false);
 
+  // Custom plan dialog state
+  const [customPlanDialogOpen, setCustomPlanDialogOpen] = useState(false);
+  const [hasCustomPlan, setHasCustomPlan] = useState(false);
+  const [customPlanName, setCustomPlanName] = useState<string | null>(null);
+
   useEffect(() => {
     if (brand && open) {
       fetchAllBrandData(brand.id);
@@ -130,6 +138,17 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
   const fetchAllBrandData = async (brandId: string) => {
     setLoading(true);
     try {
+      // Fetch custom plan status
+      const { data: customPlan } = await supabase
+        .from("custom_brand_plans")
+        .select("name, is_active")
+        .eq("brand_id", brandId)
+        .eq("is_active", true)
+        .single();
+
+      setHasCustomPlan(!!customPlan);
+      setCustomPlanName(customPlan?.name || null);
+
       const [transactionsRes, campaignsRes, membersRes] = await Promise.all([
         supabase
           .from("brand_wallet_transactions")
@@ -656,20 +675,37 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
                     Actions
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        onClick={() => navigate(`/brand/${brand.slug}`)}
+                        className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
+                      >
+                        Dashboard
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => navigate(`/brand/${brand.slug}/analytics`)}
+                        className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
+                      >
+                        Analytics
+                      </Button>
+                    </div>
                     <Button
                       variant="ghost"
-                      onClick={() => navigate(`/brand/${brand.slug}`)}
-                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
+                      onClick={() => setCustomPlanDialogOpen(true)}
+                      className="w-full h-9 text-sm font-inter tracking-[-0.5px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 justify-between"
                     >
-                      Dashboard
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => navigate(`/brand/${brand.slug}/analytics`)}
-                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-                    >
-                      Analytics
+                      <span className="flex items-center gap-2">
+                        <Crown className="h-4 w-4" />
+                        Custom Plan
+                      </span>
+                      {hasCustomPlan && (
+                        <Badge variant="secondary" className="text-[10px] h-5">
+                          {customPlanName || "Active"}
+                        </Badge>
+                      )}
                     </Button>
                   </div>
                 </section>
@@ -828,6 +864,17 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
           <div className="h-6" />
         </ScrollArea>
       </SheetContent>
+
+      {/* Custom Plan Manager Dialog */}
+      <CustomPlanManager
+        open={customPlanDialogOpen}
+        onOpenChange={setCustomPlanDialogOpen}
+        brand={brand ? { id: brand.id, name: brand.name, logo_url: brand.logo_url } : null}
+        onSuccess={() => {
+          if (brand) fetchAllBrandData(brand.id);
+          onBrandUpdated?.();
+        }}
+      />
     </Sheet>
   );
 }

@@ -128,7 +128,7 @@ const creatorMenuItems: MenuItem[] = [{
   icon: null as any
 }, {
   title: "Profile",
-  tab: "wallet",
+  tab: "profile",
   icon: Dock
 }, {
   title: "Discover",
@@ -140,7 +140,7 @@ const creatorMenuItems: MenuItem[] = [{
   icon: null as any
 }, {
   title: "Settings",
-  tab: "profile",
+  tab: "settings",
   icon: CircleUser
 }];
 const brandMenuItems: MenuItem[] = [{
@@ -166,7 +166,7 @@ const brandMenuItems: MenuItem[] = [{
   ]
 }, {
   title: "Settings",
-  tab: "profile",
+  tab: "settings",
   icon: CircleUser
 }];
 export function AppSidebar() {
@@ -527,13 +527,13 @@ export function AppSidebar() {
               {item.tab === "campaigns" ? <div className="relative h-6 w-6">
                   <img src={homeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={homeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "wallet" ? <div className="relative h-6 w-6">
+                </div> : item.tab === "profile" ? <div className="relative h-6 w-6">
                   <img src={chefHatInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={chefHatActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "discover" ? <div className="relative h-6 w-6">
                   <img src={discoverInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "profile" ? <div className="relative h-6 w-6">
+                </div> : item.tab === "settings" ? <div className="relative h-6 w-6">
                   <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "blueprints" ? <div className="relative h-6 w-6">
@@ -742,13 +742,13 @@ export function AppSidebar() {
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "wallet" ? <div className="relative h-[24px] w-[24px]">
+                    </div> : item.tab === "profile" ? <div className="relative h-[24px] w-[24px]">
                       <img src={chefHatInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={chefHatActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "discover" ? <div className="relative h-[24px] w-[24px]">
                       <img src={discoverInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={discoverActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "profile" ? <div className="relative h-[24px] w-[24px]">
+                    </div> : item.tab === "settings" ? <div className="relative h-[24px] w-[24px]">
                       <img src={profileInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={profileActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "blueprints" ? <div className="relative h-[24px] w-[24px]">

@@ -9,6 +9,7 @@ import { ExternalLink, Check, X, Clock, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useBrandUsage } from "@/hooks/useBrandUsage";
 
 interface Application {
   id: string;
@@ -32,19 +33,24 @@ interface BountyApplicationsSheetProps {
   bountyTitle: string;
   maxAccepted: number;
   currentAccepted: number;
+  brandId: string;
+  subscriptionPlan?: string | null;
 }
 
-export function BountyApplicationsSheet({ 
-  open, 
-  onOpenChange, 
-  bountyId, 
+export function BountyApplicationsSheet({
+  open,
+  onOpenChange,
+  bountyId,
   bountyTitle,
   maxAccepted,
-  currentAccepted 
+  currentAccepted,
+  brandId,
+  subscriptionPlan
 }: BountyApplicationsSheetProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const { canHireCreator } = useBrandUsage(brandId, subscriptionPlan);
 
   useEffect(() => {
     if (open) {
@@ -88,6 +94,12 @@ export function BountyApplicationsSheet({
     // Check if we're at capacity when trying to accept
     if (newStatus === 'accepted' && currentAccepted >= maxAccepted) {
       toast.error(`You've reached the maximum of ${maxAccepted} accepted creators`);
+      return;
+    }
+
+    // Check hire limit based on subscription plan
+    if (newStatus === 'accepted' && !canHireCreator) {
+      toast.error("Hire limit reached. Upgrade your plan to work with more creators.");
       return;
     }
 
@@ -267,7 +279,7 @@ export function BountyApplicationsSheet({
                     <div className="flex gap-2 pt-2">
                       <Button
                         onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                        disabled={processing === application.id || acceptedCount >= maxAccepted}
+                        disabled={processing === application.id || acceptedCount >= maxAccepted || !canHireCreator}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                         size="sm"
                       >

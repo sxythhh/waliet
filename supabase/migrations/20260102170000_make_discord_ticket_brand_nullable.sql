@@ -8,6 +8,14 @@ ALTER TABLE discord_ticket_config
 ALTER TABLE discord_ticket_config
   DROP CONSTRAINT IF EXISTS discord_ticket_config_brand_id_guild_id_key;
 
--- Add unique constraint on just guild_id
-ALTER TABLE discord_ticket_config
-  ADD CONSTRAINT discord_ticket_config_guild_id_key UNIQUE (guild_id);
+-- Add unique constraint on just guild_id (if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'discord_ticket_config_guild_id_key'
+  ) THEN
+    ALTER TABLE discord_ticket_config
+      ADD CONSTRAINT discord_ticket_config_guild_id_key UNIQUE (guild_id);
+  END IF;
+END $$;

@@ -1,5 +1,6 @@
 -- Create storage bucket for blueprint videos
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+-- ON CONFLICT handled below
 VALUES (
   'blueprint-videos',
   'blueprint-videos',

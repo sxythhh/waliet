@@ -110,32 +110,41 @@ ALTER TABLE public.brand_broadcast_reads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.brand_broadcast_targets ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for fraud_flags (admin only)
+DROP POLICY IF EXISTS "Admin can manage fraud flags" ON public.fraud_flags;
 CREATE POLICY "Admin can manage fraud flags" ON public.fraud_flags FOR ALL USING (true);
 
 -- Create policies for creator_fraud_history (admin only)
+DROP POLICY IF EXISTS "Admin can manage fraud history" ON public.creator_fraud_history;
 CREATE POLICY "Admin can manage fraud history" ON public.creator_fraud_history FOR ALL USING (true);
 
 -- Create policies for fraud_evidence (admin only)
+DROP POLICY IF EXISTS "Admin can manage fraud evidence" ON public.fraud_evidence;
 CREATE POLICY "Admin can manage fraud evidence" ON public.fraud_evidence FOR ALL USING (true);
 
 -- Create policies for auto_rejection_rules
+DROP POLICY IF EXISTS "Brand members can view rejection rules" ON public.auto_rejection_rules;
 CREATE POLICY "Brand members can view rejection rules" ON public.auto_rejection_rules FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.brand_members WHERE brand_id = auto_rejection_rules.brand_id AND user_id = auth.uid())
 );
+DROP POLICY IF EXISTS "Brand members can manage rejection rules" ON public.auto_rejection_rules;
 CREATE POLICY "Brand members can manage rejection rules" ON public.auto_rejection_rules FOR ALL USING (
   EXISTS (SELECT 1 FROM public.brand_members WHERE brand_id = auto_rejection_rules.brand_id AND user_id = auth.uid())
 );
 
 -- Create policies for auto_rejection_log
+DROP POLICY IF EXISTS "Brand members can view rejection log" ON public.auto_rejection_log;
 CREATE POLICY "Brand members can view rejection log" ON public.auto_rejection_log FOR SELECT USING (true);
 
 -- Create policies for brand_broadcasts
+DROP POLICY IF EXISTS "Brand members can manage broadcasts" ON public.brand_broadcasts;
 CREATE POLICY "Brand members can manage broadcasts" ON public.brand_broadcasts FOR ALL USING (
   EXISTS (SELECT 1 FROM public.brand_members WHERE brand_id = brand_broadcasts.brand_id AND user_id = auth.uid())
 );
 
 -- Create policies for brand_broadcast_reads
+DROP POLICY IF EXISTS "Users can manage their broadcast reads" ON public.brand_broadcast_reads;
 CREATE POLICY "Users can manage their broadcast reads" ON public.brand_broadcast_reads FOR ALL USING (auth.uid() = user_id);
 
 -- Create policies for brand_broadcast_targets
+DROP POLICY IF EXISTS "Brand members can manage broadcast targets" ON public.brand_broadcast_targets;
 CREATE POLICY "Brand members can manage broadcast targets" ON public.brand_broadcast_targets FOR ALL USING (true);

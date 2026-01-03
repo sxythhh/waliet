@@ -1,7 +1,8 @@
 import { useBrandUsage } from "@/hooks/useBrandUsage";
 import { UsageProgressBar } from "./UsageProgressBar";
 import { Button } from "@/components/ui/button";
-import { Zap, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Crown } from "lucide-react";
 
 interface BillingUsageCardProps {
   brandId: string;
@@ -14,26 +15,36 @@ export function BillingUsageCard({
   subscriptionPlan,
   onUpgrade,
 }: BillingUsageCardProps) {
-  const { boostsUsed, boostsLimit, hiresUsed, hiresLimit, loading } =
-    useBrandUsage(brandId, subscriptionPlan);
+  const {
+    campaignsUsed,
+    campaignsLimit,
+    boostsUsed,
+    boostsLimit,
+    hiresUsed,
+    hiresLimit,
+    loading,
+    isCustomPlan,
+    customPlanName,
+  } = useBrandUsage(brandId, subscriptionPlan);
 
-  const isUnlimitedPlan = subscriptionPlan === "enterprise";
-  const canUpgrade = subscriptionPlan !== "enterprise";
+  const isUnlimitedPlan = subscriptionPlan === "enterprise" || (
+    campaignsLimit === Infinity && boostsLimit === Infinity && hiresLimit === Infinity
+  );
+  const canUpgrade = subscriptionPlan !== "enterprise" && !isCustomPlan;
   const hasReachedAnyLimit =
     !isUnlimitedPlan &&
-    (boostsUsed >= boostsLimit || hiresUsed >= hiresLimit);
+    (campaignsUsed >= campaignsLimit ||
+      boostsUsed >= boostsLimit ||
+      hiresUsed >= hiresLimit);
 
-  if (!subscriptionPlan) {
+  if (!subscriptionPlan && !isCustomPlan) {
     return (
       <div className="p-4 bg-muted/30 rounded-xl space-y-3">
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-amber-500" />
-          <span className="text-sm font-medium tracking-[-0.5px]">
-            No Active Plan
-          </span>
-        </div>
+        <span className="text-sm font-medium tracking-[-0.5px]">
+          No Active Plan
+        </span>
         <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-          Subscribe to a plan to start creating boosts and hiring creators.
+          Subscribe to a plan to start creating campaigns and hiring creators.
         </p>
         {onUpgrade && (
           <Button onClick={onUpgrade} size="sm" className="w-full">
@@ -47,7 +58,15 @@ export function BillingUsageCard({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium tracking-[-0.5px]">Current Usage</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium tracking-[-0.5px]">Current Usage</h3>
+          {isCustomPlan && (
+            <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Crown className="h-3 w-3" />
+              {customPlanName || "Custom"}
+            </Badge>
+          )}
+        </div>
         {canUpgrade && hasReachedAnyLimit && onUpgrade && (
           <Button
             onClick={onUpgrade}
@@ -55,13 +74,17 @@ export function BillingUsageCard({
             variant="outline"
             className="h-7 text-xs"
           >
-            <TrendingUp className="h-3 w-3 mr-1" />
             Upgrade
           </Button>
         )}
       </div>
 
       <div className="space-y-4">
+        <UsageProgressBar
+          used={campaignsUsed}
+          limit={campaignsLimit}
+          label="Active Campaigns"
+        />
         <UsageProgressBar
           used={boostsUsed}
           limit={boostsLimit}
@@ -77,7 +100,7 @@ export function BillingUsageCard({
       {isUnlimitedPlan && (
         <p className="text-xs text-muted-foreground tracking-[-0.5px] flex items-center gap-1">
           <span className="text-green-500">✓</span>
-          Unlimited usage with Enterprise plan
+          {isCustomPlan ? "Unlimited usage with custom plan" : "Unlimited usage with Enterprise plan"}
         </p>
       )}
     </div>

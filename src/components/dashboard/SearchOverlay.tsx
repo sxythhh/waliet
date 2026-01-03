@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Sparkles, TrendingUp, Flame, Clock, DollarSign, Gamepad2, Heart, Cpu, Palette, Music, Camera, BookOpen, Globe, Dumbbell, UtensilsCrossed, Shirt, Baby, Dog, Home, Car, Gem, Coins, ShoppingBag, Layers, RotateCcw } from "lucide-react";
+import { Search, X, Sparkles, TrendingUp, Flame, Clock, DollarSign, Gamepad2, Heart, Cpu, Palette, Music, Camera, BookOpen, Globe, Dumbbell, UtensilsCrossed, Shirt, Baby, Dog, Home, Car, Gem, Coins, ShoppingBag, Layers, RotateCcw, Bookmark } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -18,11 +18,33 @@ interface SearchOverlayProps {
   onNicheFilter: (niche: string | null) => void;
   onBrowseFilter: (filter: string | null) => void;
   onPlatformFilter: (platform: string | null) => void;
+  onSortFilter: (sort: string) => void;
+  onStatusFilter: (status: string) => void;
+  onSavedFilter: (saved: boolean) => void;
   activeTypeFilter: 'all' | 'campaigns' | 'boosts';
   activeNicheFilter: string | null;
   activeBrowseFilter: string | null;
   activePlatformFilter: string | null;
+  activeSortFilter: string;
+  activeStatusFilter: string;
+  activeSavedFilter: boolean;
 }
+
+const SORT_OPTIONS = [
+  { id: 'newest', label: 'Newest' },
+  { id: 'oldest', label: 'Oldest' },
+  { id: 'popular', label: 'Most Popular' },
+  { id: 'budget-high', label: 'Highest Budget' },
+  { id: 'budget-low', label: 'Lowest Budget' },
+  { id: 'rpm-high', label: 'Highest RPM' },
+  { id: 'rpm-low', label: 'Lowest RPM' },
+];
+
+const STATUS_OPTIONS = [
+  { id: 'all', label: 'All' },
+  { id: 'active', label: 'Active' },
+  { id: 'ended', label: 'Ended' },
+];
 
 const BROWSE_FILTERS = [
   { id: 'new', label: 'New', icon: Sparkles },
@@ -69,10 +91,16 @@ export function SearchOverlay({
   onNicheFilter,
   onBrowseFilter,
   onPlatformFilter,
+  onSortFilter,
+  onStatusFilter,
+  onSavedFilter,
   activeTypeFilter,
   activeNicheFilter,
   activeBrowseFilter,
   activePlatformFilter,
+  activeSortFilter,
+  activeStatusFilter,
+  activeSavedFilter,
 }: SearchOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +111,9 @@ export function SearchOverlay({
   const [localNicheFilter, setLocalNicheFilter] = useState(activeNicheFilter);
   const [localBrowseFilter, setLocalBrowseFilter] = useState(activeBrowseFilter);
   const [localPlatformFilter, setLocalPlatformFilter] = useState(activePlatformFilter);
+  const [localSortFilter, setLocalSortFilter] = useState(activeSortFilter);
+  const [localStatusFilter, setLocalStatusFilter] = useState(activeStatusFilter);
+  const [localSavedFilter, setLocalSavedFilter] = useState(activeSavedFilter);
 
   // Sync local state when overlay opens
   useEffect(() => {
@@ -92,8 +123,11 @@ export function SearchOverlay({
       setLocalNicheFilter(activeNicheFilter);
       setLocalBrowseFilter(activeBrowseFilter);
       setLocalPlatformFilter(activePlatformFilter);
+      setLocalSortFilter(activeSortFilter);
+      setLocalStatusFilter(activeStatusFilter);
+      setLocalSavedFilter(activeSavedFilter);
     }
-  }, [isOpen, searchQuery, activeTypeFilter, activeNicheFilter, activeBrowseFilter, activePlatformFilter]);
+  }, [isOpen, searchQuery, activeTypeFilter, activeNicheFilter, activeBrowseFilter, activePlatformFilter, activeSortFilter, activeStatusFilter, activeSavedFilter]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -127,7 +161,7 @@ export function SearchOverlay({
 
   if (!isOpen) return null;
 
-  const hasLocalFilters = localSearchQuery || localTypeFilter !== 'all' || localNicheFilter || localBrowseFilter || localPlatformFilter;
+  const hasLocalFilters = localSearchQuery || localTypeFilter !== 'all' || localNicheFilter || localBrowseFilter || localPlatformFilter || localSortFilter !== 'newest' || localStatusFilter !== 'all' || localSavedFilter;
 
   const handleSearch = () => {
     onSearchChange(localSearchQuery);
@@ -135,6 +169,9 @@ export function SearchOverlay({
     onNicheFilter(localNicheFilter);
     onBrowseFilter(localBrowseFilter);
     onPlatformFilter(localPlatformFilter);
+    onSortFilter(localSortFilter);
+    onStatusFilter(localStatusFilter);
+    onSavedFilter(localSavedFilter);
     onClose();
   };
 
@@ -144,6 +181,9 @@ export function SearchOverlay({
     setLocalNicheFilter(null);
     setLocalBrowseFilter(null);
     setLocalPlatformFilter(null);
+    setLocalSortFilter('newest');
+    setLocalStatusFilter('all');
+    setLocalSavedFilter(false);
   };
 
   return (
@@ -193,6 +233,18 @@ export function SearchOverlay({
                   {type.label}
                 </button>
               ))}
+              {/* Saved Toggle */}
+              <button
+                onClick={() => setLocalSavedFilter(!localSavedFilter)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                  localSavedFilter
+                    ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
+                    : 'bg-muted/50 hover:bg-muted text-foreground'
+                }`}
+              >
+                <Bookmark className={`h-4 w-4 ${localSavedFilter ? 'fill-current' : ''}`} />
+                Saved
+              </button>
             </div>
           </div>
 
@@ -251,6 +303,50 @@ export function SearchOverlay({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Sort Filter */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              Sort By
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {SORT_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setLocalSortFilter(option.id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                    localSortFilter === option.id
+                      ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
+                      : 'bg-muted/50 hover:bg-muted text-foreground'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              Status
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {STATUS_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setLocalStatusFilter(option.id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                    localStatusFilter === option.id
+                      ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
+                      : 'bg-muted/50 hover:bg-muted text-foreground'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

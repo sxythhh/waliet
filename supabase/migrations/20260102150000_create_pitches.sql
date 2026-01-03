@@ -1,5 +1,5 @@
 -- Create pitches table for creator-brand pitch system
-CREATE TABLE pitches (
+CREATE TABLE IF NOT EXISTS pitches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT NOT NULL CHECK (type IN ('creator_to_brand', 'brand_to_creator')),
   creator_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -23,24 +23,26 @@ CREATE TABLE pitches (
 );
 
 -- Create indexes for common queries
-CREATE INDEX idx_pitches_creator_id ON pitches(creator_id);
-CREATE INDEX idx_pitches_brand_id ON pitches(brand_id);
-CREATE INDEX idx_pitches_campaign_id ON pitches(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX idx_pitches_boost_id ON pitches(boost_id) WHERE boost_id IS NOT NULL;
-CREATE INDEX idx_pitches_status ON pitches(status);
-CREATE INDEX idx_pitches_type ON pitches(type);
-CREATE INDEX idx_pitches_created_at ON pitches(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pitches_creator_id ON pitches(creator_id);
+CREATE INDEX IF NOT EXISTS idx_pitches_brand_id ON pitches(brand_id);
+CREATE INDEX IF NOT EXISTS idx_pitches_campaign_id ON pitches(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pitches_boost_id ON pitches(boost_id) WHERE boost_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pitches_status ON pitches(status);
+CREATE INDEX IF NOT EXISTS idx_pitches_type ON pitches(type);
+CREATE INDEX IF NOT EXISTS idx_pitches_created_at ON pitches(created_at DESC);
 
 -- Enable RLS
 ALTER TABLE pitches ENABLE ROW LEVEL SECURITY;
 
 -- Creators can view their own pitches
+DROP POLICY IF EXISTS "Creators can view own pitches" ON pitches;
 CREATE POLICY "Creators can view own pitches"
   ON pitches FOR SELECT
   TO authenticated
   USING (creator_id = auth.uid());
 
 -- Brand members can view pitches for their brands
+DROP POLICY IF EXISTS "Brand members can view brand pitches" ON pitches;
 CREATE POLICY "Brand members can view brand pitches"
   ON pitches FOR SELECT
   TO authenticated
@@ -53,6 +55,7 @@ CREATE POLICY "Brand members can view brand pitches"
   );
 
 -- Creators can create pitches to brands
+DROP POLICY IF EXISTS "Creators can create pitches to brands" ON pitches;
 CREATE POLICY "Creators can create pitches to brands"
   ON pitches FOR INSERT
   TO authenticated
@@ -61,6 +64,7 @@ CREATE POLICY "Creators can create pitches to brands"
   );
 
 -- Brand members can create pitches to creators
+DROP POLICY IF EXISTS "Brand members can create pitches to creators" ON pitches;
 CREATE POLICY "Brand members can create pitches to creators"
   ON pitches FOR INSERT
   TO authenticated
@@ -75,6 +79,7 @@ CREATE POLICY "Brand members can create pitches to creators"
   );
 
 -- Brand members can update pitch status (accept/reject)
+DROP POLICY IF EXISTS "Brand members can update pitch status" ON pitches;
 CREATE POLICY "Brand members can update pitch status"
   ON pitches FOR UPDATE
   TO authenticated
@@ -98,6 +103,7 @@ CREATE POLICY "Brand members can update pitch status"
   );
 
 -- Creators can update brand-to-creator pitch status (accept/reject)
+DROP POLICY IF EXISTS "Creators can update brand pitch status" ON pitches;
 CREATE POLICY "Creators can update brand pitch status"
   ON pitches FOR UPDATE
   TO authenticated
@@ -137,6 +143,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger for pitch acceptance
+DROP TRIGGER IF EXISTS on_pitch_accepted ON pitches;
 CREATE TRIGGER on_pitch_accepted
   BEFORE UPDATE ON pitches
   FOR EACH ROW

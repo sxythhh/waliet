@@ -302,10 +302,10 @@ export default function BrandPublicPage() {
       />
 
       <PublicNavbar />
-      <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="min-h-screen bg-background overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-6 pt-20 pb-12">
           {/* Brand Header */}
-          <div className="flex flex-col items-center text-center mb-10 pt-[30px]">
+          <div className="flex flex-col items-center text-center mb-10">
             <Avatar className="w-20 h-20 mb-4">
               <AvatarImage src={brand.logo_url || undefined} alt={brand.name} />
               <AvatarFallback className="text-2xl font-medium text-white" style={{
@@ -346,8 +346,7 @@ export default function BrandPublicPage() {
             {user && activeItems.length > 0 && (
               <Button
                 onClick={() => setPitchDialogOpen(true)}
-                className="mt-4 gap-2"
-                variant="outline"
+                className="mt-6 gap-2 bg-white text-black hover:bg-gray-100 dark:bg-black dark:text-white dark:hover:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm font-medium px-5"
               >
                 <Send className="h-4 w-4" />
                 Pitch to Work

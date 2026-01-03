@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Bell, Pause, Ban, CreditCard, CheckCircle2, DollarSign } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+
+export interface LowBalanceSettingsHandle {
+  save: () => Promise<void>;
+  isSaving: boolean;
+}
+
 interface LowBalanceSettingsTabProps {
   brandId: string;
+  onSavingChange?: (saving: boolean) => void;
 }
 interface BrandSettings {
   slash_balance_cents: number | null;
@@ -28,9 +31,10 @@ interface Alert {
   created_at: string;
   resolved_at: string | null;
 }
-export function LowBalanceSettingsTab({
-  brandId
-}: LowBalanceSettingsTabProps) {
+export const LowBalanceSettingsTab = forwardRef<LowBalanceSettingsHandle, LowBalanceSettingsTabProps>(({
+  brandId,
+  onSavingChange
+}, ref) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<BrandSettings | null>(null);
@@ -42,6 +46,13 @@ export function LowBalanceSettingsTab({
   const [pauseCampaignThreshold, setPauseCampaignThreshold] = useState("100");
   const [autoTopupEnabled, setAutoTopupEnabled] = useState(false);
   const [autoTopupAmount, setAutoTopupAmount] = useState("1000");
+
+  // Expose save method to parent via ref
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+    isSaving
+  }));
+
   useEffect(() => {
     fetchData();
   }, [brandId]);
@@ -135,16 +146,11 @@ export function LowBalanceSettingsTab({
       </div>;
   }
   return <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Low Balance Protection</h2>
-          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-            Configure automatic actions when your wallet runs low
-          </p>
-        </div>
-        <Button onClick={handleSave} disabled={isSaving} size="sm">
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
+      <div>
+        <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Low Balance Protection</h2>
+        <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+          Configure automatic actions when your wallet runs low
+        </p>
       </div>
 
       {/* Alert Thresholds */}
@@ -153,14 +159,9 @@ export function LowBalanceSettingsTab({
         
         <div className="grid gap-4">
           <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                <Bell className="h-4 w-4 text-yellow-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Email Notification</p>
-                <p className="text-xs text-muted-foreground">Alert when balance drops below</p>
-              </div>
+            <div>
+              <p className="text-sm font-medium font-inter tracking-[-0.3px]">Email Notification</p>
+              <p className="text-xs text-muted-foreground">Alert when balance drops below</p>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-sm">$</span>
@@ -169,14 +170,9 @@ export function LowBalanceSettingsTab({
           </div>
 
           <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Pause className="h-4 w-4 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Pause Payouts</p>
-                <p className="text-xs text-muted-foreground">Queue payouts when below</p>
-              </div>
+            <div>
+              <p className="text-sm font-medium font-inter tracking-[-0.3px]">Pause Payouts</p>
+              <p className="text-xs text-muted-foreground">Queue payouts when below</p>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-sm">$</span>
@@ -185,14 +181,9 @@ export function LowBalanceSettingsTab({
           </div>
 
           <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-red-500/10 flex items-center justify-center">
-                <Ban className="h-4 w-4 text-red-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Pause Campaigns</p>
-                <p className="text-xs text-muted-foreground">Stop new submissions when below</p>
-              </div>
+            <div>
+              <p className="text-sm font-medium font-inter tracking-[-0.3px]">Pause Campaigns</p>
+              <p className="text-xs text-muted-foreground">Stop new submissions when below</p>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-sm">$</span>
@@ -208,14 +199,9 @@ export function LowBalanceSettingsTab({
         
         <div className="p-4 rounded-xl bg-card/50 border border-border/50 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <CreditCard className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Enable Auto Top-up</p>
-                <p className="text-xs text-muted-foreground">Automatically charge your card</p>
-              </div>
+            <div>
+              <p className="text-sm font-medium font-inter tracking-[-0.3px]">Enable Auto Top-up</p>
+              <p className="text-xs text-muted-foreground">Automatically charge your card</p>
             </div>
             <Switch checked={autoTopupEnabled} onCheckedChange={setAutoTopupEnabled} />
           </div>
@@ -257,4 +243,4 @@ export function LowBalanceSettingsTab({
           </div>
         </div>}
     </div>;
-}
+});

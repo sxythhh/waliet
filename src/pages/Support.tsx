@@ -63,6 +63,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { UnifiedMessagesWidget } from "@/components/shared/UnifiedMessagesWidget";
 
 // Ticket types
 interface SupportTicket {
@@ -342,7 +343,7 @@ const Support = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const faqRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -657,74 +658,68 @@ const Support = () => {
       <PublicNavbar />
 
       <main className="pt-24 pb-16">
-        {/* Hero Section */}
-        <div className="mb-12">
-          <div className="max-w-4xl mx-auto px-6 py-12 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-foreground text-sm font-medium mb-6">
-              <HelpIcon sx={{ fontSize: 16 }} />
-              Help Center
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              How can we help you?
+        {/* Hero Section - Compact */}
+        <div className="mb-8">
+          <div className="max-w-4xl mx-auto px-6 py-8 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              How can we help?
             </h1>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Find answers to common questions or chat with our AI assistant for personalized help.
+            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+              Get instant help from our AI assistant or browse our knowledge base
             </p>
 
-            {/* Search Bar */}
-            <div className="relative max-w-xl mx-auto mb-6">
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 20 }} />
+            {/* Search Bar - Minimal */}
+            <div className="relative max-w-md mx-auto">
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 18 }} />
               <Input
                 type="text"
-                placeholder="Search for help articles..."
+                placeholder="Search help articles..."
                 value={searchQuery}
                 onChange={(e) => {
                   const value = e.target.value;
                   setSearchQuery(value);
                   setSelectedCategory(null);
-                  // Scroll to results when searching
                   if (value.trim()) {
                     setTimeout(() => {
                       resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }, 100);
                   }
                 }}
-                className="pl-12 pr-4 h-14 text-lg rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm shadow-lg"
+                className="pl-11 pr-4 h-12 rounded-xl border-border/50 bg-background/80 backdrop-blur-sm"
               />
             </div>
+          </div>
+        </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button
-                variant={showChat ? "default" : "outline"}
-                size="lg"
-                className="gap-2 rounded-xl"
-                onClick={() => setShowChat(!showChat)}
-              >
-                <ChatIcon sx={{ fontSize: 20 }} />
-                {showChat ? "Hide AI Chat" : "Chat with AI"}
-              </Button>
-              <Button
-                variant={showTickets ? "default" : "outline"}
-                size="lg"
-                className="gap-2 rounded-xl"
-                onClick={() => setShowTickets(!showTickets)}
-              >
-                <ConfirmationNumberIcon sx={{ fontSize: 20 }} />
-                My Tickets
-                {openTicketCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                    {openTicketCount}
-                  </Badge>
-                )}
-              </Button>
-              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="lg" className="gap-2 rounded-xl">
-                    <AddIcon sx={{ fontSize: 20 }} />
-                    Submit Ticket
-                  </Button>
-                </DialogTrigger>
+        {/* AI Chat Section - Always Visible, Primary Focus */}
+        <div className="max-w-3xl mx-auto px-6 mb-8">
+          <SupportChat />
+        </div>
+
+        {/* Quick Actions - Horizontal Pills */}
+        <div className="max-w-4xl mx-auto px-6 mb-8">
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button
+              variant={showTickets ? "default" : "outline"}
+              size="sm"
+              className="gap-2 rounded-full"
+              onClick={() => setShowTickets(!showTickets)}
+            >
+              <ConfirmationNumberIcon sx={{ fontSize: 16 }} />
+              My Tickets
+              {openTicketCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[10px]">
+                  {openTicketCount}
+                </Badge>
+              )}
+            </Button>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2 rounded-full">
+                  <AddIcon sx={{ fontSize: 16 }} />
+                  Submit Ticket
+                </Button>
+              </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Submit a Support Ticket</DialogTitle>
@@ -801,16 +796,8 @@ const Support = () => {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </div>
           </div>
         </div>
-
-        {/* AI Chat Section (collapsible) */}
-        {showChat && (
-          <div className="max-w-4xl mx-auto px-6 mb-12">
-            <SupportChat />
-          </div>
-        )}
 
         {/* Tickets Section (collapsible) */}
         {showTickets && (
@@ -936,9 +923,6 @@ const Support = () => {
                         "hover:border-border hover:shadow-lg group"
                       )}
                     >
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-muted">
-                        <category.icon className="text-foreground" sx={{ fontSize: 24 }} />
-                      </div>
                       <div className="flex-1">
                         <h3 className="font-semibold mb-0.5">{category.name}</h3>
                         <p className="text-sm text-muted-foreground">{category.description}</p>
@@ -971,9 +955,6 @@ const Support = () => {
                           "hover:border-border hover:shadow-lg group"
                         )}
                       >
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-muted">
-                          {category && <category.icon className="text-foreground" sx={{ fontSize: 20 }} />}
-                        </div>
                         <div className="flex-1 min-w-0">
                           <Badge variant="secondary" className="text-[10px] mb-2">
                             {category?.name}
@@ -1134,6 +1115,9 @@ const Support = () => {
           </div>
         </div>
       </main>
+
+      {/* Unified Messages Widget */}
+      {user && <UnifiedMessagesWidget />}
 
       {/* Ticket Detail Sheet */}
       <Sheet open={ticketSheetOpen} onOpenChange={setTicketSheetOpen}>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, MessageCircle, Megaphone } from "lucide-react";
+import { X, MessageCircle, Megaphone, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -297,12 +297,22 @@ export function CreatorChatWidget() {
     setSending(false);
   };
   return <>
-      {/* Floating Button */}
-      <button onClick={() => setIsOpen(true)} className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group">
+      {/* Floating Button - Mobile (Circle) */}
+      <button onClick={() => setIsOpen(true)} className="md:hidden fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group">
         <img src={mailIcon} alt="Messages" className="w-6 h-6" />
         {totalUnread > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
             {totalUnread > 9 ? "9+" : totalUnread}
           </span>}
+      </button>
+
+      {/* Floating Button - Desktop (Card) */}
+      <button onClick={() => setIsOpen(true)} className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-[#222] transition-all duration-200 shadow-lg hover:shadow-xl border border-gray-200 dark:border-white/10">
+        <MessageCircle className="w-5 h-5 text-foreground" />
+        <span className="font-medium text-sm text-foreground font-['Inter'] tracking-[-0.5px]">Messages</span>
+        {totalUnread > 0 && <span className="w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
+            {totalUnread > 9 ? "9+" : totalUnread}
+          </span>}
+        <ChevronUp className="w-4 h-4 text-muted-foreground" />
       </button>
 
       {/* Chat Panel */}

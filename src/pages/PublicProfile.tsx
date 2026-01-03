@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Calendar, ArrowRight, Briefcase, Star, Shield, Users, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
+import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
+import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviewsSection";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import { SEOHead } from "@/components/SEOHead";
@@ -62,6 +63,7 @@ interface CampaignParticipation {
   campaign: {
     id: string;
     title: string;
+    slug: string;
     brand_name: string;
     brand_logo_url: string | null;
     banner_url: string | null;
@@ -87,6 +89,7 @@ interface BoostParticipation {
   boost: {
     id: string;
     title: string;
+    slug: string;
     monthly_retainer: number;
     videos_per_month: number;
     brands?: {
@@ -116,7 +119,7 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("campaigns");
+  const [activeTab, setActiveTab] = useState("portfolio");
   const [stats, setStats] = useState({
     totalCampaigns: 0,
     totalBoosts: 0,
@@ -230,6 +233,7 @@ export default function PublicProfile() {
         campaigns (
           id,
           title,
+          slug,
           brand_name,
           brand_logo_url,
           banner_url,
@@ -296,6 +300,7 @@ export default function PublicProfile() {
         bounty_campaigns (
           id,
           title,
+          slug,
           monthly_retainer,
           videos_per_month,
           brands (
@@ -371,23 +376,7 @@ export default function PublicProfile() {
     }
   };
   if (loading) {
-    return <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-12">
-          <div className="flex items-start gap-6">
-            <Skeleton className="h-24 w-24 rounded-full" />
-            <div className="flex-1 space-y-3">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-          </div>
-          <div className="mt-12 space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        </div>
-      </div>;
+    return null;
   }
   if (!profile) {
     return null;
@@ -488,167 +477,66 @@ export default function PublicProfile() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
-            <TabsTrigger value="campaigns" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
-              Campaigns
+            <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+              Portfolio
             </TabsTrigger>
-            <TabsTrigger value="boosts" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
-              Boosts
+            <TabsTrigger value="history" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+              History
             </TabsTrigger>
-            <TabsTrigger value="testimonials" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+            <TabsTrigger value="reviews" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
               Reviews {testimonials.length > 0 && `(${testimonials.length})`}
             </TabsTrigger>
-            {(creatorPortfolio || profile.portfolio_items?.length > 0 || profile.resume_url) && (
-              <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
-                Portfolio
-              </TabsTrigger>
-            )}
           </TabsList>
 
-          {/* Campaigns Tab */}
-          <TabsContent value="campaigns" className="mt-6 space-y-4">
-            {campaignParticipations.length === 0 ? <div className="text-center py-16 text-muted-foreground">
-                <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p className="font-['Inter'] tracking-[-0.5px]">No campaign history yet</p>
-              </div> : <div className="space-y-3">
-                <div className="flex items-center justify-end">
-                  <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
-                    <button onClick={() => {
-                  const container = document.getElementById('profile-campaigns-scroll');
-                  if (container) container.scrollBy({
-                    left: -300,
-                    behavior: 'smooth'
-                  });
-                }} className="p-2.5 hover:bg-muted/50 transition-colors">
-                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                    <div className="w-px h-5 bg-border/50" />
-                    <button onClick={() => {
-                  const container = document.getElementById('profile-campaigns-scroll');
-                  if (container) container.scrollBy({
-                    left: 300,
-                    behavior: 'smooth'
-                  });
-                }} className="p-2.5 hover:bg-muted/50 transition-colors">
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-                <div id="profile-campaigns-scroll" className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide" style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}>
-                  {campaignParticipations.map(participation => {
-                const campaign = participation.campaign;
-                const logoUrl = campaign?.brands?.logo_url || campaign?.brand_logo_url;
-                const isVerified = campaign?.brands?.is_verified;
-                return <div key={participation.id} className="flex-shrink-0 w-[160px]">
-                        <CampaignCard id={campaign?.id || participation.campaign_id} title={campaign?.title || 'Campaign'} brand_name={campaign?.brand_name || ''} brand_logo_url={logoUrl || null} brand_is_verified={isVerified} banner_url={campaign?.banner_url || null} budget={campaign?.budget || 0} budget_used={campaign?.budget_used || 0} is_infinite_budget={campaign?.is_infinite_budget || false} onClick={() => handleCampaignClick(participation.campaign_id)} showBookmark={false} showFullscreen={false} />
-                      </div>;
-              })}
-                </div>
-              </div>}
-          </TabsContent>
-
-          {/* Boosts Tab */}
-          <TabsContent value="boosts" className="mt-6 space-y-4">
-            {boostParticipations.length === 0 ? <div className="text-center py-16 text-muted-foreground">
-                
-                <p className="font-['Inter'] tracking-[-0.5px]">No boost history yet</p>
-              </div> : <div className="grid gap-3">
-                {boostParticipations.map(participation => {
-              const boost = participation.boost;
-              const logoUrl = boost?.brands?.logo_url;
-              const isVerified = boost?.brands?.is_verified;
-              return <div key={participation.id} className="bg-card/50 border border-border/50 rounded-2xl p-4 hover:bg-card/80 transition-all group">
-                      <div className="flex items-center gap-4">
-                        {/* Brand Logo */}
-                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {logoUrl ? <img src={logoUrl} alt={boost?.brands?.name || "Brand"} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
-                        </div>
-                        
-                        {/* Boost Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                              {boost?.brands?.name}
-                            </span>
-                            {isVerified && <VerifiedBadge size="sm" />}
-                          </div>
-                          <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1">
-                            {boost?.title}
-                          </h3>
-                          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                            <span>${boost?.monthly_retainer}/mo</span>
-                            <span className="text-foreground/30">•</span>
-                            <span>{participation.videos_submitted} videos</span>
-                          </div>
-                        </div>
-                        
-                        {/* Earnings */}
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-lg font-bold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
-                            ${participation.total_earned?.toLocaleString() || 0}
-                          </p>
-                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">earned</p>
-                        </div>
-                      </div>
-                    </div>;
-            })}
-              </div>}
-          </TabsContent>
-
-          {/* Testimonials Tab */}
-          <TabsContent value="testimonials" className="mt-6 space-y-4">
-            {testimonials.length === 0 ? <div className="text-center py-16 text-muted-foreground">
-                <Quote className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p className="font-['Inter'] tracking-[-0.5px]">No reviews yet</p>
-              </div> : <div className="grid gap-4">
-                {testimonials.map(testimonial => <div key={testimonial.id} className="bg-card/50 border border-border/50 rounded-2xl p-5">
-                    {/* Rating Stars */}
-                    {testimonial.rating && <div className="flex items-center gap-0.5 mb-3">
-                        {[...Array(5)].map((_, i) => <Star key={i} className={`h-4 w-4 ${i < testimonial.rating! ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground/30"}`} />)}
-                      </div>}
-                    
-                    {/* Quote */}
-                    <p className="text-foreground font-['Inter'] tracking-[-0.3px] leading-relaxed mb-4">
-                      "{testimonial.content}"
-                    </p>
-                    
-                    {/* Brand Attribution */}
-                    {testimonial.brand && <div className="flex items-center gap-3 pt-3 border-t border-border/50">
-                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                          {testimonial.brand.logo_url ? <img src={testimonial.brand.logo_url} alt={testimonial.brand.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
-                            {testimonial.brand.name}
-                          </span>
-                          {testimonial.brand.is_verified && <VerifiedBadge size="sm" />}
-                        </div>
-                        <span className="text-xs text-muted-foreground ml-auto font-['Inter'] tracking-[-0.5px]">
-                          {format(new Date(testimonial.created_at), 'MMM yyyy')}
-                        </span>
-                      </div>}
-                  </div>)}
-              </div>}
-          </TabsContent>
-
           {/* Portfolio Tab */}
-          {(creatorPortfolio || profile.portfolio_items?.length > 0 || profile.resume_url) && (
-            <TabsContent value="portfolio" className="mt-6 space-y-6">
-              {/* New Portfolio System */}
-              {creatorPortfolio && (
-                <PortfolioDisplay portfolio={creatorPortfolio} />
-              )}
-              {/* Legacy Portfolio Display (backward compatibility) */}
-              {(profile.portfolio_items?.length > 0 || profile.resume_url) && !creatorPortfolio && (
-                <LegacyPortfolioDisplay
-                  portfolioItems={profile.portfolio_items || []}
-                  resumeUrl={profile.resume_url}
-                />
-              )}
-            </TabsContent>
-          )}
+          <TabsContent value="portfolio" className="mt-6">
+            {creatorPortfolio ? (
+              <PortfolioDisplay portfolio={creatorPortfolio} />
+            ) : (profile.portfolio_items?.length > 0 || profile.resume_url) ? (
+              <LegacyPortfolioDisplay
+                portfolioItems={profile.portfolio_items || []}
+                resumeUrl={profile.resume_url}
+              />
+            ) : (
+              <div className="text-center py-16 text-muted-foreground">
+                <p className="font-['Inter'] tracking-[-0.5px]">No portfolio yet</p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history" className="mt-6">
+            <DashboardHistorySection
+              items={[
+                ...campaignParticipations.map((p) => ({
+                  id: p.campaign?.slug || p.campaign_id,
+                  type: "campaign" as const,
+                  title: p.campaign?.title || "Campaign",
+                  brandName: p.campaign?.brand_name || "",
+                  brandLogoUrl: p.campaign?.brands?.logo_url || p.campaign?.brand_logo_url || null,
+                  brandIsVerified: p.campaign?.brands?.is_verified,
+                  joinedAt: p.joined_at,
+                  earnings: p.total_earnings,
+                })),
+                ...boostParticipations.map((p) => ({
+                  id: p.boost?.slug || p.bounty_campaign_id,
+                  type: "boost" as const,
+                  title: p.boost?.title || "Boost",
+                  brandName: p.boost?.brands?.name || "",
+                  brandLogoUrl: p.boost?.brands?.logo_url || null,
+                  brandIsVerified: p.boost?.brands?.is_verified,
+                  joinedAt: p.applied_at,
+                  earnings: p.total_earned,
+                })),
+              ]}
+              onItemClick={(slug) => navigate(`/c/${slug}`)}
+            />
+          </TabsContent>
+
+          {/* Reviews Tab */}
+          <TabsContent value="reviews" className="mt-6">
+            <DashboardReviewsSection testimonials={testimonials} />
+          </TabsContent>
         </Tabs>
       </div>
 

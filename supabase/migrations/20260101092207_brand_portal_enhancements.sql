@@ -36,24 +36,26 @@ CREATE INDEX IF NOT EXISTS idx_brand_resources_active ON brand_resources(brand_i
 ALTER TABLE brand_resources ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Brand admins can manage their brand's resources
-CREATE POLICY IF NOT EXISTS "Brand admins can manage resources"
+DROP POLICY IF EXISTS "Brand admins can manage resources" ON brand_resources;
+CREATE POLICY "Brand admins can manage resources"
   ON brand_resources
   FOR ALL
   USING (
     brand_id IN (
-      SELECT brand_id FROM brand_users
+      SELECT brand_id FROM brand_members
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   )
   WITH CHECK (
     brand_id IN (
-      SELECT brand_id FROM brand_users
+      SELECT brand_id FROM brand_members
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   );
 
 -- Policy: Creators with accepted applications can view resources
-CREATE POLICY IF NOT EXISTS "Creators can view resources for their brands"
+DROP POLICY IF EXISTS "Creators can view resources for their brands" ON brand_resources;
+CREATE POLICY "Creators can view resources for their brands"
   ON brand_resources
   FOR SELECT
   USING (
@@ -68,8 +70,8 @@ CREATE POLICY IF NOT EXISTS "Creators can view resources for their brands"
       -- Creator has accepted campaign application
       brand_id IN (
         SELECT c.brand_id FROM campaigns c
-        INNER JOIN campaign_creators cc ON cc.campaign_id = c.id
-        WHERE cc.user_id = auth.uid() AND cc.status = 'active'
+        INNER JOIN campaign_submissions cs ON cs.campaign_id = c.id
+        WHERE cs.creator_id = auth.uid() AND cs.status = 'accepted'
       )
     )
   );

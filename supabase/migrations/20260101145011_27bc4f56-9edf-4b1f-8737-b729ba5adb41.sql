@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.brand_referrals (
 ALTER TABLE public.brand_referrals ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for brand_referrals
+DROP POLICY IF EXISTS "Brand members can view their brand referrals" ON public.brand_referrals;
 CREATE POLICY "Brand members can view their brand referrals"
   ON public.brand_referrals
   FOR SELECT
@@ -36,6 +37,7 @@ CREATE POLICY "Brand members can view their brand referrals"
     )
   );
 
+DROP POLICY IF EXISTS "Brand members can insert referrals for their brand" ON public.brand_referrals;
 CREATE POLICY "Brand members can insert referrals for their brand"
   ON public.brand_referrals
   FOR INSERT
@@ -47,6 +49,7 @@ CREATE POLICY "Brand members can insert referrals for their brand"
     )
   );
 
+DROP POLICY IF EXISTS "Brand members can update their brand referrals" ON public.brand_referrals;
 CREATE POLICY "Brand members can update their brand referrals"
   ON public.brand_referrals
   FOR UPDATE
@@ -74,16 +77,19 @@ CREATE TABLE IF NOT EXISTS public.blueprint_training_completions (
 ALTER TABLE public.blueprint_training_completions ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for blueprint_training_completions
+DROP POLICY IF EXISTS "Users can view their own training completions" ON public.blueprint_training_completions;
 CREATE POLICY "Users can view their own training completions"
   ON public.blueprint_training_completions
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own training completions" ON public.blueprint_training_completions;
 CREATE POLICY "Users can insert their own training completions"
   ON public.blueprint_training_completions
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own training completions" ON public.blueprint_training_completions;
 CREATE POLICY "Users can update their own training completions"
   ON public.blueprint_training_completions
   FOR UPDATE

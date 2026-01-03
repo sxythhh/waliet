@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2, Loader2 } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2 } from "lucide-react";
 import videosIcon from "@/assets/videos-icon.svg";
 import personIcon from "@/assets/person-icon.svg";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
@@ -22,6 +22,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -150,6 +151,7 @@ export function DiscoverTab({
   const [userBrand, setUserBrand] = useState<{
     id: string;
     slug: string;
+    subscriptionPlan: string | null;
   } | null>(null);
   const [createCampaignDialogOpen, setCreateCampaignDialogOpen] = useState(false);
   const [createBrandDialogOpen, setCreateBrandDialogOpen] = useState(false);
@@ -163,11 +165,12 @@ export function DiscoverTab({
       const {
         data,
         error
-      } = await supabase.from("brand_members").select("brand_id, brands(id, slug)").eq("user_id", user.id).limit(1).maybeSingle();
+      } = await supabase.from("brand_members").select("brand_id, brands(id, slug, subscription_plan)").eq("user_id", user.id).limit(1).maybeSingle();
       if (!error && data?.brands) {
         setUserBrand({
           id: (data.brands as any).id,
-          slug: (data.brands as any).slug
+          slug: (data.brands as any).slug,
+          subscriptionPlan: (data.brands as any).subscription_plan
         });
       }
     };
@@ -531,6 +534,11 @@ export function DiscoverTab({
   const platforms = ["TikTok", "Instagram", "YouTube"];
   const totalActiveCampaigns = activeCampaigns.length;
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
+
+  if (loading) {
+    return <PageLoading />;
+  }
+
   return <div className="md:flex md:flex-col">
         {/* Header and Filters */}
         <div className="px-6 pt-4 pb-4 space-y-6">
@@ -551,80 +559,14 @@ export function DiscoverTab({
                 </div>
               </button>}
 
-            {/* Filter buttons row */}
-            <div className="flex gap-2 items-center h-9 shrink-0">
-              {/* Bookmarked Toggle */}
-              <button onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)} className={`flex items-center gap-1.5 px-3 h-9 text-xs font-medium rounded-md border border-[#efefef] dark:border-transparent transition-all ${showBookmarkedOnly ? "bg-foreground text-background border-transparent dark:border-transparent" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
-                <Bookmark className={`h-3.5 w-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
-                Saved
-              </button>
-
-              {/* Filter Toggle */}
-              <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex items-center gap-1.5 px-3 h-9 text-xs font-medium rounded-md border border-[#efefef] dark:border-transparent transition-all ${filtersOpen ? "bg-foreground text-background border-transparent dark:border-transparent" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filters
-              </button>
-            </div>
-
-            {/* Create Campaign Button */}
-            
           </div>
-
-          {/* Expanded Filters */}
-          {filtersOpen && <div className="flex flex-wrap gap-2 items-center pt-1">
-              {/* Sort By */}
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
-                  <span className="text-muted-foreground/70">Sort:</span>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="oldest">Oldest</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="budget-high">Budget ↓</SelectItem>
-                  <SelectItem value="budget-low">Budget ↑</SelectItem>
-                  <SelectItem value="rpm-high">RPM ↓</SelectItem>
-                  <SelectItem value="rpm-low">RPM ↑</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Frequency */}
-              <Select value={frequency} onValueChange={setFrequency}>
-                <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
-                  <span className="text-muted-foreground/70">Frequency:</span>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Status */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-auto h-8 px-3 border-0 bg-muted/30 rounded-md text-xs gap-1.5 focus:ring-0">
-                  <span className="text-muted-foreground/70">Status:</span>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="ended">Ended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>}
         </div>
         </div>
 
         {/* Scrollable Campaigns Section */}
         <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
-        {loading ? <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
+        {sortedCampaigns.length === 0 && bounties.length === 0 && !loading ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
           </div> : <div className="space-y-8">
@@ -840,8 +782,8 @@ export function DiscoverTab({
               </div>
             )}
 
-            {/* Recent Activity */}
-            <RecentActivity />
+            {/* Recent Activity - Only show when logged in */}
+            {user && <RecentActivity />}
           </div>}
         </div>
 
@@ -860,10 +802,10 @@ export function DiscoverTab({
       
       <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
       
-      <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} onPlatformFilter={setSelectedPlatform} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} activePlatformFilter={selectedPlatform} />
+      <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} onPlatformFilter={setSelectedPlatform} onSortFilter={setSortBy} onStatusFilter={setStatusFilter} onSavedFilter={setShowBookmarkedOnly} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} activePlatformFilter={selectedPlatform} activeSortFilter={sortBy} activeStatusFilter={statusFilter} activeSavedFilter={showBookmarkedOnly} />
       
       {/* Create Campaign Dialog */}
-      <CreateCampaignTypeDialog open={createCampaignDialogOpen} onOpenChange={setCreateCampaignDialogOpen} brandId={userBrand?.id} onSelectClipping={blueprintId => {
+      <CreateCampaignTypeDialog open={createCampaignDialogOpen} onOpenChange={setCreateCampaignDialogOpen} brandId={userBrand?.id} subscriptionPlan={userBrand?.subscriptionPlan} onSelectClipping={blueprintId => {
       navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
     }} onSelectManaged={blueprintId => {
       navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);

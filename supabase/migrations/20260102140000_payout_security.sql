@@ -72,67 +72,74 @@ ALTER TABLE payout_approval_votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payout_audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Admins can view all approvals
+DROP POLICY IF EXISTS "Admins can view payout approvals" ON payout_approvals;
 CREATE POLICY "Admins can view payout approvals" ON payout_approvals
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'admin'
     )
   );
 
 -- Admins can create approval requests
+DROP POLICY IF EXISTS "Admins can create payout approvals" ON payout_approvals;
 CREATE POLICY "Admins can create payout approvals" ON payout_approvals
   FOR INSERT WITH CHECK (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'admin'
     )
   );
 
 -- Admins can update approvals (for execution)
+DROP POLICY IF EXISTS "Admins can update payout approvals" ON payout_approvals;
 CREATE POLICY "Admins can update payout approvals" ON payout_approvals
   FOR UPDATE USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'admin'
     )
   );
 
 -- Admins can view votes
+DROP POLICY IF EXISTS "Admins can view approval votes" ON payout_approval_votes;
 CREATE POLICY "Admins can view approval votes" ON payout_approval_votes
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'admin'
     )
   );
 
 -- Admins can cast votes
+DROP POLICY IF EXISTS "Admins can cast votes" ON payout_approval_votes;
 CREATE POLICY "Admins can cast votes" ON payout_approval_votes
   FOR INSERT WITH CHECK (
     admin_id = auth.uid() AND
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'admin'
     )
   );
 
 -- Admins can view audit log
+DROP POLICY IF EXISTS "Admins can view audit log" ON payout_audit_log;
 CREATE POLICY "Admins can view audit log" ON payout_audit_log
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_id = auth.uid()
+      AND role = 'admin'
     )
   );
 
 -- System can insert audit log entries (via service role)
+DROP POLICY IF EXISTS "System can insert audit log" ON payout_audit_log;
 CREATE POLICY "System can insert audit log" ON payout_audit_log
   FOR INSERT WITH CHECK (true);
 
@@ -177,6 +184,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_payout_approval_timestamp ON payout_approvals;
 CREATE TRIGGER update_payout_approval_timestamp
   BEFORE UPDATE ON payout_approvals
   FOR EACH ROW

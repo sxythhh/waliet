@@ -1,4 +1,3 @@
-import { Briefcase, Wrench, Video, Share2, User, Layout } from "lucide-react";
 import type { CreatorPortfolio, PortfolioSectionType } from "@/types/portfolio";
 import { ResumeDisplay } from "./ResumeDisplay";
 import { SkillsDisplay } from "./SkillsDisplay";
@@ -10,15 +9,6 @@ import { CustomSectionDisplay } from "./CustomSectionDisplay";
 interface PortfolioDisplayProps {
   portfolio: CreatorPortfolio;
 }
-
-const SECTION_ICONS: Record<PortfolioSectionType, React.ReactNode> = {
-  resume: <Briefcase className="h-5 w-5" />,
-  skills: <Wrench className="h-5 w-5" />,
-  media: <Video className="h-5 w-5" />,
-  platforms: <Share2 className="h-5 w-5" />,
-  creator_info: <User className="h-5 w-5" />,
-  custom: <Layout className="h-5 w-5" />,
-};
 
 const SECTION_TITLES: Record<PortfolioSectionType, string> = {
   resume: "Experience & Education",
@@ -105,10 +95,9 @@ export function PortfolioDisplay({ portfolio }: PortfolioDisplayProps) {
 
         return (
           <section key={sectionId} className="space-y-4">
-            <div className="flex items-center gap-2 text-foreground">
-              {SECTION_ICONS[sectionId]}
-              <h2 className="text-lg font-semibold">{SECTION_TITLES[sectionId]}</h2>
-            </div>
+            <h2 className="text-base font-semibold text-foreground font-['Inter'] tracking-[-0.3px]">
+              {SECTION_TITLES[sectionId]}
+            </h2>
             {content}
           </section>
         );

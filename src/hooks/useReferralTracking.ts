@@ -13,6 +13,18 @@ export const useReferralTracking = () => {
     const referralCode = urlParams.get('ref');
 
     if (referralCode) {
+      // Track the click via edge function
+      const trackClick = async () => {
+        try {
+          await supabase.functions.invoke('track-referral-click', {
+            body: { referral_code: referralCode }
+          });
+        } catch (error) {
+          console.error('Failed to track referral click:', error);
+        }
+      };
+      trackClick();
+
       // Store referral code in localStorage (uppercase for consistent matching)
       localStorage.setItem('referral_code', referralCode.toUpperCase());
     }

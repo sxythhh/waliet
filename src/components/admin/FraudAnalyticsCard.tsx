@@ -152,18 +152,18 @@ export function FraudAnalyticsCard() {
 
       {/* Stats Grid */}
       <div className="p-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {statItems.map((item) => (
             <div
               key={item.label}
               className={cn(
-                "rounded-xl p-4 transition-all duration-200",
+                "rounded-lg p-3 transition-all duration-200",
                 "bg-muted/30",
                 "border border-border",
                 "hover:bg-muted/50"
               )}
             >
-              <div className="flex items-center gap-1.5 mb-2">
+              <div className="flex items-center gap-1.5 mb-1">
                 {item.hasDot && (
                   <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-foreground" />
                 )}
@@ -174,7 +174,7 @@ export function FraudAnalyticsCard() {
                   )}
                 </span>
               </div>
-              <p className="text-xl font-semibold font-inter tracking-[-0.5px] text-foreground">
+              <p className="text-lg font-semibold font-inter tracking-[-0.5px] text-foreground">
                 {item.value}
               </p>
             </div>

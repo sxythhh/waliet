@@ -144,7 +144,7 @@ CREATE POLICY "Admins can manage all fraud flags"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE has_role(auth.uid(), 'admin'::app_role)
     )
   );
 
@@ -165,7 +165,7 @@ CREATE POLICY "Admins can manage all evidence"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE has_role(auth.uid(), 'admin'::app_role)
     )
   );
 
@@ -176,7 +176,7 @@ CREATE POLICY "Admins can manage fraud history"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE has_role(auth.uid(), 'admin'::app_role)
     )
   );
 
@@ -187,7 +187,7 @@ CREATE POLICY "Admins can manage banned devices"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE has_role(auth.uid(), 'admin'::app_role)
     )
   );
 
@@ -218,6 +218,7 @@ CREATE POLICY "Service role full access to banned_devices"
 
 -- Note: Run this in Supabase dashboard or via API
 -- INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+-- ON CONFLICT handled below
 -- VALUES (
 --   'fraud-evidence',
 --   'fraud-evidence',

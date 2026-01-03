@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { ApplicationQuestionsEditor } from "./ApplicationQuestionsEditor";
 import { ApplicationQuestion } from "@/types/applicationQuestions";
+import { useBrandUsage } from "@/hooks/useBrandUsage";
 interface Blueprint {
   id: string;
   title: string;
@@ -29,6 +30,7 @@ interface CreateBountyDialogProps {
   brandId: string;
   brandName?: string;
   brandLogoUrl?: string;
+  subscriptionPlan?: string | null;
   onSuccess?: () => void;
   initialBlueprintId?: string;
 }
@@ -53,11 +55,13 @@ export function CreateBountyDialog({
   brandId,
   brandName,
   brandLogoUrl,
+  subscriptionPlan,
   onSuccess,
   initialBlueprintId
 }: CreateBountyDialogProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [creating, setCreating] = useState(false);
+  const { canCreateBoost } = useBrandUsage(brandId, subscriptionPlan);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
@@ -244,6 +248,11 @@ export function CreateBountyDialog({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
   const handleSubmit = async () => {
+    // Safety check for boost limit
+    if (!canCreateBoost) {
+      toast.error("Boost limit reached. Upgrade your plan to create more boosts.");
+      return;
+    }
     if (!formData.title || !formData.monthly_retainer || !formData.videos_per_month || !formData.max_accepted_creators) {
       toast.error("Please fill in all required fields");
       return;

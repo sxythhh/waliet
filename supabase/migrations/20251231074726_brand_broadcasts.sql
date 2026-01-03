@@ -94,7 +94,7 @@ USING (
       SELECT 1 FROM public.campaign_submissions cs
       JOIN public.campaigns c ON c.id = cs.campaign_id
       WHERE c.brand_id = brand_broadcasts.brand_id
-      AND cs.user_id = auth.uid()
+      AND cs.creator_id = auth.uid()
       AND cs.status = 'accepted'
     )) OR
     -- Target is specific campaigns
@@ -102,7 +102,7 @@ USING (
       SELECT 1 FROM public.brand_broadcast_targets bbt
       JOIN public.campaign_submissions cs ON cs.campaign_id = bbt.campaign_id
       WHERE bbt.broadcast_id = brand_broadcasts.id
-      AND cs.user_id = auth.uid()
+      AND cs.creator_id = auth.uid()
       AND cs.status = 'accepted'
     )) OR
     -- Target is specific boosts

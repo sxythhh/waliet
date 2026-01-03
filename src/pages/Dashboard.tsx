@@ -12,8 +12,7 @@ import { BrandCampaignsTab } from "@/components/dashboard/BrandCampaignsTab";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
-import { OnboardingDialog } from "@/components/OnboardingDialog";
-import { OnboardingCard } from "@/components/OnboardingCard";
+import { UserOnboardingFlow, AnnouncementPopup } from "@/components/onboarding";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
@@ -26,7 +25,7 @@ import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { SEOHead } from "@/components/SEOHead";
 
-import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
+import { UnifiedMessagesWidget } from "@/components/shared/UnifiedMessagesWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -35,14 +34,14 @@ type BrandSummary = {
   name: string;
   slug: string;
   subscription_status: string | null;
+  logo_url: string | null;
 };
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showOnboardingCard, setShowOnboardingCard] = useState(false);
+  const [showUserOnboarding, setShowUserOnboarding] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const { markOnboardingComplete } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
@@ -151,12 +150,16 @@ export default function Dashboard() {
       if (pendingBrand === "true") {
         sessionStorage.removeItem("pendingBrandCreation");
         setShowCreateBrandDialog(true);
+        return;
       }
 
-      // Show onboarding card popup for new users in creator mode
+      // Show user onboarding for new users with auto-generated usernames in creator mode
       const currentWorkspace = searchParams.get("workspace") || "creator";
-      if (profileData && !profileData.onboarding_completed && currentWorkspace === "creator") {
-        setShowOnboardingCard(true);
+      const hasAutoUsername = profileData?.username?.startsWith("user_");
+      const needsOnboarding = !profileData?.onboarding_completed || hasAutoUsername;
+
+      if (profileData && needsOnboarding && currentWorkspace === "creator") {
+        setShowUserOnboarding(true);
       }
     };
 
@@ -206,7 +209,7 @@ export default function Dashboard() {
   const fetchBrandBySlug = async (slug: string) => {
     const { data } = await supabase
       .from("brands")
-      .select("id, name, slug, subscription_status")
+      .select("id, name, slug, subscription_status, logo_url")
       .eq("slug", slug)
       .single();
 
@@ -214,6 +217,49 @@ export default function Dashboard() {
       setCurrentBrand(data);
     }
   };
+
+  // Brand workspace favicon and title
+  useEffect(() => {
+    if (!isBrandMode || !currentBrand) return;
+
+    // Update document title
+    const originalTitle = document.title;
+    document.title = `${currentBrand.name} | Virality`;
+
+    // Update favicon if brand has a logo
+    const originalFavicon = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    const originalHref = originalFavicon?.href || '/favicon.ico';
+    const originalAppleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+    const originalAppleHref = originalAppleIcon?.href;
+
+    if (currentBrand.logo_url) {
+      let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+      if (faviconLink) {
+        faviconLink.href = currentBrand.logo_url;
+      } else {
+        faviconLink = document.createElement('link');
+        faviconLink.rel = 'icon';
+        faviconLink.href = currentBrand.logo_url;
+        document.head.appendChild(faviconLink);
+      }
+
+      if (originalAppleIcon) {
+        originalAppleIcon.href = currentBrand.logo_url;
+      }
+    }
+
+    // Cleanup: restore original favicon and title on unmount or when leaving brand mode
+    return () => {
+      document.title = originalTitle;
+      const link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = originalHref;
+      }
+      if (originalAppleIcon && originalAppleHref) {
+        originalAppleIcon.href = originalAppleHref;
+      }
+    };
+  }, [isBrandMode, currentBrand]);
 
   const renderContent = () => {
     // Brand mode - let BrandCampaignsTab handle its own loading state
@@ -247,8 +293,6 @@ export default function Dashboard() {
           return <BrandCampaignDetailView brandId={currentBrand.id} />;
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
-        case "scope":
-          return <div className="p-8 text-center text-muted-foreground">Scope feature has been removed</div>;
         case "creators":
           // Handle creator subtabs
           switch (currentSubtab) {
@@ -265,7 +309,7 @@ export default function Dashboard() {
           }
         case "education":
           return <EducationTab brandId={currentBrand.id} />;
-        case "profile":
+        case "settings":
           return <UserSettingsTab />;
         default:
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
@@ -282,10 +326,13 @@ export default function Dashboard() {
         return <TrainingTab />;
       case "referrals":
         return <ReferralsTab />;
+      case "profile":
+        return <WalletTab />;
+      case "settings":
+        return <ProfileTab />;
+      // Legacy support for old URL
       case "wallet":
         return <WalletTab />;
-      case "profile":
-        return <ProfileTab />;
       default:
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }
@@ -305,18 +352,33 @@ export default function Dashboard() {
       </main>
 
       <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
-      
-      {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
+
+      {/* User Onboarding Flow - shown for new users or users without custom username */}
+      {userId && (
+        <UserOnboardingFlow
+          open={showUserOnboarding}
+          onOpenChange={setShowUserOnboarding}
+          userId={userId}
+          onComplete={() => {
+            markOnboardingComplete();
+            // Reload profile to get updated data
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* Announcements Popup - shown after onboarding for unread announcements */}
+      {userId && !showUserOnboarding && <AnnouncementPopup userId={userId} />}
 
       {/* Brand Creation Dialog - triggered when user selected Brand during onboarding */}
-      <CreateBrandDialog 
-        open={showCreateBrandDialog} 
-        onOpenChange={setShowCreateBrandDialog} 
-        hideTrigger 
+      <CreateBrandDialog
+        open={showCreateBrandDialog}
+        onOpenChange={setShowCreateBrandDialog}
+        hideTrigger
       />
 
       {/* Creator Chat Widget */}
-      {isCreatorMode && <CreatorChatWidget />}
+      {isCreatorMode && <UnifiedMessagesWidget />}
 
     </div>;
 }

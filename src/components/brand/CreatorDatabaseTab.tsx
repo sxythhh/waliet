@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy, StickyNote, Tag } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy, StickyNote, Tag, DollarSign } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -29,6 +29,8 @@ import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialo
 import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
 import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
 import { CreatorDiscoveryWizard } from "@/components/brand/CreatorDiscoveryWizard";
+import { ManualPayCreatorDialog } from "@/components/brand/ManualPayCreatorDialog";
+import { BulkPitchDialog } from "@/components/brand/BulkPitchDialog";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
 import discordIconDark from "@/assets/tiktok-icon-dark.svg";
 import removeCreatorIcon from "@/assets/remove-creator-icon.svg";
@@ -312,6 +314,13 @@ export function CreatorDatabaseTab({
   // Notes dialog state
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [notesCreator, setNotesCreator] = useState<{ id: string; name: string; username: string; avatarUrl?: string | null } | null>(null);
+
+  // Manual pay dialog state
+  const [manualPayDialogOpen, setManualPayDialogOpen] = useState(false);
+  const [creatorToPay, setCreatorToPay] = useState<{ id: string; username: string; full_name: string | null; avatar_url: string | null } | null>(null);
+
+  // Bulk pitch dialog state
+  const [bulkPitchDialogOpen, setBulkPitchDialogOpen] = useState(false);
 
   // Tag filter state
   const [selectedTagFilters, setSelectedTagFilters] = useState<string[]>([]);
@@ -1836,6 +1845,19 @@ export function CreatorDatabaseTab({
                 <MessageSquare className="h-3.5 w-3.5" />
                 Message
               </button>}
+            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
+            e.stopPropagation();
+            setCreatorToPay({
+              id: selectedCreatorPanel.id,
+              username: selectedCreatorPanel.username,
+              full_name: selectedCreatorPanel.full_name,
+              avatar_url: selectedCreatorPanel.avatar_url
+            });
+            setManualPayDialogOpen(true);
+          }}>
+                <DollarSign className="h-3.5 w-3.5" />
+                Pay
+              </button>}
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
             e.stopPropagation();
             initiateRemoveCreator(selectedCreatorPanel);
@@ -1864,6 +1886,10 @@ export function CreatorDatabaseTab({
             <button onClick={() => setAddToCampaignDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-sm">
               <Plus className="h-3 w-3" />
               Add to Campaign
+            </button>
+            <button onClick={() => setBulkPitchDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-emerald-600 rounded-md hover:bg-emerald-700 transition-all flex items-center gap-1.5 shadow-sm">
+              <MessageSquare className="h-3 w-3" />
+              Invite to Campaign
             </button>
           </div>
         </div>}
@@ -2218,6 +2244,35 @@ export function CreatorDatabaseTab({
         onCreatorAdded={() => {
           fetchCreators();
           fetchAvailableTags();
+        }}
+      />
+
+      {/* Manual Pay Creator Dialog */}
+      <ManualPayCreatorDialog
+        open={manualPayDialogOpen}
+        onOpenChange={setManualPayDialogOpen}
+        brandId={brandId}
+        creator={creatorToPay}
+        onSuccess={() => {
+          setCreatorToPay(null);
+        }}
+      />
+
+      {/* Bulk Pitch Dialog */}
+      <BulkPitchDialog
+        open={bulkPitchDialogOpen}
+        onOpenChange={setBulkPitchDialogOpen}
+        brandId={brandId}
+        selectedCreators={creators
+          .filter((c) => selectedCreators.has(c.relationship_id) && !c.is_external)
+          .map((c) => ({
+            id: c.id,
+            username: c.username,
+            full_name: c.full_name,
+            avatar_url: c.avatar_url,
+          }))}
+        onSuccess={() => {
+          setSelectedCreators(new Set());
         }}
       />
     </div>;

@@ -3,6 +3,7 @@ import { Plus, MoreHorizontal, FileText, Calendar, Link2, Sparkles, Zap, Hash } 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
@@ -14,6 +15,7 @@ import { TemplateSelector } from "./TemplateSelector";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 import tiktokIcon from "@/assets/tiktok-logo-black.png";
 import instagramIcon from "@/assets/instagram-logo-black.png";
 import youtubeIcon from "@/assets/youtube-logo-black.png";
@@ -60,6 +62,8 @@ const getStatusConfig = (status: BlueprintStatus) => {
 export function BlueprintsTab({
   brandId
 }: BlueprintsTabProps) {
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark" || (theme === "system" && typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
@@ -72,6 +76,7 @@ export function BlueprintsTab({
   const [brandInfo, setBrandInfo] = useState<{
     name: string;
     logoUrl?: string;
+    subscriptionPlan?: string | null;
   } | null>(null);
   const [campaignLinks, setCampaignLinks] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -81,11 +86,12 @@ export function BlueprintsTab({
   const fetchBrandInfo = async () => {
     const {
       data
-    } = await supabase.from("brands").select("name, logo_url, subscription_status").eq("id", brandId).single();
+    } = await supabase.from("brands").select("name, logo_url, subscription_status, subscription_plan").eq("id", brandId).single();
     if (data) {
       setBrandInfo({
         name: data.name,
-        logoUrl: data.logo_url || undefined
+        logoUrl: data.logo_url || undefined,
+        subscriptionPlan: data.subscription_plan
       });
     }
   };
@@ -246,34 +252,7 @@ export function BlueprintsTab({
     };
   };
   if (loading) {
-    return <div className="p-6 space-y-8">
-        {/* Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-56" />
-          </div>
-          <Skeleton className="h-9 w-36 rounded-lg" />
-        </div>
-        
-        {/* Grid Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="rounded-xl border border-border/40 bg-card/30 p-5 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <Skeleton className="h-8 w-8 rounded-lg" />
-              </div>
-              <Skeleton className="h-12 w-full" />
-              <div className="flex items-center justify-between pt-2">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            </div>)}
-        </div>
-      </div>;
+    return <PageLoading />;
   }
   return <div className="p-6 space-y-8">
       {/* Header */}
@@ -290,19 +269,31 @@ export function BlueprintsTab({
         </Button>
       </div>
 
-      {blueprints.length === 0 ? <div className={cn("flex flex-col items-center justify-center py-20 px-6", "rounded-2xl border border-dashed border-border/50", "bg-muted/20")}>
-          <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
-            <FileText className="w-5 h-5 text-muted-foreground" />
+      {blueprints.length === 0 ? (
+        isDarkMode ? (
+          <div className="w-full">
+            <iframe
+              src="https://join.virality.gg/blueprint-card"
+              className="w-full h-[600px] border-0 rounded-2xl"
+              title="Blueprint Card"
+            />
           </div>
-          <h3 className="text-base font-medium mb-1">No blueprints yet</h3>
-          <p className="text-sm text-muted-foreground text-center max-w-sm mb-5">
-            Create your first blueprint to define content guidelines for creators
-          </p>
-          <Button onClick={() => setTemplateSelectorOpen(true)} variant="outline" size="sm" className="gap-2 rounded-full">
-            <Plus className="w-4 h-4" />
-            Create Blueprint
-          </Button>
-        </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        ) : (
+          <div className={cn("flex flex-col items-center justify-center py-20 px-6", "rounded-2xl border border-dashed border-border/50", "bg-muted/20")}>
+            <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
+              <FileText className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-medium mb-1">No blueprints yet</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-sm mb-5">
+              Create your first blueprint to define content guidelines for creators
+            </p>
+            <Button onClick={() => setTemplateSelectorOpen(true)} variant="outline" size="sm" className="gap-2 rounded-full">
+              <Plus className="w-4 h-4" />
+              Create Blueprint
+            </Button>
+          </div>
+        )
+      ) : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {blueprints.map(blueprint => {
         const status = getBlueprintStatus(blueprint);
         const statusConfig = getStatusConfig(status);
@@ -363,11 +354,11 @@ export function BlueprintsTab({
         </div>}
 
       {/* Dialogs */}
-      <CreateCampaignTypeDialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen} brandId={brandId} defaultBlueprintId={selectedBlueprintId || undefined} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} />
+      <CreateCampaignTypeDialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen} brandId={brandId} subscriptionPlan={brandInfo?.subscriptionPlan} defaultBlueprintId={selectedBlueprintId || undefined} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} />
 
-      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
+      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} subscriptionPlan={brandInfo.subscriptionPlan} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
 
-      {brandInfo && <CreateBountyDialog brandId={brandId} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
+      {brandInfo && <CreateBountyDialog brandId={brandId} subscriptionPlan={brandInfo.subscriptionPlan} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
 
       <TemplateSelector open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen} onSelectTemplate={handleSelectTemplate} onStartBlank={createBlueprint} />
 

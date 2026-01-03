@@ -40,64 +40,81 @@ ALTER TABLE public.admin_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_incidents ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for admin_alerts (admins only)
+DROP POLICY IF EXISTS "Admins can view alerts" ON public.admin_alerts;
 CREATE POLICY "Admins can view alerts"
   ON public.admin_alerts FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid()
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
     )
   );
 
+DROP POLICY IF EXISTS "Admins can insert alerts" ON public.admin_alerts;
 CREATE POLICY "Admins can insert alerts"
   ON public.admin_alerts FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid()
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
     )
   );
 
+DROP POLICY IF EXISTS "Admins can update alerts" ON public.admin_alerts;
 CREATE POLICY "Admins can update alerts"
   ON public.admin_alerts FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid()
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
     )
   );
 
 -- RLS policies for admin_incidents (admins only)
+DROP POLICY IF EXISTS "Admins can view incidents" ON public.admin_incidents;
 CREATE POLICY "Admins can view incidents"
   ON public.admin_incidents FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid()
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
     )
   );
 
+DROP POLICY IF EXISTS "Admins can insert incidents" ON public.admin_incidents;
 CREATE POLICY "Admins can insert incidents"
   ON public.admin_incidents FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid()
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
     )
   );
 
+DROP POLICY IF EXISTS "Admins can update incidents" ON public.admin_incidents;
 CREATE POLICY "Admins can update incidents"
   ON public.admin_incidents FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM public.admin_users
-      WHERE user_id = auth.uid()
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
     )
   );
 
--- Enable realtime for these tables
-ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_alerts;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_incidents;
+-- Enable realtime for these tables (ignore error if already added)
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_alerts;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_incidents;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Add comments
 COMMENT ON TABLE public.admin_alerts IS 'Platform alerts for admin monitoring';

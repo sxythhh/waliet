@@ -238,12 +238,12 @@ export default function AuthDialog({
   };
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[380px] border-0 bg-[#050505] shadow-2xl p-6">
+        <DialogContent className="sm:max-w-[380px] border-0 bg-white dark:bg-[#050505] shadow-2xl p-6">
           <div className="rounded-xl">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex items-center justify-center gap-2">
                 <img alt="Virality Logo" className="h-7 w-auto" src="/lovable-uploads/8052c9b2-7adb-44e5-85ad-afd4a6c0a1a1.png" />
-                <span className="font-clash font-bold tracking-tight text-lg text-white">VIRALITY</span>
+                <span className="font-clash font-bold tracking-tight text-lg text-foreground">VIRALITY</span>
               </div>
             </div>
 
@@ -256,7 +256,7 @@ export default function AuthDialog({
                     </div>
 
                     <div className="space-y-3">
-                      <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-0 font-semibold font-geist gap-3" style={{
+                      <Button variant="outline" className="w-full h-12 bg-white hover:bg-white/90 text-black hover:text-black border-gray-200 dark:border-0 font-semibold font-geist gap-3" style={{
                     letterSpacing: '-0.5px'
                   }} onClick={handleGoogleSignIn} disabled={loading}>
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@ export default function AuthDialog({
                         Continue with Discord
                       </Button>
 
-                      <Button variant="outline" className="w-full h-12 bg-white/5 hover:bg-white/10 border-0 font-semibold font-geist gap-3 text-white" style={{
+                      <Button variant="outline" className="w-full h-12 bg-black/5 hover:bg-black hover:text-white dark:bg-white/5 dark:hover:bg-white/10 border-0 font-semibold font-geist gap-3 text-foreground dark:text-white" style={{
                     letterSpacing: '-0.5px'
                   }} onClick={() => setShowEmailForm(true)} disabled={loading}>
                         <Mail className="h-5 w-5" />
@@ -295,14 +295,14 @@ export default function AuthDialog({
             <div className="space-y-4">
                   <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
-                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-black/80 border-0 focus-visible:ring-2 focus-visible:ring-primary text-white placeholder:text-white/50" />
+                      <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
+                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 dark:bg-black/80 border-0 focus-visible:ring-2 focus-visible:ring-primary text-foreground placeholder:text-muted-foreground" />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-medium text-white">Password</Label>
+                      <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
                       <div className="relative">
-                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-black/80 border-0 focus-visible:ring-2 focus-visible:ring-primary pr-10 text-white placeholder:text-white/50" />
+                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted/50 dark:bg-black/80 border-0 focus-visible:ring-2 focus-visible:ring-primary pr-10 text-foreground placeholder:text-muted-foreground" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>

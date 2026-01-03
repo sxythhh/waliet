@@ -61,7 +61,7 @@ export function LocalCurrencyAmount({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={cn("cursor-help border-b border-dotted border-current", className)}>
+          <span className={cn("cursor-help", className)}>
             {localAmount}
           </span>
         </TooltipTrigger>

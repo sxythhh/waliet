@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -13,14 +13,16 @@ import {
 import {
   GraduationCap,
   CheckCircle2,
-  Circle,
   Play,
   ChevronRight,
   Video,
   HelpCircle,
   Loader2,
+  BookOpen,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface QuizQuestion {
   question: string;
@@ -392,13 +394,7 @@ export function CampaignTrainingView({
   };
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   if (modules.length === 0) {
@@ -407,83 +403,107 @@ export function CampaignTrainingView({
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="h-5 w-5" />
-            Creator Training
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Progress */}
-          {requiredModules.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {requiredCompletedCount} of {requiredModules.length} required
-                  modules complete
-                </span>
-                <span className="font-medium">{Math.round(progressPercent)}%</span>
-              </div>
-              <Progress value={progressPercent} className="h-2" />
-              {!allRequiredComplete && (
-                <p className="text-xs text-amber-600">
-                  Complete all required modules to submit content
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Modules List */}
-          <div className="space-y-2">
-            {sortedModules.map((module) => {
-              const isCompleted = completedIds.has(module.id);
-              return (
-                <button
-                  key={module.id}
-                  onClick={() => openModule(module)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
-                    isCompleted
-                      ? "bg-green-500/5 border-green-500/20"
-                      : "hover:bg-muted/50 border-border"
-                  }`}
-                >
-                  {isCompleted ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-muted-foreground shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{module.title}</span>
-                      {module.required && (
-                        <span className="text-xs bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded shrink-0">
-                          Required
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {module.video_url && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Video className="h-3 w-3" />
-                          Video
-                        </span>
-                      )}
-                      {module.quiz && module.quiz.length > 0 && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <HelpCircle className="h-3 w-3" />
-                          Quiz
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </button>
-              );
-            })}
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold tracking-[-0.5px]">Training Modules</h3>
           </div>
-        </CardContent>
-      </Card>
+          {requiredModules.length > 0 && (
+            <Badge variant={allRequiredComplete ? "default" : "secondary"} className="gap-1">
+              {allRequiredComplete ? (
+                <CheckCircle2 className="h-3 w-3" />
+              ) : (
+                <Sparkles className="h-3 w-3" />
+              )}
+              {requiredCompletedCount}/{requiredModules.length} complete
+            </Badge>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        {requiredModules.length > 0 && !allRequiredComplete && (
+          <div className="space-y-1.5">
+            <Progress value={progressPercent} className="h-1.5" />
+            <p className="text-xs text-amber-600">
+              Complete all required modules to submit content
+            </p>
+          </div>
+        )}
+
+        {/* Modules Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {sortedModules.map((module) => {
+            const isCompleted = completedIds.has(module.id);
+            const hasVideo = !!module.video_url;
+            const hasQuiz = module.quiz && module.quiz.length > 0;
+
+            return (
+              <button
+                key={module.id}
+                onClick={() => openModule(module)}
+                className={cn(
+                  "group relative text-left rounded-lg overflow-hidden border transition-colors",
+                  isCompleted
+                    ? "bg-emerald-500/5 border-emerald-500/30"
+                    : "bg-card border-border hover:border-primary/50"
+                )}
+              >
+                {/* Visual Header */}
+                <div className="relative h-20 bg-muted/50 flex items-center justify-center">
+                  {hasVideo ? (
+                    <div className="relative">
+                      <Video className="h-8 w-8 text-muted-foreground/50" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center">
+                          <Play className="h-2.5 w-2.5 text-foreground ml-0.5" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <BookOpen className="h-8 w-8 text-muted-foreground/50" />
+                  )}
+
+                  {/* Completion badge overlay */}
+                  {isCompleted && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    </div>
+                  )}
+
+                  {/* Required badge overlay */}
+                  {module.required && !isCompleted && (
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 border-0">
+                        Required
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {hasVideo && (
+                      <span className="text-[10px] text-muted-foreground">Video</span>
+                    )}
+                    {hasVideo && hasQuiz && (
+                      <span className="text-muted-foreground/50">·</span>
+                    )}
+                    {hasQuiz && (
+                      <span className="text-[10px] text-muted-foreground">Quiz</span>
+                    )}
+                  </div>
+                  <h4 className="font-medium text-sm tracking-[-0.3px] line-clamp-2">
+                    {module.title}
+                  </h4>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Module Dialog */}
       {selectedModule && (

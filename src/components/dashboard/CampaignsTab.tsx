@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search, RotateCcw } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search, RotateCcw, Copy, Check, Hourglass } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "@/components/ThemeProvider";
@@ -26,8 +26,10 @@ import schoolIconBlack from "@/assets/school-icon-black.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { format } from "date-fns";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
-import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
+import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
@@ -37,6 +39,11 @@ import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
 import { CreatorPitchesWidget } from "@/components/dashboard/CreatorPitchesWidget";
+import { ReceivedPitchesWidget } from "@/components/dashboard/ReceivedPitchesWidget";
+import { EarningsChart } from "@/components/dashboard/EarningsChart";
+import { TransactionsTable, Transaction } from "@/components/dashboard/TransactionsTable";
+import { TransactionFilterDropdown } from "@/components/dashboard/TransactionFilterDropdown";
+import { TransactionShareDialog } from "@/components/dashboard/TransactionShareDialog";
 interface Campaign {
   id: string;
   title: string;
@@ -166,6 +173,15 @@ export function CampaignsTab({
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [connectedAccountsCount, setConnectedAccountsCount] = useState(0);
   const [hasPaymentMethod, setHasPaymentMethod] = useState(false);
+  const [walletTransactions, setWalletTransactions] = useState<Transaction[]>([]);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [homeTypeFilter, setHomeTypeFilter] = useState<string>("all");
+  const [homeStatusFilter, setHomeStatusFilter] = useState<string>("all");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ username?: string; avatar_url?: string } | null>(null);
   const navigate = useNavigate();
   const {
     toast
@@ -190,7 +206,88 @@ export function CampaignsTab({
     fetchCampaigns();
     fetchBoostApplications();
     fetchDashboardData();
+    fetchWalletTransactions();
   }, []);
+
+  const fetchWalletTransactions = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch wallet for total earned
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("total_earned")
+      .eq("user_id", user.id)
+      .single();
+
+    if (walletData) {
+      setTotalEarned(walletData.total_earned || 0);
+    }
+
+    // Fetch transactions (more for the chart to work properly)
+    const { data: txns } = await supabase
+      .from("wallet_transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (!txns) return;
+
+    // Get campaign and boost IDs
+    const campaignIds = txns.map(t => (t.metadata as any)?.campaign_id).filter(Boolean);
+    const boostIds = txns.map(t => (t.metadata as any)?.boost_id).filter(Boolean);
+
+    // Fetch campaign details
+    let campaignsMap: Record<string, any> = {};
+    if (campaignIds.length > 0) {
+      const { data: campaigns } = await supabase
+        .from("campaigns")
+        .select("id, title, brand_name, brand_logo_url")
+        .in("id", campaignIds);
+      campaignsMap = (campaigns || []).reduce((acc, c) => {
+        acc[c.id] = c;
+        return acc;
+      }, {} as Record<string, any>);
+    }
+
+    // Fetch boost details
+    let boostsMap: Record<string, any> = {};
+    if (boostIds.length > 0) {
+      const { data: boosts } = await supabase
+        .from("bounty_campaigns")
+        .select("id, title, brands(name, logo_url)")
+        .in("id", boostIds);
+      boostsMap = (boosts || []).reduce((acc, b) => {
+        acc[b.id] = {
+          id: b.id,
+          title: b.title,
+          brand_name: (b.brands as any)?.name,
+          brand_logo_url: (b.brands as any)?.logo_url
+        };
+        return acc;
+      }, {} as Record<string, any>);
+    }
+
+    const transactions: Transaction[] = txns.map(txn => {
+      const metadata = txn.metadata as any;
+      const isBoostEarning = txn.type === 'earning' && metadata?.boost_id;
+
+      return {
+        id: txn.id,
+        type: isBoostEarning ? 'boost_earning' : (txn.type as Transaction['type']),
+        amount: Number(txn.amount) || 0,
+        date: new Date(txn.created_at),
+        status: txn.status,
+        campaign: metadata?.campaign_id ? campaignsMap[metadata.campaign_id] || null : null,
+        boost: metadata?.boost_id ? boostsMap[metadata.boost_id] || null : null,
+        recipient: null,
+        sender: null
+      };
+    });
+
+    setWalletTransactions(transactions);
+  };
   const fetchDashboardData = async () => {
     const {
       data: {
@@ -202,8 +299,11 @@ export function CampaignsTab({
     // Fetch profile
     const {
       data: profileData
-    } = await supabase.from("profiles").select("full_name, username, total_earnings").eq("id", user.id).single();
-    if (profileData) setProfile(profileData);
+    } = await supabase.from("profiles").select("full_name, username, total_earnings, avatar_url").eq("id", user.id).single();
+    if (profileData) {
+      setProfile(profileData);
+      setUserProfile({ username: profileData.username, avatar_url: profileData.avatar_url });
+    }
 
     // Fetch wallet balance and payment method status
     const {
@@ -614,11 +714,11 @@ export function CampaignsTab({
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Join Discord </h3>
               <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-                Connect with our community and be the first to know about new campaigns.   
+                Connect with our community and be the first to know about new campaigns.
               </p>
             </div>
           </button>
-          
+
           <button onClick={() => navigate('/resources')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
             <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
               <img src={resolvedTheme === 'dark' ? schoolIcon : schoolIconBlack} alt="" className="w-5 h-5" />
@@ -630,8 +730,8 @@ export function CampaignsTab({
               </p>
             </div>
           </button>
-          
-          <button onClick={() => navigate('/dashboard?tab=wallet')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+
+          <button onClick={() => navigate('/dashboard?tab=profile')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
             <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
               <img src={creditCardIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
             </div>
@@ -643,6 +743,51 @@ export function CampaignsTab({
             </div>
           </button>
         </div>}
+
+      {/* Earnings & Transactions Section */}
+      {(walletTransactions.length > 0 || totalEarned > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Earnings Chart */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
+              <div className="text-right">
+                <p className="text-lg font-bold text-emerald-500 font-geist tracking-[-0.5px]">
+                  ${totalEarned.toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
+              </div>
+            </div>
+            <EarningsChart transactions={walletTransactions} totalEarned={totalEarned} showPeriodSelector={true} />
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Transactions</h3>
+              <TransactionFilterDropdown
+                typeFilter={homeTypeFilter}
+                statusFilter={homeStatusFilter}
+                onTypeFilterChange={setHomeTypeFilter}
+                onStatusFilterChange={setHomeStatusFilter}
+              />
+            </div>
+            <TransactionsTable
+              transactions={walletTransactions.filter(t => {
+                if (homeTypeFilter !== 'all' && t.type !== homeTypeFilter && !(homeTypeFilter === 'earning' && t.type === 'boost_earning')) return false;
+                if (homeStatusFilter !== 'all' && t.status !== homeStatusFilter) return false;
+                return true;
+              })}
+              showPagination={false}
+              maxHeight="400px"
+              onTransactionClick={(t) => {
+                setSelectedTransaction(t);
+                setTransactionSheetOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Your Boosts Section - Accepted Applications */}
       {boostApplications.filter(app => app.status === 'accepted').length > 0 && <div className="space-y-3">
@@ -694,7 +839,10 @@ export function CampaignsTab({
         </div>
       )}
 
-      {/* Pitches Widget */}
+      {/* Received Pitches (Brand Invitations) */}
+      <ReceivedPitchesWidget />
+
+      {/* Sent Pitches Widget */}
       <CreatorPitchesWidget />
 
       {/* Submissions Section */}
@@ -879,7 +1027,7 @@ export function CampaignsTab({
               <img src={getPlatformIcon(selectedAccount.platform) || ''} alt={selectedAccount.platform} className="w-full h-full" />
             </div>} />
         
-        <SubmitDemographicsDialog open={submitDemographicsDialogOpen} onOpenChange={setSubmitDemographicsDialogOpen} socialAccountId={selectedAccount.id} platform={selectedAccount.platform} username={selectedAccount.username} onSuccess={() => {
+        <SubmitAudienceInsightsDialog open={submitDemographicsDialogOpen} onOpenChange={setSubmitDemographicsDialogOpen} socialAccountId={selectedAccount.id} platform={selectedAccount.platform} username={selectedAccount.username} onSuccess={() => {
           setSubmitDemographicsDialogOpen(false);
           fetchCampaigns();
         }} />
@@ -944,5 +1092,145 @@ export function CampaignsTab({
           });
         }}
       />
+
+      {/* Transaction Receipt Sheet */}
+      <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0 font-inter tracking-[-0.3px]">
+          {selectedTransaction && <div className="flex flex-col h-full">
+              {/* Hero Header with Amount */}
+              {selectedTransaction.status && selectedTransaction.status !== 'completed' && <div className="px-6 pt-4 pb-2 text-center relative">
+                <button onClick={() => setTransactionSheetOpen(false)} className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+                <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
+                    {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
+                  </Badge>
+              </div>}
+
+              {/* Transaction Details Content */}
+              <div className="flex-1 px-6 py-5">
+                <div className="space-y-6">
+                  {/* Source Section */}
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Source</span>
+                    <div className="flex items-center gap-3 mt-2">
+                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt={selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || "Brand"} className="w-10 h-10 rounded-[7px] object-cover" /> : <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
+                          <span className="text-base font-semibold text-muted-foreground">
+                            {(selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N')?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>}
+                      <div>
+                        <span className="text-base font-semibold tracking-[-0.5px] block">
+                          {selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N/A'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timeline Section */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Initiated</span>
+                      <div className="mt-1.5">
+                        <span className="text-sm font-medium tracking-[-0.5px] block">
+                          {format(selectedTransaction.date, 'MMM d, yyyy')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(selectedTransaction.date, 'h:mm a')}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Paid</span>
+                      <div className="mt-1.5">
+                        {selectedTransaction.status === 'completed' ? <>
+                          <span className="text-sm font-medium tracking-[-0.5px] block">
+                            {format(selectedTransaction.date, 'MMM d, yyyy')}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(selectedTransaction.date, 'h:mm a')}
+                          </span>
+                        </> : <span className="text-sm text-muted-foreground">—</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Period Section - only show for non-boost transactions */}
+                  {selectedTransaction.type !== 'boost_earning' && selectedTransaction.metadata?.period_start && <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Period</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
+                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')} – ${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}` : format(selectedTransaction.date, 'MMM d, yyyy')}
+                    </span>
+                  </div>}
+
+                  {/* Amount Section */}
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Amount</span>
+                    <span className="text-lg font-bold tracking-[-0.5px] block mt-1">
+                      ${Math.abs(selectedTransaction.amount).toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Description Section */}
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Description</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
+                      {selectedTransaction.source || (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' : selectedTransaction.type === 'referral' ? 'Referral bonus' : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` : selectedTransaction.type === 'balance_correction' ? 'Balance correction' : 'Transaction')}
+                    </span>
+                  </div>
+
+                  {/* Transaction ID */}
+                  <div className="pt-4">
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Transaction ID</span>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-xs font-mono text-muted-foreground break-all">
+                        {selectedTransaction.id}
+                      </span>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" onClick={() => {
+                    navigator.clipboard.writeText(selectedTransaction.id);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                    toast({
+                      description: "Transaction ID copied"
+                    });
+                  }}>
+                        {copiedId ? <Check className="h-2.5 w-2.5 text-green-500" /> : <Copy className="h-2.5 w-2.5" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rejection Reason */}
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="mt-5 p-3 bg-destructive/10 rounded-xl">
+                    <div className="flex items-start gap-2">
+                      <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs font-medium tracking-[-0.5px] text-destructive mb-1">Rejection Reason</div>
+                        <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
+                      </div>
+                    </div>
+                  </div>}
+              </div>
+
+              {/* Fixed Buttons */}
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border mt-auto flex flex-col gap-2">
+                <Button onClick={() => setShareDialogOpen(true)} className="w-full gap-2">
+                  Share Transaction
+                </Button>
+                <Button variant="ghost" onClick={() => setTransactionSheetOpen(false)} className="w-full md:hidden text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                  Close
+                </Button>
+              </div>
+            </div>}
+        </SheetContent>
+      </Sheet>
+
+      {/* Share Transaction Dialog */}
+      <TransactionShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} transaction={selectedTransaction} userProfile={userProfile} />
     </div>;
 }
