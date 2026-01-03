@@ -66,7 +66,7 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
         startResendCooldown();
         toast({
           title: "Code sent!",
-          description: "Check your email for a 6-digit verification code.",
+          description: "Check your email for an 8-digit verification code.",
         });
       }
     } catch (error: any) {
@@ -81,7 +81,7 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
   };
 
   const handleVerifyOTP = async (code: string) => {
-    if (code.length !== 6) return;
+    if (code.length !== 8) return;
 
     setLoading(true);
 
@@ -184,17 +184,17 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
         <div className="text-center space-y-2">
           <h2 className="text-xl font-semibold text-foreground">Check your email</h2>
           <p className="text-sm text-muted-foreground">
-            We sent a 6-digit code to <span className="text-foreground font-medium">{email}</span>
+            We sent an 8-digit code to <span className="text-foreground font-medium">{email}</span>
           </p>
         </div>
 
         <div className="flex flex-col items-center gap-4">
           <InputOTP
-            maxLength={6}
+            maxLength={8}
             value={otpCode}
             onChange={(value) => {
               setOtpCode(value);
-              if (value.length === 6) {
+              if (value.length === 8) {
                 handleVerifyOTP(value);
               }
             }}
@@ -207,6 +207,8 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
               <InputOTPSlot index={3} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
               <InputOTPSlot index={4} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
               <InputOTPSlot index={5} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={6} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={7} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
             </InputOTPGroup>
           </InputOTP>
 
