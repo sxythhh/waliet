@@ -61,24 +61,24 @@ export const BrandCard = memo(function BrandCard({
         {/* Header: Logo + Brand Info */}
         <div className="flex items-center gap-3">
           {/* Logo */}
-          <div
-            className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
-            style={{ backgroundColor: brand_color || "#1a1a1a" }}
-          >
-            {logo_url ? (
+          {logo_url ? (
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
               <OptimizedImage
                 src={logo_url}
                 alt={name}
                 className="w-full h-full object-cover"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-sm font-bold text-white">
-                  {name?.charAt(0) || "B"}
-                </span>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div
+              className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center"
+              style={{ backgroundColor: brand_color || "#1a1a1a" }}
+            >
+              <span className="text-sm font-bold text-white">
+                {name?.charAt(0) || "B"}
+              </span>
+            </div>
+          )}
 
           {/* Name and Verified */}
           <div className="flex-1 min-w-0">

@@ -400,7 +400,7 @@ export function DiscoverTab({
       setBounties(availableBounties as BountyCampaign[]);
     }
 
-    // Fetch brands with campaigns (active or ended)
+    // Fetch all active brands with their campaigns
     const { data: brandsData } = await supabase
       .from("brands")
       .select(`
@@ -414,20 +414,19 @@ export function DiscoverTab({
         website_url,
         instagram_handle,
         tiktok_handle,
-        campaigns!inner(id, status, is_private),
+        campaigns(id, status, is_private),
         bounty_campaigns(id, status, is_private)
       `)
       .eq("is_active", true)
-      .eq("campaigns.is_private", false)
-      .in("campaigns.status", ["active", "ended"])
-      .limit(12);
+      .limit(50);
 
     if (brandsData) {
-      // Process brands to get campaign and boost counts (prioritize active, but include ended)
+      // Process brands - include any brand that has had campaigns or boosts
       const processedBrands = brandsData.map(brand => {
         const activeCampaigns = (brand.campaigns || []).filter((c: any) => c.status === "active" && !c.is_private);
         const activeBoosts = (brand.bounty_campaigns || []).filter((b: any) => b.status === "active" && !b.is_private);
-        const totalCampaigns = (brand.campaigns || []).filter((c: any) => !c.is_private);
+        const allCampaigns = (brand.campaigns || []).filter((c: any) => !c.is_private);
+        const allBoosts = (brand.bounty_campaigns || []).filter((b: any) => !b.is_private);
         return {
           id: brand.id,
           name: brand.name,
@@ -441,9 +440,9 @@ export function DiscoverTab({
           tiktok_handle: brand.tiktok_handle,
           campaign_count: activeCampaigns.length,
           boost_count: activeBoosts.length,
-          has_campaigns: totalCampaigns.length > 0,
+          has_opportunities: allCampaigns.length > 0 || allBoosts.length > 0,
         };
-      }).filter(b => b.has_campaigns)
+      }).filter(b => b.has_opportunities)
         .sort((a, b) => {
           // Prioritize brands with active opportunities
           const aActive = a.campaign_count + a.boost_count;
@@ -451,7 +450,8 @@ export function DiscoverTab({
           if (aActive > 0 && bActive === 0) return -1;
           if (bActive > 0 && aActive === 0) return 1;
           return bActive - aActive;
-        });
+        })
+        .slice(0, 12);
 
       setBrands(processedBrands);
     }
