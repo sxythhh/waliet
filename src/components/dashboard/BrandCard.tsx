@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { cn } from "@/lib/utils";
-import { Briefcase, Zap } from "lucide-react";
 
 export interface BrandCardProps {
   id: string;
@@ -98,30 +97,6 @@ export const BrandCard = memo(function BrandCard({
           </div>
         </div>
 
-        {/* Stats Row */}
-        {totalOpportunities > 0 && (
-          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/50">
-            {campaign_count > 0 && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Briefcase className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">
-                  {campaign_count} {campaign_count === 1 ? 'Campaign' : 'Campaigns'}
-                </span>
-              </div>
-            )}
-            {campaign_count > 0 && boost_count > 0 && (
-              <span className="text-border">•</span>
-            )}
-            {boost_count > 0 && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Zap className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">
-                  {boost_count} {boost_count === 1 ? 'Boost' : 'Boosts'}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
