@@ -1,34 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useReferralTracking } from "@/hooks/useReferralTracking";
-import { getStoredUtmParams, clearStoredUtmParams, preserveTrackingForOAuth } from "@/hooks/useUtmTracking";
+import { preserveTrackingForOAuth } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Mail, ArrowLeft } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Eye, EyeOff, Mail } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import { EmailOTPAuth } from "@/components/auth/EmailOTPAuth";
-import discordIcon from "@/assets/discord-icon-new.png";
 export default function Auth() {
   const [searchParams] = useSearchParams();
-  const {
-    trackReferral
-  } = useReferralTracking();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [showResetDialog, setShowResetDialog] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [useOTPLogin, setUseOTPLogin] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -58,88 +46,6 @@ export default function Auth() {
     });
     return () => subscription.unsubscribe();
   }, [navigate, isRecoveryMode]);
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Try to sign in first
-    const {
-      data: signInData,
-      error: signInError
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    if (signInError) {
-      // If sign in fails, try to sign up
-      if (signInError.message.includes("Invalid login credentials")) {
-        // Get stored UTM params
-        const utmParams = getStoredUtmParams();
-        
-        const {
-          data: signUpData,
-          error: signUpError
-        } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: utmParams ? {
-              utm_source: utmParams.utm_source,
-              utm_medium: utmParams.utm_medium,
-              utm_campaign: utmParams.utm_campaign,
-              utm_content: utmParams.utm_content,
-              utm_term: utmParams.utm_term,
-              signup_url: utmParams.signup_url
-            } : undefined
-          }
-        });
-        setLoading(false);
-        if (signUpError) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: signUpError.message
-          });
-        } else if (signUpData.user) {
-          const referralResult = await trackReferral(signUpData.user.id);
-          clearStoredUtmParams();
-
-          if (referralResult.success) {
-            toast({
-              title: "Welcome to Virality!",
-              description: "Your account has been created and referral applied successfully."
-            });
-          } else if (referralResult.error) {
-            toast({
-              title: "Welcome to Virality!",
-              description: "Your account has been created successfully."
-            });
-            // Show referral error as a separate notification
-            toast({
-              variant: "destructive",
-              title: "Referral Error",
-              description: referralResult.error
-            });
-          } else {
-            toast({
-              title: "Welcome to Virality!",
-              description: "Your account has been created successfully."
-            });
-          }
-        }
-      } else {
-        setLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: signInError.message
-        });
-      }
-    } else {
-      setLoading(false);
-    }
-  };
   const handleGoogleSignIn = async () => {
     setLoading(true);
     // Preserve UTM and referral params before OAuth redirect
@@ -177,43 +83,6 @@ export default function Auth() {
     discordAuthUrl.searchParams.set('scope', 'identify email');
     discordAuthUrl.searchParams.set('state', state);
     window.location.href = discordAuthUrl.toString();
-  };
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLoading(true);
-    try {
-      const {
-        error
-      } = await supabase.functions.invoke('send-password-reset', {
-        body: {
-          email: resetEmail,
-          redirectTo: `${window.location.origin}/auth`
-        }
-      });
-      setLoading(false);
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message
-        });
-      } else {
-        toast({
-          title: "Check your email",
-          description: "We've sent you a password reset link."
-        });
-        setShowResetDialog(false);
-        setResetEmail("");
-      }
-    } catch (error: any) {
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to send reset email"
-      });
-    }
   };
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -333,71 +202,16 @@ export default function Auth() {
 
 
               </div>
-            </> : useOTPLogin ? (
-              /* Email OTP Login */
+            </> : (
+              /* Email OTP Login - Now the default for email auth */
               <EmailOTPAuth
-                onBack={() => {
-                  setUseOTPLogin(false);
-                  setShowEmailForm(false);
-                }}
+                onBack={() => setShowEmailForm(false)}
                 onSuccess={() => {
                   const returnUrl = sessionStorage.getItem('applyReturnUrl');
                   navigate(returnUrl || "/dashboard");
                 }}
               />
-            ) : (/* Email Password Form */
-        <div className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setShowEmailForm(false)}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </button>
-
-              <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 dark:bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
-                  <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted/50 dark:bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 pr-10 text-foreground placeholder:text-muted-foreground" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <button type="button" onClick={() => setShowResetDialog(true)} className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </button>
-                </div>
-
-                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-inter tracking-[-0.5px]">
-                  {loading ? "Please wait..." : "Continue"}
-                </Button>
-              </form>
-
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-[#111111] px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setUseOTPLogin(true)}
-                className="w-full h-12 bg-white/5 hover:bg-white/10 text-white hover:text-white border-white/10 font-medium"
-              >
-                Sign in with email code instead
-              </Button>
-            </div>)}
+            )}
           
           {/* Terms and Conditions */}
           <div className="mt-8 text-center" style={{
@@ -421,26 +235,5 @@ export default function Auth() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Password Reset Dialog */}
-      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-        <DialogContent className="bg-card border-0 shadow-xl">
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Enter your email address and we'll send you a link to reset your password.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="reset-email">Email</Label>
-              <Input id="reset-email" type="email" placeholder="you@example.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
-            </div>
-            <Button type="submit" className="w-full h-12" disabled={loading}>
-              {loading ? "Sending..." : "Send Reset Link"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>;
 }
