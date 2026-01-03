@@ -9,6 +9,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, CheckCircle2, Clock, XCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import { AudienceInsightsGuidance } from "./AudienceInsightsGuidance";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -23,7 +24,7 @@ interface DemographicSubmission {
   tier1_percentage: number;
 }
 
-interface SubmitDemographicsDialogProps {
+interface SubmitAudienceInsightsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -32,14 +33,14 @@ interface SubmitDemographicsDialogProps {
   username: string;
 }
 
-export function SubmitDemographicsDialog({
+export function SubmitAudienceInsightsDialog({
   open,
   onOpenChange,
   onSuccess,
   socialAccountId,
   platform,
   username
-}: SubmitDemographicsDialogProps) {
+}: SubmitAudienceInsightsDialogProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -109,7 +110,7 @@ export function SubmitDemographicsDialog({
       toast({
         variant: "destructive",
         title: "Video Required",
-        description: "Please upload a video showing your audience demographics"
+        description: "Please upload a video showing your audience insights"
       });
       return;
     }
@@ -124,7 +125,7 @@ export function SubmitDemographicsDialog({
         toast({
           variant: "destructive",
           title: "Error",
-          description: "You must be logged in to submit demographics"
+          description: "You must be logged in to submit audience insights"
         });
         return;
       }
@@ -185,6 +186,18 @@ export function SubmitDemographicsDialog({
         status: 'pending'
       }).select().single();
       if (insertError) {
+        // Handle unique constraint violation (race condition - another pending submission was created)
+        if (insertError.code === '23505' || insertError.message?.includes('duplicate') || insertError.message?.includes('unique')) {
+          toast({
+            variant: "destructive",
+            title: "Submission Already Pending",
+            description: "You already have a pending submission for this account. Please wait for it to be reviewed."
+          });
+          // Refresh to show the latest status
+          await fetchPreviousSubmissions();
+          setUploading(false);
+          return;
+        }
         throw insertError;
       }
 
@@ -216,24 +229,18 @@ export function SubmitDemographicsDialog({
       }
       toast({
         title: "Success",
-        description: "Demographics submitted successfully. Admin will review your submission."
+        description: "Audience insights submitted successfully. Admin will review your submission."
       });
 
       // Reset form
       setVideoFile(null);
       onOpenChange(false);
-      
-      // Delay to ensure database write is fully committed before refreshing
-      // This prevents race conditions where the query returns stale data
-      console.log('Demographic submission successful, waiting before refresh...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Refreshing social accounts...');
       onSuccess();
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to submit demographics"
+        description: error.message || "Failed to submit audience insights"
       });
     } finally {
       setUploading(false);
@@ -274,12 +281,12 @@ export function SubmitDemographicsDialog({
           <DialogTitle style={{
           fontFamily: 'Inter',
           letterSpacing: '-0.5px'
-        }}>Submit Account Demographics</DialogTitle>
+        }}>Share Audience Insights</DialogTitle>
           <DialogDescription style={{
           fontFamily: 'Inter',
           letterSpacing: '-0.3px'
         }}>
-            Upload a video showing your audience demographics
+            Upload a video showing your audience insights
           </DialogDescription>
         </DialogHeader>
 
@@ -333,6 +340,14 @@ export function SubmitDemographicsDialog({
           </div>
         )}
 
+        {/* Recording Guidance - expanded by default for first-time submitters */}
+        {!hasPendingSubmission && (
+          <AudienceInsightsGuidance
+            platform={platform}
+            defaultExpanded={previousSubmissions.length === 0}
+          />
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
 
 
@@ -341,7 +356,7 @@ export function SubmitDemographicsDialog({
             <Label style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
-          }}>Demographics Video</Label>
+          }}>Audience Insights Video</Label>
             
             <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => !uploading && fileInputRef.current?.click()}>
               {videoFile ? <div className="space-y-2">
@@ -377,7 +392,7 @@ export function SubmitDemographicsDialog({
           fontFamily: 'Inter',
           letterSpacing: '-0.3px'
         }}>
-            {uploading ? "Uploading..." : "Submit Demographics"}
+            {uploading ? "Uploading..." : "Submit Insights"}
           </Button>
         </form>
       </DialogContent>

@@ -13,7 +13,7 @@ export function useOnboardingStatus(): OnboardingStatus {
   const [isLoading, setIsLoading] = useState(true);
   const [completedCount, setCompletedCount] = useState(0);
   const [onboardingCompleted, setOnboardingCompleted] = useState(true); // Default to true to prevent flash
-  const totalCount = 8;
+  const totalCount = 7; // Demographics/Audience Insights no longer required
 
   useEffect(() => {
     checkOnboardingStatus();
@@ -45,13 +45,10 @@ export function useOnboardingStatus(): OnboardingStatus {
 
       setOnboardingCompleted(false);
 
-      // Fetch social accounts with demographics
+      // Fetch social accounts
       const { data: socialAccounts } = await supabase
         .from("social_accounts")
-        .select(`
-          *,
-          demographic_submissions(status)
-        `)
+        .select("*")
         .eq("user_id", session.user.id)
         .eq("is_verified", true);
 
@@ -79,15 +76,10 @@ export function useOnboardingStatus(): OnboardingStatus {
       // 5. Connect a social account
       if (socialAccounts && socialAccounts.length > 0) completed++;
 
-      // 6. Submit demographics
-      if (socialAccounts?.some(a => 
-        a.demographic_submissions?.some((d: { status: string }) => d.status === 'approved')
-      )) completed++;
-
-      // 7. Join your first campaign
+      // 6. Join your first campaign
       if (joinedCampaigns && joinedCampaigns.length > 0) completed++;
 
-      // 8. Earn your first payout
+      // 7. Earn your first payout
       if ((profile?.total_earnings || 0) > 0) completed++;
 
       setCompletedCount(completed);

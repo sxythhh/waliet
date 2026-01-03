@@ -29,7 +29,7 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import flagIcon from "@/assets/flag-icon.svg";
-import { DemographicScoreIndicator } from "./DemographicScoreIndicator";
+import { AudienceScoreIndicator } from "./AudienceScoreIndicator";
 import { VideoPreview } from "@/components/ui/VideoPreview";
 
 // Helper to extract platform video ID from URL
@@ -1581,7 +1581,7 @@ export function VideoSubmissionsTab({
                                       {video.video_author_username || profile?.username || "Unknown"}
                                     </span>
                                   </div>
-                                  <DemographicScoreIndicator score={demographicScore?.score} />
+                                  <AudienceScoreIndicator score={demographicScore?.score} />
                                 </div>
                               </TableCell>
                               <TableCell>

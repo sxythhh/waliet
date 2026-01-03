@@ -17,8 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
-import { DemographicStatusCard } from "@/components/DemographicStatusCard";
+import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
+import { AudienceInsightsStatusCard } from "@/components/AudienceInsightsStatusCard";
+import { PendingInsightsRequestsBanner } from "@/components/dashboard/PendingInsightsRequestsBanner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -26,11 +27,10 @@ import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
 import { VerifyAccountDialog } from "@/components/VerifyAccountDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
-import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { PortfolioSection, PortfolioItem } from "@/components/dashboard/PortfolioSection";
-import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard } from "@/components/dashboard/settings";
+import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard, NotificationSettingsCard } from "@/components/dashboard/settings";
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -153,6 +153,8 @@ export function ProfileTab() {
   const [originalSubscribedToUpdates, setOriginalSubscribedToUpdates] = useState(true);
   const [savingSubscription, setSavingSubscription] = useState(false);
   const [expandedCampaignAccounts, setExpandedCampaignAccounts] = useState<Set<string>>(new Set());
+  const [authProvider, setAuthProvider] = useState<string | null>(null);
+  const [authIdentities, setAuthIdentities] = useState<Array<{ provider: string; identity_id: string; created_at: string }>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileInfoRef = useRef<HTMLDivElement>(null);
   const connectedAccountsRef = useRef<HTMLDivElement>(null);
@@ -221,6 +223,21 @@ export function ProfileTab() {
     } = await supabase.auth.getSession();
     if (!session) return;
     setLoading(true);
+
+    // Get auth provider info from user object
+    const user = session.user;
+    const provider = user.app_metadata?.provider || 'email';
+    setAuthProvider(provider);
+
+    // Get all linked identities
+    if (user.identities && user.identities.length > 0) {
+      setAuthIdentities(user.identities.map(id => ({
+        provider: id.provider,
+        identity_id: id.identity_id || id.id,
+        created_at: id.created_at || ''
+      })));
+    }
+
     const {
       data: profileData
     } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
@@ -253,7 +270,8 @@ export function ProfileTab() {
           score,
           submitted_at,
           reviewed_at,
-          screenshot_url
+          screenshot_url,
+          admin_notes
         )
       `).eq("user_id", session.user.id).order("connected_at", {
       ascending: false
@@ -723,80 +741,23 @@ export function ProfileTab() {
   if (loading || !profile) {
     return null;
   }
-  // Generate onboarding tasks based on profile completion
-  const onboardingTasks = [{
-    id: 'profile_info',
-    label: 'Add basic profile info',
-    completed: !!(profile?.full_name && profile?.username),
-    onClick: () => profileInfoRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
-  }, {
-    id: 'content_preferences',
-    label: 'Choose content preferences',
-    completed: !!(profile?.content_styles && profile.content_styles.length > 0),
-    onClick: () => profileInfoRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
-  }, {
-    id: 'location',
-    label: 'Add your location',
-    completed: !!profile?.country,
-    onClick: () => profileInfoRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
-  }, {
-    id: 'phone',
-    label: 'Add phone number',
-    completed: !!profile?.phone_number,
-    onClick: () => profileInfoRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    })
-  }, {
-    id: 'social_account',
-    label: 'Connect a social account',
-    completed: socialAccounts.length > 0,
-    onClick: () => setShowAddAccountDialog(true)
-  }, {
-    id: 'demographics',
-    label: 'Submit demographics',
-    completed: socialAccounts.some(a => a.demographic_submissions?.some(d => d.status === 'approved')),
-    onClick: () => {
-      if (socialAccounts.length > 0) {
-        const account = socialAccounts[0];
-        setSelectedAccountForDemographics({
-          id: account.id,
-          platform: account.platform,
-          username: account.username
-        });
-        setShowDemographicsDialog(true);
-      } else {
-        setShowAddAccountDialog(true);
-      }
-    }
-  }, {
-    id: 'join_campaign',
-    label: 'Join your first campaign',
-    completed: joinedCampaigns.length > 0,
-    onClick: () => navigate('/dashboard?tab=discover')
-  }, {
-    id: 'earn_first',
-    label: 'Earn your first payout',
-    completed: (profile?.total_earnings || 0) > 0,
-    onClick: () => navigate('/dashboard?tab=discover')
-  }];
   return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8">
-      {/* Onboarding Checklist */}
-      <ProfileOnboardingChecklist tasks={onboardingTasks} />
-
       {/* Profile Header */}
       <Card className="bg-card border-0">
-        
+
       </Card>
+
+      {/* Pending Audience Insights Requests Banner */}
+      {profile && (
+        <PendingInsightsRequestsBanner
+          creatorId={profile.id}
+          socialAccounts={socialAccounts}
+          onSubmitInsights={(account) => {
+            setSelectedAccountForDemographics(account);
+            setShowDemographicsDialog(true);
+          }}
+        />
+      )}
 
       {/* Connected Accounts */}
       <Card ref={connectedAccountsRef} className="bg-transparent border-0">
@@ -856,6 +817,57 @@ export function ProfileTab() {
         subscribed_to_updates: checked
       })} subscriptionHasChanges={profile.subscribed_to_updates !== originalSubscribedToUpdates} onSaveSubscription={handleSaveSubscription} savingSubscription={savingSubscription} />
 
+        {/* Login Method Card */}
+        {authProvider && (
+          <SettingsCard
+            title="Login Method"
+            description="How you signed up and log into your account"
+            footerHint={`You're signed in with ${authProvider === 'google' ? 'Google' : authProvider === 'discord' ? 'Discord' : authProvider === 'email' ? 'email and password' : authProvider}.`}
+          >
+            <div className="flex items-center gap-3 max-w-md h-11 px-3 bg-background border border-border rounded-md">
+              {authProvider === 'google' && (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                    Google
+                  </span>
+                </>
+              )}
+              {authProvider === 'discord' && (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#5865F2">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                  </svg>
+                  <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                    Discord
+                  </span>
+                </>
+              )}
+              {authProvider === 'email' && (
+                <>
+                  <Mail className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                    Email & Password
+                  </span>
+                </>
+              )}
+              {authProvider !== 'google' && authProvider !== 'discord' && authProvider !== 'email' && (
+                <>
+                  <Mail className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm capitalize" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                    {authProvider}
+                  </span>
+                </>
+              )}
+            </div>
+          </SettingsCard>
+        )}
+
         {/* Currency Card */}
         <CurrencySettingsCard />
 
@@ -874,6 +886,9 @@ export function ProfileTab() {
               <DiscordLinkDialog userId={profile.id} discordUsername={profile.discord_username} discordAvatar={profile.discord_avatar || undefined} onSuccess={fetchProfile} />
             </div> : <DiscordLinkDialog userId={profile.id} onSuccess={fetchProfile} />}
         </SettingsCard>
+
+        {/* Notification Settings */}
+        <NotificationSettingsCard />
 
         {/* Private Profile Card */}
         <SettingsCard title="Private Profile" description="When enabled, your public profile page will show 'This profile is private' to other users" footerHint={profile.is_private ? "Your profile is currently hidden from other users." : "Your profile is publicly visible."} saveButton={{
@@ -901,8 +916,8 @@ export function ProfileTab() {
       {/* Security Section */}
       <SecuritySection />
 
-      {/* Portfolio Section */}
-      {profile && (
+      {/* Portfolio Section - Hidden for now */}
+      {/* {profile && (
         <PortfolioSection
           userId={profile.id}
           portfolioItems={(profile.portfolio_items || []) as PortfolioItem[]}
@@ -915,14 +930,14 @@ export function ProfileTab() {
             });
           }}
         />
-      )}
+      )} */}
 
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} />
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
 
-      {/* Demographics Dialog */}
-      {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
+      {/* Audience Insights Dialog */}
+      {selectedAccountForDemographics && <SubmitAudienceInsightsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
       {/* Verify Account Dialog */}
       {selectedAccountForVerification && <VerifyAccountDialog open={showVerifyAccountDialog} onOpenChange={open => {

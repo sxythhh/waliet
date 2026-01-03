@@ -61,6 +61,8 @@ interface Campaign {
     logo_url: string;
     is_verified?: boolean;
   };
+  require_audience_insights?: boolean;
+  min_insights_score?: number;
 }
 interface JoinCampaignSheetProps {
   campaign: Campaign | null;
@@ -86,6 +88,7 @@ export function JoinCampaignSheet({
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loadingBlueprint, setLoadingBlueprint] = useState(false);
+  const [userInsightsScore, setUserInsightsScore] = useState<number | null>(null);
   const navigate = useNavigate();
   const {
     resolvedTheme
@@ -175,9 +178,32 @@ export function JoinCampaignSheet({
     }
 
     // Get all user's social accounts that match the campaign's platforms
+    // Also fetch demographic submissions to check insights score
     const {
       data: accounts
-    } = await supabase.from("social_accounts").select("*").eq("user_id", user.id).in("platform", campaign.platforms.map(p => p.toLowerCase()));
+    } = await supabase.from("social_accounts").select(`
+      *,
+      demographic_submissions(
+        id,
+        status,
+        score
+      )
+    `).eq("user_id", user.id).in("platform", campaign.platforms.map(p => p.toLowerCase()));
+
+    // Calculate user's best insights score from approved submissions
+    if (accounts) {
+      const approvedScores = accounts
+        .flatMap(acc => acc.demographic_submissions || [])
+        .filter((sub: any) => sub.status === 'approved' && sub.score != null)
+        .map((sub: any) => sub.score);
+
+      if (approvedScores.length > 0) {
+        const avgScore = Math.round(approvedScores.reduce((a: number, b: number) => a + b, 0) / approvedScores.length);
+        setUserInsightsScore(avgScore);
+      } else {
+        setUserInsightsScore(null);
+      }
+    }
 
     // Get active (non-withdrawn) submissions to filter out platforms
     const {
@@ -608,6 +634,44 @@ export function JoinCampaignSheet({
                   </div>}
               </div>}
 
+            {/* Audience Insights Requirement Notice */}
+            {isLoggedIn && campaign.require_audience_insights && (
+              (() => {
+                const minScore = campaign.min_insights_score || 0;
+                const meetsRequirement = userInsightsScore !== null && userInsightsScore >= minScore;
+
+                if (!meetsRequirement) {
+                  return (
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-2">
+                      <p className="text-sm font-medium text-amber-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                        Audience Insights Required
+                      </p>
+                      <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                        {minScore > 0
+                          ? `This campaign requires verified audience insights with a score of ${minScore}% or higher.`
+                          : 'This campaign requires verified audience insights.'}
+                        {userInsightsScore !== null
+                          ? ` Your current score is ${userInsightsScore}%.`
+                          : ' You have not submitted audience insights yet.'}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => {
+                          onOpenChange(false);
+                          navigate('/dashboard?tab=profile');
+                        }}
+                      >
+                        Share Audience Insights
+                      </Button>
+                    </div>
+                  );
+                }
+                return null;
+              })()
+            )}
+
             {/* Application Questions - only show if logged in and campaign requires application */}
             {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
                 <Label htmlFor={`question-${index}`}>
@@ -622,23 +686,31 @@ export function JoinCampaignSheet({
         </div>
 
         {/* Sticky Submit Button at bottom */}
-        {isLoggedIn && <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-[#dadce2]/0">
-            <div className="flex flex-col gap-3">
-              <Button style={{
-            fontFamily: 'Geist',
-            letterSpacing: '-0.5px',
-            backgroundColor: campaign.status === "ended" ? '#6b7280' : '#2060df'
-          }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0} className="w-full text-white tracking-tighter">
-                {campaign.status === "ended" ? "Campaign Ended" : submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
-              </Button>
-              <Button variant="ghost" className="w-full md:hidden" style={{
-            fontFamily: 'Geist',
-            letterSpacing: '-0.5px'
-          }} onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
+        {isLoggedIn && (() => {
+          const insightsRequired = campaign.require_audience_insights;
+          const minScore = campaign.min_insights_score || 0;
+          const meetsInsightsRequirement = !insightsRequired || (userInsightsScore !== null && userInsightsScore >= minScore);
+
+          return (
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-[#dadce2]/0">
+              <div className="flex flex-col gap-3">
+                <Button style={{
+                  fontFamily: 'Geist',
+                  letterSpacing: '-0.5px',
+                  backgroundColor: campaign.status === "ended" || !meetsInsightsRequirement ? '#6b7280' : '#2060df'
+                }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0 || !meetsInsightsRequirement} className="w-full text-white tracking-tighter">
+                  {campaign.status === "ended" ? "Campaign Ended" : !meetsInsightsRequirement ? "Insights Required" : submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+                </Button>
+                <Button variant="ghost" className="w-full md:hidden" style={{
+                  fontFamily: 'Geist',
+                  letterSpacing: '-0.5px'
+                }} onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+              </div>
             </div>
-          </div>}
+          );
+        })()}
       </SheetContent>
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={loadSocialAccounts} />

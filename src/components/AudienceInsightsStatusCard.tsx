@@ -17,9 +17,10 @@ interface DemographicSubmission {
   submitted_at: string;
   reviewed_at?: string | null;
   screenshot_url?: string | null;
+  admin_notes?: string | null;
 }
 
-interface DemographicStatusCardProps {
+interface AudienceInsightsStatusCardProps {
   accountId: string;
   platform: string;
   username: string;
@@ -29,7 +30,7 @@ interface DemographicStatusCardProps {
   campaignIds?: string[];
 }
 
-export function DemographicStatusCard({
+export function AudienceInsightsStatusCard({
   accountId,
   platform,
   username,
@@ -37,7 +38,7 @@ export function DemographicStatusCard({
   onSubmitNew,
   onRefresh,
   campaignIds = [],
-}: DemographicStatusCardProps) {
+}: AudienceInsightsStatusCardProps) {
   const [viewingSubmission, setViewingSubmission] = useState<DemographicSubmission | null>(null);
   const [deletingSubmission, setDeletingSubmission] = useState<DemographicSubmission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -122,7 +123,7 @@ export function DemographicStatusCard({
         };
       case 'rejected':
         return {
-          label: 'Rejected',
+          label: 'Not Approved',
           color: 'bg-red-500/10 text-red-500 border-red-500/20',
           icon: XCircle,
           dotColor: 'bg-red-500'
@@ -141,7 +142,17 @@ export function DemographicStatusCard({
 
   return (
     <>
-      <div>
+      <div className="space-y-2">
+        {/* Rejection reason display */}
+        {status === 'rejected' && latestSubmission?.admin_notes && (
+          <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg max-w-xs">
+            <p className="text-[10px] font-medium text-red-400 uppercase tracking-wider mb-0.5">Why it wasn't approved</p>
+            <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              {latestSubmission.admin_notes}
+            </p>
+          </div>
+        )}
+
         {/* Action Button */}
         <Button
           size="sm"
@@ -166,7 +177,7 @@ export function DemographicStatusCard({
         <DialogContent className="sm:max-w-[600px] bg-background">
           <DialogHeader>
             <DialogTitle style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-              Demographics Submission
+              Audience Insights Submission
             </DialogTitle>
             <DialogDescription>
               Submitted {viewingSubmission && format(new Date(viewingSubmission.submitted_at), "MMMM d, yyyy 'at' h:mm a")}
@@ -216,7 +227,7 @@ export function DemographicStatusCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Submission?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this demographics submission. This action cannot be undone.
+              This will permanently delete this audience insights submission. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

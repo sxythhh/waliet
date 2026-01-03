@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import { ArrowUpRight, Link2, Trash2, X, MoreHorizontal, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { DemographicStatusCard } from "@/components/DemographicStatusCard";
+import { AudienceInsightsStatusCard } from "@/components/AudienceInsightsStatusCard";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -114,7 +114,7 @@ export function SocialAccountsTable({
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Account</TableHead>
             
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Campaigns</TableHead>
-            <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Demographics</TableHead>
+            <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Audience Insights</TableHead>
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Status</TableHead>
             <TableHead className="text-foreground font-medium text-sm h-12 text-right tracking-tighter">Actions</TableHead>
           </TableRow>
@@ -189,7 +189,7 @@ export function SocialAccountsTable({
               })} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors tracking-tight">
                       <img alt="" className="h-3 w-3" src="/lovable-uploads/277a54e4-4b44-4fe9-a480-ecc968a0f7b6.png" />
                       Submit
-                    </button> : <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={connectedCampaigns.map(c => c.campaign.id)} onSubmitNew={() => onSubmitDemographics({
+                    </button> : <AudienceInsightsStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={connectedCampaigns.map(c => c.campaign.id)} onSubmitNew={() => onSubmitDemographics({
                 id: account.id,
                 platform: account.platform,
                 username: account.username

@@ -5,13 +5,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft, MessageSquare, StickyNote, CheckSquare, Square } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft, MessageSquare, StickyNote, CheckSquare, Square, BarChart3 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
+import { RequestAudienceInsightsDialog } from "@/components/brand/RequestAudienceInsightsDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { useBrandUsage } from "@/hooks/useBrandUsage";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
@@ -50,6 +52,7 @@ interface CampaignApplicationsViewProps {
   campaignId?: string;
   boostId?: string;
   brandId?: string; // For "all programs" mode
+  subscriptionPlan?: string | null;
   onApplicationReviewed?: () => void;
 }
 const PLATFORM_LOGOS: Record<string, string> = {
@@ -61,6 +64,7 @@ export function CampaignApplicationsView({
   campaignId,
   boostId,
   brandId,
+  subscriptionPlan,
   onApplicationReviewed
 }: CampaignApplicationsViewProps) {
   const navigate = useNavigate();
@@ -74,7 +78,10 @@ export function CampaignApplicationsView({
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [notesCreator, setNotesCreator] = useState<{ id: string; name: string; username: string; avatarUrl?: string | null } | null>(null);
+  const [insightsDialogOpen, setInsightsDialogOpen] = useState(false);
+  const [insightsCreator, setInsightsCreator] = useState<{ id: string; username: string; full_name: string | null; avatar_url: string | null } | null>(null);
   const [currentBrandId, setCurrentBrandId] = useState<string | null>(null);
+  const [currentSubscriptionPlan, setCurrentSubscriptionPlan] = useState<string | null>(subscriptionPlan || null);
 
   // Bulk selection state
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -83,27 +90,44 @@ export function CampaignApplicationsView({
 
   const isBoost = !!boostId && !brandId;
 
-  // Fetch brand ID from workspace slug
+  // Use the brand ID to get usage limits
+  const { canHireCreator, hiresUsed, hiresLimit } = useBrandUsage(currentBrandId || undefined, currentSubscriptionPlan);
+
+  // Fetch brand ID and subscription plan from workspace slug
   useEffect(() => {
-    const fetchBrandId = async () => {
+    const fetchBrandData = async () => {
       if (brandId) {
         setCurrentBrandId(brandId);
+        // Fetch subscription plan if not provided
+        if (!subscriptionPlan) {
+          const { data: brand } = await supabase
+            .from('brands')
+            .select('subscription_plan')
+            .eq('id', brandId)
+            .single();
+          if (brand) {
+            setCurrentSubscriptionPlan(brand.subscription_plan);
+          }
+        }
         return;
       }
       if (!workspace) return;
 
       const { data: brand } = await supabase
         .from('brands')
-        .select('id')
+        .select('id, subscription_plan')
         .eq('slug', workspace)
         .single();
 
       if (brand) {
         setCurrentBrandId(brand.id);
+        if (!subscriptionPlan) {
+          setCurrentSubscriptionPlan(brand.subscription_plan);
+        }
       }
     };
-    fetchBrandId();
-  }, [workspace, brandId]);
+    fetchBrandData();
+  }, [workspace, brandId, subscriptionPlan]);
   const isAllMode = !!brandId && !campaignId && !boostId;
   useEffect(() => {
     fetchApplications();
@@ -227,6 +251,11 @@ export function CampaignApplicationsView({
     }
   };
   const handleUpdateStatus = async (applicationId: string, newStatus: 'approved' | 'rejected' | 'accepted' | 'pending') => {
+    // Check hire limit when approving/accepting
+    if ((newStatus === 'approved' || newStatus === 'accepted') && !canHireCreator) {
+      toast.error("Hire limit reached. Upgrade your plan to work with more creators.");
+      return;
+    }
     setProcessing(applicationId);
     try {
       const application = applications.find(a => a.id === applicationId);
@@ -387,10 +416,18 @@ export function CampaignApplicationsView({
 
   // Bulk action handlers
   const handleBulkAccept = async () => {
+    const selectedIds = Array.from(selectedApps);
+    const selectedApplications = applications.filter(a => selectedIds.includes(a.id) && a.status === 'pending');
+
+    // Check if accepting all would exceed hire limit
+    if (hiresUsed + selectedApplications.length > hiresLimit) {
+      toast.error(`Cannot accept ${selectedApplications.length} applications. Only ${Math.max(0, hiresLimit - hiresUsed)} more hires allowed on your plan.`);
+      setBulkActionDialog({ type: null, open: false });
+      return;
+    }
+
     setBulkProcessing(true);
     try {
-      const selectedIds = Array.from(selectedApps);
-      const selectedApplications = applications.filter(a => selectedIds.includes(a.id) && a.status === 'pending');
 
       for (const app of selectedApplications) {
         const appIsBoost = app.is_boost || !!app.bounty_campaign_id;
@@ -644,6 +681,26 @@ export function CampaignApplicationsView({
                       </p>
                     </div>
                   </div>
+                  {/* Request Insights Button */}
+                  {selectedApp.profile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 hidden sm:flex"
+                      onClick={() => {
+                        setInsightsCreator({
+                          id: selectedApp.profile!.id,
+                          username: selectedApp.profile!.username,
+                          full_name: selectedApp.profile!.full_name,
+                          avatar_url: selectedApp.profile!.avatar_url
+                        });
+                        setInsightsDialogOpen(true);
+                      }}
+                    >
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      Request Insights
+                    </Button>
+                  )}
                 </div>
 
                 {/* Connected Account */}
@@ -705,7 +762,7 @@ export function CampaignApplicationsView({
                         <X className="h-4 w-4 mr-2" />
                         Reject
                       </Button>
-                      <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id || !canHireCreator} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
                         <Check className="h-4 w-4 mr-2" />
                         Accept
                       </Button>
@@ -716,7 +773,7 @@ export function CampaignApplicationsView({
                         <X className="h-4 w-4 mr-2" />
                         Reject
                       </Button>
-                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')} disabled={processing === selectedApp.id || !canHireCreator} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
                         <Check className="h-4 w-4 mr-2" />
                         Promote to Accepted
                       </Button>
@@ -846,6 +903,17 @@ export function CampaignApplicationsView({
         creatorName={notesCreator.name}
         creatorUsername={notesCreator.username}
         creatorAvatarUrl={notesCreator.avatarUrl}
+      />
+    )}
+
+    {/* Request Audience Insights Dialog */}
+    {currentBrandId && insightsCreator && (
+      <RequestAudienceInsightsDialog
+        open={insightsDialogOpen}
+        onOpenChange={setInsightsDialogOpen}
+        brandId={currentBrandId}
+        creator={insightsCreator}
+        campaignId={campaignId}
       />
     )}
   </>;

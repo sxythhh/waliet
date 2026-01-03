@@ -21,6 +21,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useBrandUsage } from "@/hooks/useBrandUsage";
 const SUGGESTED_TAGS = ['growth', 'retargeting', 'seasonal', 'awareness', 'retention', 'acquisition', 'promo', 'reactivation', 'launch', 'evergreen', 'holiday', 'influencer', 'performance', 'branding', 'viral'];
 const CAMPAIGN_NICHES = [{
   id: 'tech',
@@ -259,6 +260,8 @@ interface Campaign {
   platform_rates?: Record<string, PlatformRate> | null;
   discord_guild_id?: string | null;
   discord_role_id?: string | null;
+  require_audience_insights?: boolean;
+  min_insights_score?: number;
 }
 const PLATFORM_OPTIONS = [{
   id: 'tiktok',
@@ -281,6 +284,7 @@ interface CampaignCreationWizardProps {
   brandId: string;
   brandName: string;
   brandLogoUrl?: string;
+  subscriptionPlan?: string | null;
   onSuccess?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -301,6 +305,7 @@ export function CampaignCreationWizard({
   brandId,
   brandName,
   brandLogoUrl,
+  subscriptionPlan,
   onSuccess,
   open,
   onOpenChange,
@@ -311,6 +316,7 @@ export function CampaignCreationWizard({
   template
 }: CampaignCreationWizardProps) {
   const isEditMode = !!campaign && !cloneMode;
+  const { canCreateCampaign } = useBrandUsage(brandId, subscriptionPlan);
   const isCloneMode = !!campaign && cloneMode;
   const isFromTemplate = !!template && !campaign;
   const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1);
@@ -337,6 +343,8 @@ export function CampaignCreationWizard({
   const [pendingRateValue, setPendingRateValue] = useState<string>('5');
   const [discordGuildId, setDiscordGuildId] = useState<string>(campaign?.discord_guild_id || "");
   const [discordRoleId, setDiscordRoleId] = useState<string>(campaign?.discord_role_id || "");
+  const [requireAudienceInsights, setRequireAudienceInsights] = useState<boolean>(campaign?.require_audience_insights || false);
+  const [minInsightsScore, setMinInsightsScore] = useState<number>(campaign?.min_insights_score || 0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
@@ -634,6 +642,11 @@ export function CampaignCreationWizard({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
   const handleSaveDraft = async () => {
+    // Safety check for campaign limit (only for new campaigns)
+    if (!isEditMode && !canCreateCampaign) {
+      toast.error("Campaign limit reached. Upgrade your plan to create more campaigns.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const values = form.getValues();
@@ -695,6 +708,11 @@ export function CampaignCreationWizard({
     }
   };
   const onSubmit = async (values: CampaignFormValues) => {
+    // Safety check for campaign limit (only for new campaigns)
+    if (!isEditMode && !canCreateCampaign) {
+      toast.error("Campaign limit reached. Upgrade your plan to create more campaigns.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const bannerUrl = await uploadBanner();
@@ -729,6 +747,8 @@ export function CampaignCreationWizard({
           platform_rates: Object.keys(platformRates).length > 0 ? platformRates : null,
           discord_guild_id: discordGuildId || null,
           discord_role_id: discordRoleId || null,
+          require_audience_insights: requireAudienceInsights,
+          min_insights_score: requireAudienceInsights ? minInsightsScore : 0,
           ...(bannerFile ? {
             banner_url: bannerUrl
           } : {})
@@ -780,7 +800,9 @@ export function CampaignCreationWizard({
           shortimize_collection_name: shortimizeCollectionName || null,
           platform_rates: Object.keys(platformRates).length > 0 ? platformRates : null,
           discord_guild_id: discordGuildId || null,
-          discord_role_id: discordRoleId || null
+          discord_role_id: discordRoleId || null,
+          require_audience_insights: requireAudienceInsights,
+          min_insights_score: requireAudienceInsights ? minInsightsScore : 0
         } as any;
         const {
           data: newCampaign,
@@ -1148,6 +1170,33 @@ export function CampaignCreationWizard({
                               <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
                           </FormItem>} />
+                    </div>
+
+                    {/* Audience Insights Requirement */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                        <div className="flex-1">
+                          <p className="text-sm font-inter tracking-[-0.5px] text-foreground">Require Audience Insights</p>
+                          <p className="text-xs text-muted-foreground">Only creators with verified insights can apply</p>
+                        </div>
+                        <Switch checked={requireAudienceInsights} onCheckedChange={setRequireAudienceInsights} />
+                      </div>
+
+                      {requireAudienceInsights && (
+                        <div className="pl-3">
+                          <p className="text-sm font-inter tracking-[-0.5px] text-foreground mb-2">Minimum Score</p>
+                          <select
+                            value={minInsightsScore}
+                            onChange={(e) => setMinInsightsScore(Number(e.target.value))}
+                            className="w-full h-10 px-3 rounded-lg bg-muted/30 border-0 text-sm font-inter tracking-[-0.3px] focus:ring-1 focus:ring-primary/30"
+                          >
+                            <option value={0}>Any verified insights</option>
+                            <option value={40}>40%+ (Average)</option>
+                            <option value={60}>60%+ (Good)</option>
+                            <option value={80}>80%+ (Excellent)</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                     {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({

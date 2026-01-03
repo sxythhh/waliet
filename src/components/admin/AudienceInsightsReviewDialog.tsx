@@ -55,16 +55,25 @@ interface DemographicSubmission {
   };
 }
 
-interface DemographicReviewDialogProps {
+interface AudienceInsightsReviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   submission: DemographicSubmission | null;
   submissions: DemographicSubmission[];
   onApprove: (submission: DemographicSubmission, score: number) => Promise<void>;
-  onReject: (submission: DemographicSubmission) => Promise<void>;
+  onReject: (submission: DemographicSubmission, reason: string) => Promise<void>;
   onNavigate: (submission: DemographicSubmission) => void;
   isProcessing: boolean;
 }
+
+const REJECTION_REASONS = [
+  "Video quality too low to read analytics",
+  "Analytics screen not visible",
+  "Wrong section shown - need audience demographics",
+  "Video too short - couldn't see all data",
+  "Data appears manipulated or fake",
+  "Account doesn't match submission",
+];
 
 function getPlatformIcon(platform: string) {
   switch (platform.toLowerCase()) {
@@ -79,7 +88,7 @@ function getPlatformIcon(platform: string) {
   }
 }
 
-export function DemographicReviewDialog({
+export function AudienceInsightsReviewDialog({
   open,
   onOpenChange,
   submission,
@@ -88,9 +97,11 @@ export function DemographicReviewDialog({
   onReject,
   onNavigate,
   isProcessing,
-}: DemographicReviewDialogProps) {
+}: AudienceInsightsReviewDialogProps) {
   const [score, setScore] = useState("");
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showRejectionInput, setShowRejectionInput] = useState(false);
 
   // Get current index and navigation helpers
   const currentIndex = submission
@@ -99,10 +110,12 @@ export function DemographicReviewDialog({
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < submissions.length - 1;
 
-  // Reset score when submission changes
+  // Reset score and rejection reason when submission changes
   useEffect(() => {
     if (submission) {
       setScore(submission.tier1_percentage.toString());
+      setRejectionReason("");
+      setShowRejectionInput(false);
     }
   }, [submission?.id]);
 
@@ -132,14 +145,18 @@ export function DemographicReviewDialog({
 
   const handleReject = useCallback(async () => {
     if (!submission || isProcessing) return;
-    await onReject(submission);
+    if (!rejectionReason.trim()) {
+      setShowRejectionInput(true);
+      return;
+    }
+    await onReject(submission, rejectionReason);
     // Auto-advance to next
     if (hasNext) {
       goToNext();
     } else {
       onOpenChange(false);
     }
-  }, [submission, isProcessing, onReject, hasNext, goToNext, onOpenChange]);
+  }, [submission, isProcessing, onReject, rejectionReason, hasNext, goToNext, onOpenChange]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -387,10 +404,10 @@ export function DemographicReviewDialog({
                     </p>
                   </div>
 
-                  {/* Demographics Score */}
+                  {/* Audience Score */}
                   <div className="p-2 rounded-lg bg-background/50">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
-                      Demo Score
+                      Insights Score
                     </p>
                     <p className="text-lg font-bold font-inter tracking-[-0.5px]">
                       {userProfile.demographics_score || 0}%
@@ -467,7 +484,7 @@ export function DemographicReviewDialog({
             <div className="mt-auto pt-6 space-y-4">
               <div className="space-y-2">
                 <Label className="text-sm font-inter tracking-[-0.5px]">
-                  Demographics Score (0-100)
+                  Audience Score (0-100)
                 </Label>
                 <Input
                   type="number"
@@ -483,17 +500,49 @@ export function DemographicReviewDialog({
                 </p>
               </div>
 
+              {/* Rejection Reason Input */}
+              {showRejectionInput && (
+                <div className="space-y-2 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                  <Label className="text-sm font-inter tracking-[-0.5px] text-red-400">
+                    Rejection Reason (required)
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {REJECTION_REASONS.map((reason) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setRejectionReason(reason)}
+                        className={cn(
+                          "px-2 py-1 text-[10px] rounded-full border transition-colors font-inter tracking-[-0.3px]",
+                          rejectionReason === reason
+                            ? "bg-red-500 text-white border-red-500"
+                            : "bg-background border-border hover:border-red-500/50"
+                        )}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Or enter a custom reason..."
+                    className="text-sm font-inter tracking-[-0.3px]"
+                  />
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <Button
                   variant="destructive"
                   size="lg"
                   onClick={handleReject}
-                  disabled={isProcessing}
+                  disabled={isProcessing || (showRejectionInput && !rejectionReason.trim())}
                   className="flex-1 gap-2 font-inter tracking-[-0.5px]"
                 >
                   <CancelIcon sx={{ fontSize: 20 }} />
-                  Reject
+                  {showRejectionInput ? "Confirm Reject" : "Reject"}
                   <kbd className="ml-2 px-1.5 py-0.5 bg-white/10 rounded text-[10px]">R</kbd>
                 </Button>
                 <Button

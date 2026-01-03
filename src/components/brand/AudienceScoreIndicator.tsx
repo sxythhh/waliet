@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface DemographicScoreIndicatorProps {
+interface AudienceScoreIndicatorProps {
   score: number | null | undefined;
   className?: string;
 }
@@ -22,7 +22,7 @@ const getFilledSteps = (score: number): number => {
   return 1;
 };
 
-export function DemographicScoreIndicator({ score, className }: DemographicScoreIndicatorProps) {
+export function AudienceScoreIndicator({ score, className }: AudienceScoreIndicatorProps) {
   if (score === null || score === undefined) {
     return (
       <div className={cn("flex flex-col gap-0.5", className)}>
@@ -66,7 +66,7 @@ export function DemographicScoreIndicator({ score, className }: DemographicScore
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="font-['Inter'] tracking-[-0.3px]">
-          <p className="text-xs">Demographic Score: {score}%</p>
+          <p className="text-xs">Audience Score: {score}%</p>
           <p className="text-[10px] text-muted-foreground">Based on Tier 1 audience percentage</p>
         </TooltipContent>
       </Tooltip>

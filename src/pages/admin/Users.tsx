@@ -22,7 +22,7 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import discordIcon from "@/assets/discord-white-icon.webp";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
-import { DemographicReviewDialog } from "@/components/admin/DemographicReviewDialog";
+import { AudienceInsightsReviewDialog } from "@/components/admin/AudienceInsightsReviewDialog";
 
 // Types
 interface User {
@@ -507,7 +507,7 @@ export default function AdminUsers() {
     }
   };
 
-  const handleDialogReject = async (submission: DemographicSubmission) => {
+  const handleDialogReject = async (submission: DemographicSubmission, reason: string) => {
     setProcessingSubmission(submission.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -516,6 +516,7 @@ export default function AdminUsers() {
       await supabase.from("demographic_submissions").update({
         status: "rejected",
         score: null,
+        admin_notes: reason,
         reviewed_at: new Date().toISOString(),
         reviewed_by: session.user.id
       }).eq("id", submission.id);
@@ -593,7 +594,7 @@ export default function AdminUsers() {
               Users ({totalCount.toLocaleString()})
             </TabsTrigger>
             <TabsTrigger value="demographics" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
-              Demographics ({pendingSubmissions.length} pending)
+              Audience Insights ({pendingSubmissions.length} pending)
             </TabsTrigger>
           </TabsList>
 
@@ -1175,7 +1176,7 @@ export default function AdminUsers() {
 
         {/* Demographic Review Dialog */}
         {reviewingSubmission && (
-          <DemographicReviewDialog
+          <AudienceInsightsReviewDialog
             submission={reviewingSubmission}
             submissions={pendingSubmissions}
             open={reviewDialogOpen}
