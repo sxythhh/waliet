@@ -125,12 +125,36 @@ export function DiscordOAuthCallback() {
 
         // Must exactly match the redirect_uri used in the initial authorize URL
         const redirectUri = `${window.location.origin}/discord/callback`;
+        console.log('Calling discord-auth with redirectUri:', redirectUri);
+
         // Call the discord-auth function to sign in/up
         const { data, error: functionError } = await supabase.functions.invoke('discord-auth', {
           body: { code, redirectUri }
         });
 
-        if (functionError) throw functionError;
+        console.log('Discord auth response:', { data, functionError });
+
+        // Check for error in data (edge function might return error in body)
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        if (functionError) {
+          // Try to extract more detailed error message
+          let errorMsg = functionError.message || 'Unknown error';
+          if (functionError.name === 'FunctionsHttpError') {
+            try {
+              const context = (functionError as any).context;
+              if (context?.json) {
+                const errorBody = await context.json();
+                if (errorBody?.error) errorMsg = errorBody.error;
+              }
+            } catch (e) {
+              console.error('Failed to parse error context:', e);
+            }
+          }
+          throw new Error(errorMsg);
+        }
 
         if (data.success && data.actionLink) {
           // Check if this is a new user signup
