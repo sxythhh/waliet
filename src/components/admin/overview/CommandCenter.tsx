@@ -4,6 +4,9 @@ import { MetricsGrid } from "./MetricsGrid";
 import { LiveActivityFeed } from "./LiveActivityFeed";
 import { QuickActions } from "./QuickActions";
 import { SendAnnouncementDialog } from "../SendAnnouncementDialog";
+import { FraudAnalyticsCard } from "../FraudAnalyticsCard";
+import { PlatformHealthMetrics } from "./PlatformHealthMetrics";
+import { PostHogAnalytics } from "./PostHogAnalytics";
 
 export function CommandCenter() {
   return (
@@ -25,6 +28,12 @@ export function CommandCenter() {
         {/* Metrics Grid */}
         <MetricsGrid />
 
+        {/* Platform Health Metrics */}
+        <PlatformHealthMetrics />
+
+        {/* PostHog Site Analytics */}
+        <PostHogAnalytics />
+
         {/* Two column layout for activity and quick actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Live Activity Feed - takes 2 columns */}
@@ -32,9 +41,10 @@ export function CommandCenter() {
             <LiveActivityFeed />
           </div>
 
-          {/* Quick Actions */}
-          <div>
+          {/* Quick Actions + Fraud Analytics */}
+          <div className="space-y-6">
             <QuickActions />
+            <FraudAnalyticsCard />
           </div>
         </div>
       </div>
