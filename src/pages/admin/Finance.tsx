@@ -31,6 +31,7 @@ import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { StatCard } from "@/components/admin/StatCard";
 import { PayoutApprovals } from "@/components/admin/PayoutApprovals";
 import { FinancialContextCard } from "@/components/admin/FinancialContextCard";
+import { CampaignBudgetAdjustmentDialog } from "@/components/admin/CampaignBudgetAdjustmentDialog";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -176,6 +177,9 @@ export default function Finance() {
   // Processing states
   const [undoingTransaction, setUndoingTransaction] = useState<string | null>(null);
   const [processingPayout, setProcessingPayout] = useState<string | null>(null);
+
+  // Budget adjustment dialog
+  const [budgetAdjustmentDialogOpen, setBudgetAdjustmentDialogOpen] = useState(false);
 
   const { toast } = useToast();
   const { usdcBalance, solBalance, loading: treasuryLoading } = useTreasuryBalance();
@@ -568,6 +572,17 @@ export default function Finance() {
                 <p className="text-sm text-muted-foreground font-inter">Unified view of all financial activity</p>
               </div>
               <div className="flex items-center gap-3">
+                {/* Budget Adjustment Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBudgetAdjustmentDialogOpen(true)}
+                  className="gap-2 font-['Inter']"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  Adjust Budget
+                </Button>
+
                 {/* Date Preset Dropdown */}
                 <Select value={datePreset} onValueChange={(v) => handleDatePresetChange(v as DatePreset)}>
                   <SelectTrigger className="w-[150px] h-9 border-0 bg-muted/50 hover:bg-muted transition-colors font-['Inter']">
@@ -1179,6 +1194,13 @@ export default function Finance() {
           onOpenChange={setCryptoPayoutDialogOpen}
           payoutRequest={selectedCryptoRequest}
           onSuccess={() => { fetchPayoutRequests(); setContextOpen(false); }}
+        />
+
+        {/* Campaign Budget Adjustment Dialog */}
+        <CampaignBudgetAdjustmentDialog
+          open={budgetAdjustmentDialogOpen}
+          onOpenChange={setBudgetAdjustmentDialogOpen}
+          onSuccess={fetchAllData}
         />
       </div>
     </AdminPermissionGuard>

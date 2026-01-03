@@ -459,8 +459,8 @@ export default function PublicProfile() {
                   </button>)}
               </div>}
 
-            {/* Trust Score & Audience Quality Badges */}
-            {profile.trust_score !== null || profile.audience_quality_score !== null}
+            {/* Trust Score & Audience Quality Badges - Hidden for now */}
+            {/* {profile.trust_score !== null || profile.audience_quality_score !== null} */}
 
             {/* Join Date */}
             <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
@@ -473,8 +473,8 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      {/* Tabs Section */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      {/* Tabs Section - Hidden for now */}
+      {/* <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
             <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
@@ -488,7 +488,6 @@ export default function PublicProfile() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Portfolio Tab */}
           <TabsContent value="portfolio" className="mt-6">
             {creatorPortfolio ? (
               <PortfolioDisplay portfolio={creatorPortfolio} />
@@ -504,7 +503,6 @@ export default function PublicProfile() {
             )}
           </TabsContent>
 
-          {/* History Tab */}
           <TabsContent value="history" className="mt-6">
             <DashboardHistorySection
               items={[
@@ -533,12 +531,11 @@ export default function PublicProfile() {
             />
           </TabsContent>
 
-          {/* Reviews Tab */}
           <TabsContent value="reviews" className="mt-6">
             <DashboardReviewsSection testimonials={testimonials} />
           </TabsContent>
         </Tabs>
-      </div>
+      </div> */}
 
       {/* Footer */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12">

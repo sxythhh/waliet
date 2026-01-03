@@ -46,6 +46,25 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
     setLoading(true);
 
     try {
+      // First check if this email is associated with an OAuth-only account
+      const { data: checkData, error: checkError } = await supabase.functions.invoke('check-auth-provider', {
+        body: { email },
+      });
+
+      if (checkError) {
+        console.error('Error checking auth provider:', checkError);
+        // Continue anyway - fail gracefully
+      } else if (checkData && !checkData.canUseEmailOTP && checkData.exists) {
+        // User exists but only with OAuth - show them a message
+        toast({
+          variant: "destructive",
+          title: "Different sign-in method required",
+          description: checkData.message || "Please use the social login method you originally signed up with.",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -135,6 +154,25 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
 
     setLoading(true);
     try {
+      // Re-check auth provider (in case account state changed)
+      const { data: checkData, error: checkError } = await supabase.functions.invoke('check-auth-provider', {
+        body: { email },
+      });
+
+      if (checkError) {
+        console.error('Error checking auth provider:', checkError);
+        // Continue anyway
+      } else if (checkData && !checkData.canUseEmailOTP && checkData.exists) {
+        toast({
+          variant: "destructive",
+          title: "Different sign-in method required",
+          description: checkData.message || "Please use the social login method you originally signed up with.",
+        });
+        setStep("email");
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {

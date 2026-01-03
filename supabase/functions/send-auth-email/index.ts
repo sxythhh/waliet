@@ -31,26 +31,27 @@ function generateEmailHTML(payload: EmailPayload): { subject: string; html: stri
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to || site_url)}`;
 
-  // Common styles
+  // Common styles - Light mode with Geist + Inter fonts
   const baseStyles = `
     <style>
-      body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; background-color: #0a0a0a; }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      body { margin: 0; padding: 0; font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #f5f5f5; letter-spacing: -0.5px; }
       .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-      .card { background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%); border-radius: 16px; padding: 48px 32px; border: 1px solid #333; }
+      .card { background: #ffffff; border-radius: 16px; padding: 48px 32px; border: 1px solid #e5e5e5; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
       .header { text-align: center; margin-bottom: 32px; }
-      .title { color: #ffffff; font-size: 28px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px; }
-      .subtitle { color: #a3a3a3; font-size: 16px; margin: 0; }
-      .content { background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #2a2a2a; }
-      .text { color: #e5e5e5; font-size: 15px; margin: 0 0 20px 0; line-height: 1.6; }
+      .title { color: #171717; font-size: 28px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px; }
+      .subtitle { color: #737373; font-size: 16px; margin: 0; letter-spacing: -0.5px; }
+      .content { background: #fafafa; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #e5e5e5; }
+      .text { color: #404040; font-size: 15px; margin: 0 0 20px 0; line-height: 1.6; letter-spacing: -0.5px; }
       .otp-container { text-align: center; margin: 24px 0; }
-      .otp-code { display: inline-block; background: linear-gradient(135deg, #9b87f5 0%, #7e69ab 100%); color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: 8px; padding: 16px 32px; border-radius: 12px; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace; }
+      .otp-code { display: inline-block; background: #5865f2; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: 8px; padding: 16px 32px; border-radius: 12px; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace; }
       .button-container { text-align: center; margin: 24px 0; }
-      .button { display: inline-block; background: linear-gradient(135deg, #9b87f5 0%, #7e69ab 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; letter-spacing: -0.5px; }
-      .divider { border-top: 1px solid #2a2a2a; padding-top: 24px; }
-      .small-text { color: #737373; font-size: 13px; margin: 0 0 8px 0; }
-      .link { color: #9b87f5; font-size: 12px; word-break: break-all; margin: 0 0 16px 0; }
-      .footer { text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #2a2a2a; }
-      .footer-text { color: #525252; font-size: 12px; margin: 0; }
+      .button { display: inline-block; background: #5865f2; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; letter-spacing: -0.5px; }
+      .divider { border-top: 1px solid #e5e5e5; padding-top: 24px; }
+      .small-text { color: #737373; font-size: 13px; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+      .link { color: #5865f2; font-size: 12px; word-break: break-all; margin: 0 0 16px 0; }
+      .footer { text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5; }
+      .footer-text { color: #a3a3a3; font-size: 12px; margin: 0; letter-spacing: -0.5px; }
       .logo { margin-bottom: 24px; }
     </style>
   `;
@@ -82,7 +83,7 @@ function generateEmailHTML(payload: EmailPayload): { subject: string; html: stri
                   <div class="otp-container">
                     <div class="otp-code">${token}</div>
                   </div>
-                  <p style="color: #a3a3a3; font-size: 14px; text-align: center; margin: 16px 0 0 0;">
+                  <p style="color: #737373; font-size: 14px; text-align: center; margin: 16px 0 0 0; letter-spacing: -0.5px;">
                     This code expires in 10 minutes
                   </p>
                 </div>
@@ -138,7 +139,7 @@ function generateEmailHTML(payload: EmailPayload): { subject: string; html: stri
                   <div class="otp-container">
                     <div class="otp-code">${token}</div>
                   </div>
-                  <p style="color: #a3a3a3; font-size: 14px; text-align: center; margin: 16px 0 0 0;">
+                  <p style="color: #737373; font-size: 14px; text-align: center; margin: 16px 0 0 0; letter-spacing: -0.5px;">
                     This code expires in 24 hours
                   </p>
                 </div>
@@ -326,7 +327,7 @@ function generateEmailHTML(payload: EmailPayload): { subject: string; html: stri
                   <div class="otp-container">
                     <div class="otp-code">${token}</div>
                   </div>
-                  <p style="color: #a3a3a3; font-size: 14px; text-align: center; margin: 16px 0 0 0;">
+                  <p style="color: #737373; font-size: 14px; text-align: center; margin: 16px 0 0 0; letter-spacing: -0.5px;">
                     This code expires in 5 minutes
                   </p>
                 </div>
