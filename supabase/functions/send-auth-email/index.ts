@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 
 const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
-const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET")!;
 
 interface EmailPayload {
   user: {
@@ -400,12 +398,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const payload = await req.text();
-    const headers = Object.fromEntries(req.headers);
-
-    // Verify webhook signature
-    const wh = new Webhook(hookSecret);
-    const emailPayload = wh.verify(payload, headers) as EmailPayload;
+    const emailPayload: EmailPayload = await req.json();
 
     console.log("Received auth email request:", {
       email: emailPayload.user.email,
