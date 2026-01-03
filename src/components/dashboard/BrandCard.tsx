@@ -83,7 +83,7 @@ export const BrandCard = memo(function BrandCard({
           {/* Name and Verified */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-semibold text-foreground truncate">
+              <h3 className="text-sm font-semibold text-foreground truncate group-hover:underline">
                 {name}
               </h3>
               {is_verified && <VerifiedBadge size="sm" />}
