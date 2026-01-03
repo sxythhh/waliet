@@ -1,0 +1,293 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useReferralTracking } from "@/hooks/useReferralTracking";
+import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Mail, Loader2 } from "lucide-react";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+
+interface EmailOTPAuthProps {
+  onBack: () => void;
+  onSuccess: () => void;
+}
+
+export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
+  const [email, setEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+  const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const { trackReferral } = useReferralTracking();
+  const { toast } = useToast();
+
+  // Start cooldown timer for resend
+  const startResendCooldown = () => {
+    setResendCooldown(60);
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // This creates the user if they don't exist
+          shouldCreateUser: true,
+          data: getStoredUtmParams() || undefined,
+        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else {
+        setStep("otp");
+        startResendCooldown();
+        toast({
+          title: "Code sent!",
+          description: "Check your email for a 6-digit verification code.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send verification code",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (code: string) => {
+    if (code.length !== 6) return;
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Invalid code",
+          description: "Please check the code and try again.",
+        });
+        setOtpCode("");
+      } else if (data.user) {
+        // Track referral for new users
+        const referralResult = await trackReferral(data.user.id);
+        clearStoredUtmParams();
+
+        if (referralResult.success) {
+          toast({
+            title: "Welcome to Virality!",
+            description: "You're signed in and referral applied successfully.",
+          });
+        } else {
+          toast({
+            title: "Welcome to Virality!",
+            description: "You're signed in successfully.",
+          });
+        }
+
+        onSuccess();
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to verify code",
+      });
+      setOtpCode("");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else {
+        startResendCooldown();
+        toast({
+          title: "Code resent!",
+          description: "Check your email for a new verification code.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to resend code",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "otp") {
+    return (
+      <div className="space-y-6">
+        <button
+          type="button"
+          onClick={() => {
+            setStep("email");
+            setOtpCode("");
+          }}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Change email
+        </button>
+
+        <div className="text-center space-y-2">
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Mail className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Check your email</h2>
+          <p className="text-sm text-muted-foreground">
+            We sent a 6-digit code to <span className="text-white font-medium">{email}</span>
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center gap-4">
+          <InputOTP
+            maxLength={6}
+            value={otpCode}
+            onChange={(value) => {
+              setOtpCode(value);
+              if (value.length === 6) {
+                handleVerifyOTP(value);
+              }
+            }}
+            disabled={loading}
+          >
+            <InputOTPGroup>
+              <InputOTPSlot index={0} className="bg-white/10 border-white/20 text-white" />
+              <InputOTPSlot index={1} className="bg-white/10 border-white/20 text-white" />
+              <InputOTPSlot index={2} className="bg-white/10 border-white/20 text-white" />
+              <InputOTPSlot index={3} className="bg-white/10 border-white/20 text-white" />
+              <InputOTPSlot index={4} className="bg-white/10 border-white/20 text-white" />
+              <InputOTPSlot index={5} className="bg-white/10 border-white/20 text-white" />
+            </InputOTPGroup>
+          </InputOTP>
+
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Verifying...
+            </div>
+          )}
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Didn't receive the code?{" "}
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              disabled={resendCooldown > 0 || loading}
+              className="text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+
+      <div className="text-center space-y-2">
+        <h2 className="text-xl font-semibold text-white">Sign in with email</h2>
+        <p className="text-sm text-muted-foreground">
+          We'll send you a verification code
+        </p>
+      </div>
+
+      <form onSubmit={handleSendOTP} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="otp-email" className="text-sm font-medium text-white">
+            Email
+          </Label>
+          <Input
+            id="otp-email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+            className="h-12 bg-white/10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-gray-400"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={loading || !email}
+          className="w-full h-12 font-semibold"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending code...
+            </>
+          ) : (
+            "Send verification code"
+          )}
+        </Button>
+      </form>
+    </div>
+  );
+}
