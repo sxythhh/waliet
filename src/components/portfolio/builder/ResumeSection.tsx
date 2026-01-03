@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Building2, GraduationCap, Award, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback } from "react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ExpandableCard, AddCardButton } from "./ExpandableCard";
+import { DraggableItem } from "./DraggableItem";
+import { cn } from "@/lib/utils";
 import type { WorkExperience, Education, Certification } from "@/types/portfolio";
 
 interface ResumeSectionProps {
@@ -30,11 +33,29 @@ export function ResumeSection({
   const [eduOpen, setEduOpen] = useState(true);
   const [certOpen, setCertOpen] = useState(true);
 
+  const [expandedWorkId, setExpandedWorkId] = useState<string | null>(null);
+  const [expandedEduId, setExpandedEduId] = useState<string | null>(null);
+  const [expandedCertId, setExpandedCertId] = useState<string | null>(null);
+
   const [editingWork, setEditingWork] = useState<WorkExperience | null>(null);
   const [editingEdu, setEditingEdu] = useState<Education | null>(null);
   const [editingCert, setEditingCert] = useState<Certification | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   // Work Experience handlers
+  const handleWorkDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = workExperience.findIndex((w) => w.id === active.id);
+      const newIndex = workExperience.findIndex((w) => w.id === over.id);
+      onWorkExperienceChange(arrayMove(workExperience, oldIndex, newIndex));
+    }
+  }, [workExperience, onWorkExperienceChange]);
+
   const handleSaveWork = (item: WorkExperience) => {
     const existing = workExperience.find((w) => w.id === item.id);
     if (existing) {
@@ -42,14 +63,25 @@ export function ResumeSection({
     } else {
       onWorkExperienceChange([...workExperience, item]);
     }
+    setExpandedWorkId(null);
     setEditingWork(null);
   };
 
   const handleDeleteWork = (id: string) => {
     onWorkExperienceChange(workExperience.filter((w) => w.id !== id));
+    setExpandedWorkId(null);
   };
 
   // Education handlers
+  const handleEduDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = education.findIndex((e) => e.id === active.id);
+      const newIndex = education.findIndex((e) => e.id === over.id);
+      onEducationChange(arrayMove(education, oldIndex, newIndex));
+    }
+  }, [education, onEducationChange]);
+
   const handleSaveEdu = (item: Education) => {
     const existing = education.find((e) => e.id === item.id);
     if (existing) {
@@ -57,14 +89,25 @@ export function ResumeSection({
     } else {
       onEducationChange([...education, item]);
     }
+    setExpandedEduId(null);
     setEditingEdu(null);
   };
 
   const handleDeleteEdu = (id: string) => {
     onEducationChange(education.filter((e) => e.id !== id));
+    setExpandedEduId(null);
   };
 
   // Certification handlers
+  const handleCertDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = certifications.findIndex((c) => c.id === active.id);
+      const newIndex = certifications.findIndex((c) => c.id === over.id);
+      onCertificationsChange(arrayMove(certifications, oldIndex, newIndex));
+    }
+  }, [certifications, onCertificationsChange]);
+
   const handleSaveCert = (item: Certification) => {
     const existing = certifications.find((c) => c.id === item.id);
     if (existing) {
@@ -72,450 +115,537 @@ export function ResumeSection({
     } else {
       onCertificationsChange([...certifications, item]);
     }
+    setExpandedCertId(null);
     setEditingCert(null);
   };
 
   const handleDeleteCert = (id: string) => {
     onCertificationsChange(certifications.filter((c) => c.id !== id));
+    setExpandedCertId(null);
+  };
+
+  const formatDateRange = (startDate: string, endDate?: string, current?: boolean) => {
+    const start = startDate ? new Date(startDate + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
+    if (current) return `${start} - Present`;
+    const end = endDate ? new Date(endDate + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
+    return `${start} - ${end}`;
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Work Experience */}
       <Collapsible open={workOpen} onOpenChange={setWorkOpen}>
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">Work Experience</span>
-              <span className="text-xs text-muted-foreground">({workExperience.length})</span>
+          <button className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-2.5">
+              <span className="font-medium text-sm tracking-[-0.5px]">Work Experience</span>
+              {workExperience.length > 0 && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                  {workExperience.length}
+                </span>
+              )}
             </div>
-            {workOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span className="text-xs text-muted-foreground">{workOpen ? "Hide" : "Show"}</span>
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pt-3 space-y-2">
-          {workExperience.map((item) => (
-            <div key={item.id} className="flex items-start justify-between p-3 border border-border rounded-lg bg-background">
-              <div>
-                <p className="font-medium text-sm">{item.role}</p>
-                <p className="text-sm text-muted-foreground">{item.company}</p>
-                <p className="text-xs text-muted-foreground">
-                  {item.startDate} - {item.current ? "Present" : item.endDate}
-                </p>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingWork(item)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteWork(item.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => setEditingWork({ id: crypto.randomUUID(), company: "", role: "", description: "", startDate: "", current: false, highlights: [] })}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Work Experience
-          </Button>
+        <CollapsibleContent className="pt-3 space-y-3">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleWorkDragEnd}>
+            <SortableContext items={workExperience.map((w) => w.id)} strategy={verticalListSortingStrategy}>
+              {workExperience.map((item) => (
+                <DraggableItem key={item.id} id={item.id}>
+                  {({ dragHandleProps, isDragging }) => (
+                    <WorkExperienceCard
+                      item={item}
+                      isExpanded={expandedWorkId === item.id}
+                      onToggle={() => setExpandedWorkId(expandedWorkId === item.id ? null : item.id)}
+                      onSave={handleSaveWork}
+                      onDelete={() => handleDeleteWork(item.id)}
+                      dragHandleProps={dragHandleProps}
+                      formatDateRange={formatDateRange}
+                    />
+                  )}
+                </DraggableItem>
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {editingWork ? (
+            <WorkExperienceCard
+              item={editingWork}
+              isExpanded={true}
+              onToggle={() => setEditingWork(null)}
+              onSave={handleSaveWork}
+              onDelete={() => setEditingWork(null)}
+              showDragHandle={false}
+              formatDateRange={formatDateRange}
+            />
+          ) : (
+            <AddCardButton
+              onClick={() => setEditingWork({
+                id: crypto.randomUUID(),
+                company: "",
+                role: "",
+                description: "",
+                startDate: "",
+                current: false,
+                highlights: [],
+              })}
+              label="Add Work Experience"
+              icon={<Plus className="h-4 w-4" />}
+            />
+          )}
         </CollapsibleContent>
       </Collapsible>
 
       {/* Education */}
       <Collapsible open={eduOpen} onOpenChange={setEduOpen}>
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">Education</span>
-              <span className="text-xs text-muted-foreground">({education.length})</span>
+          <button className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-2.5">
+              <span className="font-medium text-sm tracking-[-0.5px]">Education</span>
+              {education.length > 0 && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                  {education.length}
+                </span>
+              )}
             </div>
-            {eduOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span className="text-xs text-muted-foreground">{eduOpen ? "Hide" : "Show"}</span>
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pt-3 space-y-2">
-          {education.map((item) => (
-            <div key={item.id} className="flex items-start justify-between p-3 border border-border rounded-lg bg-background">
-              <div>
-                <p className="font-medium text-sm">{item.degree} in {item.field}</p>
-                <p className="text-sm text-muted-foreground">{item.institution}</p>
-                <p className="text-xs text-muted-foreground">
-                  {item.startDate} - {item.current ? "Present" : item.endDate}
-                </p>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingEdu(item)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteEdu(item.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => setEditingEdu({ id: crypto.randomUUID(), institution: "", degree: "", field: "", startDate: "", current: false })}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Education
-          </Button>
+        <CollapsibleContent className="pt-3 space-y-3">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleEduDragEnd}>
+            <SortableContext items={education.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+              {education.map((item) => (
+                <DraggableItem key={item.id} id={item.id}>
+                  {({ dragHandleProps, isDragging }) => (
+                    <EducationCard
+                      item={item}
+                      isExpanded={expandedEduId === item.id}
+                      onToggle={() => setExpandedEduId(expandedEduId === item.id ? null : item.id)}
+                      onSave={handleSaveEdu}
+                      onDelete={() => handleDeleteEdu(item.id)}
+                      dragHandleProps={dragHandleProps}
+                      formatDateRange={formatDateRange}
+                    />
+                  )}
+                </DraggableItem>
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {editingEdu ? (
+            <EducationCard
+              item={editingEdu}
+              isExpanded={true}
+              onToggle={() => setEditingEdu(null)}
+              onSave={handleSaveEdu}
+              onDelete={() => setEditingEdu(null)}
+              showDragHandle={false}
+              formatDateRange={formatDateRange}
+            />
+          ) : (
+            <AddCardButton
+              onClick={() => setEditingEdu({
+                id: crypto.randomUUID(),
+                institution: "",
+                degree: "",
+                field: "",
+                startDate: "",
+                current: false,
+              })}
+              label="Add Education"
+              icon={<Plus className="h-4 w-4" />}
+            />
+          )}
         </CollapsibleContent>
       </Collapsible>
 
       {/* Certifications */}
       <Collapsible open={certOpen} onOpenChange={setCertOpen}>
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">Certifications</span>
-              <span className="text-xs text-muted-foreground">({certifications.length})</span>
+          <button className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-2.5">
+              <span className="font-medium text-sm tracking-[-0.5px]">Certifications</span>
+              {certifications.length > 0 && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-muted text-muted-foreground">
+                  {certifications.length}
+                </span>
+              )}
             </div>
-            {certOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span className="text-xs text-muted-foreground">{certOpen ? "Hide" : "Show"}</span>
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pt-3 space-y-2">
-          {certifications.map((item) => (
-            <div key={item.id} className="flex items-start justify-between p-3 border border-border rounded-lg bg-background">
-              <div>
-                <p className="font-medium text-sm">{item.name}</p>
-                <p className="text-sm text-muted-foreground">{item.issuer}</p>
-                <p className="text-xs text-muted-foreground">{item.date}</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingCert(item)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteCert(item.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => setEditingCert({ id: crypto.randomUUID(), name: "", issuer: "", date: "" })}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Certification
-          </Button>
+        <CollapsibleContent className="pt-3 space-y-3">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCertDragEnd}>
+            <SortableContext items={certifications.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              {certifications.map((item) => (
+                <DraggableItem key={item.id} id={item.id}>
+                  {({ dragHandleProps, isDragging }) => (
+                    <CertificationCard
+                      item={item}
+                      isExpanded={expandedCertId === item.id}
+                      onToggle={() => setExpandedCertId(expandedCertId === item.id ? null : item.id)}
+                      onSave={handleSaveCert}
+                      onDelete={() => handleDeleteCert(item.id)}
+                      dragHandleProps={dragHandleProps}
+                    />
+                  )}
+                </DraggableItem>
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {editingCert ? (
+            <CertificationCard
+              item={editingCert}
+              isExpanded={true}
+              onToggle={() => setEditingCert(null)}
+              onSave={handleSaveCert}
+              onDelete={() => setEditingCert(null)}
+              showDragHandle={false}
+            />
+          ) : (
+            <AddCardButton
+              onClick={() => setEditingCert({
+                id: crypto.randomUUID(),
+                name: "",
+                issuer: "",
+                date: "",
+              })}
+              label="Add Certification"
+              icon={<Plus className="h-4 w-4" />}
+            />
+          )}
         </CollapsibleContent>
       </Collapsible>
-
-      {/* Work Experience Dialog */}
-      <WorkExperienceDialog
-        item={editingWork}
-        onSave={handleSaveWork}
-        onClose={() => setEditingWork(null)}
-      />
-
-      {/* Education Dialog */}
-      <EducationDialog
-        item={editingEdu}
-        onSave={handleSaveEdu}
-        onClose={() => setEditingEdu(null)}
-      />
-
-      {/* Certification Dialog */}
-      <CertificationDialog
-        item={editingCert}
-        onSave={handleSaveCert}
-        onClose={() => setEditingCert(null)}
-      />
     </div>
   );
 }
 
-// Work Experience Dialog
-function WorkExperienceDialog({
+// Work Experience Card
+function WorkExperienceCard({
   item,
+  isExpanded,
+  onToggle,
   onSave,
-  onClose,
+  onDelete,
+  dragHandleProps,
+  showDragHandle = true,
+  formatDateRange,
 }: {
-  item: WorkExperience | null;
+  item: WorkExperience;
+  isExpanded: boolean;
+  onToggle: () => void;
   onSave: (item: WorkExperience) => void;
-  onClose: () => void;
+  onDelete: () => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
+  showDragHandle?: boolean;
+  formatDateRange: (start: string, end?: string, current?: boolean) => string;
 }) {
-  const [form, setForm] = useState<WorkExperience | null>(null);
+  const [form, setForm] = useState<WorkExperience>(item);
 
-  // Update form when item changes
-  if (item && !form) {
+  if (item.id !== form.id) {
     setForm(item);
   }
-  if (!item && form) {
-    setForm(null);
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form) {
-      onSave(form);
-      setForm(null);
-    }
-  };
 
   return (
-    <Dialog open={!!item} onOpenChange={() => { setForm(null); onClose(); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{form?.company ? "Edit" : "Add"} Work Experience</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <ExpandableCard
+      id={item.id}
+      isExpanded={isExpanded}
+      onToggle={onToggle}
+      onSave={() => onSave(form)}
+      onDelete={onDelete}
+      dragHandleProps={dragHandleProps}
+      showDragHandle={showDragHandle}
+      preview={
+        <div className="min-w-0">
+          <p className="font-medium text-sm tracking-[-0.5px] truncate">
+            {item.role || "New Position"}
+          </p>
+          <p className="text-sm text-muted-foreground truncate">
+            {item.company || "Company name"}
+          </p>
+          {item.startDate && (
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              {formatDateRange(item.startDate, item.endDate, item.current)}
+            </p>
+          )}
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Company</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Role / Title</Label>
             <Input
-              value={form?.company || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, company: e.target.value } : null)}
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+              placeholder="e.g., Content Creator"
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Company</Label>
+            <Input
+              value={form.company}
+              onChange={(e) => setForm({ ...form, company: e.target.value })}
               placeholder="Company name"
-              required
+              className="h-9"
             />
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-muted-foreground">Description</Label>
+          <Textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="What did you do in this role?"
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Role</Label>
-            <Input
-              value={form?.role || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, role: e.target.value } : null)}
-              placeholder="Job title"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea
-              value={form?.description || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, description: e.target.value } : null)}
-              placeholder="Describe your role and responsibilities"
-              rows={3}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <Input
-                type="month"
-                value={form?.startDate || ""}
-                onChange={(e) => setForm((prev) => prev ? { ...prev, startDate: e.target.value } : null)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Input
-                type="month"
-                value={form?.endDate || ""}
-                onChange={(e) => setForm((prev) => prev ? { ...prev, endDate: e.target.value } : null)}
-                disabled={form?.current}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={form?.current || false}
-              onCheckedChange={(checked) => setForm((prev) => prev ? { ...prev, current: checked, endDate: checked ? undefined : prev.endDate } : null)}
-            />
-            <Label>Currently working here</Label>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { setForm(null); onClose(); }}>
-              Cancel
-            </Button>
-            <Button type="submit">Save</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Education Dialog
-function EducationDialog({
-  item,
-  onSave,
-  onClose,
-}: {
-  item: Education | null;
-  onSave: (item: Education) => void;
-  onClose: () => void;
-}) {
-  const [form, setForm] = useState<Education | null>(null);
-
-  if (item && !form) {
-    setForm(item);
-  }
-  if (!item && form) {
-    setForm(null);
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form) {
-      onSave(form);
-      setForm(null);
-    }
-  };
-
-  return (
-    <Dialog open={!!item} onOpenChange={() => { setForm(null); onClose(); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{form?.institution ? "Edit" : "Add"} Education</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Institution</Label>
-            <Input
-              value={form?.institution || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, institution: e.target.value } : null)}
-              placeholder="School or university"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Degree</Label>
-              <Input
-                value={form?.degree || ""}
-                onChange={(e) => setForm((prev) => prev ? { ...prev, degree: e.target.value } : null)}
-                placeholder="e.g., Bachelor's, Master's"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Field of Study</Label>
-              <Input
-                value={form?.field || ""}
-                onChange={(e) => setForm((prev) => prev ? { ...prev, field: e.target.value } : null)}
-                placeholder="e.g., Computer Science"
-                required
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <Input
-                type="month"
-                value={form?.startDate || ""}
-                onChange={(e) => setForm((prev) => prev ? { ...prev, startDate: e.target.value } : null)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Input
-                type="month"
-                value={form?.endDate || ""}
-                onChange={(e) => setForm((prev) => prev ? { ...prev, endDate: e.target.value } : null)}
-                disabled={form?.current}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={form?.current || false}
-              onCheckedChange={(checked) => setForm((prev) => prev ? { ...prev, current: checked, endDate: checked ? undefined : prev.endDate } : null)}
-            />
-            <Label>Currently studying</Label>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { setForm(null); onClose(); }}>
-              Cancel
-            </Button>
-            <Button type="submit">Save</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Certification Dialog
-function CertificationDialog({
-  item,
-  onSave,
-  onClose,
-}: {
-  item: Certification | null;
-  onSave: (item: Certification) => void;
-  onClose: () => void;
-}) {
-  const [form, setForm] = useState<Certification | null>(null);
-
-  if (item && !form) {
-    setForm(item);
-  }
-  if (!item && form) {
-    setForm(null);
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form) {
-      onSave(form);
-      setForm(null);
-    }
-  };
-
-  return (
-    <Dialog open={!!item} onOpenChange={() => { setForm(null); onClose(); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{form?.name ? "Edit" : "Add"} Certification</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Certification Name</Label>
-            <Input
-              value={form?.name || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, name: e.target.value } : null)}
-              placeholder="e.g., Google Analytics Certified"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Issuing Organization</Label>
-            <Input
-              value={form?.issuer || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, issuer: e.target.value } : null)}
-              placeholder="e.g., Google"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Date Issued</Label>
+            <Label className="text-xs font-medium text-muted-foreground">Start Date</Label>
             <Input
               type="month"
-              value={form?.date || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, date: e.target.value } : null)}
-              required
+              value={form.startDate}
+              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+              className="h-9"
             />
           </div>
           <div className="space-y-2">
-            <Label>Credential URL (optional)</Label>
+            <Label className="text-xs font-medium text-muted-foreground">End Date</Label>
             <Input
-              type="url"
-              value={form?.url || ""}
-              onChange={(e) => setForm((prev) => prev ? { ...prev, url: e.target.value } : null)}
-              placeholder="https://..."
+              type="month"
+              value={form.endDate || ""}
+              onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+              disabled={form.current}
+              className="h-9"
             />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { setForm(null); onClose(); }}>
-              Cancel
-            </Button>
-            <Button type="submit">Save</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={form.current}
+            onCheckedChange={(checked) => setForm({ ...form, current: checked, endDate: checked ? undefined : form.endDate })}
+          />
+          <Label className="text-sm text-muted-foreground">I currently work here</Label>
+        </div>
+      </div>
+    </ExpandableCard>
+  );
+}
+
+// Education Card
+function EducationCard({
+  item,
+  isExpanded,
+  onToggle,
+  onSave,
+  onDelete,
+  dragHandleProps,
+  showDragHandle = true,
+  formatDateRange,
+}: {
+  item: Education;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onSave: (item: Education) => void;
+  onDelete: () => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
+  showDragHandle?: boolean;
+  formatDateRange: (start: string, end?: string, current?: boolean) => string;
+}) {
+  const [form, setForm] = useState<Education>(item);
+
+  if (item.id !== form.id) {
+    setForm(item);
+  }
+
+  return (
+    <ExpandableCard
+      id={item.id}
+      isExpanded={isExpanded}
+      onToggle={onToggle}
+      onSave={() => onSave(form)}
+      onDelete={onDelete}
+      dragHandleProps={dragHandleProps}
+      showDragHandle={showDragHandle}
+      preview={
+        <div className="min-w-0">
+          <p className="font-medium text-sm tracking-[-0.5px] truncate">
+            {item.degree && item.field ? `${item.degree} in ${item.field}` : "New Education"}
+          </p>
+          <p className="text-sm text-muted-foreground truncate">
+            {item.institution || "Institution name"}
+          </p>
+          {item.startDate && (
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              {formatDateRange(item.startDate, item.endDate, item.current)}
+            </p>
+          )}
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-muted-foreground">Institution</Label>
+          <Input
+            value={form.institution}
+            onChange={(e) => setForm({ ...form, institution: e.target.value })}
+            placeholder="School or university"
+            className="h-9"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Degree</Label>
+            <Input
+              value={form.degree}
+              onChange={(e) => setForm({ ...form, degree: e.target.value })}
+              placeholder="e.g., Bachelor's"
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Field of Study</Label>
+            <Input
+              value={form.field}
+              onChange={(e) => setForm({ ...form, field: e.target.value })}
+              placeholder="e.g., Marketing"
+              className="h-9"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Start Date</Label>
+            <Input
+              type="month"
+              value={form.startDate}
+              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">End Date</Label>
+            <Input
+              type="month"
+              value={form.endDate || ""}
+              onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+              disabled={form.current}
+              className="h-9"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={form.current}
+            onCheckedChange={(checked) => setForm({ ...form, current: checked, endDate: checked ? undefined : form.endDate })}
+          />
+          <Label className="text-sm text-muted-foreground">Currently studying here</Label>
+        </div>
+      </div>
+    </ExpandableCard>
+  );
+}
+
+// Certification Card
+function CertificationCard({
+  item,
+  isExpanded,
+  onToggle,
+  onSave,
+  onDelete,
+  dragHandleProps,
+  showDragHandle = true,
+}: {
+  item: Certification;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onSave: (item: Certification) => void;
+  onDelete: () => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
+  showDragHandle?: boolean;
+}) {
+  const [form, setForm] = useState<Certification>(item);
+
+  if (item.id !== form.id) {
+    setForm(item);
+  }
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    return new Date(dateStr + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  };
+
+  return (
+    <ExpandableCard
+      id={item.id}
+      isExpanded={isExpanded}
+      onToggle={onToggle}
+      onSave={() => onSave(form)}
+      onDelete={onDelete}
+      dragHandleProps={dragHandleProps}
+      showDragHandle={showDragHandle}
+      preview={
+        <div className="min-w-0">
+          <p className="font-medium text-sm tracking-[-0.5px] truncate">
+            {item.name || "New Certification"}
+          </p>
+          <p className="text-sm text-muted-foreground truncate">
+            {item.issuer || "Issuing organization"}
+          </p>
+          {item.date && (
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              {formatDate(item.date)}
+            </p>
+          )}
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-muted-foreground">Certification Name</Label>
+          <Input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="e.g., Google Analytics Certified"
+            className="h-9"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Issuing Organization</Label>
+            <Input
+              value={form.issuer}
+              onChange={(e) => setForm({ ...form, issuer: e.target.value })}
+              placeholder="e.g., Google"
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Date Issued</Label>
+            <Input
+              type="month"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="h-9"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-muted-foreground">Credential URL (optional)</Label>
+          <Input
+            type="url"
+            value={form.url || ""}
+            onChange={(e) => setForm({ ...form, url: e.target.value })}
+            placeholder="https://..."
+            className="h-9"
+          />
+        </div>
+      </div>
+    </ExpandableCard>
   );
 }

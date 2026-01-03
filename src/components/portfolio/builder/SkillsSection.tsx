@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 // Common skills suggestions for creators
 const SKILL_SUGGESTIONS = [
@@ -49,8 +50,7 @@ export function SkillsSection({ skills, onChange }: SkillsSectionProps) {
 
   const filteredSuggestions = SKILL_SUGGESTIONS.filter(
     (skill) =>
-      skill.toLowerCase().includes(inputValue.toLowerCase()) &&
-      !skills.includes(skill)
+      skill.toLowerCase().includes(inputValue.toLowerCase()) && !skills.includes(skill)
   ).slice(0, 8);
 
   const handleAddSkill = useCallback(
@@ -84,58 +84,61 @@ export function SkillsSection({ skills, onChange }: SkillsSectionProps) {
   return (
     <div className="space-y-4">
       {/* Skills Tags */}
-      <div className="flex flex-wrap gap-2">
-        {skills.map((skill) => (
-          <Badge
-            key={skill}
-            variant="secondary"
-            className="pl-3 pr-1 py-1.5 text-sm flex items-center gap-1.5"
-          >
-            {skill}
-            <button
-              onClick={() => handleRemoveSkill(skill)}
-              className="p-0.5 rounded-full hover:bg-background/50 transition-colors"
+      {skills.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {skills.map((skill) => (
+            <div
+              key={skill}
+              className={cn(
+                "group flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+                "bg-primary/10 text-primary text-sm font-medium",
+                "border border-primary/20"
+              )}
             >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
-      </div>
+              <span>{skill}</span>
+              <button
+                onClick={() => handleRemoveSkill(skill)}
+                className="p-0.5 rounded-full opacity-60 hover:opacity-100 hover:bg-primary/20 transition-all"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div className="relative">
-        <div className="flex items-center gap-2">
-          <Plus className="h-4 w-4 text-muted-foreground" />
-          <Input
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              setShowSuggestions(true);
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a skill and press Enter"
-            className="flex-1"
-          />
-        </div>
+        <Input
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type a skill and press Enter"
+          className="bg-muted/30 border-0 focus-visible:ring-1"
+        />
 
         {/* Suggestions Dropdown */}
         {showSuggestions && (inputValue || filteredSuggestions.length > 0) && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-            {inputValue && !SKILL_SUGGESTIONS.some((s) => s.toLowerCase() === inputValue.toLowerCase()) && (
-              <button
-                className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
-                onClick={() => handleAddSkill(inputValue)}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add "{inputValue}"
-              </button>
-            )}
+          <div className="absolute top-full left-0 right-0 mt-1 bg-popover rounded-xl border shadow-lg z-10 max-h-48 overflow-y-auto">
+            {inputValue &&
+              !SKILL_SUGGESTIONS.some((s) => s.toLowerCase() === inputValue.toLowerCase()) && (
+                <button
+                  className="w-full px-3 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                  onClick={() => handleAddSkill(inputValue)}
+                >
+                  <span className="text-primary">+</span>
+                  <span>Add "{inputValue}"</span>
+                </button>
+              )}
             {filteredSuggestions.map((skill) => (
               <button
                 key={skill}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                className="w-full px-3 py-2.5 text-left text-sm hover:bg-muted transition-colors"
                 onClick={() => handleAddSkill(skill)}
               >
                 {skill}
@@ -146,17 +149,24 @@ export function SkillsSection({ skills, onChange }: SkillsSectionProps) {
       </div>
 
       {/* Quick Add Suggestions */}
-      {skills.length < 5 && (
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Quick add:</p>
+      {skills.length < 8 && (
+        <div className="space-y-2.5">
+          <Label className="text-xs text-muted-foreground tracking-[-0.5px]">
+            Suggested skills
+          </Label>
           <div className="flex flex-wrap gap-1.5">
             {SKILL_SUGGESTIONS.filter((s) => !skills.includes(s))
-              .slice(0, 12)
+              .slice(0, 10)
               .map((skill) => (
                 <button
                   key={skill}
                   onClick={() => handleAddSkill(skill)}
-                  className="px-2.5 py-1 text-xs bg-muted/50 hover:bg-muted rounded-full transition-colors"
+                  className={cn(
+                    "px-2.5 py-1 text-xs rounded-full transition-all",
+                    "bg-muted/50 text-muted-foreground",
+                    "hover:bg-primary/10 hover:text-primary hover:border-primary/20",
+                    "border border-transparent"
+                  )}
                 >
                   + {skill}
                 </button>
@@ -165,10 +175,13 @@ export function SkillsSection({ skills, onChange }: SkillsSectionProps) {
         </div>
       )}
 
-      {/* Help text */}
-      <p className="text-xs text-muted-foreground">
-        Add skills that showcase your expertise. These help brands find you for relevant campaigns.
-      </p>
+      {/* Empty state */}
+      {skills.length === 0 && (
+        <div className="text-center py-4 text-muted-foreground text-sm tracking-[-0.5px]">
+          <p>No skills added yet</p>
+          <p className="text-xs mt-1">Add skills to help brands find you for relevant campaigns</p>
+        </div>
+      )}
     </div>
   );
 }

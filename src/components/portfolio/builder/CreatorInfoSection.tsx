@@ -1,8 +1,8 @@
 import { X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
   CONTENT_NICHES,
   EQUIPMENT_OPTIONS,
@@ -76,27 +76,18 @@ export function CreatorInfoSection({
   return (
     <div className="space-y-6">
       {/* Content Niches */}
-      <div className="space-y-3">
-        <Label>Content Niches</Label>
-        <div className="flex flex-wrap gap-2">
-          {contentNiches.map((niche) => (
-            <Badge
-              key={niche}
-              variant="secondary"
-              className="pl-3 pr-1 py-1.5 text-sm flex items-center gap-1.5"
-            >
-              {niche}
-              <button
-                onClick={() => handleRemoveNiche(niche)}
-                className="p-0.5 rounded-full hover:bg-background/50 transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+      <InfoGroup label="Content Niches" description="What topics do you create content about?">
+        {contentNiches.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {contentNiches.map((niche) => (
+              <TagBadge key={niche} onRemove={() => handleRemoveNiche(niche)}>
+                {niche}
+              </TagBadge>
+            ))}
+          </div>
+        )}
         <Select onValueChange={handleAddNiche}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
             <SelectValue placeholder="Add a niche..." />
           </SelectTrigger>
           <SelectContent>
@@ -107,30 +98,21 @@ export function CreatorInfoSection({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </InfoGroup>
 
       {/* Equipment */}
-      <div className="space-y-3">
-        <Label>Equipment</Label>
-        <div className="flex flex-wrap gap-2">
-          {equipment.map((item) => (
-            <Badge
-              key={item}
-              variant="outline"
-              className="pl-3 pr-1 py-1.5 text-sm flex items-center gap-1.5"
-            >
-              {item}
-              <button
-                onClick={() => handleRemoveEquipment(item)}
-                className="p-0.5 rounded-full hover:bg-muted transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+      <InfoGroup label="Equipment" description="What gear do you use for content creation?">
+        {equipment.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {equipment.map((item) => (
+              <TagBadge key={item} onRemove={() => handleRemoveEquipment(item)}>
+                {item}
+              </TagBadge>
+            ))}
+          </div>
+        )}
         <Select onValueChange={handleAddEquipment}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
             <SelectValue placeholder="Add equipment..." />
           </SelectTrigger>
           <SelectContent>
@@ -141,30 +123,21 @@ export function CreatorInfoSection({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </InfoGroup>
 
       {/* Languages */}
-      <div className="space-y-3">
-        <Label>Languages</Label>
-        <div className="flex flex-wrap gap-2">
-          {languages.map((lang) => (
-            <Badge
-              key={lang}
-              variant="outline"
-              className="pl-3 pr-1 py-1.5 text-sm flex items-center gap-1.5"
-            >
-              {lang}
-              <button
-                onClick={() => handleRemoveLanguage(lang)}
-                className="p-0.5 rounded-full hover:bg-muted transition-colors"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+      <InfoGroup label="Languages" description="What languages can you create content in?">
+        {languages.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {languages.map((lang) => (
+              <TagBadge key={lang} onRemove={() => handleRemoveLanguage(lang)}>
+                {lang}
+              </TagBadge>
+            ))}
+          </div>
+        )}
         <Select onValueChange={handleAddLanguage}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
             <SelectValue placeholder="Add a language..." />
           </SelectTrigger>
           <SelectContent>
@@ -175,13 +148,12 @@ export function CreatorInfoSection({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </InfoGroup>
 
       {/* Availability */}
-      <div className="space-y-3">
-        <Label>Availability</Label>
+      <InfoGroup label="Availability" description="How available are you for new projects?">
         <Select value={availability || ""} onValueChange={onAvailabilityChange}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
             <SelectValue placeholder="Select availability..." />
           </SelectTrigger>
           <SelectContent>
@@ -192,17 +164,31 @@ export function CreatorInfoSection({
             ))}
           </SelectContent>
         </Select>
-      </div>
+        {availability && (
+          <div className="mt-2">
+            <span
+              className={cn(
+                "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium",
+                availability === "available" && "bg-emerald-500/10 text-emerald-600",
+                availability === "limited" && "bg-amber-500/10 text-amber-600",
+                availability === "busy" && "bg-red-500/10 text-red-600",
+                availability === "unavailable" && "bg-muted text-muted-foreground"
+              )}
+            >
+              {AVAILABILITY_OPTIONS.find((o) => o.id === availability)?.label}
+            </span>
+          </div>
+        )}
+      </InfoGroup>
 
       {/* Rate Range */}
-      <div className="space-y-3">
-        <Label>Rate Range (optional)</Label>
+      <InfoGroup label="Rate Range" description="Set your pricing to help brands understand your rates" optional>
         <div className="grid grid-cols-4 gap-2">
           <Select
             value={rateRange?.currency || "USD"}
             onValueChange={(value) => updateRateRange("currency", value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -218,18 +204,20 @@ export function CreatorInfoSection({
             placeholder="Min"
             value={rateRange?.min || ""}
             onChange={(e) => updateRateRange("min", parseInt(e.target.value) || 0)}
+            className="bg-muted/30 border-0 focus-visible:ring-1"
           />
           <Input
             type="number"
             placeholder="Max"
             value={rateRange?.max || ""}
             onChange={(e) => updateRateRange("max", parseInt(e.target.value) || 0)}
+            className="bg-muted/30 border-0 focus-visible:ring-1"
           />
           <Select
             value={rateRange?.type || "project"}
             onValueChange={(value) => updateRateRange("type", value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -241,12 +229,72 @@ export function CreatorInfoSection({
             </SelectContent>
           </Select>
         </div>
-        <p className="text-xs text-muted-foreground">
-          {rateRange?.min && rateRange?.max
-            ? `${CURRENCY_OPTIONS.find((c) => c.id === rateRange.currency)?.symbol}${rateRange.min} - ${CURRENCY_OPTIONS.find((c) => c.id === rateRange.currency)?.symbol}${rateRange.max} ${RATE_TYPE_OPTIONS.find((t) => t.id === rateRange.type)?.label.toLowerCase()}`
-            : "Set your rate range to help brands understand your pricing"}
-        </p>
+        {rateRange?.min !== undefined && rateRange?.max !== undefined && rateRange.min > 0 && rateRange.max > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {CURRENCY_OPTIONS.find((c) => c.id === rateRange.currency)?.symbol}
+            {rateRange.min.toLocaleString()} – {CURRENCY_OPTIONS.find((c) => c.id === rateRange.currency)?.symbol}
+            {rateRange.max.toLocaleString()}{" "}
+            {RATE_TYPE_OPTIONS.find((t) => t.id === rateRange.type)?.label.toLowerCase()}
+          </p>
+        )}
+      </InfoGroup>
+    </div>
+  );
+}
+
+// Info Group Component - simplified without icons
+function InfoGroup({
+  label,
+  description,
+  optional,
+  children,
+}: {
+  label: string;
+  description?: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium tracking-[-0.5px]">{label}</Label>
+          {optional && (
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              Optional
+            </span>
+          )}
+        </div>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+// Tag Badge Component
+function TagBadge({
+  children,
+  onRemove,
+}: {
+  children: React.ReactNode;
+  onRemove: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "group flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+        "bg-muted text-foreground text-sm",
+        "border border-border/50"
+      )}
+    >
+      <span>{children}</span>
+      <button
+        onClick={onRemove}
+        className="p-0.5 rounded-full opacity-60 hover:opacity-100 hover:bg-muted-foreground/20 transition-all"
+      >
+        <X className="h-3 w-3" />
+      </button>
     </div>
   );
 }

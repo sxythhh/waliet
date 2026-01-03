@@ -62,7 +62,7 @@ interface PageLoadingProps {
 
 export function PageLoading({ text = "Loading..." }: PageLoadingProps) {
   return (
-    <div className="flex items-center justify-center py-20">
+    <div className="flex items-center justify-center h-[calc(100vh-200px)]">
       <LoadingState text={text} size="md" />
     </div>
   );

@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Loader2, Eye, EyeOff, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useMyPortfolio, useUpsertPortfolio } from "@/hooks/usePortfolio";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import type { CreatorPortfolio, PortfolioSectionType } from "@/types/portfolio";
 import { PortfolioSectionMenu } from "./PortfolioSectionMenu";
 import { SortableSection } from "./SortableSection";
@@ -15,7 +15,6 @@ import { SkillsSection } from "./SkillsSection";
 import { MediaShowcase } from "./MediaShowcase";
 import { PlatformSection } from "./PlatformSection";
 import { CreatorInfoSection } from "./CreatorInfoSection";
-import { CustomSectionEditor } from "./CustomSectionEditor";
 
 const DEFAULT_SECTION_ORDER: PortfolioSectionType[] = [
   "resume",
@@ -25,16 +24,74 @@ const DEFAULT_SECTION_ORDER: PortfolioSectionType[] = [
   "creator_info",
 ];
 
+// Helper to count items per section for the badge display
+function getSectionItemCount(
+  sectionId: PortfolioSectionType,
+  portfolio: Partial<CreatorPortfolio>
+): number {
+  switch (sectionId) {
+    case "resume":
+      return (
+        (portfolio.work_experience?.length || 0) +
+        (portfolio.education?.length || 0) +
+        (portfolio.certifications?.length || 0)
+      );
+    case "skills":
+      return portfolio.skills?.length || 0;
+    case "media":
+      return (
+        (portfolio.featured_videos?.length || 0) +
+        (portfolio.showcase_items?.length || 0)
+      );
+    case "platforms":
+      return portfolio.platforms?.length || 0;
+    case "creator_info":
+      return (
+        (portfolio.content_niches?.length || 0) +
+        (portfolio.equipment?.length || 0) +
+        (portfolio.languages?.length || 0)
+      );
+    default:
+      return 0;
+  }
+}
+
+type SaveStatus = "saved" | "saving" | "unsaved";
+
 export function PortfolioBuilder() {
   const { data: portfolio, isLoading } = useMyPortfolio();
   const upsertPortfolio = useUpsertPortfolio();
+  const { user } = useAuth();
 
   const [localPortfolio, setLocalPortfolio] = useState<Partial<CreatorPortfolio>>({});
   const [enabledSections, setEnabledSections] = useState<PortfolioSectionType[]>(DEFAULT_SECTION_ORDER);
   const [isPublic, setIsPublic] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedPortfolio = useDebounce(localPortfolio, 2000);
+
+  // Update save status based on mutation state
+  useEffect(() => {
+    if (upsertPortfolio.isPending) {
+      setSaveStatus("saving");
+    } else if (upsertPortfolio.isSuccess && !hasChanges) {
+      setSaveStatus("saved");
+      // Show "saved" for 2 seconds then hide
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        setSaveStatus("saved");
+      }, 2000);
+    }
+  }, [upsertPortfolio.isPending, upsertPortfolio.isSuccess, hasChanges]);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (hasChanges) {
+      setSaveStatus("unsaved");
+    }
+  }, [hasChanges]);
 
   // Initialize from loaded portfolio
   useEffect(() => {
@@ -156,13 +213,6 @@ export function PortfolioBuilder() {
             onRateRangeChange={(value) => updateField("rate_range", value)}
           />
         );
-      case "custom":
-        return (
-          <CustomSectionEditor
-            customSections={localPortfolio.custom_sections || []}
-            onChange={(value) => updateField("custom_sections", value)}
-          />
-        );
       default:
         return null;
     }
@@ -170,53 +220,65 @@ export function PortfolioBuilder() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  // Get username for preview link
+  const username = user?.user_metadata?.username;
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between pb-4 border-b border-border/40">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Portfolio Builder</h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Customize your public profile to showcase your work and experience
+          <h2 className="text-xl font-semibold tracking-[-0.5px]">Portfolio Builder</h2>
+          <p className="text-muted-foreground text-sm mt-1 tracking-[-0.5px]">
+            Drag sections to reorder, click to edit content
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {isPublic ? (
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <EyeOff className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-3">
+          {/* Save Status Indicator */}
+          <div
+            className={cn(
+              "px-2.5 py-1 rounded-full text-xs font-medium transition-all tracking-[-0.5px]",
+              saveStatus === "saved" && "bg-emerald-500/10 text-emerald-600",
+              saveStatus === "saving" && "bg-amber-500/10 text-amber-600",
+              saveStatus === "unsaved" && "bg-muted text-muted-foreground"
             )}
-            <Label htmlFor="public-toggle" className="text-sm text-muted-foreground">
-              {isPublic ? "Public" : "Private"}
-            </Label>
-            <Switch
-              id="public-toggle"
-              checked={isPublic}
-              onCheckedChange={(checked) => {
-                setIsPublic(checked);
-                setHasChanges(true);
-              }}
-            />
-          </div>
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || upsertPortfolio.isPending}
-            size="sm"
           >
-            {upsertPortfolio.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Unsaved"}
+          </div>
+
+          {/* Visibility Toggle */}
+          <button
+            onClick={() => {
+              setIsPublic(!isPublic);
+              setHasChanges(true);
+            }}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-all border tracking-[-0.5px]",
+              isPublic
+                ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15"
+                : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
             )}
-            Save
-          </Button>
+          >
+            {isPublic ? "Public" : "Private"}
+          </button>
+
+          {/* Preview Button */}
+          {username && isPublic && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs tracking-[-0.5px]"
+              onClick={() => window.open(`/creator/${username}`, "_blank")}
+            >
+              Preview
+            </Button>
+          )}
         </div>
       </div>
 
@@ -236,6 +298,7 @@ export function PortfolioBuilder() {
                 key={sectionId}
                 id={sectionId}
                 onRemove={() => handleToggleSection(sectionId)}
+                itemCount={getSectionItemCount(sectionId, localPortfolio)}
               >
                 {renderSection(sectionId)}
               </SortableSection>
@@ -249,13 +312,6 @@ export function PortfolioBuilder() {
         enabledSections={enabledSections}
         onToggleSection={handleToggleSection}
       />
-
-      {/* Auto-save indicator */}
-      {hasChanges && (
-        <div className="fixed bottom-4 right-4 bg-muted/90 backdrop-blur-sm text-muted-foreground text-sm px-3 py-2 rounded-lg shadow-lg">
-          Auto-saving...
-        </div>
-      )}
     </div>
   );
 }
