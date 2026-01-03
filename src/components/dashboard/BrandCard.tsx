@@ -62,7 +62,7 @@ export const BrandCard = memo(function BrandCard({
         <div className="flex items-center gap-3">
           {/* Logo */}
           <div
-            className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
+            className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
             style={{ backgroundColor: brand_color || "#1a1a1a" }}
           >
             {logo_url ? (

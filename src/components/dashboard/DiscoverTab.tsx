@@ -400,7 +400,7 @@ export function DiscoverTab({
       setBounties(availableBounties as BountyCampaign[]);
     }
 
-    // Fetch brands with active campaigns/boosts
+    // Fetch brands with campaigns (active or ended)
     const { data: brandsData } = await supabase
       .from("brands")
       .select(`
@@ -419,14 +419,15 @@ export function DiscoverTab({
       `)
       .eq("is_active", true)
       .eq("campaigns.is_private", false)
-      .in("campaigns.status", ["active"])
+      .in("campaigns.status", ["active", "ended"])
       .limit(12);
 
     if (brandsData) {
-      // Process brands to get campaign and boost counts
+      // Process brands to get campaign and boost counts (prioritize active, but include ended)
       const processedBrands = brandsData.map(brand => {
         const activeCampaigns = (brand.campaigns || []).filter((c: any) => c.status === "active" && !c.is_private);
         const activeBoosts = (brand.bounty_campaigns || []).filter((b: any) => b.status === "active" && !b.is_private);
+        const totalCampaigns = (brand.campaigns || []).filter((c: any) => !c.is_private);
         return {
           id: brand.id,
           name: brand.name,
@@ -440,9 +441,17 @@ export function DiscoverTab({
           tiktok_handle: brand.tiktok_handle,
           campaign_count: activeCampaigns.length,
           boost_count: activeBoosts.length,
+          has_campaigns: totalCampaigns.length > 0,
         };
-      }).filter(b => b.campaign_count > 0 || b.boost_count > 0)
-        .sort((a, b) => (b.campaign_count + b.boost_count) - (a.campaign_count + a.boost_count));
+      }).filter(b => b.has_campaigns)
+        .sort((a, b) => {
+          // Prioritize brands with active opportunities
+          const aActive = a.campaign_count + a.boost_count;
+          const bActive = b.campaign_count + b.boost_count;
+          if (aActive > 0 && bActive === 0) return -1;
+          if (bActive > 0 && aActive === 0) return 1;
+          return bActive - aActive;
+        });
 
       setBrands(processedBrands);
     }
