@@ -25,7 +25,7 @@ interface TopPerformingVideosProps {
   totalVideos: number;
 }
 
-const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
+const THUMBNAIL_BASE_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/ads_tracked_thumbnails`;
 
 const extractPlatformId = (adLink: string, platform: string): string | null => {
   try {

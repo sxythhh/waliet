@@ -1,8 +1,8 @@
 import posthog from "posthog-js";
 
-// PostHog configuration
-export const POSTHOG_KEY = "phc_G6ikbkcGrPjMMh1IZng78xOD8P6TM1ffvsB392I7rZF";
-export const POSTHOG_HOST = "https://us.i.posthog.com";
+// PostHog configuration - use env var with fallback
+export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || "phc_G6ikbkcGrPjMMh1IZng78xOD8P6TM1ffvsB392I7rZF";
+export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
 
 // Initialize PostHog (for use outside of React)
 export function initPostHog() {

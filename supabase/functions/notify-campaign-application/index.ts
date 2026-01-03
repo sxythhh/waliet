@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
   try {
     const notification: CampaignApplicationNotification = await req.json();
 
-    const webhookUrl = 'https://discord.com/api/webhooks/1424693920436060281/riU2duk3CDy0Y582nmgnlNY12-9TOjJXXLbmCt1yLOpbPfa7kjZ9ynUql7ewvcPG3GBZ';
+    const webhookUrl = Deno.env.get('DISCORD_CAMPAIGN_APPLICATION_WEBHOOK_URL');
     
     if (!webhookUrl) {
       console.error('Discord webhook URL not configured');

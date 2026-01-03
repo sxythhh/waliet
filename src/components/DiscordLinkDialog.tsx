@@ -26,7 +26,7 @@ export function DiscordLinkDialog({
   const queryClient = useQueryClient();
   const isLinked = !!discordUsername;
   const handleLinkDiscord = () => {
-    const DISCORD_CLIENT_ID = '1358316231341375518';
+    const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID || '1358316231341375518';
     const REDIRECT_URI = `${window.location.origin}/discord/callback`;
     const STATE = btoa(JSON.stringify({
       userId

@@ -67,7 +67,7 @@ const getTrackedThumbnailUrl = (video: {
   const platform = video.platform?.toLowerCase();
   const adPlatformId = extractPlatformVideoId(video.video_url, platform);
   if (!username || !adPlatformId || !platform) return null;
-  return `https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails/${username}/${adPlatformId}_${platform}.jpg`;
+  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/ads_tracked_thumbnails/${username}/${adPlatformId}_${platform}.jpg`;
 };
 
 // Unified video interface that handles both submissions and tracked videos
