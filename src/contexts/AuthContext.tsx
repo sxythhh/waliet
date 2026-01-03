@@ -3,10 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Session timeout configuration
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const WARNING_BEFORE = 5 * 60 * 1000; // Show warning 5 minutes before timeout
-const CHECK_INTERVAL = 60 * 1000; // Check every minute
+// Session timeout disabled - sessions persist until explicit logout or token expiry
 
 interface AuthContextType {
   session: Session | null;
@@ -73,8 +70,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const hasTrackedSession = useRef<string | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
-  const warningShownRef = useRef<boolean>(false);
 
   const updateAuthState = useCallback((newSession: Session | null) => {
     setSession(newSession);
@@ -130,52 +125,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, [updateAuthState]);
 
-  // Session timeout - auto logout after 30 minutes of inactivity
-  useEffect(() => {
-    if (!session) {
-      // Reset tracking when logged out
-      lastActivityRef.current = Date.now();
-      warningShownRef.current = false;
-      return;
-    }
-
-    const resetActivity = () => {
-      lastActivityRef.current = Date.now();
-      warningShownRef.current = false;
-    };
-
-    const checkInactivity = async () => {
-      const inactiveTime = Date.now() - lastActivityRef.current;
-
-      if (inactiveTime >= INACTIVITY_TIMEOUT) {
-        // Timeout reached - sign out
-        await supabase.auth.signOut();
-        toast.info('You have been signed out due to inactivity');
-      } else if (inactiveTime >= INACTIVITY_TIMEOUT - WARNING_BEFORE && !warningShownRef.current) {
-        // Show warning 5 minutes before timeout
-        warningShownRef.current = true;
-        toast.warning('You will be signed out in 5 minutes due to inactivity', {
-          duration: 10000,
-        });
-      }
-    };
-
-    // Activity event listeners
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => {
-      window.addEventListener(event, resetActivity, { passive: true });
-    });
-
-    // Check inactivity periodically
-    const intervalId = setInterval(checkInactivity, CHECK_INTERVAL);
-
-    return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, resetActivity);
-      });
-      clearInterval(intervalId);
-    };
-  }, [session]);
 
   return (
     <AuthContext.Provider value={{ session, user, loading }}>
