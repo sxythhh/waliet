@@ -1068,6 +1068,14 @@ export default function Finance() {
                   <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-5 border border-primary/20">
                     <p className="text-xs text-muted-foreground mb-1">Requested Amount</p>
                     <p className="text-3xl font-bold">${Number(selectedPayout.amount).toFixed(2)}</p>
+                    {selectedPayout.payout_method === 'crypto' && (
+                      <div className="mt-2 pt-2 border-t border-primary/10">
+                        <p className="text-xs text-muted-foreground">Amount after fees ($1 + 0.75%)</p>
+                        <p className="text-lg font-semibold text-emerald-500">
+                          ${(Number(selectedPayout.amount) - (Number(selectedPayout.amount) * 0.0075) - 1).toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -1131,26 +1139,44 @@ export default function Finance() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-4 border-t border-border/50">
+                  <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
                     {selectedPayout.status === 'pending' && (
                       <>
                         {selectedPayout.payout_method === 'crypto' ? (
-                          <Button onClick={() => openCryptoPayoutDialog(selectedPayout)} className="flex-1 gap-2 bg-amber-600 hover:bg-amber-700">
-                            <Coins className="h-4 w-4" /> Send USDC
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button onClick={() => openCryptoPayoutDialog(selectedPayout)} className="flex-1 gap-2 bg-amber-600 hover:bg-amber-700">
+                              <Coins className="h-4 w-4" /> Send USDC
+                            </Button>
+                            <Button variant="outline" onClick={() => { setPayoutAction('reject'); setActionDialogOpen(true); }} className="flex-1 gap-2 text-rose-500 border-rose-500/30 hover:bg-rose-500/10">
+                              <XCircle className="h-4 w-4" /> Reject
+                            </Button>
+                          </div>
                         ) : (
-                          <Button onClick={() => handleCompletePayout(selectedPayout)} disabled={processingPayout === selectedPayout.id} className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
-                            {processingPayout === selectedPayout.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Complete
+                          <div className="flex gap-2">
+                            <Button onClick={() => handleCompletePayout(selectedPayout)} disabled={processingPayout === selectedPayout.id} className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700">
+                              {processingPayout === selectedPayout.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Complete
+                            </Button>
+                            <Button variant="outline" onClick={() => { setPayoutAction('reject'); setActionDialogOpen(true); }} className="flex-1 gap-2 text-rose-500 border-rose-500/30 hover:bg-rose-500/10">
+                              <XCircle className="h-4 w-4" /> Reject
+                            </Button>
+                          </div>
+                        )}
+                        {selectedPayout.payout_method === 'crypto' && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleCompletePayout(selectedPayout)}
+                            disabled={processingPayout === selectedPayout.id}
+                            className="w-full gap-2 text-emerald-500 border-emerald-500/30 hover:bg-emerald-500/10"
+                          >
+                            {processingPayout === selectedPayout.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            Mark as Completed
                           </Button>
                         )}
-                        <Button variant="outline" onClick={() => { setPayoutAction('reject'); setActionDialogOpen(true); }} className="flex-1 gap-2 text-rose-500 border-rose-500/30 hover:bg-rose-500/10">
-                          <XCircle className="h-4 w-4" /> Reject
-                        </Button>
                       </>
                     )}
                     {selectedPayout.status === 'in_transit' && (
                       <Button onClick={() => handleCompletePayout(selectedPayout)} disabled={processingPayout === selectedPayout.id} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700">
-                        {processingPayout === selectedPayout.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Complete
+                        {processingPayout === selectedPayout.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Mark as Completed
                       </Button>
                     )}
                   </div>

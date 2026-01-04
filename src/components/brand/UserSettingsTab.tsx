@@ -29,6 +29,7 @@ import { CustomWebhooksTab } from "./CustomWebhooksTab";
 import { BillingUsageCard } from "./BillingUsageCard";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { DataExportDialog, AccountDeletionDialog } from "@/components/dashboard/settings";
+import { DiscordIntegrationTab } from "./DiscordIntegrationTab";
 
 // Plan ID to display name mapping
 const PLAN_DISPLAY_NAMES: Record<string, string> = {
@@ -1282,6 +1283,7 @@ export function UserSettingsTab() {
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="mt-6">
           {isBrandMode && brand && (
+            <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column - Analytics Integrations */}
               <div className="space-y-6">
@@ -1343,20 +1345,6 @@ export function UserSettingsTab() {
                   </div>
                 </div>
 
-                {/* Discord Webhook */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
-                  <div className="flex items-center gap-3">
-                    <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover" />
-                    <div>
-                      <h3 className="font-medium tracking-[-0.5px]">Discord</h3>
-                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Webhook URL</Label>
-                    <Input type="url" value={discordWebhookUrl} onChange={e => setDiscordWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://discord.com/api/webhooks/..." />
-                  </div>
-                </div>
               </div>
 
               {/* Right Column - Custom Webhooks & Notifications */}
@@ -1419,6 +1407,12 @@ export function UserSettingsTab() {
                 </div>
               </div>
             </div>
+
+            {/* Discord Integration - Full Width Section */}
+            <div className="mt-6 rounded-xl border border-border/50 bg-white dark:bg-muted/20 overflow-hidden">
+              <DiscordIntegrationTab brandId={brand.id} />
+            </div>
+            </>
           )}
         </TabsContent>
 
