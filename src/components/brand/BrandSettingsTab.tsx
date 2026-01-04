@@ -13,9 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { DiscordServerSettings } from "./DiscordServerSettings";
 
 interface BrandSettingsTabProps {
   brandId: string;
+  subscriptionStatus?: string | null;
 }
 
 interface BrandSettings {
@@ -90,7 +92,7 @@ const DEFAULT_SETTINGS: BrandSettings = {
   email_on_payout_request: true,
 };
 
-export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
+export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsTabProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState<BrandSettings>(DEFAULT_SETTINGS);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -344,6 +346,14 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
 
   return (
     <div className="p-6 space-y-10 max-w-4xl mx-auto">
+      {/* Discord Server Integration */}
+      <DiscordServerSettings
+        brandId={brandId}
+        subscriptionStatus={subscriptionStatus}
+      />
+
+      <hr className="border-border/50" />
+
       {/* Application Settings */}
       <section>
         <div className="flex items-center justify-between mb-4">
