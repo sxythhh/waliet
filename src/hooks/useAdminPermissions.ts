@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Available admin resources
@@ -139,6 +139,9 @@ export const useManageAdminPermissions = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Use a ref to store adminUsers for stable searchUsers function
+  const adminUsersRef = useRef<AdminUser[]>([]);
+
   const fetchAdminUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -183,6 +186,7 @@ export const useManageAdminPermissions = () => {
       }));
 
       setAdminUsers(users);
+      adminUsersRef.current = users;
     } catch (error) {
       console.error("Error fetching admin users:", error);
     } finally {
@@ -386,8 +390,8 @@ export const useManageAdminPermissions = () => {
     }
   };
 
-  // Search users by email or username
-  const searchUsers = async (query: string): Promise<Array<{ id: string; email: string; full_name: string | null; avatar_url: string | null; username: string | null }>> => {
+  // Search users by email or username (wrapped in useCallback for stable reference)
+  const searchUsers = useCallback(async (query: string): Promise<Array<{ id: string; email: string; full_name: string | null; avatar_url: string | null; username: string | null }>> => {
     if (!query || query.length < 2) return [];
 
     try {
@@ -399,14 +403,14 @@ export const useManageAdminPermissions = () => {
 
       if (error) throw error;
 
-      // Filter out existing admins
-      const adminIds = adminUsers.map(u => u.id);
+      // Filter out existing admins using ref (to avoid re-creating this function when adminUsers changes)
+      const adminIds = adminUsersRef.current.map(u => u.id);
       return (data || []).filter(u => !adminIds.includes(u.id));
     } catch (error) {
       console.error("Error searching users:", error);
       return [];
     }
-  };
+  }, []);
 
   return {
     adminUsers,
