@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
-import { format, formatDistanceToNow } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Link2, Unlink, BadgeCheck, Clock, XCircle, AlertCircle, Calendar } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+
 interface Campaign {
   id: string;
   title: string;
@@ -17,10 +24,12 @@ interface Campaign {
     logo_url: string;
   } | null;
 }
+
 interface ConnectedCampaign extends Campaign {
   connection_id: string;
   connected_at: string;
 }
+
 interface ManageAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,6 +38,9 @@ interface ManageAccountDialogProps {
     username: string;
     platform: string;
     account_link?: string | null;
+    follower_count?: number | null;
+    is_verified?: boolean;
+    hidden_from_public?: boolean;
   };
   demographicStatus: 'approved' | 'pending' | 'rejected' | null;
   daysUntilNext: number | null;
@@ -36,8 +48,9 @@ interface ManageAccountDialogProps {
   nextSubmissionDate: Date | null;
   onUpdate: () => void;
   onSubmitDemographics: () => void;
-  platformIcon: React.ReactNode;
+  onReconnect: () => void;
 }
+
 export function ManageAccountDialog({
   open,
   onOpenChange,
@@ -48,52 +61,78 @@ export function ManageAccountDialog({
   nextSubmissionDate,
   onUpdate,
   onSubmitDemographics,
-  platformIcon
+  onReconnect,
 }: ManageAccountDialogProps) {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
+  const [hiddenFromPublic, setHiddenFromPublic] = useState(account.hidden_from_public ?? false);
+
+  useEffect(() => {
+    if (open) {
+      setHiddenFromPublic(account.hidden_from_public ?? false);
+    }
+  }, [open, account.hidden_from_public]);
+
+  const formatFollowerCount = (count: number | null | undefined) => {
+    if (!count) return null;
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    const isLightMode = resolvedTheme === "light";
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className="w-5 h-5 object-contain" />;
+      case "instagram":
+        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className="w-5 h-5 object-contain" />;
+      case "youtube":
+        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className="w-5 h-5 object-contain" />;
+      default:
+        return null;
+    }
+  };
+
   const [connectedCampaigns, setConnectedCampaigns] = useState<ConnectedCampaign[]>([]);
   const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
   const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const fetchCampaigns = async () => {
     if (!account) return;
     setLoading(true);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch campaigns the user has approved submissions for
-      const {
-        data: submissions
-      } = await supabase.from('campaign_submissions').select('campaign_id').eq('creator_id', user.id).eq('status', 'approved');
-      
-      // Get unique campaign IDs
+      const { data: submissions } = await supabase
+        .from('campaign_submissions')
+        .select('campaign_id')
+        .eq('creator_id', user.id)
+        .eq('status', 'approved');
+
       const uniqueCampaignIds = [...new Set(submissions?.map(s => s.campaign_id) || [])];
-      
-      // Fetch campaign details for unique campaigns
+
       const { data: campaignsData } = await supabase
         .from('campaigns')
         .select('id, title, brand_name, brand_logo_url, brands(logo_url)')
         .in('id', uniqueCampaignIds);
-      
+
       const approvedCampaigns = campaignsData || [];
 
-      // Fetch campaigns already connected to this social account
-      const {
-        data: connections
-      } = await supabase.from('social_account_campaigns').select(`
+      const { data: connections } = await supabase
+        .from('social_account_campaigns')
+        .select(`
           id,
           connected_at,
           campaign_id,
           campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))
-        `).eq('social_account_id', account.id).eq('status', 'active');
+        `)
+        .eq('social_account_id', account.id)
+        .eq('status', 'active');
+
       const connected = connections?.map(conn => ({
         ...(conn.campaigns as Campaign),
         connection_id: conn.id,
@@ -101,7 +140,6 @@ export function ManageAccountDialog({
       })) || [];
       setConnectedCampaigns(connected);
 
-      // Filter out already connected campaigns from available list
       const connectedIds = connected.map(c => c.id);
       const available = approvedCampaigns.filter(c => !connectedIds.includes(c.id));
       setAvailableCampaigns(available);
@@ -116,15 +154,13 @@ export function ManageAccountDialog({
       setLoading(false);
     }
   };
+
   const handleLink = async (campaignId: string) => {
     setLinkingCampaignId(campaignId);
     try {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // Check for existing disconnected record
       const { data: existingRecord } = await supabase
         .from('social_account_campaigns')
         .select('id')
@@ -132,30 +168,29 @@ export function ManageAccountDialog({
         .eq('campaign_id', campaignId)
         .eq('status', 'disconnected')
         .maybeSingle();
-      
+
       if (existingRecord) {
-        // Reactivate existing record
         const { error } = await supabase
           .from('social_account_campaigns')
-          .update({ 
+          .update({
             status: 'active',
             disconnected_at: null,
             connected_at: new Date().toISOString()
           })
           .eq('id', existingRecord.id);
-        
+
         if (error) throw error;
       } else {
-        // Insert new record
-        const { error } = await supabase.from('social_account_campaigns').insert({
-          social_account_id: account.id,
-          campaign_id: campaignId,
-          user_id: user.id,
-          status: 'active'
-        });
+        const { error } = await supabase
+          .from('social_account_campaigns')
+          .insert({
+            social_account_id: account.id,
+            campaign_id: campaignId,
+            user_id: user.id,
+            status: 'active'
+          });
         if (error) throw error;
       }
-
 
       toast({
         title: "Success",
@@ -174,16 +209,17 @@ export function ManageAccountDialog({
       setLinkingCampaignId(null);
     }
   };
-  const handleUnlink = async (connectionId: string, campaignId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from('social_account_campaigns').update({ 
-        status: 'disconnected',
-        disconnected_at: new Date().toISOString()
-      }).eq('id', connectionId);
-      if (error) throw error;
 
+  const handleUnlink = async (connectionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('social_account_campaigns')
+        .update({
+          status: 'disconnected',
+          disconnected_at: new Date().toISOString()
+        })
+        .eq('id', connectionId);
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -200,11 +236,38 @@ export function ManageAccountDialog({
       });
     }
   };
+
+  const handleToggleVisibility = async (checked: boolean) => {
+    setHiddenFromPublic(!checked);
+    try {
+      const { error } = await supabase
+        .from('social_accounts')
+        .update({ hidden_from_public: !checked })
+        .eq('id', account.id);
+
+      if (error) throw error;
+
+      toast({
+        title: checked ? "Visible on profile" : "Hidden from profile",
+        description: checked
+          ? "This account will appear on your public profile"
+          : "This account is now hidden from your public profile"
+      });
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+      setHiddenFromPublic(!checked ? false : true);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update visibility"
+      });
+    }
+  };
+
   const handleDelete = async () => {
     try {
-      const {
-        error
-      } = await supabase.from('social_accounts').delete().eq('id', account.id);
+      const { error } = await supabase.from('social_accounts').delete().eq('id', account.id);
       if (error) throw error;
       toast({
         title: "Success",
@@ -222,143 +285,185 @@ export function ManageAccountDialog({
     }
   };
 
-  // Fetch campaigns when dialog opens
   useEffect(() => {
     if (open) {
       fetchCampaigns();
     }
   }, [open]);
-  return <>
+
+  return (
+    <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Manage Account</DialogTitle>
-            
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="pb-0">
+            <DialogTitle className="font-['Inter'] tracking-[-0.5px]">Manage Account</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-5 pt-2">
             {/* Account Info */}
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-              <div className="p-2 rounded-md bg-background">
-                {platformIcon}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-background">
+                {getPlatformIcon(account.platform)}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">{account.username}</h3>
-                  {demographicStatus === 'approved' && <BadgeCheck className="h-4 w-4 text-success" />}
-                  {demographicStatus === 'pending' && <Clock className="h-4 w-4 text-warning" />}
-                  {demographicStatus === 'rejected' && <XCircle className="h-4 w-4 text-destructive" />}
-                  {!demographicStatus && <AlertCircle className="h-4 w-4 text-destructive" />}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {!demographicStatus ? (
-                    "No demographics submitted - submission required"
-                  ) : demographicStatus === 'pending' ? (
-                    "Demographics under review"
-                  ) : demographicStatus === 'approved' ? (
-                    daysUntilNext !== null && daysUntilNext > 0 ? (
-                      `Demographics approved - next due in ${daysUntilNext} days`
-                    ) : (
-                      "Demographics approved"
-                    )
-                  ) : (
-                    "Demographics rejected - resubmission required"
-                  )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold font-['Inter'] tracking-[-0.5px] truncate">{account.username}</p>
+                <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  {formatFollowerCount(account.follower_count)
+                    ? `${formatFollowerCount(account.follower_count)} followers`
+                    : account.platform.charAt(0).toUpperCase() + account.platform.slice(1)
+                  }
+                  {account.is_verified ? ' • Verified' : ''}
                 </p>
               </div>
-              {account.account_link && <Button variant="secondary" size="sm" onClick={() => window.open(account.account_link!, '_blank')} className="bg-muted border-0">
-                  View Profile
-                </Button>}
             </div>
 
-            <Separator />
+            {/* Quick Actions */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onReconnect}
+                className="flex-1 font-['Inter'] tracking-[-0.5px]"
+              >
+                Reconnect
+              </Button>
+              {account.account_link && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(account.account_link!, '_blank')}
+                  className="flex-1 font-['Inter'] tracking-[-0.5px]"
+                >
+                  Open Profile
+                </Button>
+              )}
+            </div>
+
+            {/* Visibility Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+              <div className="space-y-0.5">
+                <Label className="font-['Inter'] tracking-[-0.5px] font-medium">Show on public profile</Label>
+                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  {hiddenFromPublic ? "Hidden from visitors" : "Visible to visitors"}
+                </p>
+              </div>
+              <Switch
+                checked={!hiddenFromPublic}
+                onCheckedChange={handleToggleVisibility}
+              />
+            </div>
 
             {/* Demographics Section */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-sm" style={{ letterSpacing: '-0.5px' }}>Demographics</h4>
+                <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Audience Insights</p>
                 {lastSubmissionDate && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                     Last: {format(new Date(lastSubmissionDate), "MMM d, yyyy")}
                   </span>
                 )}
               </div>
-              
-              {/* Next Submission Date - only show if approved */}
-              {demographicStatus === 'approved' && nextSubmissionDate && <div className="text-sm text-muted-foreground">
-                  Next submission: {format(nextSubmissionDate, "MMM d, yyyy")}
-                </div>}
-              
-              {demographicStatus === 'approved' && daysUntilNext !== null ? <Button variant="secondary" disabled className="w-full gap-2">
-                  <Calendar className="h-4 w-4" />
+
+              {demographicStatus === 'approved' && daysUntilNext !== null ? (
+                <Button variant="secondary" disabled className="w-full font-['Inter'] tracking-[-0.5px]">
                   Next submission in {daysUntilNext} days
-                </Button> : demographicStatus === 'pending' ? <Button variant="secondary" disabled className="w-full">
+                </Button>
+              ) : demographicStatus === 'pending' ? (
+                <Button variant="secondary" disabled className="w-full font-['Inter'] tracking-[-0.5px]">
                   Pending Review
-                </Button> : <Button onClick={onSubmitDemographics} className="w-full" variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}>
-                  {demographicStatus === 'rejected' ? 'Resubmit Demographics' : 'Submit Demographics'}
-                </Button>}
+                </Button>
+              ) : (
+                <Button
+                  onClick={onSubmitDemographics}
+                  className="w-full font-['Inter'] tracking-[-0.5px]"
+                  variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}
+                >
+                  {demographicStatus === 'rejected' ? 'Resubmit Insights' : 'Submit Insights'}
+                </Button>
+              )}
             </div>
 
-            <Separator />
-
             {/* Connected Campaigns */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-sm">Connected Campaigns</h4>
-              {loading ? <p className="text-sm text-muted-foreground">Loading campaigns...</p> : connectedCampaigns.length === 0 ? <p className="text-sm text-muted-foreground">No campaigns connected yet</p> : <div className="space-y-2">
-                  {connectedCampaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                      <div className="flex items-center gap-3">
-                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && <img src={campaign.brand_logo_url || campaign.brands?.logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded object-cover" />}
-                        <div>
-                          <p className="font-medium text-sm">{campaign.title}</p>
-                          <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
+            <div className="space-y-2">
+              <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Connected Campaigns</p>
+              {loading ? (
+                <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Loading...</p>
+              ) : connectedCampaigns.length === 0 ? (
+                <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">No campaigns connected</p>
+              ) : (
+                <div className="space-y-2">
+                  {connectedCampaigns.map(campaign => (
+                    <div key={campaign.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
+                          <img
+                            src={campaign.brand_logo_url || campaign.brands?.logo_url}
+                            alt={campaign.brand_name}
+                            className="w-7 h-7 rounded-md object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{campaign.title}</p>
+                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleUnlink(campaign.connection_id, campaign.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <Unlink className="h-4 w-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleUnlink(campaign.connection_id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 font-['Inter'] tracking-[-0.5px] h-8 px-2"
+                      >
+                        Unlink
                       </Button>
-                    </div>)}
-                </div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Available Campaigns */}
-            {availableCampaigns.length > 0 && <>
-                <Separator />
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-sm">Available to Link</h4>
-                  <div className="space-y-2">
-                    {availableCampaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                        <div className="flex items-center gap-3">
-                          {(campaign.brand_logo_url || campaign.brands?.logo_url) && <img src={campaign.brand_logo_url || campaign.brands?.logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded object-cover" />}
-                          <div>
-                            <p className="font-medium text-sm">{campaign.title}</p>
-                            <p className="text-xs text-muted-foreground">{campaign.brand_name}</p>
-                          </div>
+            {availableCampaigns.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Available to Link</p>
+                <div className="space-y-2">
+                  {availableCampaigns.map(campaign => (
+                    <div key={campaign.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
+                          <img
+                            src={campaign.brand_logo_url || campaign.brands?.logo_url}
+                            alt={campaign.brand_name}
+                            className="w-7 h-7 rounded-md object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{campaign.title}</p>
+                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}</p>
                         </div>
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          onClick={() => handleLink(campaign.id)} 
-                          disabled={linkingCampaignId === campaign.id}
-                          className="bg-muted border-0"
-                        >
-                          <Link2 className="h-4 w-4 mr-1" />
-                          {linkingCampaignId === campaign.id ? 'Linking...' : 'Link'}
-                        </Button>
-                      </div>)}
-                  </div>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleLink(campaign.id)}
+                        disabled={linkingCampaignId === campaign.id}
+                        className="font-['Inter'] tracking-[-0.5px] h-8 px-3"
+                      >
+                        {linkingCampaignId === campaign.id ? 'Linking...' : 'Link'}
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              </>}
+              </div>
+            )}
 
-            <Separator />
-
-            {/* Danger Zone */}
-            <div className="space-y-3">
-              
-              <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full gap-2">
-                <Trash2 className="h-4 w-4" />
-                Delete Account
-              </Button>
-            </div>
+            {/* Delete Button */}
+            <Button
+              variant="ghost"
+              onClick={() => setShowDeleteDialog(true)}
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 font-['Inter'] tracking-[-0.5px]"
+            >
+              Delete Account
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -367,18 +472,19 @@ export function ManageAccountDialog({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-['Inter'] tracking-[-0.5px]">Delete this account?</AlertDialogTitle>
+            <AlertDialogDescription className="font-['Inter'] tracking-[-0.5px]">
               This will permanently delete this social account and all associated data. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogCancel className="font-['Inter'] tracking-[-0.5px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 font-['Inter'] tracking-[-0.5px]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>;
+    </>
+  );
 }

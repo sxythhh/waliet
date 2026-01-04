@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
+import { CampaignBudgetAdjustmentDialog } from "@/components/admin/CampaignBudgetAdjustmentDialog";
 
 interface Campaign {
   id: string;
@@ -708,10 +709,7 @@ export default function Campaigns() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setNewBudget(selectedCampaign.budget?.toString() || "");
-                      setBudgetDialogOpen(true);
-                    }}
+                    onClick={() => setBudgetDialogOpen(true)}
                     className="h-8 text-xs font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                   >
                     Adjust
@@ -914,51 +912,26 @@ export default function Campaigns() {
       </Sheet>
 
       {/* Budget Adjustment Dialog */}
-      <Dialog open={budgetDialogOpen} onOpenChange={setBudgetDialogOpen}>
-        <DialogContent className="sm:max-w-[360px]">
-          <DialogHeader>
-            <DialogTitle className="font-inter tracking-[-0.5px]">Adjust Budget</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                New Budget
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-inter tracking-[-0.5px]">$</span>
-                <Input
-                  type="number"
-                  value={newBudget}
-                  onChange={(e) => setNewBudget(e.target.value)}
-                  placeholder="0.00"
-                  className="pl-7 h-10 font-inter tracking-[-0.5px]"
-                />
-              </div>
-            </div>
-            {selectedCampaign?.budget_used && (
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                ${selectedCampaign.budget_used.toLocaleString()} already used
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setBudgetDialogOpen(false)}
-              className="font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateBudget}
-              disabled={isUpdating}
-              className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90"
-            >
-              {isUpdating ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {selectedCampaign && (
+        <CampaignBudgetAdjustmentDialog
+          open={budgetDialogOpen}
+          onOpenChange={setBudgetDialogOpen}
+          preselectedCampaign={{
+            id: selectedCampaign.id,
+            title: selectedCampaign.title,
+            brand_name: selectedCampaign.brand_name,
+            brand_logo_url: selectedCampaign.brand_logo_url,
+            budget: selectedCampaign.budget || 0,
+            budget_used: selectedCampaign.budget_used,
+            status: selectedCampaign.status,
+            is_infinite_budget: 'is_infinite_budget' in selectedCampaign ? selectedCampaign.is_infinite_budget : false,
+          }}
+          onSuccess={() => {
+            fetchCampaigns();
+            fetchBoosts();
+          }}
+        />
+      )}
 
       {/* Review Dialog */}
       <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>

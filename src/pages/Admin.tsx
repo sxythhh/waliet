@@ -20,6 +20,7 @@ import {
   LayersIcon,
   MessageCircleIcon,
   ShieldCheckIcon,
+  MailIcon,
   type AnimatedIconProps,
 } from "@/components/icons";
 
@@ -33,6 +34,7 @@ const ResourcesContent = lazy(() => import("./admin/Resources"));
 const TicketsContent = lazy(() => import("./admin/Tickets"));
 const PermissionsContent = lazy(() => import("./admin/Permissions"));
 const CampaignsContent = lazy(() => import("./admin/Campaigns"));
+const EmailsContent = lazy(() => import("./admin/Emails"));
 
 function TabLoader() {
   return (
@@ -61,6 +63,7 @@ const tabs: { id: string; label: string; icon: ComponentType<AnimatedIconProps> 
   { id: "finance", label: "Finance", icon: CurrencyDollarIcon },
   { id: "referrals", label: "Referrals", icon: UsersIcon },
   { id: "content", label: "Content", icon: LayersIcon },
+  { id: "emails", label: "Emails", icon: MailIcon },
   { id: "tickets", label: "Tickets", icon: MessageCircleIcon },
   { id: "permissions", label: "Permissions", icon: ShieldCheckIcon },
 ];
@@ -207,6 +210,12 @@ export default function Admin() {
           <TabsContent value="content" className="m-0 h-full">
             <Suspense fallback={<TabLoader />}>
               <ResourcesContent />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="emails" className="m-0 h-full">
+            <Suspense fallback={<TabLoader />}>
+              <EmailsContent />
             </Suspense>
           </TabsContent>
 

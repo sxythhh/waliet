@@ -1074,11 +1074,17 @@ export default function Finance() {
                     <div className="bg-muted/30 rounded-xl p-4 space-y-3">
                       <h4 className="text-sm font-medium text-muted-foreground">Payment Details</h4>
                       <div className="flex justify-between"><span className="text-sm text-muted-foreground">Method</span><Badge variant="secondary" className="capitalize">{selectedPayout.payout_method}</Badge></div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-muted-foreground">Address</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono truncate max-w-[150px]">{selectedPayout.payout_details?.address || selectedPayout.payout_details?.email || 'N/A'}</span>
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => copyToClipboard(selectedPayout.payout_details?.address || selectedPayout.payout_details?.email || '')}>
+                      {selectedPayout.payout_details?.network && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Network</span>
+                          <span className="text-sm font-medium capitalize">{selectedPayout.payout_details.network}</span>
+                        </div>
+                      )}
+                      <div className="space-y-1.5">
+                        <span className="text-sm text-muted-foreground">Wallet Address</span>
+                        <div className="flex items-center gap-2 bg-background/50 rounded-lg p-2">
+                          <code className="text-xs font-mono break-all flex-1">{selectedPayout.payout_details?.address || selectedPayout.payout_details?.email || 'N/A'}</code>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 flex-shrink-0" onClick={() => copyToClipboard(selectedPayout.payout_details?.address || selectedPayout.payout_details?.email || '')}>
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
                         </div>

@@ -481,8 +481,16 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
             </div>
           </div>
         ) : payoutMethods.length === 0 ? (
-          <div className="py-8 text-center">
+          <div className="py-8 text-center space-y-4">
             <p className="text-muted-foreground font-inter tracking-[-0.5px]">Please add a payout method first.</p>
+            <Button
+              variant="outline"
+              onClick={() => setAddMethodDialogOpen(true)}
+              className="font-inter tracking-[-0.5px]"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Payment Method
+            </Button>
           </div>
         ) : pendingWithdrawals > 0 ? (
           <div className="py-8 text-center">

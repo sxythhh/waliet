@@ -8,12 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check, Pencil, MapPin, Languages, Mail, RefreshCw, AtSign, ChevronsUpDown } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, MapPin, Languages, Mail, RefreshCw, AtSign, ChevronsUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
@@ -32,15 +31,8 @@ import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { PortfolioSection, PortfolioItem } from "@/components/dashboard/PortfolioSection";
 import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard, NotificationSettingsCard } from "@/components/dashboard/settings";
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { useTheme } from "@/components/ThemeProvider";
-import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-white.png";
-import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
-import instagramLogoBlack from "@/assets/instagram-logo-black.png";
-import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
-import emptyAccountsImage from "@/assets/empty-accounts.png";
-import demographicsIcon from "@/assets/demographics-icon.svg";
 import noAccountsIcon from "@/assets/no-accounts-icon.svg";
 import noAccountsIconBlack from "@/assets/no-accounts-icon-black.svg";
 interface Profile {
@@ -147,6 +139,8 @@ export function ProfileTab() {
     platform: string;
     username: string;
   } | null>(null);
+  const [showManageAccountDialog, setShowManageAccountDialog] = useState(false);
+  const [selectedAccountForManage, setSelectedAccountForManage] = useState<SocialAccount | null>(null);
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [originalUsername, setOriginalUsername] = useState('');
@@ -364,6 +358,7 @@ export function ProfileTab() {
       fetchSocialAccounts();
     }
   };
+
   const handleLinkCampaign = async (campaignId: string) => {
     if (!selectedAccountForLinking) return;
     setLinkingCampaign(true);
@@ -491,20 +486,6 @@ export function ProfileTab() {
   const getLinkedCampaign = (campaignId: string | null) => {
     if (!campaignId) return null;
     return joinedCampaigns.find(c => c.id === campaignId);
-  };
-  const getPlatformIcon = (platform: string) => {
-    const iconClass = "w-full h-full object-contain opacity-100";
-    const isLightMode = resolvedTheme === "light";
-    switch (platform.toLowerCase()) {
-      case "tiktok":
-        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
-      case "instagram":
-        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={iconClass} />;
-      case "youtube":
-        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={iconClass} />;
-      default:
-        return null;
-    }
   };
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -777,16 +758,23 @@ export function ProfileTab() {
               </div>
               <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
               <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
-            </div> : <SocialAccountsTable accounts={socialAccounts} onRefresh={fetchSocialAccounts} onDeleteAccount={handleDeleteAccount} onLinkCampaign={account => {
-          setSelectedAccountForLinking(account);
-          setShowLinkCampaignDialog(true);
-        }} onUnlinkCampaign={handleUnlinkCampaign} onVerifyAccount={account => {
-          setSelectedAccountForVerification(account);
-          setShowVerifyAccountDialog(true);
-        }} onSubmitDemographics={account => {
-          setSelectedAccountForDemographics(account);
-          setShowDemographicsDialog(true);
-        }} />}
+            </div> : <SocialAccountsTable
+              accounts={socialAccounts}
+              onRefresh={fetchSocialAccounts}
+              onManageAccount={account => {
+                setSelectedAccountForManage(account);
+                setShowManageAccountDialog(true);
+              }}
+              onUnlinkCampaign={handleUnlinkCampaign}
+              onVerifyAccount={account => {
+                setSelectedAccountForVerification(account);
+                setShowVerifyAccountDialog(true);
+              }}
+              onSubmitDemographics={account => {
+                setSelectedAccountForDemographics(account);
+                setShowDemographicsDialog(true);
+              }}
+            />}
         </CardContent>
       </Card>
 
@@ -944,6 +932,59 @@ export function ProfileTab() {
       setShowVerifyAccountDialog(open);
       if (!open) setSelectedAccountForVerification(null);
     }} onSuccess={fetchSocialAccounts} accountId={selectedAccountForVerification.id} platform={selectedAccountForVerification.platform} username={selectedAccountForVerification.username} />}
+
+      {/* Manage Account Dialog */}
+      {selectedAccountForManage && (
+        <ManageAccountDialog
+          open={showManageAccountDialog}
+          onOpenChange={open => {
+            setShowManageAccountDialog(open);
+            if (!open) setSelectedAccountForManage(null);
+          }}
+          account={{
+            id: selectedAccountForManage.id,
+            username: selectedAccountForManage.username,
+            platform: selectedAccountForManage.platform,
+            account_link: selectedAccountForManage.account_link,
+            follower_count: selectedAccountForManage.follower_count,
+            is_verified: selectedAccountForManage.is_verified,
+            hidden_from_public: selectedAccountForManage.hidden_from_public,
+          }}
+          demographicStatus={
+            selectedAccountForManage.demographic_submissions?.length
+              ? (selectedAccountForManage.demographic_submissions.sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                )[0]?.status as 'approved' | 'pending' | 'rejected')
+              : null
+          }
+          daysUntilNext={null}
+          lastSubmissionDate={
+            selectedAccountForManage.demographic_submissions?.length
+              ? selectedAccountForManage.demographic_submissions.sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                )[0]?.submitted_at
+              : null
+          }
+          nextSubmissionDate={null}
+          onUpdate={fetchSocialAccounts}
+          onSubmitDemographics={() => {
+            setSelectedAccountForDemographics({
+              id: selectedAccountForManage.id,
+              platform: selectedAccountForManage.platform,
+              username: selectedAccountForManage.username
+            });
+            setShowDemographicsDialog(true);
+          }}
+          onReconnect={() => {
+            setSelectedAccountForVerification({
+              id: selectedAccountForManage.id,
+              platform: selectedAccountForManage.platform,
+              username: selectedAccountForManage.username
+            });
+            setShowVerifyAccountDialog(true);
+          }}
+        />
+      )}
 
       {/* Link Campaign Dialog */}
       <Dialog open={showLinkCampaignDialog} onOpenChange={open => {

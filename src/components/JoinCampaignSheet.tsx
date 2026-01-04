@@ -569,11 +569,6 @@ export function JoinCampaignSheet({
             {/* Budget & RPM */}
             {!campaign.is_infinite_budget}
 
-            {/* Campaign Preview Button - only show if preview_url exists */}
-            {campaign.preview_url && <Button variant="outline" className="w-full h-12 bg-muted border-0 hover:bg-muted/60 transition-colors" onClick={() => window.open(campaign.preview_url!, '_blank')}>
-                <ArrowUp className="w-4 h-4 mr-2" />
-                <span className="font-medium">View Campaign Details</span>
-              </Button>}
 
             {/* Account Selection or Create Account - only show for campaigns requiring application */}
             {!isLoggedIn ? <div className="space-y-3">

@@ -13,6 +13,7 @@ export const ADMIN_RESOURCES = [
   { id: "permissions", name: "Permissions", description: "Manage admin permissions" },
   { id: "reports", name: "Reports", description: "View reports and disputes" },
   { id: "finance", name: "Finance", description: "Financial overview and transactions" },
+  { id: "emails", name: "Emails", description: "Email broadcasts and templates" },
 ] as const;
 
 export type AdminResource = typeof ADMIN_RESOURCES[number]["id"];
@@ -94,13 +95,13 @@ export const useAdminPermissions = () => {
     // Not an admin = no permission
     if (!isAdmin) return false;
 
-    // If no specific permissions are set, deny access (secure by default)
-    if (permissions.length === 0) return false;
+    // If no specific permissions are set, user has FULL access (unrestricted admin)
+    if (permissions.length === 0) return true;
 
     // Find the permission for this resource
     const permission = permissions.find(p => p.resource === resource);
 
-    // If no permission record exists for this resource, deny access
+    // If no permission record exists for this resource, deny access (restricted admin without this resource)
     if (!permission) return false;
 
     // Check the specific action
@@ -119,7 +120,9 @@ export const useAdminPermissions = () => {
   // Check if user can access any admin resource (for sidebar visibility)
   const canAccessAdmin = useCallback((): boolean => {
     if (!isAdmin) return false;
-    if (permissions.length === 0) return false; // No permissions = no access
+    // No permissions = full access (unrestricted admin)
+    if (permissions.length === 0) return true;
+    // Has permissions = check if any resource has view access
     return permissions.some(p => p.can_view);
   }, [isAdmin, permissions]);
 

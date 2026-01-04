@@ -49,6 +49,7 @@ interface TransactionsTableProps {
   maxItems?: number;
   maxHeight?: string;
   className?: string;
+  variant?: 'default' | 'compact';
 }
 
 export function TransactionsTable({
@@ -58,7 +59,8 @@ export function TransactionsTable({
   itemsPerPage = 10,
   maxItems,
   maxHeight,
-  className = ""
+  className = "",
+  variant = "default"
 }: TransactionsTableProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,6 +78,136 @@ export function TransactionsTable({
     );
   }
 
+  // Compact variant - simplified list view for dashboard home
+  if (variant === 'compact') {
+    return (
+      <div className={className}>
+        <div
+          className={`space-y-1 ${maxHeight ? 'overflow-auto' : ''}`}
+          style={maxHeight ? { maxHeight } : undefined}
+        >
+          {paginatedTransactions.map(transaction => {
+            const brandName = transaction.boost?.brand_name || transaction.campaign?.brand_name;
+            const brandLogo = transaction.boost?.brand_logo_url || transaction.campaign?.brand_logo_url;
+            const isOutgoing = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out';
+            const isTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_received';
+
+            return (
+              <div
+                key={transaction.id}
+                onClick={() => onTransactionClick?.(transaction)}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+              >
+                {/* Source Icon */}
+                <div className="flex-shrink-0">
+                  {brandLogo ? (
+                    <img src={brandLogo} alt={brandName || ''} className="w-9 h-9 rounded-lg object-cover" />
+                  ) : isTransfer && transaction.type === 'transfer_received' ? (
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={transaction.sender?.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs bg-muted">
+                        {(transaction.sender?.username || transaction.metadata?.sender_username || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : isTransfer && transaction.type === 'transfer_sent' ? (
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={transaction.recipient?.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs bg-muted">
+                        {(transaction.recipient?.username || transaction.metadata?.recipient_username || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {brandName ? brandName.charAt(0).toUpperCase() : '$'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Source Name & Date */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {brandName ||
+                      (transaction.type === 'transfer_received' ? `@${transaction.sender?.username || transaction.metadata?.sender_username}` :
+                      transaction.type === 'transfer_sent' ? `@${transaction.recipient?.username || transaction.metadata?.recipient_username}` :
+                      transaction.type === 'withdrawal' ? 'Withdrawal' :
+                      transaction.type === 'referral' ? 'Referral Bonus' :
+                      'Transaction')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {format(transaction.date, 'MMM d, yyyy')}
+                  </p>
+                </div>
+
+                {/* Status Icon */}
+                <div className="flex-shrink-0">
+                  {transaction.status === 'completed' && (
+                    <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Check className="h-3.5 w-3.5 text-green-500" />
+                    </div>
+                  )}
+                  {transaction.status === 'pending' && (
+                    <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <Clock className="h-3.5 w-3.5 text-orange-500" />
+                    </div>
+                  )}
+                  {transaction.status === 'in_transit' && (
+                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Hourglass className="h-3.5 w-3.5 text-blue-500" />
+                    </div>
+                  )}
+                  {transaction.status === 'rejected' && (
+                    <div className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center">
+                      <X className="h-3.5 w-3.5 text-red-500" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Amount */}
+                <div className="flex-shrink-0 text-right">
+                  <span className={`text-sm font-semibold ${isOutgoing ? 'text-foreground' : 'text-emerald-500'}`}>
+                    {isOutgoing ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pagination for compact */}
+        {showPagination && displayTransactions.length > itemsPerPage && (
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              {Math.min((currentPage - 1) * itemsPerPage + 1, displayTransactions.length)}-{Math.min(currentPage * itemsPerPage, displayTransactions.length)} of {displayTransactions.length}
+            </p>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="h-7 w-7 rounded-md"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={currentPage * itemsPerPage >= displayTransactions.length}
+                className="h-7 w-7 rounded-md"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Default table variant
   return (
     <div className={className}>
       <div

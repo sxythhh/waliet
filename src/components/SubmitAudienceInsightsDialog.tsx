@@ -9,7 +9,6 @@ import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, CheckCircle2, Clock, XCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
-import { AudienceInsightsGuidance } from "./AudienceInsightsGuidance";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -340,13 +339,6 @@ export function SubmitAudienceInsightsDialog({
           </div>
         )}
 
-        {/* Recording Guidance - expanded by default for first-time submitters */}
-        {!hasPendingSubmission && (
-          <AudienceInsightsGuidance
-            platform={platform}
-            defaultExpanded={previousSubmissions.length === 0}
-          />
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
 
