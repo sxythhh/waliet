@@ -387,11 +387,14 @@ export function ProfileTab() {
       return;
     }
     if (existingRecord?.status === "active") {
+      // Account is already linked - this is the desired state, so show success and refresh UI
       toast({
-        variant: "destructive",
-        title: "Already linked",
-        description: "This account is already linked to this campaign"
+        title: "Account linked",
+        description: "This account is connected to the campaign"
       });
+      fetchSocialAccounts();
+      setShowLinkCampaignDialog(false);
+      setSelectedAccountForLinking(null);
       setLinkingCampaign(false);
       return;
     }

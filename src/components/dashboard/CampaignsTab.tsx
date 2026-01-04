@@ -626,7 +626,7 @@ export function CampaignsTab({
       // 2. Get all linked social accounts before unlinking
       const {
         data: linkedAccounts
-      } = await supabase.from("social_account_campaigns").select("social_account_id, social_accounts(id)").eq("campaign_id", selectedCampaignId).eq("social_accounts.user_id", user.id);
+      } = await supabase.from("social_account_campaigns").select("social_account_id, social_accounts(id)").eq("campaign_id", selectedCampaignId).eq("user_id", user.id);
 
       // 3. Stop tracking in Shortimize for each linked account
       if (linkedAccounts && linkedAccounts.length > 0) {

@@ -54,7 +54,7 @@ export function ConnectedAccountsTab() {
           brand_name
         )
       `)
-      .eq("social_accounts.user_id", user.id)
+      .eq("user_id", user.id)
       .eq("status", "active")
       .order("connected_at", { ascending: false });
 

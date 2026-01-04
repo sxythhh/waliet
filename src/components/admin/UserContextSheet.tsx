@@ -125,7 +125,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
             demographic_submissions(status, tier1_percentage)
           `)
           .eq("user_id", userId)
-          .order("created_at", { ascending: false }),
+          .order("connected_at", { ascending: false }),
         supabase
           .from("wallet_transactions")
           .select("*")
