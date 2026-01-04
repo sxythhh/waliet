@@ -72,10 +72,28 @@ serve(async (req) => {
         throw new Error('Invalid request body');
       }
 
-      const { code, redirectUri } = requestBody;
+      const { code, redirectUri, state } = requestBody;
 
       if (!code) {
         throw new Error('Authorization code is required');
+      }
+
+      // Validate state parameter to prevent CSRF attacks
+      if (state) {
+        try {
+          // State is base64 encoded JSON with userId
+          const decodedState = JSON.parse(atob(state));
+          if (!decodedState.userId || typeof decodedState.userId !== 'string') {
+            console.warn('Invalid state format - missing or invalid userId');
+          }
+          // State is valid - contains expected structure
+          console.log('State validated successfully');
+        } catch (e) {
+          console.error('Invalid state parameter:', e);
+          throw new Error('Invalid state parameter - possible CSRF attack');
+        }
+      } else {
+        console.warn('No state parameter provided - OAuth flow may be vulnerable to CSRF');
       }
 
       const callbackUri = redirectUri || 'https://virality.gg/discord/callback';

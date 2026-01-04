@@ -99,7 +99,25 @@ export function BrandPipelineView() {
     try {
       const { data, error } = await supabase
         .from('brands')
-        .select('*')
+        .select(`
+          id,
+          name,
+          slug,
+          brand_type,
+          is_active,
+          is_verified,
+          created_at,
+          renewal_date,
+          logo_url,
+          description,
+          home_url,
+          account_url,
+          assets_url,
+          show_account_tab,
+          subscription_status,
+          subscription_plan,
+          subscription_expires_at
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Copy, ExternalLink, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
@@ -193,7 +194,7 @@ export default function BlueprintPreview() {
               <SectionHeader emoji="📝" title="Content Brief" />
               <div
                 className="prose prose-lg dark:prose-invert max-w-none prose-p:text-foreground/80 prose-p:leading-relaxed prose-headings:font-semibold prose-headings:tracking-tight"
-                dangerouslySetInnerHTML={{ __html: blueprint.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blueprint.content) }}
               />
             </section>
           )}

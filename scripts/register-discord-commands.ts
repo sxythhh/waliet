@@ -12,12 +12,15 @@
  */
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "1358316231341375518";
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
-if (!DISCORD_BOT_TOKEN) {
-  console.error("Error: DISCORD_BOT_TOKEN environment variable is required");
+if (!DISCORD_BOT_TOKEN || !DISCORD_CLIENT_ID) {
+  const missing = [];
+  if (!DISCORD_BOT_TOKEN) missing.push("DISCORD_BOT_TOKEN");
+  if (!DISCORD_CLIENT_ID) missing.push("DISCORD_CLIENT_ID");
+  console.error(`Error: ${missing.join(" and ")} environment variable(s) required`);
   console.log("\nUsage:");
-  console.log("  DISCORD_BOT_TOKEN=your_token npx ts-node scripts/register-discord-commands.ts");
+  console.log("  DISCORD_BOT_TOKEN=your_token DISCORD_CLIENT_ID=your_client_id npx ts-node scripts/register-discord-commands.ts");
   process.exit(1);
 }
 

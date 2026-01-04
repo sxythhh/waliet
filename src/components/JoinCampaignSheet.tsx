@@ -11,6 +11,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useTheme } from "@/components/ThemeProvider";
+import DOMPurify from "dompurify";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -534,7 +535,7 @@ export function JoinCampaignSheet({
                     {/* Main Content */}
                     {blueprint.content && <div className="prose prose-sm dark:prose-invert max-w-none">
                         <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-inter tracking-[-0.3px]" dangerouslySetInnerHTML={{
-                    __html: blueprint.content
+                    __html: DOMPurify.sanitize(blueprint.content)
                   }} />
                       </div>}
 

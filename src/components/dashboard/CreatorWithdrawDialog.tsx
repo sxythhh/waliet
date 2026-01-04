@@ -288,6 +288,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
           description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : selectedMethod.method === 'crypto' ? 'Crypto' : selectedMethod.method}`,
           metadata: {
             payout_method: selectedMethod.method,
+            payout_details: selectedMethod.details,
             network: selectedMethod.details.network || null,
             balance_before: balance_before,
             balance_after: balance_after

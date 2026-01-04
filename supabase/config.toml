@@ -145,7 +145,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.support-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.setup-slash-wallet]
 verify_jwt = true
@@ -157,7 +157,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.get-slash-accounts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.undo-transaction]
 verify_jwt = true

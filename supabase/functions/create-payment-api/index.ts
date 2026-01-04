@@ -99,26 +99,52 @@ async function verifySignature(
   return result === 0;
 }
 
-// Simple in-memory rate limiting (resets on function cold start)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+// Database-backed rate limiting (persists across cold starts)
 const RATE_LIMIT = 20; // requests per minute
-const RATE_WINDOW = 60 * 1000; // 1 minute in ms
+const RATE_WINDOW_SECONDS = 60; // 1 minute
 
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(identifier);
-  
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_WINDOW });
-    return true;
+async function checkRateLimit(supabase: any, identifier: string): Promise<{ allowed: boolean; remaining: number }> {
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - RATE_WINDOW_SECONDS * 1000);
+
+  // Clean up old entries and count recent requests in one query
+  const { data, error } = await supabase
+    .from('api_rate_limits')
+    .select('id, created_at')
+    .eq('api_key_hash', identifier)
+    .gte('created_at', windowStart.toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Rate limit check error:', error);
+    // Fail open but log the error - in production you might want to fail closed
+    return { allowed: true, remaining: RATE_LIMIT };
   }
-  
-  if (entry.count >= RATE_LIMIT) {
-    return false;
+
+  const currentCount = data?.length || 0;
+
+  if (currentCount >= RATE_LIMIT) {
+    return { allowed: false, remaining: 0 };
   }
-  
-  entry.count++;
-  return true;
+
+  // Record this request
+  await supabase
+    .from('api_rate_limits')
+    .insert({
+      api_key_hash: identifier,
+      endpoint: 'create-payment-api',
+    });
+
+  // Periodically clean up old entries (1 in 10 chance to avoid doing it every request)
+  if (Math.random() < 0.1) {
+    const cleanupTime = new Date(now.getTime() - RATE_WINDOW_SECONDS * 2 * 1000);
+    await supabase
+      .from('api_rate_limits')
+      .delete()
+      .lt('created_at', cleanupTime.toISOString());
+  }
+
+  return { allowed: true, remaining: RATE_LIMIT - currentCount - 1 };
 }
 
 Deno.serve(async (req) => {
@@ -132,7 +158,7 @@ Deno.serve(async (req) => {
     const signature = req.headers.get('x-signature');
     const timestamp = req.headers.get('x-timestamp');
     const expectedApiKey = Deno.env.get('VIRALITY_API_KEY');
-    
+
     // Basic API key check first
     if (!apiKey || apiKey !== expectedApiKey) {
       console.error('Invalid API key attempt');
@@ -142,12 +168,36 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Rate limiting check
-    if (!checkRateLimit(apiKey)) {
+    // Initialize Supabase client for rate limiting
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Hash the API key for storage (don't store raw keys)
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(apiKey);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', keyData);
+    const apiKeyHash = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .slice(0, 32); // Use first 32 chars
+
+    // Database-backed rate limiting check
+    const rateLimit = await checkRateLimit(supabase, apiKeyHash);
+    if (!rateLimit.allowed) {
       console.error('Rate limit exceeded for API key');
       return new Response(
         JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per minute.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': RATE_LIMIT.toString(),
+            'X-RateLimit-Remaining': '0',
+            'Retry-After': RATE_WINDOW_SECONDS.toString(),
+          }
+        }
       );
     }
 
@@ -165,10 +215,6 @@ Deno.serve(async (req) => {
         );
       }
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse and validate request body
     const body: PaymentRequest = JSON.parse(rawBody);

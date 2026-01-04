@@ -26,7 +26,15 @@ export function DiscordLinkDialog({
   const queryClient = useQueryClient();
   const isLinked = !!discordUsername;
   const handleLinkDiscord = () => {
-    const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID || '1358316231341375518';
+    const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
+    if (!DISCORD_CLIENT_ID) {
+      toast({
+        variant: "destructive",
+        title: "Configuration Error",
+        description: "Discord integration is not configured. Please contact support."
+      });
+      return;
+    }
     const REDIRECT_URI = `${window.location.origin}/discord/callback`;
     const STATE = btoa(JSON.stringify({
       userId
@@ -142,7 +150,7 @@ export function DiscordLinkDialog({
                   <div className="font-medium">{discordUsername}</div>
                   <div className="text-xs text-muted-foreground">Connected</div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={handleUnlinkDiscord} disabled={loading} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Button variant="ghost" size="icon" onClick={handleUnlinkDiscord} disabled={loading} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Unlink Discord account">
                   <Unlink className="h-4 w-4" />
                 </Button>
               </div>

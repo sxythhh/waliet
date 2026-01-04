@@ -880,6 +880,24 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 )}>
                   {selectedTransaction.amount >= 0 ? '+' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </p>
+                {/* Amount after fees for withdrawals */}
+                {selectedTransaction.type === 'withdrawal' && (() => {
+                  const amount = Math.abs(selectedTransaction.amount);
+                  const payoutMethod = selectedTransaction.metadata?.payout_method;
+                  // PayPal and UPI don't have processing fees
+                  if (payoutMethod === 'paypal' || payoutMethod === 'upi') return null;
+                  // Calculate fee: $1 + 0.75%
+                  const percentageFee = amount * 0.0075;
+                  const totalFee = percentageFee + 1;
+                  const netAmount = amount - totalFee;
+                  if (netAmount <= 0) return null;
+                  return (
+                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mt-1">
+                      After fees: <span className="text-foreground font-medium">${netAmount.toFixed(2)}</span>
+                      <span className="text-xs ml-1">(-${totalFee.toFixed(2)})</span>
+                    </p>
+                  );
+                })()}
               </div>
 
               {/* Details */}
@@ -937,6 +955,72 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                       </div>
                     </div>
                   )}
+
+                  {/* Crypto network for withdrawals */}
+                  {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.network && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Network</span>
+                      <span className="text-sm font-inter tracking-[-0.5px] capitalize">
+                        {selectedTransaction.metadata.network}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Payout method for withdrawals */}
+                  {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.payout_method && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Method</span>
+                      <span className="text-sm font-inter tracking-[-0.5px] capitalize">
+                        {selectedTransaction.metadata.payout_method === 'paypal' ? 'PayPal' : selectedTransaction.metadata.payout_method}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Payout destination address/email for withdrawals */}
+                  {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.payout_details && (() => {
+                    const details = selectedTransaction.metadata.payout_details;
+                    const method = selectedTransaction.metadata.payout_method;
+
+                    let label = 'Destination';
+                    let value = '';
+
+                    if (method === 'crypto' && details.address) {
+                      label = 'Wallet Address';
+                      value = details.address;
+                    } else if (method === 'paypal' && details.email) {
+                      label = 'PayPal Email';
+                      value = details.email;
+                    } else if (method === 'bank' && details.accountNumber) {
+                      label = 'Account';
+                      value = `${details.bankName || 'Bank'} ****${details.accountNumber.slice(-4)}`;
+                    } else if (method === 'wise' && details.email) {
+                      label = 'Wise Email';
+                      value = details.email;
+                    } else if (method === 'revolut' && details.email) {
+                      label = 'Revolut Email';
+                      value = details.email;
+                    } else if (method === 'upi' && details.upi_id) {
+                      label = 'UPI ID';
+                      value = details.upi_id;
+                    } else if (method === 'tips' && details.username) {
+                      label = 'TIPS Username';
+                      value = details.username;
+                    }
+
+                    if (!value) return null;
+
+                    return (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{label}</span>
+                        <button
+                          onClick={() => copyToClipboard(value)}
+                          className="text-sm font-mono text-foreground bg-muted/50 px-2 py-1.5 rounded-md hover:bg-muted transition-colors text-left break-all"
+                        >
+                          {value}
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   {selectedTransaction.metadata?.views && (
                     <div className="flex justify-between items-center">

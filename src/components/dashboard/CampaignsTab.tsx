@@ -1191,7 +1191,7 @@ export function CampaignsTab({
                       <span className="text-xs font-mono text-muted-foreground break-all">
                         {selectedTransaction.id}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" onClick={() => {
+                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" aria-label="Copy transaction ID" onClick={() => {
                     navigator.clipboard.writeText(selectedTransaction.id);
                     setCopiedId(true);
                     setTimeout(() => setCopiedId(false), 2000);

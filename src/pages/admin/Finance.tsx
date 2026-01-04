@@ -882,7 +882,7 @@ export default function Finance() {
                               </TableCell>
                               <TableCell className="py-3 text-right" onClick={e => e.stopPropagation()}>
                                 {!tx.metadata?.reversed && (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" onClick={() => handleUndoTransaction(tx.id)} disabled={undoingTransaction === tx.id}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" aria-label="Undo transaction" onClick={() => handleUndoTransaction(tx.id)} disabled={undoingTransaction === tx.id}>
                                     {undoingTransaction === tx.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
                                   </Button>
                                 )}

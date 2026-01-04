@@ -5,6 +5,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limiting: max requests per IP per time window
+const RATE_LIMIT_MAX = 60; // requests
+const RATE_LIMIT_WINDOW_SECONDS = 60; // 1 minute
+
+async function checkRateLimit(supabase: any, ipHash: string): Promise<{ allowed: boolean; remaining: number }> {
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000);
+
+  const { count, error } = await supabase
+    .from('link_clicks')
+    .select('id', { count: 'exact', head: true })
+    .eq('ip_hash', ipHash)
+    .gte('clicked_at', windowStart.toISOString());
+
+  if (error) {
+    console.error('Rate limit check error:', error);
+    // Fail open but log
+    return { allowed: true, remaining: RATE_LIMIT_MAX };
+  }
+
+  const currentCount = count || 0;
+  return {
+    allowed: currentCount < RATE_LIMIT_MAX,
+    remaining: Math.max(0, RATE_LIMIT_MAX - currentCount)
+  };
+}
+
 // Simple hash function for IP anonymization
 function hashIP(ip: string): string {
   let hash = 0;
@@ -72,9 +98,29 @@ Deno.serve(async (req) => {
     const shortCode = url.searchParams.get('code');
 
     if (!shortCode) {
-      return new Response('Missing code parameter', { 
+      return new Response('Missing code parameter', {
         status: 400,
-        headers: corsHeaders 
+        headers: corsHeaders
+      });
+    }
+
+    // Get IP for rate limiting early
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+               req.headers.get('cf-connecting-ip') ||
+               'unknown';
+    const ipHash = hashIP(ip);
+
+    // Check rate limit
+    const rateLimit = await checkRateLimit(supabase, ipHash);
+    if (!rateLimit.allowed) {
+      return new Response('Rate limit exceeded', {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Retry-After': RATE_LIMIT_WINDOW_SECONDS.toString(),
+          'X-RateLimit-Limit': RATE_LIMIT_MAX.toString(),
+          'X-RateLimit-Remaining': '0',
+        }
       });
     }
 
@@ -94,14 +140,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get visitor info
+    // Get visitor info (ip and ipHash already defined above for rate limiting)
     const userAgent = req.headers.get('user-agent') || '';
     const referrer = req.headers.get('referer') || '';
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-               req.headers.get('cf-connecting-ip') || 
-               'unknown';
-    
-    const ipHash = hashIP(ip);
     const { device, browser, os } = parseUserAgent(userAgent);
 
     // Try to get country from Cloudflare header

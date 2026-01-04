@@ -1,12 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsOptions } from '../_shared/cors.ts';
 
 const POSTHOG_API_KEY = Deno.env.get('POSTHOG_API_KEY');
-const POSTHOG_PROJECT_ID = Deno.env.get('POSTHOG_PROJECT_ID') || '79177';
+const POSTHOG_PROJECT_ID = Deno.env.get('POSTHOG_PROJECT_ID');
 const POSTHOG_HOST = 'https://us.i.posthog.com';
 
 interface InsightResult {
@@ -65,8 +61,10 @@ async function getInsight(shortId: string): Promise<InsightResult> {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -108,12 +106,15 @@ Deno.serve(async (req) => {
     }
 
     // Check if PostHog is configured
-    if (!POSTHOG_API_KEY) {
+    if (!POSTHOG_API_KEY || !POSTHOG_PROJECT_ID) {
+      const missing = [];
+      if (!POSTHOG_API_KEY) missing.push('POSTHOG_API_KEY');
+      if (!POSTHOG_PROJECT_ID) missing.push('POSTHOG_PROJECT_ID');
       return new Response(
         JSON.stringify({
           configured: false,
-          error: 'PostHog API key not configured',
-          message: 'Add POSTHOG_API_KEY to your Supabase secrets'
+          error: 'PostHog not fully configured',
+          message: `Add ${missing.join(' and ')} to your Supabase secrets`
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -145,6 +146,19 @@ Deno.serve(async (req) => {
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = now.toISOString().split('T')[0];
 
+    // Validate date format (YYYY-MM-DD) as defense-in-depth against SQL injection
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDateStr) || !dateRegex.test(endDateStr)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid date format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Escape single quotes in date strings (additional safety measure)
+    const safeStartDate = startDateStr.replace(/'/g, "''");
+    const safeEndDate = endDateStr.replace(/'/g, "''");
+
     // Query 1: Total pageviews and unique visitors
     const pageviewsQuery = `
       SELECT
@@ -152,8 +166,8 @@ Deno.serve(async (req) => {
         count(DISTINCT distinct_id) as unique_visitors
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
     `;
 
     // Query 2: Sessions count (using $session_id)
@@ -162,8 +176,8 @@ Deno.serve(async (req) => {
         count(DISTINCT properties.$session_id) as sessions
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
     `;
 
     // Query 3: Pageviews by day
@@ -174,8 +188,8 @@ Deno.serve(async (req) => {
         count(DISTINCT distinct_id) as unique_visitors
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
       GROUP BY date
       ORDER BY date ASC
     `;
@@ -187,8 +201,8 @@ Deno.serve(async (req) => {
         count() as views
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
       GROUP BY pathname
       ORDER BY views DESC
       LIMIT 10
@@ -201,8 +215,8 @@ Deno.serve(async (req) => {
         count() as count
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
       GROUP BY device
       ORDER BY count DESC
       LIMIT 5
@@ -215,8 +229,8 @@ Deno.serve(async (req) => {
         count() as count
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
       GROUP BY browser
       ORDER BY count DESC
       LIMIT 5
@@ -229,8 +243,8 @@ Deno.serve(async (req) => {
         count() as count
       FROM events
       WHERE event = '$pageview'
-        AND timestamp >= toDateTime('${startDateStr}')
-        AND timestamp <= toDateTime('${endDateStr} 23:59:59')
+        AND timestamp >= toDateTime('${safeStartDate}')
+        AND timestamp <= toDateTime('${safeEndDate} 23:59:59')
       GROUP BY country
       ORDER BY count DESC
       LIMIT 10
@@ -325,12 +339,13 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in posthog-analytics:', error);
+    // Return 200 with error so frontend can display the actual error message
     return new Response(
       JSON.stringify({
         configured: true,
         error: error.message || 'Failed to fetch analytics',
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

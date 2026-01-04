@@ -11,6 +11,7 @@ import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
 import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Trash2, PenLine } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
+import DOMPurify from "dompurify";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -402,7 +403,7 @@ export function BoostCard({
             {boost.blueprint_embed_url ? <iframe src={boost.blueprint_embed_url} className="w-full h-[400px] rounded-lg border" title="Boost directions" /> : boost.blueprint ? <div className="space-y-6">
                 {boost.blueprint.content && <div className="prose prose-sm dark:prose-invert max-w-none">
                     <div dangerouslySetInnerHTML={{
-                __html: boost.blueprint.content
+                __html: DOMPurify.sanitize(boost.blueprint.content)
               }} />
                   </div>}
                 
@@ -525,7 +526,7 @@ export function BoostCard({
                         </div>
                         
                         {/* Withdraw button - only for pending submissions */}
-                        {submission.status === "pending" && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleWithdrawSubmission(submission.id)}>
+                        {submission.status === "pending" && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10" aria-label="Withdraw submission" onClick={() => handleWithdrawSubmission(submission.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>}
                       </div>

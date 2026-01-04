@@ -370,7 +370,7 @@ export function BrandCampaignDetailView({
         {/* Header with title and campaign selector */}
         <div className="flex-shrink-0 flex items-center justify-between px-2 bg-background gap-2 sm:px-[15px] py-[8px]">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {onBack && <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
+            {onBack && <Button variant="ghost" size="icon" aria-label="Go back" onClick={onBack} className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
               </Button>}
             {/* Campaign/Boost Selector Dropdown */}

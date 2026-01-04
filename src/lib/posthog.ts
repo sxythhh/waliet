@@ -1,11 +1,20 @@
 import posthog from "posthog-js";
 
-// PostHog configuration - use env var with fallback
-export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || "phc_G6ikbkcGrPjMMh1IZng78xOD8P6TM1ffvsB392I7rZF";
+// PostHog configuration - requires env var (no hardcoded fallbacks for security)
+export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
 export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
+
+// Check if PostHog is configured
+export const isPostHogConfigured = (): boolean => {
+  return !!POSTHOG_KEY;
+};
 
 // Initialize PostHog (for use outside of React)
 export function initPostHog() {
+  if (!POSTHOG_KEY) {
+    console.warn('PostHog not configured: VITE_POSTHOG_KEY is missing');
+    return posthog;
+  }
   if (typeof window !== "undefined" && !posthog.__loaded) {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,

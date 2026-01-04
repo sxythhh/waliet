@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
+import DOMPurify from "dompurify";
 import tiktokIcon from "@/assets/tiktok-logo-white.png";
 import tiktokIconBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramIcon from "@/assets/instagram-logo-white.png";
@@ -443,7 +444,7 @@ export function CampaignDetailsDialog({
             overflowWrap: 'break-word',
             wordBreak: 'break-word'
           }} dangerouslySetInnerHTML={{
-            __html: blueprintContent
+            __html: DOMPurify.sanitize(blueprintContent)
           }} /> : <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px',

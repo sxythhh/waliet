@@ -90,7 +90,7 @@ function CreatorDetailPanel({ creator, open, onClose }: CreatorDetailPanelProps)
         <SheetHeader className="pb-4">
           <div className="flex items-center justify-between">
             <SheetTitle>Creator Profile</SheetTitle>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" aria-label="Close panel" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>

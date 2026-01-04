@@ -172,7 +172,9 @@ export function WalletTab() {
     content_languages: string[] | null;
     country: string | null;
     city: string | null;
-    show_location: boolean;
+    show_location: boolean | null;
+    show_total_earned: boolean | null;
+    show_joined_campaigns: boolean | null;
     bio: string | null;
     phone_number: string | null;
     total_earnings: number | null;
@@ -324,7 +326,7 @@ export function WalletTab() {
     // Fetch profile data with extended fields
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("id, full_name, username, content_styles, content_languages, country, city, show_location, bio, phone_number, total_earnings, trust_score, avatar_url, banner_url, created_at")
+      .select("id, full_name, username, content_styles, content_languages, country, city, show_location, show_total_earned, show_joined_campaigns, bio, phone_number, total_earnings, trust_score, avatar_url, banner_url, created_at")
       .eq("id", session.user.id)
       .single();
 
@@ -1503,7 +1505,19 @@ export function WalletTab() {
       <EditProfileDialog
         open={editProfileDialogOpen}
         onOpenChange={setEditProfileDialogOpen}
-        onSave={fetchOnboardingData}
+        profile={onboardingProfile ? {
+          id: onboardingProfile.id,
+          full_name: onboardingProfile.full_name,
+          bio: onboardingProfile.bio,
+          city: onboardingProfile.city,
+          country: onboardingProfile.country,
+          content_styles: onboardingProfile.content_styles,
+          content_languages: onboardingProfile.content_languages,
+          show_total_earned: onboardingProfile.show_total_earned,
+          show_location: onboardingProfile.show_location,
+          show_joined_campaigns: onboardingProfile.show_joined_campaigns
+        } : null}
+        onSuccess={fetchOnboardingData}
       />
 
       {/* Add Social Account Dialog */}
@@ -2011,7 +2025,7 @@ export function WalletTab() {
               }).length} payouts
                 </p>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50">
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50" aria-label="Previous page">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
@@ -2019,7 +2033,7 @@ export function WalletTab() {
                 if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
                 if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
                 return true;
-              }).length} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50">
+              }).length} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50" aria-label="Next page">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
