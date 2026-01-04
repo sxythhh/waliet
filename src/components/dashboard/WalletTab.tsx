@@ -1019,6 +1019,10 @@ export function WalletTab() {
             source = 'Wallet';
             destination = metadata?.brand_name ? `${metadata.brand_name} Wallet` : 'Brand Wallet';
             break;
+          case 'balance_correction':
+            source = 'Balance Adjustment';
+            destination = 'Wallet';
+            break;
         }
 
         // Determine transaction type

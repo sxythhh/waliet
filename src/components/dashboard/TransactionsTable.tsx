@@ -89,7 +89,7 @@ export function TransactionsTable({
           {paginatedTransactions.map(transaction => {
             const brandName = transaction.boost?.brand_name || transaction.campaign?.brand_name;
             const brandLogo = transaction.boost?.brand_logo_url || transaction.campaign?.brand_logo_url;
-            const isOutgoing = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out';
+            const isOutgoing = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0);
             const isTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_received';
 
             return (
@@ -133,6 +133,7 @@ export function TransactionsTable({
                       transaction.type === 'transfer_sent' ? `@${transaction.recipient?.username || transaction.metadata?.recipient_username}` :
                       transaction.type === 'withdrawal' ? 'Withdrawal' :
                       transaction.type === 'referral' ? 'Referral Bonus' :
+                      transaction.type === 'balance_correction' ? 'Balance Adjustment' :
                       'Transaction')}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -408,9 +409,14 @@ export function TransactionsTable({
 
                 {/* Amount */}
                 <TableCell className="py-4 text-right">
-                  <span className={transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? '' : 'text-emerald-500'}>
-                    {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
-                  </span>
+                  {(() => {
+                    const isDeduction = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0);
+                    return (
+                      <span className={isDeduction ? '' : 'text-emerald-500'}>
+                        {isDeduction ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                      </span>
+                    );
+                  })()}
                 </TableCell>
               </TableRow>
             ))}
