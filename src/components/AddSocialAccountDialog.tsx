@@ -76,7 +76,7 @@ function VerificationStep({
     }
   };
   const steps = [`Open the ${getPlatformLabel(platform)} app on your phone`, "Go to your profile", 'Tap "Edit profile"', "Add the verification code to your Bio field", 'Tap "Save" to confirm'];
-  return <div className="flex flex-col">
+  return <div className="flex flex-col px-6 pt-6 pb-5">
       {/* Header with account info */}
       <div className="pb-4 flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
@@ -153,17 +153,17 @@ function VerificationStep({
       </button>
 
       {/* Footer buttons */}
-      <div className="flex gap-2">
-        <Button variant="ghost" onClick={handleBack} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
+      <div className="flex flex-col-reverse sm:flex-row gap-2">
+        <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
           Cancel
         </Button>
-        <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
+        <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
           {isChecking ? <>
               <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
               Verifying...
             </> : cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : <>
               <Check className="h-4 w-4 mr-1.5" />
-              I've Added the Code
+              Verify
             </>}
         </Button>
       </div>
@@ -654,18 +654,18 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-border bg-muted/20 flex gap-3">
+            <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col-reverse sm:flex-row gap-3">
               <Button
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="h-10 px-5 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
+                className="w-full sm:w-auto h-10 px-5 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleContinueClick}
                 disabled={isContinuing || !username.trim()}
-                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.3px] text-sm"
+                className="w-full sm:w-auto sm:flex-1 h-10 rounded-xl font-inter tracking-[-0.3px] text-sm"
                 style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
               >
                 {isContinuing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
@@ -673,7 +673,7 @@ export function AddSocialAccountDialog({
             </div>
           </div> : step === "verification" ? <VerificationStep username={username} platform={selectedPlatform} verificationCode={verificationCode} copied={copied} isChecking={isChecking} cooldownRemaining={cooldownRemaining} getPlatformIcon={getPlatformIcon} getPlatformLabel={getPlatformLabel} handleCopyCode={handleCopyCode} handleBack={handleBack} handleCheckVerification={handleCheckVerification} handleSwitchToManual={handleSwitchToManual} /> :
       // Manual URL connection step
-      <div className="flex flex-col">
+      <div className="flex flex-col px-6 pt-6 pb-5">
             {/* Header */}
             <div className="pb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -715,12 +715,12 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Footer */}
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleBack} className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
+            <div className="flex flex-col-reverse sm:flex-row gap-2">
+              <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
                 <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Back
               </Button>
-              <Button onClick={handleSaveManualAccount} disabled={isSavingManual || !profileUrl.trim()} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+              <Button onClick={handleSaveManualAccount} disabled={isSavingManual || !profileUrl.trim()} className="w-full sm:w-auto sm:flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
                 {isSavingManual ? <>
                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                     Connecting...
