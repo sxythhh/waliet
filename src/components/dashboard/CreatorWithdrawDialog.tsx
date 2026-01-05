@@ -261,70 +261,21 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
     }
 
     try {
-      const balance_before = wallet.balance;
-      const balance_after = wallet.balance - amount;
-
-      // Create payout request
-      const { error: payoutError } = await supabase
-        .from("payout_requests")
-        .insert({
-          user_id: session.user.id,
+      // Use secure edge function for withdrawal
+      const { data, error } = await supabase.functions.invoke('request-withdrawal', {
+        body: {
           amount: amount,
           payout_method: selectedMethod.method,
-          payout_details: selectedMethod.details,
-          status: 'pending'
-        });
+          payout_details: selectedMethod.details
+        }
+      });
 
-      if (payoutError) throw payoutError;
+      if (error) {
+        throw new Error(error.message || 'Failed to submit payout request');
+      }
 
-      // Create wallet transaction
-      const { error: txnError } = await supabase
-        .from("wallet_transactions")
-        .insert({
-          user_id: session.user.id,
-          amount: -amount,
-          type: 'withdrawal',
-          status: 'pending',
-          description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : selectedMethod.method === 'crypto' ? 'Crypto' : selectedMethod.method}`,
-          metadata: {
-            payout_method: selectedMethod.method,
-            payout_details: selectedMethod.details,
-            network: selectedMethod.details.network || null,
-            balance_before: balance_before,
-            balance_after: balance_after
-          },
-          created_by: session.user.id
-        });
-
-      if (txnError) throw txnError;
-
-      // Update wallet balance
-      const { error: walletError } = await supabase
-        .from("wallets")
-        .update({
-          balance: wallet.balance - amount,
-          total_withdrawn: wallet.total_withdrawn + amount
-        })
-        .eq("id", wallet.id);
-
-      if (walletError) throw walletError;
-
-      // Send Discord notification
-      try {
-        await supabase.functions.invoke('notify-withdrawal', {
-          body: {
-            username: session.user.user_metadata?.username || 'Unknown',
-            email: session.user.email || 'Unknown',
-            amount: amount,
-            payout_method: selectedMethod.method,
-            payout_details: selectedMethod.details,
-            balance_before: balance_before,
-            balance_after: balance_after,
-            date: new Date().toISOString()
-          }
-        });
-      } catch (notifError) {
-        console.error('Failed to send Discord notification:', notifError);
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast({
