@@ -366,7 +366,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   return (
     <>
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-[420px] p-0 border-l border-border/50 bg-background">
+      <SheetContent width="md" className="w-full p-0 border-l border-border/50 bg-background">
         <ScrollArea className="h-full">
           {/* Header */}
           <div className="px-6 pt-6 pb-5 border-b border-border/50">
@@ -840,7 +840,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
 
     {/* Transaction Context Sheet */}
     <Sheet open={transactionContextOpen} onOpenChange={setTransactionContextOpen}>
-      <SheetContent className="w-full sm:max-w-md p-0 border-l border-border/50">
+      <SheetContent width="md" className="w-full p-0 border-l border-border/50">
         <ScrollArea className="h-full">
           {selectedTransaction && (
             <div className="p-6 space-y-6">

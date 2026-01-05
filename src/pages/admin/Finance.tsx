@@ -35,6 +35,20 @@ import { CampaignBudgetAdjustmentDialog } from "@/components/admin/CampaignBudge
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import {
+  AdminPageHeader,
+  AdminToolbar,
+  AdminEmptyState,
+  AdminButton,
+  AdminSearchInput,
+  AdminTabs,
+  TYPOGRAPHY,
+  PADDING,
+  BORDERS,
+  BACKGROUNDS,
+  TRANSITIONS,
+  TABLE,
+} from "@/components/admin/design-system";
 
 interface Transaction {
   id: string;
@@ -564,12 +578,12 @@ export default function Finance() {
     <AdminPermissionGuard resource="finance">
       <div className="h-full overflow-auto bg-background">
         {/* Header with Date Filter */}
-        <div className="bg-background border-b border-border/50">
-          <div className="p-6 space-y-4">
+        <div className={cn("bg-background border-b", BORDERS.default)}>
+          <div className={cn(PADDING.page, "space-y-4")}>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Finance</h1>
-                <p className="text-sm text-muted-foreground font-inter">Unified view of all financial activity</p>
+                <h1 className={TYPOGRAPHY.pageTitle}>Finance</h1>
+                <p className={cn(TYPOGRAPHY.caption, "mt-1")}>Unified view of all financial activity</p>
               </div>
               <div className="flex items-center gap-3">
                 {/* Budget Adjustment Button */}
@@ -671,26 +685,26 @@ export default function Finance() {
         {/* Pending Payouts Queue */}
         {pendingPayouts.length > 0 && (
           <div className="px-6 py-4">
-            <div className="bg-muted/30 rounded-2xl p-4">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
                 <div>
-                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Pending Payouts</h3>
-                  <p className="text-xs text-muted-foreground font-['Inter'] mt-0.5">{pendingPayouts.length} requests • ${stats.totalPendingAmount.toFixed(2)} total</p>
+                  <h3 className="text-sm font-semibold tracking-tight">Pending Payouts</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{pendingPayouts.length} requests • ${stats.totalPendingAmount.toFixed(2)} total</p>
                 </div>
                 <button
                   onClick={() => setPayoutQueueExpanded(!payoutQueueExpanded)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter']"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {payoutQueueExpanded ? "Hide" : "Show"}
                 </button>
               </div>
 
               {payoutQueueExpanded && (
-                <div className="space-y-2">
+                <div className="p-3 space-y-2">
                   {pendingPayouts.slice(0, 6).map(request => (
                     <div
                       key={request.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-card/50 hover:bg-card transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer border border-transparent hover:border-border/30"
                       onClick={() => { setSelectedPayout(request); setContextType('payout'); setContextOpen(true); }}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -744,79 +758,84 @@ export default function Finance() {
         )}
 
         {/* Filters */}
-        <div className="px-6 py-4 border-b border-border/50 bg-card/30">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* View Mode */}
-            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1">
-              {(['all', 'transactions', 'payouts'] as ViewMode[]).map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                    viewMode === mode ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {mode === 'all' ? 'All Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </button>
-              ))}
-            </div>
+        <div className="px-6 py-4">
+          <div className="bg-card border border-border/40 rounded-xl p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* View Mode */}
+              <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1 border border-border/30">
+                {(['all', 'transactions', 'payouts'] as ViewMode[]).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all tracking-tight",
+                      viewMode === mode ? "bg-card text-foreground shadow-sm border border-border/40" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {mode === 'all' ? 'All Activity' : mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </button>
+                ))}
+              </div>
 
-            {/* Search */}
-            <div className="flex-1 min-w-[200px] max-w-sm relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by user, email, campaign..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 h-9 bg-muted/30 border-0"
-              />
-              {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                </button>
+              <div className="h-6 w-px bg-border/40" />
+
+              {/* Search */}
+              <div className="flex-1 min-w-[200px] max-w-md relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by user, email, campaign..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-10 h-9 bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors">
+                    <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
+              </div>
+
+              {/* Type Filter (Transactions) */}
+              {viewMode !== 'payouts' && (
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                  <SelectTrigger className="w-[130px] h-9 bg-muted/40 border-0">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="earning">Earnings</SelectItem>
+                    <SelectItem value="withdrawal">Withdrawals</SelectItem>
+                    <SelectItem value="balance_correction">Corrections</SelectItem>
+                  </SelectContent>
+                </Select>
               )}
+
+              {/* Status Filter (Payouts) */}
+              {viewMode !== 'transactions' && (
+                <Select value={payoutStatusFilter} onValueChange={setPayoutStatusFilter}>
+                  <SelectTrigger className="w-[130px] h-9 bg-muted/40 border-0">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_transit">In Transit</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+
+              <span className="text-xs text-muted-foreground ml-auto">{combinedItems.length.toLocaleString()} items</span>
             </div>
-
-            {/* Type Filter (Transactions) */}
-            {viewMode !== 'payouts' && (
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-[130px] h-9 bg-muted/30 border-0">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="earning">Earnings</SelectItem>
-                  <SelectItem value="withdrawal">Withdrawals</SelectItem>
-                  <SelectItem value="balance_correction">Corrections</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Status Filter (Payouts) */}
-            {viewMode !== 'transactions' && (
-              <Select value={payoutStatusFilter} onValueChange={setPayoutStatusFilter}>
-                <SelectTrigger className="w-[130px] h-9 bg-muted/30 border-0">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_transit">In Transit</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
-            <span className="text-xs text-muted-foreground ml-auto">{combinedItems.length.toLocaleString()} items</span>
           </div>
         </div>
 
         {/* Main Table */}
-        <div className="p-6">
+        <div className="px-6 pb-6">
+          <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
               {loading ? (
-                <PageLoading />
+                <div className="p-8"><PageLoading /></div>
               ) : combinedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Wallet className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -826,13 +845,13 @@ export default function Finance() {
                 <>
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-border/50 hover:bg-transparent">
-                        <TableHead className="text-muted-foreground font-medium text-xs h-10">User</TableHead>
-                        <TableHead className="text-muted-foreground font-medium text-xs h-10">Date</TableHead>
-                        <TableHead className="text-muted-foreground font-medium text-xs h-10">Type</TableHead>
-                        <TableHead className="text-muted-foreground font-medium text-xs h-10 text-right">Amount</TableHead>
-                        <TableHead className="text-muted-foreground font-medium text-xs h-10">Status</TableHead>
-                        <TableHead className="text-muted-foreground font-medium text-xs h-10 text-right">Actions</TableHead>
+                      <TableRow className="border-b border-border/30 hover:bg-transparent bg-muted/30">
+                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">User</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Amount</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -842,7 +861,7 @@ export default function Finance() {
                           return (
                             <TableRow
                               key={`tx-${tx.id}`}
-                              className="border-b border-border/30 hover:bg-muted/30 cursor-pointer transition-colors"
+                              className={cn(TABLE.row, TABLE.rowHover, "cursor-pointer", TRANSITIONS.fast)}
                               onClick={() => { setSelectedTransaction(tx); setContextType('transaction'); setContextOpen(true); }}
                             >
                               <TableCell className="py-3">
@@ -894,7 +913,7 @@ export default function Finance() {
                           return (
                             <TableRow
                               key={`payout-${payout.id}`}
-                              className="border-b border-border/30 hover:bg-muted/30 cursor-pointer transition-colors"
+                              className={cn(TABLE.row, TABLE.rowHover, "cursor-pointer", TRANSITIONS.fast)}
                               onClick={() => { setSelectedPayout(payout); setContextType('payout'); setContextOpen(true); }}
                             >
                               <TableCell className="py-3">
@@ -972,6 +991,7 @@ export default function Finance() {
                   )}
                 </>
               )}
+          </div>
         </div>
 
         {/* Context Panel (Sheet) */}

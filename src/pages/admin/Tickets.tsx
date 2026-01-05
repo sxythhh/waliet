@@ -16,6 +16,12 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { PageLoading } from "@/components/ui/loading-bar";
 import {
+  TYPOGRAPHY,
+  BORDERS,
+  BACKGROUNDS,
+  TRANSITIONS,
+} from "@/components/admin/design-system";
+import {
   SupportTicket,
   TicketMessage,
   TicketStats,

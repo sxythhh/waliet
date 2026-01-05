@@ -14,6 +14,7 @@ export const ADMIN_RESOURCES = [
   { id: "reports", name: "Reports", description: "View reports and disputes" },
   { id: "finance", name: "Finance", description: "Financial overview and transactions" },
   { id: "emails", name: "Emails", description: "Email broadcasts and templates" },
+  { id: "tools", name: "Tools", description: "Internal productivity and team tools" },
 ] as const;
 
 export type AdminResource = typeof ADMIN_RESOURCES[number]["id"];

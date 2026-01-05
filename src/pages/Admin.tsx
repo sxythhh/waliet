@@ -1,9 +1,7 @@
-import { useState, useEffect, lazy, Suspense, ComponentType } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LogOut, Search } from "lucide-react";
+import { LogOut, Search, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
@@ -11,18 +9,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageLoading } from "@/components/ui/loading-bar";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import ghostLogoBlue from "@/assets/ghost-logo-blue.png";
-import {
-  GaugeIcon,
-  UsersIcon,
-  TargetIcon,
-  RocketIcon,
-  CurrencyDollarIcon,
-  LayersIcon,
-  MessageCircleIcon,
-  ShieldCheckIcon,
-  MailIcon,
-  type AnimatedIconProps,
-} from "@/components/icons";
+import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+// Material Icons
+import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
+import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
+import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
+import CampaignOutlined from "@mui/icons-material/CampaignOutlined";
+import AccountBalanceWalletOutlined from "@mui/icons-material/AccountBalanceWalletOutlined";
+import ShareOutlined from "@mui/icons-material/ShareOutlined";
+import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
+import MailOutlined from "@mui/icons-material/MailOutlined";
+import SupportAgentOutlined from "@mui/icons-material/SupportAgentOutlined";
+import AdminPanelSettingsOutlined from "@mui/icons-material/AdminPanelSettingsOutlined";
+import BuildOutlined from "@mui/icons-material/BuildOutlined";
+import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 
 // Lazy load tab content
 const OverviewContent = lazy(() => import("./admin/Overview"));
@@ -35,6 +38,7 @@ const TicketsContent = lazy(() => import("./admin/Tickets"));
 const PermissionsContent = lazy(() => import("./admin/Permissions"));
 const CampaignsContent = lazy(() => import("./admin/Campaigns"));
 const EmailsContent = lazy(() => import("./admin/Emails"));
+const ToolsContent = lazy(() => import("./admin/Tools"));
 
 function TabLoader() {
   return (
@@ -55,24 +59,128 @@ function TabLoader() {
   );
 }
 
-const tabs: { id: string; label: string; icon: ComponentType<AnimatedIconProps> }[] = [
-  { id: "overview", label: "Overview", icon: GaugeIcon },
-  { id: "users", label: "Users", icon: UsersIcon },
-  { id: "brands", label: "Brands", icon: TargetIcon },
-  { id: "campaigns", label: "Campaigns", icon: RocketIcon },
-  { id: "finance", label: "Finance", icon: CurrencyDollarIcon },
-  { id: "referrals", label: "Referrals", icon: UsersIcon },
-  { id: "content", label: "Content", icon: LayersIcon },
-  { id: "emails", label: "Emails", icon: MailIcon },
-  { id: "tickets", label: "Tickets", icon: MessageCircleIcon },
-  { id: "permissions", label: "Permissions", icon: ShieldCheckIcon },
+// Sidebar navigation items with Material icons
+const navItems = [
+  { id: "overview", label: "Overview", icon: DashboardOutlined },
+  { id: "users", label: "Users", icon: PeopleOutlined },
+  { id: "brands", label: "Brands", icon: BusinessOutlined },
+  { id: "campaigns", label: "Campaigns", icon: CampaignOutlined },
+  { id: "finance", label: "Finance", icon: AccountBalanceWalletOutlined },
+  { id: "referrals", label: "Referrals", icon: ShareOutlined },
+  { id: "content", label: "Content", icon: ArticleOutlined },
+  { id: "emails", label: "Emails", icon: MailOutlined },
+  { id: "tickets", label: "Tickets", icon: SupportAgentOutlined },
+  { id: "permissions", label: "Permissions", icon: AdminPanelSettingsOutlined },
+  { id: "tools", label: "Tools", icon: BuildOutlined },
 ];
+
+// Sidebar navigation component
+function AdminNav({
+  activeTab,
+  onNavigate,
+  onSearchOpen,
+  onSignOut,
+}: {
+  activeTab: string;
+  onNavigate: (tab: string) => void;
+  onSearchOpen: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <div className="flex flex-col h-full bg-[#0a0a0a]">
+      {/* Logo */}
+      <div className="h-14 flex items-center px-4 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6" />
+          <span className="font-geist font-bold tracking-tight text-[15px] text-white">VIRALITY</span>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="p-3">
+        <button
+          onClick={onSearchOpen}
+          className="w-full flex items-center gap-2 h-9 px-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-lg transition-colors text-left"
+        >
+          <SearchOutlined sx={{ fontSize: 16 }} className="text-white/30" />
+          <span className="text-[13px] text-white/30 flex-1">Search</span>
+          <kbd className="text-[11px] text-white/20 font-medium">⌘K</kbd>
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={cn(
+                "group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors relative",
+                isActive
+                  ? "bg-white/10 text-white"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
+              )}
+            >
+              <Icon
+                sx={{ fontSize: 18 }}
+                className={cn(
+                  "shrink-0 transition-colors",
+                  isActive ? "text-white" : "text-white/40 group-hover:text-white/60"
+                )}
+              />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-white/5">
+        <button
+          onClick={onSignOut}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+        >
+          <LogoutOutlined sx={{ fontSize: 18 }} />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Content renderer based on active tab
+function AdminContent({ activeTab }: { activeTab: string }) {
+  const content = {
+    overview: <OverviewContent />,
+    users: <UsersContent />,
+    brands: <BrandsContent />,
+    campaigns: <CampaignsContent />,
+    finance: <FinanceContent />,
+    referrals: <ReferralsContent />,
+    content: <ResourcesContent />,
+    emails: <EmailsContent />,
+    tickets: <TicketsContent />,
+    permissions: <PermissionsContent />,
+    tools: <ToolsContent />,
+  };
+
+  return (
+    <Suspense fallback={<TabLoader />}>
+      {content[activeTab as keyof typeof content] || <OverviewContent />}
+    </Suspense>
+  );
+}
 
 export default function Admin() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin, loading } = useAdminCheck();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const activeTab = searchParams.get("tab") || "overview";
 
@@ -99,8 +207,9 @@ export default function Admin() {
     navigate("/auth");
   };
 
-  const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+  const handleNavigate = (tab: string) => {
+    setSearchParams({ tab });
+    setMobileNavOpen(false);
   };
 
   if (loading) {
@@ -116,122 +225,63 @@ export default function Admin() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border px-6 py-3 flex items-center justify-between bg-card">
-        <div className="flex items-center gap-6">
-          {/* Logo + Wordmark */}
-          <div className="flex items-center gap-1">
-            <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover" />
-            <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
-          </div>
+    <div className="h-screen flex bg-background">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 flex-col shrink-0">
+        <AdminNav
+          activeTab={activeTab}
+          onNavigate={handleNavigate}
+          onSearchOpen={() => setSearchOpen(true)}
+          onSignOut={handleSignOut}
+        />
+      </aside>
 
-          {/* Search Input */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 h-9 px-3 w-64 bg-muted/40 hover:bg-muted/60 rounded-lg transition-colors text-left"
+      {/* Mobile Sidebar */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="w-72 p-0 border-0">
+          <AdminNav
+            activeTab={activeTab}
+            onNavigate={handleNavigate}
+            onSearchOpen={() => {
+              setMobileNavOpen(false);
+              setSearchOpen(true);
+            }}
+            onSignOut={handleSignOut}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => setMobileNavOpen(true)}
           >
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground flex-1">Search...</span>
-            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-border/50 bg-background/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-              <span className="text-xs">⌘</span>K
-            </kbd>
-          </button>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSignOut}
-          className="gap-2 text-muted-foreground hover:text-destructive"
-        >
-          <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline">Sign Out</span>
-        </Button>
-      </header>
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover" />
+            <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground">VIRALITY</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+        </header>
 
-      {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-border px-6 bg-card">
-          <TabsList className="h-12 bg-transparent gap-1 p-0">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="h-12 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent font-inter tracking-[-0.3px] text-sm"
-                >
-                  {/* Icon hidden but preserved: <Icon size={16} strokeWidth={2} /> */}
-                  {tab.label}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-        </div>
-
-        {/* Tab Content */}
-        <div className="flex-1 overflow-auto">
-          <TabsContent value="overview" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <OverviewContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="users" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <UsersContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="brands" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <BrandsContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="campaigns" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <CampaignsContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="finance" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <FinanceContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="referrals" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <ReferralsContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="content" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <ResourcesContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="emails" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <EmailsContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="tickets" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <TicketsContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="permissions" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <PermissionsContent />
-            </Suspense>
-          </TabsContent>
-        </div>
-      </Tabs>
+        {/* Content */}
+        <main className="flex-1 overflow-auto bg-background">
+          <AdminContent activeTab={activeTab} />
+        </main>
+      </div>
 
       <AdminSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
     </div>

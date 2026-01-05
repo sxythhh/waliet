@@ -185,3 +185,12 @@ verify_jwt = false
 
 [functions.push-discord-message]
 verify_jwt = false
+
+[functions.close-webhook]
+verify_jwt = false
+
+[functions.close-sync]
+verify_jwt = true
+
+[functions.close-crud]
+verify_jwt = true

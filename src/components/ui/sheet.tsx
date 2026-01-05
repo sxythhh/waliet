@@ -2,43 +2,94 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+
 const Sheet = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
 const SheetClose = SheetPrimitive.Close;
 const SheetPortal = SheetPrimitive.Portal;
-const SheetOverlay = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Overlay>, React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>>(({
-  className,
-  ...props
-}, ref) => <SheetPrimitive.Overlay className={cn("fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0", className)} {...props} ref={ref} />);
+
+const SheetOverlay = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Overlay
+    className={cn(
+      "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out",
+      "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+    ref={ref}
+  />
+));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
-const sheetVariants = cva("fixed z-50 gap-4 bg-background px-6 pb-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500", {
+
+// Sheet side variants (direction)
+const sheetSideVariants = cva(
+  [
+    "fixed z-50 gap-4 bg-background shadow-lg",
+    "transition ease-in-out",
+    "data-[state=open]:animate-in data-[state=closed]:animate-out",
+    "data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  ],
+  {
+    variants: {
+      side: {
+        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        bottom: "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+        right: "inset-y-0 right-0 h-full w-3/4 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+      },
+    },
+    defaultVariants: {
+      side: "right",
+    },
+  }
+);
+
+// Standardized sheet width variants
+const sheetWidthVariants = cva("", {
   variants: {
-    side: {
-      top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
-      bottom: "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-      left: "inset-y-0 left-0 h-full w-3/4 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
-      right: "inset-y-0 right-0 h-full w-3/4 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm"
-    }
+    width: {
+      sm: "sm:max-w-sm",      // 384px - Narrow panels
+      md: "sm:max-w-md",      // 448px - Standard panels
+      lg: "sm:max-w-lg",      // 512px - Wider panels
+      xl: "sm:max-w-xl",      // 576px - Large panels
+      "2xl": "sm:max-w-2xl",  // 672px - Extra large panels
+      full: "sm:max-w-full",  // Full width
+    },
   },
   defaultVariants: {
-    side: "right"
-  }
+    width: "md",
+  },
 });
-interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>, VariantProps<typeof sheetVariants> {}
-const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(({
-  side = "right",
-  className,
-  children,
-  ...props
-}, ref) => <SheetPortal>
-      <SheetOverlay />
-      <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({
-    side
-  }), "focus:outline-none focus:ring-0 border-0", className)} {...props}>
-        {children}
-        
-      </SheetPrimitive.Content>
-    </SheetPortal>);
+
+interface SheetContentProps
+  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
+    VariantProps<typeof sheetSideVariants>,
+    VariantProps<typeof sheetWidthVariants> {}
+
+const SheetContent = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Content>,
+  SheetContentProps
+>(({ side = "right", width = "md", className, children, ...props }, ref) => (
+  <SheetPortal>
+    <SheetOverlay />
+    <SheetPrimitive.Content
+      ref={ref}
+      className={cn(
+        sheetSideVariants({ side }),
+        (side === "left" || side === "right") && sheetWidthVariants({ width }),
+        "focus:outline-none focus:ring-0 border-0 px-6 pb-6",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </SheetPrimitive.Content>
+  </SheetPortal>
+));
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 const SheetHeader = ({
   className,

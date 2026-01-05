@@ -163,24 +163,26 @@ export function BrandPipelineView() {
   return (
     <>
       {/* Pipeline Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 min-h-[500px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 min-h-[500px]">
         {PIPELINE_STAGES.map((stage) => {
           const stageBrands = getBrandsByStage(stage.id);
           return (
             <div key={stage.id} className="flex flex-col">
               {/* Column Header */}
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3 border border-border bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">{stage.icon}</span>
-                  <span className="font-medium text-sm">{stage.label}</span>
+              <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm mb-3">
+                <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">{stage.icon}</span>
+                    <span className="font-semibold text-sm tracking-tight">{stage.label}</span>
+                  </div>
+                  <Badge variant="secondary" className="h-5 px-2 text-xs font-medium">
+                    {stageBrands.length}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs font-medium">
-                  {stageBrands.length}
-                </Badge>
               </div>
 
               {/* Column Content */}
-              <div className="flex-1 rounded-xl border-2 border-dashed border-border p-2 space-y-2 transition-colors hover:border-muted-foreground/30">
+              <div className="flex-1 bg-muted/20 rounded-xl border border-border/30 p-3 space-y-2.5 transition-colors">
                 {stageBrands.length === 0 ? (
                   <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                     No brands
@@ -235,7 +237,7 @@ function BrandCard({ brand, index, onClick }: BrandCardProps) {
   return (
     <div
       onClick={onClick}
-      className="group relative p-3 rounded-xl border cursor-pointer transition-all duration-200 bg-card hover:bg-muted/50 border-border"
+      className="group relative p-3 rounded-lg cursor-pointer transition-all duration-200 bg-card hover:bg-muted/50 border border-border/40 hover:border-border/60 shadow-sm hover:shadow"
       style={{
         animationDelay: `${index * 50}ms`,
         animation: 'fadeInUp 0.3s ease-out forwards',
@@ -243,9 +245,9 @@ function BrandCard({ brand, index, onClick }: BrandCardProps) {
     >
       <div className="flex items-start gap-3">
         {/* Logo */}
-        <Avatar className="h-10 w-10 rounded-lg border border-border transition-all duration-200 group-hover:scale-105">
+        <Avatar className="h-10 w-10 rounded-lg border border-border/40 transition-all duration-200 group-hover:scale-105">
           <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
-          <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
+          <AvatarFallback className="rounded-lg bg-muted/60 text-xs font-semibold">
             {brand.name.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -253,9 +255,9 @@ function BrandCard({ brand, index, onClick }: BrandCardProps) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <h4 className="font-medium text-sm truncate">{brand.name}</h4>
+            <h4 className="font-semibold text-sm truncate tracking-tight">{brand.name}</h4>
             {brand.is_verified && (
-              <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate">
@@ -266,8 +268,8 @@ function BrandCard({ brand, index, onClick }: BrandCardProps) {
 
       {/* Quick Stats */}
       {brand.subscription_plan && (
-        <div className="mt-2 pt-2 border-t border-border">
-          <Badge variant="outline" className="text-[10px] h-5 capitalize">
+        <div className="mt-2.5 pt-2.5 border-t border-border/30">
+          <Badge variant="outline" className="text-[10px] h-5 capitalize bg-primary/5 border-primary/20 text-primary">
             {brand.subscription_plan}
           </Badge>
         </div>
