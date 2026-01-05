@@ -725,7 +725,7 @@ export function ProfileTab() {
   if (loading || !profile) {
     return null;
   }
-  return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8">
+  return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8 bg-background">
       {/* Profile Header */}
       <Card className="bg-card border-0">
 
@@ -744,7 +744,7 @@ export function ProfileTab() {
       )}
 
       {/* Connected Accounts */}
-      <Card ref={connectedAccountsRef} className="bg-transparent border-0">
+      <Card ref={connectedAccountsRef} className="bg-background border-0">
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>

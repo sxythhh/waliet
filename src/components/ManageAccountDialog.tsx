@@ -294,127 +294,145 @@ export function ManageAccountDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="pb-0">
-            <DialogTitle className="font-['Inter'] tracking-[-0.5px]">Manage Account</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-5 pt-2">
-            {/* Account Info */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-background">
+        <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden max-h-[85vh]">
+          {/* Header with Account Info */}
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-muted dark:bg-muted/60 flex items-center justify-center flex-shrink-0">
                 {getPlatformIcon(account.platform)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold font-['Inter'] tracking-[-0.5px] truncate">{account.username}</p>
-                <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                  {formatFollowerCount(account.follower_count)
-                    ? `${formatFollowerCount(account.follower_count)} followers`
-                    : account.platform.charAt(0).toUpperCase() + account.platform.slice(1)
-                  }
-                  {account.is_verified ? ' • Verified' : ''}
-                </p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold font-inter tracking-[-0.5px] truncate">
+                    {account.username}
+                  </h2>
+                  {account.is_verified && (
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      Verified
+                    </span>
+                  )}
+                </div>
+                {formatFollowerCount(account.follower_count) && (
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                    {formatFollowerCount(account.follower_count)} followers
+                  </p>
+                )}
               </div>
             </div>
+          </div>
 
+          {/* Scrollable Content */}
+          <div className="px-6 pb-6 space-y-4 overflow-y-auto max-h-[calc(85vh-180px)]">
             {/* Quick Actions */}
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={onReconnect}
-                className="flex-1 font-['Inter'] tracking-[-0.5px]"
+                className="flex-1 h-10 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors text-sm font-medium font-inter tracking-[-0.3px]"
               >
                 Reconnect
-              </Button>
+              </button>
               {account.account_link && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={() => window.open(account.account_link!, '_blank')}
-                  className="flex-1 font-['Inter'] tracking-[-0.5px]"
+                  className="flex-1 h-10 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors text-sm font-medium font-inter tracking-[-0.3px]"
                 >
                   Open Profile
-                </Button>
+                </button>
               )}
             </div>
 
-            {/* Visibility Toggle */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-              <div className="space-y-0.5">
-                <Label className="font-['Inter'] tracking-[-0.5px] font-medium">Show on public profile</Label>
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                  {hiddenFromPublic ? "Hidden from visitors" : "Visible to visitors"}
-                </p>
+            {/* Settings Section */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Settings</p>
+
+              {/* Visibility Toggle */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/50 dark:bg-muted/30">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium font-inter tracking-[-0.3px]">Show on public profile</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                    {hiddenFromPublic ? "Hidden from visitors" : "Visible to visitors"}
+                  </p>
+                </div>
+                <Switch
+                  checked={!hiddenFromPublic}
+                  onCheckedChange={handleToggleVisibility}
+                />
               </div>
-              <Switch
-                checked={!hiddenFromPublic}
-                onCheckedChange={handleToggleVisibility}
-              />
             </div>
 
-            {/* Demographics Section */}
+            {/* Audience Insights Section */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Audience Insights</p>
+                <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Audience Insights</p>
                 {lastSubmissionDate && (
-                  <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                    Last: {format(new Date(lastSubmissionDate), "MMM d, yyyy")}
+                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                    Last: {format(new Date(lastSubmissionDate), "MMM d")}
                   </span>
                 )}
               </div>
 
               {demographicStatus === 'approved' && daysUntilNext !== null ? (
-                <Button variant="secondary" disabled className="w-full font-['Inter'] tracking-[-0.5px]">
-                  Next submission in {daysUntilNext} days
-                </Button>
+                <div className="p-3.5 rounded-xl bg-muted/50 dark:bg-muted/30 text-center">
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                    Next submission in <span className="font-medium text-foreground">{daysUntilNext} days</span>
+                  </p>
+                </div>
               ) : demographicStatus === 'pending' ? (
-                <Button variant="secondary" disabled className="w-full font-['Inter'] tracking-[-0.5px]">
-                  Pending Review
-                </Button>
+                <div className="p-3.5 rounded-xl bg-amber-500/10 text-center">
+                  <p className="text-sm text-amber-600 dark:text-amber-400 font-inter tracking-[-0.3px]">
+                    Pending Review
+                  </p>
+                </div>
               ) : (
-                <Button
+                <button
                   onClick={onSubmitDemographics}
-                  className="w-full font-['Inter'] tracking-[-0.5px]"
-                  variant={demographicStatus === 'rejected' ? 'destructive' : 'default'}
+                  className={`w-full h-10 rounded-xl text-sm font-medium font-inter tracking-[-0.3px] transition-colors ${
+                    demographicStatus === 'rejected'
+                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  }`}
                 >
                   {demographicStatus === 'rejected' ? 'Resubmit Insights' : 'Submit Insights'}
-                </Button>
+                </button>
               )}
             </div>
 
             {/* Connected Campaigns */}
             <div className="space-y-2">
-              <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Connected Campaigns</p>
+              <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Connected Campaigns</p>
               {loading ? (
-                <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Loading...</p>
+                <div className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Loading...</p>
+                </div>
               ) : connectedCampaigns.length === 0 ? (
-                <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">No campaigns connected</p>
+                <div className="p-4 rounded-xl bg-muted/30 dark:bg-muted/20 text-center">
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">No campaigns connected</p>
+                </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {connectedCampaigns.map(campaign => (
-                    <div key={campaign.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
+                    <div key={campaign.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 dark:bg-muted/30">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {(campaign.brand_logo_url || campaign.brands?.logo_url) ? (
                           <img
                             src={campaign.brand_logo_url || campaign.brands?.logo_url}
                             alt={campaign.brand_name}
-                            className="w-7 h-7 rounded-md object-cover flex-shrink-0"
+                            className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
                           />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-muted flex-shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <p className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{campaign.title}</p>
-                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}</p>
+                          <p className="text-sm font-medium font-inter tracking-[-0.3px] truncate">{campaign.title}</p>
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">{campaign.brand_name}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => handleUnlink(campaign.connection_id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 font-['Inter'] tracking-[-0.5px] h-8 px-2"
+                        className="text-xs font-medium text-destructive hover:text-destructive/80 font-inter tracking-[-0.3px] px-2 py-1"
                       >
                         Unlink
-                      </Button>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -424,46 +442,53 @@ export function ManageAccountDialog({
             {/* Available Campaigns */}
             {availableCampaigns.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Available to Link</p>
-                <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Available to Link</p>
+                <div className="space-y-1.5">
                   {availableCampaigns.map(campaign => (
-                    <div key={campaign.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {(campaign.brand_logo_url || campaign.brands?.logo_url) && (
+                    <div key={campaign.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 dark:bg-muted/30">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {(campaign.brand_logo_url || campaign.brands?.logo_url) ? (
                           <img
                             src={campaign.brand_logo_url || campaign.brands?.logo_url}
                             alt={campaign.brand_name}
-                            className="w-7 h-7 rounded-md object-cover flex-shrink-0"
+                            className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
                           />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-muted flex-shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <p className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{campaign.title}</p>
-                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}</p>
+                          <p className="text-sm font-medium font-inter tracking-[-0.3px] truncate">{campaign.title}</p>
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">{campaign.brand_name}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                      <button
                         onClick={() => handleLink(campaign.id)}
                         disabled={linkingCampaignId === campaign.id}
-                        className="font-['Inter'] tracking-[-0.5px] h-8 px-3"
+                        className="text-xs font-medium text-primary hover:text-primary/80 font-inter tracking-[-0.3px] px-2 py-1 disabled:opacity-50"
                       >
                         {linkingCampaignId === campaign.id ? 'Linking...' : 'Link'}
-                      </Button>
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+          </div>
 
-            {/* Delete Button */}
-            <Button
-              variant="ghost"
-              onClick={() => setShowDeleteDialog(true)}
-              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 font-['Inter'] tracking-[-0.5px]"
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-border/50 flex gap-3">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="flex-1 h-11 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors text-sm font-medium font-inter tracking-[-0.3px]"
             >
-              Delete Account
-            </Button>
+              Done
+            </button>
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="h-11 px-5 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors text-sm font-medium font-inter tracking-[-0.3px]"
+            >
+              Delete
+            </button>
           </div>
         </DialogContent>
       </Dialog>

@@ -328,9 +328,9 @@ export default function Dashboard() {
       <AppSidebar />
       
       {/* Main Content */}
-      <main className="flex-1 h-screen overflow-hidden flex flex-col">
+      <main className="flex-1 h-screen overflow-hidden flex flex-col bg-background">
         <div className={`
-          pt-14 md:pt-0 flex-1 overflow-y-auto pb-[50px] md:pb-0
+          pt-14 md:pt-0 flex-1 overflow-y-auto pb-[50px] md:pb-0 bg-background
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
           {renderContent()}

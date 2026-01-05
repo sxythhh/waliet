@@ -585,88 +585,104 @@ export function AddSocialAccountDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
         {step === "input" ? <div className="flex flex-col">
-            {/* Content */}
-            <div className="px-6 pt-6 pb-5 space-y-5">
-              {/* Platform Selection as Cards */}
-              <div className="space-y-3">
-                <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
-                  Select Platform
-                </Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4">
+              <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Connect Account</h2>
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
+                Select a platform to connect
+              </p>
+            </div>
+
+            {/* Platform Selection - Vertical List */}
+            <div className="px-6 pb-5">
+              <div className="space-y-2">
+                {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => {
+                  const isSelected = selectedPlatform === platform;
+                  return (
                     <button
                       key={platform}
                       onClick={() => setSelectedPlatform(platform)}
-                      className={`flex items-center justify-center p-3 rounded-xl transition-all ${
-                        selectedPlatform === platform
-                          ? 'ring-2'
-                          : 'bg-muted/30 hover:bg-muted/50'
+                      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-150 ${
+                        isSelected
+                          ? 'bg-primary/10 dark:bg-primary/15'
+                          : 'bg-muted/50 dark:bg-muted/30 hover:bg-muted/80 dark:hover:bg-muted/50'
                       }`}
-                      style={selectedPlatform === platform ? {
-                        backgroundColor: 'rgba(32, 97, 222, 0.1)',
-                        ringColor: '#2061de',
-                        '--tw-ring-color': '#2061de'
-                      } as React.CSSProperties : undefined}
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        selectedPlatform === platform ? '' : 'bg-muted/50'
-                      }`}
-                      style={selectedPlatform === platform ? {
-                        backgroundColor: 'rgba(32, 97, 222, 0.15)'
-                      } : undefined}
-                      >
+                      {/* Icon */}
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isSelected
+                          ? 'bg-primary/15 dark:bg-primary/20'
+                          : 'bg-white dark:bg-background'
+                      }`}>
                         {getPlatformIcon(platform, "h-5 w-5")}
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* Username Input */}
-              <div className="space-y-3">
-                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
-                  {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Your Username"}
-                </Label>
-                <div className="relative flex items-center">
-                  {showAtSymbol && (
-                    <div className="absolute left-0 h-12 w-12 rounded-l-xl bg-muted/50 flex items-center justify-center border-r border-border/30">
-                      <span className="text-muted-foreground text-base font-medium">@</span>
-                    </div>
-                  )}
-                  <Input
-                    id="username"
-                    placeholder={getPlaceholderText(selectedPlatform)}
-                    value={username}
-                    onChange={e => {
-                      const value = e.target.value;
-                      const sanitized = value.replace(/@/g, "").trim();
-                      setUsername(sanitized);
-                    }}
-                    className={`h-12 bg-muted/30 border-border/50 rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-1 focus-visible:ring-primary/50 ${showAtSymbol ? 'pl-14' : 'pl-4'}`}
-                  />
-                </div>
-                {username.includes('@') && (
-                  <p className="text-[11px] text-amber-500 font-inter tracking-[-0.5px]">
-                    The @ symbol will be removed automatically
-                  </p>
-                )}
+                      {/* Platform name */}
+                      <span className={`text-sm font-medium font-inter tracking-[-0.3px] flex-1 text-left ${
+                        isSelected ? 'text-foreground' : 'text-foreground/80'
+                      }`}>
+                        {getPlatformLabel(platform)}
+                      </span>
+
+                      {/* Radio indicator */}
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                        isSelected
+                          ? 'border-primary bg-primary'
+                          : 'border-muted-foreground/30 dark:border-muted-foreground/40'
+                      }`}>
+                        {isSelected && (
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
+            {/* Username Input */}
+            <div className="px-6 pb-5 space-y-2.5">
+              <Label htmlFor="username" className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
+                {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
+              </Label>
+              <div className="relative flex items-center">
+                {showAtSymbol && (
+                  <div className="absolute left-0 h-12 w-12 rounded-l-xl bg-muted/80 dark:bg-muted/50 flex items-center justify-center">
+                    <span className="text-muted-foreground text-base font-medium">@</span>
+                  </div>
+                )}
+                <Input
+                  id="username"
+                  placeholder={getPlaceholderText(selectedPlatform)}
+                  value={username}
+                  onChange={e => {
+                    const value = e.target.value;
+                    const sanitized = value.replace(/@/g, "").trim();
+                    setUsername(sanitized);
+                  }}
+                  className={`h-12 bg-muted/50 dark:bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-2 focus-visible:ring-primary/30 ${showAtSymbol ? 'pl-14' : 'pl-4'}`}
+                />
+              </div>
+              {username.includes('@') && (
+                <p className="text-xs text-amber-500 font-inter tracking-[-0.3px]">
+                  The @ symbol will be removed automatically
+                </p>
+              )}
+            </div>
+
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col-reverse sm:flex-row gap-3">
+            <div className="px-6 py-4 border-t border-border/50 flex gap-3">
               <Button
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="w-full sm:w-auto h-10 px-5 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
+                className="flex-1 h-11 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleContinueClick}
                 disabled={isContinuing || !username.trim()}
-                className="w-full sm:w-auto sm:flex-1 h-10 rounded-xl font-inter tracking-[-0.3px] text-sm"
-                style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                className="flex-1 h-11 rounded-xl font-inter tracking-[-0.3px] text-sm bg-primary hover:bg-primary/90"
               >
                 {isContinuing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
               </Button>

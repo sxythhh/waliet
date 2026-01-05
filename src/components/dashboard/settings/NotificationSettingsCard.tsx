@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Mail, MessageCircle } from "lucide-react";
 
 interface NotificationPreferences {
   // Email preferences
@@ -158,16 +157,14 @@ export function NotificationSettingsCard() {
         </p>
       </div>
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4 text-muted-foreground" />
+        <div className="w-14 flex justify-center">
           <Switch
             checked={preferences[emailKey]}
             onCheckedChange={(checked) => updatePreference(emailKey, checked)}
           />
         </div>
         {discordKey && (
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-4 h-4 text-muted-foreground" />
+          <div className="w-14 flex justify-center">
             <Switch
               checked={preferences[discordKey]}
               onCheckedChange={(checked) => updatePreference(discordKey, checked)}

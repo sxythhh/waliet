@@ -5,10 +5,15 @@ import { Calendar, Camera, Plus, Link2, Check } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-white.png";
-import xLogo from "@/assets/x-logo.png";
+import { useTheme } from "@/components/ThemeProvider";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
+import xLogoDark from "@/assets/x-logo.png";
+import xLogoLight from "@/assets/x-logo-light.png";
 import defaultProfileBanner from "@/assets/default-profile-banner.png";
 
 interface SocialAccount {
@@ -47,6 +52,7 @@ export function DashboardProfileHeader({
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   const handleCopyProfileUrl = async () => {
     const profileUrl = `${window.location.origin}/@${profile.username}`;
@@ -62,15 +68,16 @@ export function DashboardProfileHeader({
 
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
+    const isDark = resolvedTheme === "dark";
     switch (platform) {
       case "instagram":
-        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
+        return <img src={isDark ? instagramLogoWhite : instagramLogoBlack} alt="Instagram" className={iconClass} />;
       case "youtube":
-        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+        return <img src={isDark ? youtubeLogoWhite : youtubeLogoBlack} alt="YouTube" className={iconClass} />;
       case "tiktok":
-        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+        return <img src={isDark ? tiktokLogoWhite : tiktokLogoBlack} alt="TikTok" className={iconClass} />;
       case "x":
-        return <img src={xLogo} alt="X" className={iconClass} />;
+        return <img src={isDark ? xLogoDark : xLogoLight} alt="X" className={iconClass} />;
       default:
         return null;
     }
@@ -301,28 +308,26 @@ export function DashboardProfileHeader({
           )}
 
           {/* Connected Accounts */}
-          <div className="flex flex-wrap items-center gap-3 mt-4">
+          <div className="flex flex-wrap items-center gap-2 mt-4">
             {socialAccounts.map((account) => (
               <button
                 key={account.id}
                 onClick={() => account.account_link && window.open(account.account_link, "_blank")}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border hover:bg-muted transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors"
               >
                 {getPlatformIcon(account.platform)}
-                <span className="text-sm font-['Inter'] tracking-[-0.5px] text-foreground">
+                <span className="text-sm font-medium font-['Inter'] tracking-[-0.3px] text-foreground">
                   {account.username}
                 </span>
               </button>
             ))}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={onAddAccount}
-              className="rounded-full gap-1.5 font-['Inter'] tracking-[-0.5px]"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
             >
               <Plus className="h-4 w-4" />
-              Add
-            </Button>
+              <span className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Add</span>
+            </button>
           </div>
 
           {/* Join Date */}
