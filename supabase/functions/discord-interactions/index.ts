@@ -455,7 +455,7 @@ async function handleBalanceCommand(supabase: any, discordId: string) {
   return componentResponse(embed, [buttons], true);
 }
 
-async function handleCampaignsCommand(supabase: any, discordId: string, page = 0, status = "active") {
+async function handleCampaignsCommand(supabase: any, discordId: string, page = 0, status = "active", isUpdate = false) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -615,10 +615,14 @@ async function handleCampaignsCommand(supabase: any, discordId: string, page = 0
   ]);
   components.push(actionButtons);
 
+  // Use updateResponse for button interactions (pagination), componentResponse for slash commands
+  if (isUpdate) {
+    return updateResponse(embed, components);
+  }
   return componentResponse(embed, components, true);
 }
 
-async function handleStatsCommand(supabase: any, discordId: string, period = "all") {
+async function handleStatsCommand(supabase: any, discordId: string, period = "all", isUpdate = false) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -753,6 +757,10 @@ async function handleStatsCommand(supabase: any, discordId: string, period = "al
   ]);
   components.push(actionButtons);
 
+  // Use updateResponse for button interactions, componentResponse for slash commands
+  if (isUpdate) {
+    return updateResponse(embed, components);
+  }
   return componentResponse(embed, components, true);
 }
 
@@ -785,7 +793,7 @@ async function handleLinkCommand(discordId: string) {
   return componentResponse(embed, [buttons], true);
 }
 
-async function handleLeaderboardCommand(supabase: any, discordId: string, page = 0) {
+async function handleLeaderboardCommand(supabase: any, discordId: string, page = 0, isUpdate = false) {
   const PAGE_SIZE = 10;
   const offset = page * PAGE_SIZE;
 
@@ -919,6 +927,12 @@ async function handleLeaderboardCommand(supabase: any, discordId: string, page =
   ]);
   components.push(actionButtons);
 
+  // Use updateResponse for button interactions (pagination), componentResponse for slash commands
+  if (isUpdate) {
+    console.log(`handleLeaderboardCommand: Returning UPDATE_MESSAGE (type 7) for page ${page}`);
+    return updateResponse(embed, components);
+  }
+  console.log(`handleLeaderboardCommand: Returning CHANNEL_MESSAGE_WITH_SOURCE (type 4) for page ${page}`);
   return componentResponse(embed, components);
 }
 
@@ -1794,10 +1808,14 @@ async function handleComponentInteraction(supabase: any, interaction: any) {
   const discordId = interaction.member?.user?.id || interaction.user?.id;
   const componentType = interaction.data.component_type;
 
-  console.log(`Handling component interaction: ${customId}, type: ${componentType}`);
+  console.log(`=== COMPONENT INTERACTION ===`);
+  console.log(`customId: ${customId}`);
+  console.log(`componentType: ${componentType}`);
+  console.log(`discordId: ${discordId}`);
 
   // Parse custom_id format: "action:param1:param2:..."
   const [action, ...params] = customId.split(":");
+  console.log(`Parsed action: ${action}, params: ${JSON.stringify(params)}`);
 
   // Handle select menu for campaign submission
   if (componentType === ComponentType.STRING_SELECT) {
@@ -1852,23 +1870,52 @@ async function handleComponentInteraction(supabase: any, interaction: any) {
 
   // Handle button interactions
   if (componentType === ComponentType.BUTTON) {
-    // Refresh handlers
+    // Refresh handlers - use isUpdate=true to edit existing message instead of creating new one
     if (action === "refresh") {
       const [target, ...extraParams] = params;
 
-      switch (target) {
-        case "balance":
-          return handleBalanceCommand(supabase, discordId);
-        case "campaigns":
-          const campPage = parseInt(extraParams[0] || "0");
-          const campStatus = extraParams[1] || "active";
-          return handleCampaignsCommand(supabase, discordId, campPage, campStatus);
-        case "stats":
-          const statsPeriod = extraParams[0] || "all";
-          return handleStatsCommand(supabase, discordId, statsPeriod);
-        case "leaderboard":
-          const lbPage = parseInt(extraParams[0] || "0");
-          return handleLeaderboardCommand(supabase, discordId, lbPage);
+      try {
+        switch (target) {
+          case "balance":
+            return handleBalanceCommand(supabase, discordId);
+          case "campaigns": {
+            const campPage = parseInt(extraParams[0] || "0");
+            const campStatus = extraParams[1] || "active";
+            return handleCampaignsCommand(supabase, discordId, campPage, campStatus, true);
+          }
+          case "stats": {
+            const statsPeriod = extraParams[0] || "all";
+            return handleStatsCommand(supabase, discordId, statsPeriod, true);
+          }
+          case "leaderboard": {
+            const lbPage = parseInt(extraParams[0] || "0");
+            return handleLeaderboardCommand(supabase, discordId, lbPage, true);
+          }
+          default: {
+            console.log(`Unknown refresh target: ${target}`);
+            return jsonResponse({
+              type: InteractionResponseType.UPDATE_MESSAGE,
+              data: {
+                content: `Unknown refresh target: ${target}`,
+                embeds: [],
+                components: [],
+              },
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Refresh error for ${target}:`, error);
+        return jsonResponse({
+          type: InteractionResponseType.UPDATE_MESSAGE,
+          data: {
+            embeds: [createEmbed({
+              title: "❌ Error",
+              description: "Failed to refresh. Please try again.",
+              color: Colors.ERROR,
+            })],
+            components: [],
+          },
+        });
       }
     }
 
@@ -1876,20 +1923,68 @@ async function handleComponentInteraction(supabase: any, interaction: any) {
     if (action === "page") {
       const [target, pageStr, ...extraParams] = params;
       const page = parseInt(pageStr || "0");
+      console.log(`Pagination: target=${target}, page=${page}, isUpdate=true`);
 
-      switch (target) {
-        case "campaigns":
-          const status = extraParams[0] || "active";
-          return handleCampaignsCommand(supabase, discordId, page, status);
-        case "leaderboard":
-          return handleLeaderboardCommand(supabase, discordId, page);
+      try {
+        switch (target) {
+          case "campaigns": {
+            const status = extraParams[0] || "active";
+            console.log(`Returning UPDATE_MESSAGE for campaigns page ${page}`);
+            return handleCampaignsCommand(supabase, discordId, page, status, true);
+          }
+          case "leaderboard": {
+            console.log(`Returning UPDATE_MESSAGE for leaderboard page ${page}`);
+            return handleLeaderboardCommand(supabase, discordId, page, true);
+          }
+          default: {
+            console.log(`Unknown pagination target: ${target}`);
+            // Return UPDATE_MESSAGE with error to avoid creating new message
+            return jsonResponse({
+              type: InteractionResponseType.UPDATE_MESSAGE,
+              data: {
+                content: `Unknown pagination target: ${target}`,
+                embeds: [],
+                components: [],
+              },
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Pagination error for ${target}:`, error);
+        // Return UPDATE_MESSAGE even on error to avoid spam
+        return jsonResponse({
+          type: InteractionResponseType.UPDATE_MESSAGE,
+          data: {
+            embeds: [createEmbed({
+              title: "❌ Error",
+              description: "Failed to load page. Please try again.",
+              color: Colors.ERROR,
+            })],
+            components: [],
+          },
+        });
       }
     }
 
-    // Stats period selector
+    // Stats period selector - use isUpdate=true to edit existing message
     if (action === "stats") {
-      const period = params[0] || "all";
-      return handleStatsCommand(supabase, discordId, period);
+      try {
+        const period = params[0] || "all";
+        return handleStatsCommand(supabase, discordId, period, true);
+      } catch (error) {
+        console.error("Stats handler error:", error);
+        return jsonResponse({
+          type: InteractionResponseType.UPDATE_MESSAGE,
+          data: {
+            embeds: [createEmbed({
+              title: "❌ Error",
+              description: "Failed to load stats. Please try again.",
+              color: Colors.ERROR,
+            })],
+            components: [],
+          },
+        });
+      }
     }
 
     // Withdraw handlers
@@ -1955,7 +2050,20 @@ async function handleComponentInteraction(supabase: any, interaction: any) {
     }
   }
 
-  console.log(`Unknown component interaction: ${customId}`);
+  console.log(`Unknown component interaction: ${customId}, componentType: ${componentType}`);
+
+  // For button interactions, return UPDATE_MESSAGE to prevent creating new messages
+  if (componentType === ComponentType.BUTTON) {
+    return jsonResponse({
+      type: InteractionResponseType.UPDATE_MESSAGE,
+      data: {
+        content: "This button is not yet supported.",
+        embeds: [],
+        components: [],
+      },
+    });
+  }
+
   return textResponse("This interaction is not yet supported.", true);
 }
 
