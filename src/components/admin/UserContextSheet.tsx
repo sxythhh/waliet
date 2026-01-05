@@ -880,21 +880,18 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 )}>
                   {selectedTransaction.amount >= 0 ? '+' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </p>
-                {/* Amount after fees for withdrawals */}
-                {selectedTransaction.type === 'withdrawal' && (() => {
+                {/* Amount after fees for crypto withdrawals (1% + $1 fee) */}
+                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.payout_method === 'crypto' && (() => {
                   const amount = Math.abs(selectedTransaction.amount);
-                  const payoutMethod = selectedTransaction.metadata?.payout_method;
-                  // PayPal and UPI don't have processing fees
-                  if (payoutMethod === 'paypal' || payoutMethod === 'upi') return null;
-                  // Calculate fee: $1 + 0.75%
-                  const percentageFee = amount * 0.0075;
+                  // Calculate fee: 1% + $1
+                  const percentageFee = amount * 0.01;
                   const totalFee = percentageFee + 1;
                   const netAmount = amount - totalFee;
                   if (netAmount <= 0) return null;
                   return (
                     <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mt-1">
                       After fees: <span className="text-foreground font-medium">${netAmount.toFixed(2)}</span>
-                      <span className="text-xs ml-1">(-${totalFee.toFixed(2)})</span>
+                      <span className="text-xs ml-1">(-${totalFee.toFixed(2)} fee)</span>
                     </p>
                   );
                 })()}

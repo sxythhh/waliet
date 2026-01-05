@@ -189,7 +189,9 @@ export default function AdminUsers() {
 
     try {
       // Check if we need to search across ALL users (for post-query filters)
-      const needsFullScan = filters.hasSocialAccount !== null ||
+      // Include search in needsFullScan because we need to search social account usernames client-side
+      const needsFullScan = debouncedSearch ||
+                           filters.hasSocialAccount !== null ||
                            filters.hasApprovedDemographics !== null ||
                            filters.hasBrandRole !== null ||
                            filters.campaign !== "all" ||
@@ -261,7 +263,7 @@ export default function AdminUsers() {
         social_accounts (id, platform, username, follower_count, demographic_submissions (status))
       `, { count: "exact" });
 
-      query = applyDatabaseFilters(query);
+      query = applyDatabaseFilters(query, true); // Skip search - will be applied client-side to include social accounts
       query = query.order("created_at", { ascending: false });
       query = query.range(offset, offset + BATCH_SIZE - 1);
 
@@ -286,6 +288,17 @@ export default function AdminUsers() {
 
     // Apply client-side filters
     let filtered = allUsers;
+
+    // Search filter - check profile fields AND social account usernames
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      filtered = filtered.filter(u =>
+        u.username?.toLowerCase().includes(term) ||
+        u.full_name?.toLowerCase().includes(term) ||
+        u.email?.toLowerCase().includes(term) ||
+        u.social_accounts?.some(acc => acc.username?.toLowerCase().includes(term))
+      );
+    }
 
     // Social account filter
     if (filters.hasSocialAccount === true) {
@@ -361,9 +374,9 @@ export default function AdminUsers() {
     setTotalCount(filtered.length);
   };
 
-  const applyDatabaseFilters = (query: any) => {
-    // Search filter
-    if (debouncedSearch) {
+  const applyDatabaseFilters = (query: any, skipSearch = false) => {
+    // Search filter - skip when doing full scan (search will be applied client-side to include social accounts)
+    if (debouncedSearch && !skipSearch) {
       const term = debouncedSearch.toLowerCase();
       query = query.or(`username.ilike.%${term}%,full_name.ilike.%${term}%,email.ilike.%${term}%`);
     }
