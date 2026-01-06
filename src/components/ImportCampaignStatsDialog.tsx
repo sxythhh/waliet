@@ -148,37 +148,75 @@ export function ImportCampaignStatsDialog({
           }
 
           try {
+            // Detect CSV format based on column count
+            // New format (12 cols): account, account_link, platform, amount_of_videos_tracked, outperforming_video_rate, average_engagement_rate, total_views, total_likes, total_comments, average_video_views, posts_last_7_days, last_tracked
+            // Old format (10 cols): account, account_link, platform, amount_of_videos_tracked, average_engagement_rate, total_views, total_likes, total_comments, posts_last_7_days, last_tracked
+            const isNewFormat = values.length >= 12;
+
+            // Column indices based on format
+            const cols = isNewFormat ? {
+              account: 0,
+              account_link: 1,
+              platform: 2,
+              amount_of_videos_tracked: 3,
+              outperforming_video_rate: 4,
+              average_engagement_rate: 5,
+              total_views: 6,
+              total_likes: 7,
+              total_comments: 8,
+              average_video_views: 9,
+              posts_last_7_days: 10,
+              last_tracked: 11,
+            } : {
+              account: 0,
+              account_link: 1,
+              platform: 2,
+              amount_of_videos_tracked: 3,
+              outperforming_video_rate: -1, // Not present in old format
+              average_engagement_rate: 4,
+              total_views: 5,
+              total_likes: 6,
+              total_comments: 7,
+              average_video_views: -1, // Not present in old format
+              posts_last_7_days: 8,
+              last_tracked: 9,
+            };
+
             // Parse posts_last_7_days JSON, handling escaped quotes
             let postsLast7Days = null;
-            if (values[8] && values[8].trim()) {
+            const postsValue = values[cols.posts_last_7_days];
+            if (postsValue && postsValue.trim()) {
               try {
-                postsLast7Days = JSON.parse(values[8]);
+                postsLast7Days = JSON.parse(postsValue);
               } catch (jsonError) {
-                console.error("Error parsing JSON for posts_last_7_days:", values[8], jsonError);
+                console.error("Error parsing JSON for posts_last_7_days:", postsValue, jsonError);
               }
             }
 
-            // CSV columns: account, account_link, platform, amount_of_videos_tracked, average_engagement_rate, total_views, total_likes, total_comments, posts_last_7_days, last_tracked
-            const amountOfVideosTracked = values[3] || '0';
-            const totalViews = parseInt(values[5]) || 0;
-            const totalLikes = parseInt(values[6]) || 0;
-            const totalComments = parseInt(values[7]) || 0;
+            const amountOfVideosTracked = values[cols.amount_of_videos_tracked] || '0';
+            const totalViews = parseInt(values[cols.total_views]) || 0;
+            const totalLikes = parseInt(values[cols.total_likes]) || 0;
+            const totalComments = parseInt(values[cols.total_comments]) || 0;
             const totalVideos = parseInt(amountOfVideosTracked) || 0;
+            const outperformingRate = cols.outperforming_video_rate >= 0 ? (parseFloat(values[cols.outperforming_video_rate]) || 0) : 0;
+            const avgVideoViews = cols.average_video_views >= 0
+              ? (parseFloat(values[cols.average_video_views]) || 0)
+              : (totalVideos > 0 ? Math.round(totalViews / totalVideos) : 0);
 
             const record = {
               campaign_id: campaignId,
-              account_username: values[0] || '',
-              account_link: values[1] || null,
-              platform: values[2] || 'unknown',
+              account_username: values[cols.account] || '',
+              account_link: values[cols.account_link] || null,
+              platform: values[cols.platform] || 'unknown',
               total_videos: totalVideos,
               total_views: totalViews,
               total_likes: totalLikes,
               total_comments: totalComments,
-              average_engagement_rate: parseFloat(values[4]) || 0,
-              outperforming_video_rate: 0,
-              average_video_views: totalVideos > 0 ? Math.round(totalViews / totalVideos) : 0,
+              average_engagement_rate: parseFloat(values[cols.average_engagement_rate]) || 0,
+              outperforming_video_rate: outperformingRate,
+              average_video_views: avgVideoViews,
               posts_last_7_days: postsLast7Days,
-              last_tracked: parseDate(values[9]),
+              last_tracked: parseDate(values[cols.last_tracked]),
               amount_of_videos_tracked: amountOfVideosTracked,
               start_date: format(startDate, 'yyyy-MM-dd'),
               end_date: format(endDate, 'yyyy-MM-dd')
@@ -380,7 +418,7 @@ export function ImportCampaignStatsDialog({
               </p>
             )}
             <p className="text-xs text-white/40 mt-2">
-              Expected format: account, account_link, platform, amount_of_videos_tracked, average_engagement_rate, total_views, total_likes, total_comments, posts_last_7_days, last_tracked
+              Supports both formats: 12-column (with outperforming_video_rate, average_video_views) and 10-column (legacy)
             </p>
           </div>
           
