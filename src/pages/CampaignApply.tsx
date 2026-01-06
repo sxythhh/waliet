@@ -446,17 +446,19 @@ export default function CampaignApply() {
           data: existingLink
         } = await supabase.from("social_account_campaigns").select("id, status").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
         if (!existingLink) {
-          await supabase.from("social_account_campaigns").insert({
+          const { error: linkError } = await supabase.from("social_account_campaigns").insert({
             social_account_id: accountId,
             campaign_id: campaign.id,
             user_id: user.id,
             status: 'active'
           });
+          if (linkError) throw linkError;
         } else if (existingLink.status !== 'active') {
-          await supabase.from("social_account_campaigns").update({
+          const { error: updateError } = await supabase.from("social_account_campaigns").update({
             status: 'active',
             disconnected_at: null
           }).eq("id", existingLink.id);
+          if (updateError) throw updateError;
         }
         submissionsCreated++;
         submittedAccountsData.push({
