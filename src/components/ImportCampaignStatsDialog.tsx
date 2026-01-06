@@ -158,13 +158,13 @@ export function ImportCampaignStatsDialog({
               }
             }
 
-            // CSV columns: account, account_link, platform, amount_of_videos_tracked, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked
+            // CSV columns: account, account_link, platform, amount_of_videos_tracked, average_engagement_rate, total_views, total_likes, total_comments, posts_last_7_days, last_tracked
             const amountOfVideosTracked = values[3] || '0';
-            const totalViews = parseInt(values[4]) || 0;
-            const totalLikes = parseInt(values[5]) || 0;
-            const totalComments = parseInt(values[6]) || 0;
+            const totalViews = parseInt(values[5]) || 0;
+            const totalLikes = parseInt(values[6]) || 0;
+            const totalComments = parseInt(values[7]) || 0;
             const totalVideos = parseInt(amountOfVideosTracked) || 0;
-            
+
             const record = {
               campaign_id: campaignId,
               account_username: values[0] || '',
@@ -174,7 +174,7 @@ export function ImportCampaignStatsDialog({
               total_views: totalViews,
               total_likes: totalLikes,
               total_comments: totalComments,
-              average_engagement_rate: parseFloat(values[7]) || 0,
+              average_engagement_rate: parseFloat(values[4]) || 0,
               outperforming_video_rate: 0,
               average_video_views: totalVideos > 0 ? Math.round(totalViews / totalVideos) : 0,
               posts_last_7_days: postsLast7Days,
@@ -380,7 +380,7 @@ export function ImportCampaignStatsDialog({
               </p>
             )}
             <p className="text-xs text-white/40 mt-2">
-              Expected format: account, account_link, platform, total_videos, total_views, total_likes, total_comments, average_engagement_rate, posts_last_7_days, last_tracked, amount_of_videos_tracked
+              Expected format: account, account_link, platform, amount_of_videos_tracked, average_engagement_rate, total_views, total_likes, total_comments, posts_last_7_days, last_tracked
             </p>
           </div>
           
