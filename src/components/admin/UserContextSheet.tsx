@@ -4,6 +4,16 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +21,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -101,6 +112,15 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   // Transaction context state
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [transactionContextOpen, setTransactionContextOpen] = useState(false);
+
+  // IP ban state
+  const [showIpBanDialog, setShowIpBanDialog] = useState(false);
+  const [ipBanReason, setIpBanReason] = useState("");
+  const [userIpAddresses, setUserIpAddresses] = useState<string[]>([]);
+  const [isBanningIp, setIsBanningIp] = useState(false);
+
+  // Impersonation state
+  const [isImpersonating, setIsImpersonating] = useState(false);
 
   useEffect(() => {
     if (user && open) {
@@ -315,6 +335,117 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied");
+  };
+
+  const handleOpenIpBanDialog = async () => {
+    if (!user) return;
+
+    // Fetch user's IP addresses from sessions
+    const { data: sessions } = await supabase
+      .from("user_sessions")
+      .select("ip_address")
+      .eq("user_id", user.id)
+      .not("ip_address", "is", null);
+
+    const uniqueIps = [...new Set(sessions?.map(s => s.ip_address).filter(Boolean) || [])];
+    setUserIpAddresses(uniqueIps);
+    setIpBanReason("");
+    setShowIpBanDialog(true);
+  };
+
+  const handleIpBan = async () => {
+    if (!user || userIpAddresses.length === 0) return;
+
+    setIsBanningIp(true);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      // Insert IP bans for all user's IPs
+      const ipBans = userIpAddresses.map(ip => ({
+        ip_address: ip,
+        user_id: user.id,
+        banned_by: currentUser?.id,
+        reason: ipBanReason || `Banned via admin panel for user @${user.username}`,
+        is_active: true,
+      }));
+
+      const { error: ipError } = await supabase
+        .from("ip_bans")
+        .upsert(ipBans, { onConflict: "ip_address" });
+
+      if (ipError) throw ipError;
+
+      // Also ban the user account
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          banned_at: new Date().toISOString(),
+          ban_reason: ipBanReason || "IP banned by admin",
+        })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
+
+      toast.success(`Banned ${userIpAddresses.length} IP address(es) and user account`);
+      setShowIpBanDialog(false);
+      onUserUpdated?.();
+    } catch (error) {
+      console.error("Error banning IP:", error);
+      toast.error("Failed to ban IP addresses");
+    } finally {
+      setIsBanningIp(false);
+    }
+  };
+
+  const handleImpersonate = async () => {
+    if (!user?.email) {
+      toast.error("User has no email address");
+      return;
+    }
+
+    setIsImpersonating(true);
+    try {
+      // Generate a magic link for the user
+      const { data, error } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: user.email,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.properties?.action_link) {
+        // Open the magic link in a new tab
+        window.open(data.properties.action_link, "_blank");
+        toast.success(`Impersonating @${user.username} in new tab`);
+      } else {
+        throw new Error("No action link generated");
+      }
+    } catch (error: any) {
+      console.error("Error impersonating user:", error);
+      // Fallback: try using the edge function if admin API is not available
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke("admin-impersonate", {
+          body: { user_id: user.id },
+        });
+
+        if (fnError) throw fnError;
+
+        if (data?.url) {
+          window.open(data.url, "_blank");
+          toast.success(`Impersonating @${user.username} in new tab`);
+        } else {
+          throw new Error("No impersonation URL returned");
+        }
+      } catch (fallbackError) {
+        console.error("Fallback impersonation failed:", fallbackError);
+        toast.error("Impersonation not available. Contact developer to enable admin API.");
+      }
+    } finally {
+      setIsImpersonating(false);
+    }
   };
 
   const getTypeLabel = (type: string) => {
@@ -709,6 +840,21 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                       className="h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                     >
                       View Profile
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleImpersonate}
+                      disabled={isImpersonating || !user.email}
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-500"
+                    >
+                      {isImpersonating ? "Loading..." : "Impersonate"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleOpenIpBanDialog}
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-red-500/10 hover:bg-red-500/20 text-red-500"
+                    >
+                      IP Ban
                     </Button>
                   </div>
                 </section>
@@ -1117,6 +1263,80 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
         </ScrollArea>
       </SheetContent>
     </Sheet>
+
+    {/* IP Ban Dialog */}
+    <AlertDialog open={showIpBanDialog} onOpenChange={setShowIpBanDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="font-inter tracking-[-0.5px]">
+            Ban User & IP Addresses
+          </AlertDialogTitle>
+          <AlertDialogDescription className="font-inter tracking-[-0.5px]">
+            This will ban the user account and block all associated IP addresses from accessing the platform.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* User info */}
+          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user?.avatar_url || ''} alt={user?.username} />
+              <AvatarFallback className="text-sm">
+                {(user?.username || 'U')[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium font-inter tracking-[-0.5px]">@{user?.username}</p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{user?.email}</p>
+            </div>
+          </div>
+
+          {/* IP addresses */}
+          <div>
+            <p className="text-sm font-medium font-inter tracking-[-0.5px] mb-2">
+              IP Addresses to ban ({userIpAddresses.length})
+            </p>
+            {userIpAddresses.length > 0 ? (
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {userIpAddresses.map((ip) => (
+                  <div key={ip} className="text-xs font-mono bg-muted/30 px-2 py-1.5 rounded">
+                    {ip}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                No IP addresses found for this user
+              </p>
+            )}
+          </div>
+
+          {/* Ban reason */}
+          <div>
+            <p className="text-sm font-medium font-inter tracking-[-0.5px] mb-2">
+              Reason (optional)
+            </p>
+            <Textarea
+              value={ipBanReason}
+              onChange={(e) => setIpBanReason(e.target.value)}
+              placeholder="Enter reason for ban..."
+              className="h-20 resize-none font-inter tracking-[-0.5px] text-sm"
+            />
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleIpBan}
+            disabled={isBanningIp || userIpAddresses.length === 0}
+            className="bg-red-500 hover:bg-red-600 font-inter tracking-[-0.5px]"
+          >
+            {isBanningIp ? "Banning..." : "Ban User & IPs"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </>
   );
 }
