@@ -15,10 +15,20 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Authenticate the requesting user
-    const authHeader = req.headers.get('Authorization');
+    // Get auth header - try both Authorization and apikey
+    let authHeader = req.headers.get('Authorization');
+
+    // If no auth header, check if there's a bearer token in the apikey header (some clients do this)
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      const apiKey = req.headers.get('apikey');
+      if (apiKey && apiKey !== supabaseAnonKey) {
+        authHeader = `Bearer ${apiKey}`;
+      }
+    }
+
+    if (!authHeader) {
+      console.error('No authorization header found');
+      return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -32,11 +42,14 @@ Deno.serve(async (req) => {
     const { data: { user: adminUser }, error: authError } = await userClient.auth.getUser();
 
     if (authError || !adminUser) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('Auth error:', authError?.message || 'No user found');
+      return new Response(JSON.stringify({ error: 'Authentication failed', details: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('Authenticated admin user:', adminUser.email);
 
     // Create service role client
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -51,6 +64,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (profileError || !adminProfile?.is_admin) {
+      console.error('Admin check failed:', profileError?.message, 'is_admin:', adminProfile?.is_admin);
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -71,6 +85,7 @@ Deno.serve(async (req) => {
     const { data: targetUser, error: targetError } = await supabase.auth.admin.getUserById(user_id);
 
     if (targetError || !targetUser?.user?.email) {
+      console.error('Target user not found:', targetError?.message);
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
