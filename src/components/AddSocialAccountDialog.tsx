@@ -76,96 +76,100 @@ function VerificationStep({
     }
   };
   const steps = [`Open the ${getPlatformLabel(platform)} app on your phone`, "Go to your profile", 'Tap "Edit profile"', "Add the verification code to your Bio field", 'Tap "Save" to confirm'];
-  return <div className="flex flex-col px-6 pt-6 pb-5">
-      {/* Header with account info */}
-      <div className="pb-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-          {getPlatformIcon(platform, "h-5 w-5")}
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">@{username}</h2>
-          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{getPlatformLabel(platform)}</p>
-        </div>
-      </div>
-
-      {/* Verification Code Box */}
-      <div className="pb-4">
-        <div className="bg-muted/20 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Your verification code</span>
-            <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
-              {copied ? <>
-                  <Check className="h-3.5 w-3.5" />
-                  Copied
-                </> : <>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </>}
-            </button>
+  return <div className="flex flex-col max-h-[85vh]">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4">
+        {/* Header with account info */}
+        <div className="pb-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
+            {getPlatformIcon(platform, "h-5 w-5")}
           </div>
-          <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors">
-            <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">{verificationCode}</span>
+          <div>
+            <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">@{username}</h2>
+            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{getPlatformLabel(platform)}</p>
           </div>
         </div>
-      </div>
 
-      {/* Time Remaining */}
-      <div className="pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Time remaining</span>
-          <span className="text-sm font-semibold font-inter tracking-[-0.5px]">{formatTime(timeRemaining)}</span>
+        {/* Verification Code Box */}
+        <div className="pb-4">
+          <div className="bg-muted/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Your verification code</span>
+              <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
+                {copied ? <>
+                    <Check className="h-3.5 w-3.5" />
+                    Copied
+                  </> : <>
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </>}
+              </button>
+            </div>
+            <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors">
+              <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">{verificationCode}</span>
+            </div>
+          </div>
         </div>
-        <Progress value={progressPercent} className="h-2 bg-muted/30" />
-      </div>
 
-      {/* How to add the code steps */}
-      <div className="pb-4">
-        <h3 className="text-sm font-semibold font-inter tracking-[-0.5px] mb-3">How to add the code:</h3>
-        <div className="space-y-2.5">
-          {steps.map((step, index) => <div key={index} className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-bold text-primary-foreground">{index + 1}</span>
-              </div>
-              <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] leading-5">{step}</p>
-            </div>)}
+        {/* Time Remaining */}
+        <div className="pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Time remaining</span>
+            <span className="text-sm font-semibold font-inter tracking-[-0.5px]">{formatTime(timeRemaining)}</span>
+          </div>
+          <Progress value={progressPercent} className="h-2 bg-muted/30" />
         </div>
+
+        {/* How to add the code steps */}
+        <div className="pb-4">
+          <h3 className="text-sm font-semibold font-inter tracking-[-0.5px] mb-3">How to add the code:</h3>
+          <div className="space-y-2.5">
+            {steps.map((step, index) => <div key={index} className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-[11px] font-bold text-primary-foreground">{index + 1}</span>
+                </div>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] leading-5">{step}</p>
+              </div>)}
+          </div>
+        </div>
+
+        {/* Open settings link */}
+        <a href={getSettingsLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px] mb-4">
+          Open {getPlatformLabel(platform)} settings
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+
+        {/* Warning box - more compact on mobile */}
+        <div className="bg-muted/30 rounded-xl p-3 mb-3 flex items-start gap-2.5">
+          <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+            Make sure your account is <strong className="text-foreground">public</strong>. You can remove the code after verification.
+          </p>
+        </div>
+
+        {/* Manual connection option */}
+        <button onClick={handleSwitchToManual} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5 w-full">
+          <Link2 className="h-3.5 w-3.5" />
+          Can't verify? Connect manually
+        </button>
       </div>
 
-      {/* Open settings link */}
-      <a href={getSettingsLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px] mb-4">
-        Open {getPlatformLabel(platform)} settings
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
-
-      {/* Warning box */}
-      <div className="bg-muted/30 rounded-xl p-4 mb-4 flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-          Make sure your {getPlatformLabel(platform)} account is set to <strong className="text-foreground">public</strong> so we can
-          verify your bio. You can remove the code after verification is complete.
-        </p>
-      </div>
-
-      {/* Manual connection option */}
-      <button onClick={handleSwitchToManual} className="mb-4 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5">
-        <Link2 className="h-3.5 w-3.5" />
-        Can't verify? Connect manually with URL
-      </button>
-
-      {/* Footer buttons */}
-      <div className="flex flex-col-reverse sm:flex-row gap-2">
-        <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
-          Cancel
-        </Button>
-        <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
-          {isChecking ? <>
-              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-              Verifying...
-            </> : cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : <>
-              <Check className="h-4 w-4 mr-1.5" />
-              Verify
-            </>}
-        </Button>
+      {/* Sticky footer buttons */}
+      <div className="flex-shrink-0 px-6 py-4 border-t border-border/50 bg-background">
+        <div className="flex flex-col-reverse sm:flex-row gap-2">
+          <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
+            Cancel
+          </Button>
+          <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
+            {isChecking ? <>
+                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                Verifying...
+              </> : cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : <>
+                <Check className="h-4 w-4 mr-1.5" />
+                Verify
+              </>}
+          </Button>
+        </div>
       </div>
     </div>;
 }
