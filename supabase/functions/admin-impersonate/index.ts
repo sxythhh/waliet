@@ -56,15 +56,16 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Check if requesting user is an admin
-    const { data: adminProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', adminUser.id)
-      .single();
+    // Check if requesting user is an admin (via user_roles table)
+    const { data: adminRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', adminUser.id)
+      .eq('role', 'admin')
+      .maybeSingle();
 
-    if (profileError || !adminProfile?.is_admin) {
-      console.error('Admin check failed:', profileError?.message, 'is_admin:', adminProfile?.is_admin);
+    if (roleError || !adminRole) {
+      console.error('Admin check failed:', roleError?.message, 'adminRole:', adminRole);
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
