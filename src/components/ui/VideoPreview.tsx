@@ -9,6 +9,8 @@ interface VideoPreviewProps {
   fill?: boolean;
   /** Show play icon overlay (default: true) */
   showPlayIcon?: boolean;
+  /** Optional click handler for video preview */
+  onClick?: () => void;
 }
 
 export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
@@ -18,6 +20,7 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
       className,
       fill = false,
       showPlayIcon = true,
+      onClick,
     },
     ref
   ) {
@@ -60,7 +63,8 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
       return (
         <div
           ref={ref}
-          className={cn("absolute inset-0", className)}
+          className={cn("absolute inset-0", onClick && "cursor-pointer", className)}
+          onClick={onClick}
         >
           {content}
         </div>
@@ -72,8 +76,10 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
         ref={ref}
         className={cn(
           "relative overflow-hidden rounded-xl bg-muted/30 aspect-[9/16]",
+          onClick && "cursor-pointer",
           className
         )}
+        onClick={onClick}
       >
         {content}
       </div>

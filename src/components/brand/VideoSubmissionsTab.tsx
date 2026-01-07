@@ -7,7 +7,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard, Settings, GripVertical } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,7 +33,9 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import flagIcon from "@/assets/flag-icon.svg";
 import { AudienceScoreIndicator } from "./AudienceScoreIndicator";
+import { BotRiskIndicator } from "./BotRiskIndicator";
 import { VideoPreview } from "@/components/ui/VideoPreview";
+import { ProxatoreVideoModal } from "@/components/ui/ProxatoreVideoModal";
 
 // Helper to extract platform video ID from URL
 const extractPlatformVideoId = (url: string, platform: string): string | null => {
@@ -144,6 +149,45 @@ interface VideoSubmissionsTabProps {
   videosPerMonth?: number;
   onSubmissionReviewed?: () => void;
 }
+
+// Sortable column item for drag-and-drop reordering
+interface SortableColumnItemProps {
+  id: string;
+  label: string;
+  isVisible: boolean;
+  isRequired: boolean;
+  onToggle: () => void;
+}
+
+function SortableColumnItem({ id, label, isVisible, isRequired, onToggle }: SortableColumnItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-1.5 px-1 rounded-md hover:bg-muted/50 transition-colors">
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted/70">
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
+      </div>
+      <Checkbox
+        id={`col-${id}`}
+        checked={isVisible}
+        onCheckedChange={onToggle}
+        disabled={isRequired}
+        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+      />
+      <label
+        htmlFor={`col-${id}`}
+        className={`text-sm font-inter tracking-[-0.5px] cursor-pointer flex-1 ${isRequired ? 'text-muted-foreground' : 'text-foreground'}`}
+      >
+        {label}
+      </label>
+    </div>
+  );
+}
+
 export function VideoSubmissionsTab({
   campaign,
   boostId,
@@ -185,6 +229,64 @@ export function VideoSubmissionsTab({
   // Sync state
   const [syncing, setSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+  // Video playback modal state
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedVideoForPlayback, setSelectedVideoForPlayback] = useState<UnifiedVideo | null>(null);
+
+  // Column configuration for table view
+  const ALL_COLUMNS = [
+    { id: 'title', label: 'Title', required: true },
+    { id: 'user', label: 'User', required: false },
+    { id: 'account', label: 'Account', required: false },
+    { id: 'status', label: 'Status', required: false },
+    { id: 'bot', label: 'Bot Score', required: false },
+    { id: 'views', label: 'Views', required: false },
+    { id: 'likes', label: 'Likes', required: false },
+    { id: 'comments', label: 'Comments', required: false },
+    { id: 'payout', label: 'Payout', required: false },
+    { id: 'actions', label: 'Actions', required: true },
+  ] as const;
+  type ColumnId = typeof ALL_COLUMNS[number]['id'];
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(
+    new Set(['title', 'user', 'account', 'status', 'bot', 'views', 'likes', 'comments', 'payout', 'actions'])
+  );
+  const [columnOrder, setColumnOrder] = useState<ColumnId[]>(ALL_COLUMNS.map(c => c.id));
+
+  // DnD sensors for column reordering
+  const columnSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleColumnDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setColumnOrder(items => {
+        const oldIndex = items.indexOf(active.id as ColumnId);
+        const newIndex = items.indexOf(over.id as ColumnId);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }, []);
+
+  const toggleColumnVisibility = useCallback((columnId: ColumnId) => {
+    const column = ALL_COLUMNS.find(c => c.id === columnId);
+    if (column?.required) return;
+    setVisibleColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(columnId)) {
+        next.delete(columnId);
+      } else {
+        next.add(columnId);
+      }
+      return next;
+    });
+  }, []);
+
+  const orderedVisibleColumns = useMemo(() => {
+    return columnOrder.filter(id => visibleColumns.has(id));
+  }, [columnOrder, visibleColumns]);
 
   // Determine if this is a boost or campaign
   const isBoost = !!boostId;
@@ -266,6 +368,44 @@ export function VideoSubmissionsTab({
     }
   }, [entityId, brandId]);
 
+  // Realtime subscription for bot_score updates
+  useEffect(() => {
+    if (!entityId) return;
+
+    const channel = supabase
+      .channel(`video_submissions_bot_score_${entityId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'video_submissions',
+          filter: `source_id=eq.${entityId}`
+        },
+        (payload) => {
+          // Only refetch if bot_score was updated
+          const newRecord = payload.new as { bot_score?: number | null; bot_analysis_status?: string };
+          if (newRecord.bot_score !== undefined || newRecord.bot_analysis_status === 'completed') {
+            // Update just this submission in state instead of refetching all
+            setSubmissions(prev => prev.map(s => {
+              if (s.id === (payload.new as { id: string }).id) {
+                return {
+                  ...s,
+                  bot_score: newRecord.bot_score ?? null
+                };
+              }
+              return s;
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [entityId]);
+
   // Fetch minimum views threshold from auto_rejection_rules
   useEffect(() => {
     const fetchMinViewsThreshold = async () => {
@@ -322,7 +462,7 @@ export function VideoSubmissionsTab({
         likes: v.likes,
         comments: v.comments,
         shares: v.shares,
-        bot_score: (v as any).bot_score || null,
+        bot_score: (v as any).bot_score ?? null,
         // Use the source field from database, default to 'submitted' for legacy records
         source: (v.source === "tracked" ? "tracked" : "submitted") as "submitted" | "tracked",
         uploaded_at: v.video_upload_date
@@ -1096,10 +1236,11 @@ export function VideoSubmissionsTab({
           break;
         case "o":
         case "O":
-          // Open video in new tab
+          // Open video in modal
           if (focusedVideoIndex >= 0 && focusedVideoIndex < filteredVids.length) {
             const video = filteredVids[focusedVideoIndex];
-            window.open(video.video_url, "_blank");
+            setSelectedVideoForPlayback(video);
+            setVideoModalOpen(true);
           }
           break;
         case "?":
@@ -1383,6 +1524,45 @@ export function VideoSubmissionsTab({
                 </button>
               </div>
 
+              {/* Column Manager - only show in table view */}
+              {viewMode === "table" && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground">
+                      <Settings className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[220px] p-3 bg-background border border-border shadow-lg z-50" align="end">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Columns</span>
+                      </div>
+                      <DndContext sensors={columnSensors} collisionDetection={closestCenter} onDragEnd={handleColumnDragEnd}>
+                        <SortableContext items={columnOrder} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-0.5">
+                            {columnOrder.map(colId => {
+                              const col = ALL_COLUMNS.find(c => c.id === colId);
+                              if (!col) return null;
+                              return (
+                                <SortableColumnItem
+                                  key={col.id}
+                                  id={col.id}
+                                  label={col.label}
+                                  isVisible={visibleColumns.has(col.id)}
+                                  isRequired={col.required}
+                                  onToggle={() => toggleColumnVisibility(col.id)}
+                                />
+                              );
+                            })}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+
               {/* Keyboard shortcuts hint for grid view */}
               {viewMode === "grid" && (
                 <button
@@ -1460,7 +1640,7 @@ export function VideoSubmissionsTab({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2 w-full">
+            <div className={cn("w-full", viewMode === "table" ? "" : "p-3 space-y-2")}>
               {(() => {
               // Get filtered videos
               let filteredVids = selectedCreator ? allVideos.filter(v => v.user_id === selectedCreator) : allVideos;
@@ -1523,108 +1703,185 @@ export function VideoSubmissionsTab({
 
               // Table View
               if (viewMode === "table") {
-                return <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-border/40">
-                          <TableHead className="w-8 p-0 pl-2">
-                            <div className="h-4 w-4 rounded border border-border/60 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSelectAllPending(filteredVids)}>
-                              {filteredVids.filter(v => v.status === "pending").length > 0 && filteredVids.filter(v => v.status === "pending").every(v => selectedVideos.has(v.id)) && <Check className="h-3 w-3 text-primary" />}
+                // Helper to render table header for a column
+                const renderTableHeader = (colId: ColumnId) => {
+                  const headerClass = "text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground";
+                  switch (colId) {
+                    case 'title': return <TableHead key={colId} className={`${headerClass} min-w-[140px]`}>Title</TableHead>;
+                    case 'user': return <TableHead key={colId} className={`${headerClass} w-[100px]`}>User</TableHead>;
+                    case 'account': return <TableHead key={colId} className={`${headerClass} w-[120px]`}>Account</TableHead>;
+                    case 'status': return <TableHead key={colId} className={`${headerClass} w-[80px]`}>Status</TableHead>;
+                    case 'bot': return <TableHead key={colId} className={`${headerClass} w-[50px] text-center`}>Bot</TableHead>;
+                    case 'views': return <TableHead key={colId} className={`${headerClass} text-right w-[70px]`}>Views</TableHead>;
+                    case 'likes': return <TableHead key={colId} className={`${headerClass} text-right w-[60px]`}>Likes</TableHead>;
+                    case 'comments': return <TableHead key={colId} className={`${headerClass} text-right w-[70px]`}>Comments</TableHead>;
+                    case 'payout': return <TableHead key={colId} className={`${headerClass} text-right w-[60px]`}>Payout</TableHead>;
+                    case 'actions': return <TableHead key={colId} className={`${headerClass} text-center w-[70px]`}>Actions</TableHead>;
+                    default: return null;
+                  }
+                };
+
+                // Helper to render table cell for a column
+                const renderTableCell = (colId: ColumnId, video: UnifiedVideo, profile: Profile | null, demographicScore: DemographicScore | null) => {
+                  switch (colId) {
+                    case 'title':
+                      return (
+                        <TableCell key={colId} className="max-w-[200px]">
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              onClick={() => {
+                                setSelectedVideoForPlayback(video);
+                                setVideoModalOpen(true);
+                              }}
+                              className="text-xs font-medium font-['Inter'] tracking-[-0.5px] line-clamp-1 hover:underline text-left"
+                            >
+                              {video.video_title || video.video_description || "Untitled Video"}
+                            </button>
+                            <span className="text-[10px] text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                              {format(new Date(video.submitted_at), "MMM d, yyyy")}
+                            </span>
+                          </div>
+                        </TableCell>
+                      );
+                    case 'user':
+                      return (
+                        <TableCell key={colId}>
+                          {profile ? (
+                            <div className="flex items-center gap-1.5">
+                              {profile.avatar_url ? (
+                                <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-[10px] font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground uppercase">
+                                    {(profile.full_name || profile.username || "U").charAt(0)}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
+                                {profile.full_name || profile.username}
+                              </span>
                             </div>
-                          </TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">User</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Payout</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Date</TableHead>
-                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredVids.map(video => {
-                      const profile = video.user_id ? profiles[video.user_id] : null;
-                      const demographicScore = video.user_id ? demographicScores[video.user_id] : null;
-                      const isSelected = selectedVideos.has(video.id);
-                      return <TableRow key={video.id} className={cn("border-border/30 group font-['Inter'] hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
-                              <TableCell className="w-8 p-0 pl-2">
-                                <div className={cn("h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all", isSelected ? "border-primary bg-primary" : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50")} onClick={() => toggleVideoSelection(video.id)}>
-                                  {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                                </div>
-                              </TableCell>
-                              <TableCell className="max-w-[200px]">
-                                <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium font-['Inter'] tracking-[-0.5px] line-clamp-1 hover:underline">
-                                  {video.video_title || video.video_description || "Untitled Video"}
-                                </a>
-                              </TableCell>
-                              <TableCell>
-                                {profile ? <div className="flex items-center gap-1.5">
-                                    {profile.avatar_url ? <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" /> : <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-[10px] font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground uppercase">
-                                          {(profile.full_name || profile.username || "U").charAt(0)}
-                                        </span>
-                                      </div>}
-                                    <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
-                                      {profile.full_name || profile.username}
-                                    </span>
-                                  </div> : null}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-col gap-1.5">
-                                  <div className="flex items-center gap-1.5">
-                                    <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                      <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
-                                    </div>
-                                    <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
-                                      {video.video_author_username || profile?.username || "Unknown"}
-                                    </span>
-                                  </div>
-                                  <AudienceScoreIndicator score={demographicScore?.score} />
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-['Inter'] tracking-[-0.5px] flex items-center gap-1", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
-                                  {video.status === "approved" && <Check className="h-3 w-3" />}
-                                  {video.status === "pending" && <Loader className="h-3 w-3" />}
-                                  {video.status === "rejected" && <X className="h-3 w-3" />}
-                                  {video.status === "tracked" && <Eye className="h-3 w-3" />}
-                                  {video.status === "approved" ? "Approved" : video.status === "pending" ? "Pending" : video.status === "rejected" ? "Rejected" : video.status === "tracked" ? "Tracked" : video.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
-                                {formatNumber(video.views)}
-                              </TableCell>
-                              <TableCell className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
-                                {formatNumber(video.likes)}
-                              </TableCell>
-                              <TableCell className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
-                                {formatNumber(video.comments)}
-                              </TableCell>
-                              <TableCell className="text-right text-xs font-medium font-['Inter'] tracking-[-0.5px] tabular-nums text-green-500">
-                                ${getPayoutForSubmission(video).toFixed(2)}
-                              </TableCell>
-                              <TableCell className="text-xs font-['Inter'] tracking-[-0.5px] text-muted-foreground">
-                                {format(new Date(video.submitted_at), "MMM d")}
-                              </TableCell>
-                              <TableCell>
-                                {video.status === "pending" && <div className="flex items-center justify-center gap-1">
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-sm" onClick={() => handleApprove(video)} disabled={processing}>
-                                      <Check className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-sm" onClick={() => {
-                              setSelectedSubmission(video);
-                              setRejectDialogOpen(true);
-                            }} disabled={processing}>
-                                      <X className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>}
-                              </TableCell>
-                            </TableRow>;
-                    })}
-                      </TableBody>
-                    </Table>;
+                          ) : null}
+                        </TableCell>
+                      );
+                    case 'account':
+                      return (
+                        <TableCell key={colId}>
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
+                              </div>
+                              <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
+                                {video.video_author_username || profile?.username || "Unknown"}
+                              </span>
+                            </div>
+                            <AudienceScoreIndicator score={demographicScore?.score} />
+                          </div>
+                        </TableCell>
+                      );
+                    case 'status':
+                      return (
+                        <TableCell key={colId}>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-['Inter'] tracking-[-0.5px] flex items-center gap-1", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
+                            {video.status === "approved" && <Check className="h-3 w-3" />}
+                            {video.status === "pending" && <Loader className="h-3 w-3" />}
+                            {video.status === "rejected" && <X className="h-3 w-3" />}
+                            {video.status === "tracked" && <Eye className="h-3 w-3" />}
+                            {video.status === "approved" ? "Approved" : video.status === "pending" ? "Pending" : video.status === "rejected" ? "Rejected" : video.status === "tracked" ? "Tracked" : video.status}
+                          </Badge>
+                        </TableCell>
+                      );
+                    case 'bot':
+                      return (
+                        <TableCell key={colId} className="text-center">
+                          {video.platform?.toLowerCase() === "tiktok" && video.bot_score !== null ? (
+                            <div className="flex justify-center">
+                              <BotRiskIndicator botScore={video.bot_score} size="sm" />
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/50">—</span>
+                          )}
+                        </TableCell>
+                      );
+                    case 'views':
+                      return (
+                        <TableCell key={colId} className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
+                          {formatNumber(video.views)}
+                        </TableCell>
+                      );
+                    case 'likes':
+                      return (
+                        <TableCell key={colId} className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
+                          {formatNumber(video.likes)}
+                        </TableCell>
+                      );
+                    case 'comments':
+                      return (
+                        <TableCell key={colId} className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
+                          {formatNumber(video.comments)}
+                        </TableCell>
+                      );
+                    case 'payout':
+                      return (
+                        <TableCell key={colId} className="text-right text-xs font-medium font-['Inter'] tracking-[-0.5px] tabular-nums text-green-500">
+                          ${getPayoutForSubmission(video).toFixed(2)}
+                        </TableCell>
+                      );
+                    case 'actions':
+                      return (
+                        <TableCell key={colId}>
+                          {video.status === "pending" && (
+                            <div className="flex items-center justify-center gap-1">
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-sm" onClick={() => handleApprove(video)} disabled={processing}>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-sm" onClick={() => {
+                                setSelectedSubmission(video);
+                                setRejectDialogOpen(true);
+                              }} disabled={processing}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      );
+                    default:
+                      return null;
+                  }
+                };
+
+                return (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-border/40">
+                        <TableHead className="w-8 p-0 pl-2">
+                          <div className="h-4 w-4 rounded border border-border/60 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSelectAllPending(filteredVids)}>
+                            {filteredVids.filter(v => v.status === "pending").length > 0 && filteredVids.filter(v => v.status === "pending").every(v => selectedVideos.has(v.id)) && <Check className="h-3 w-3 text-primary" />}
+                          </div>
+                        </TableHead>
+                        {orderedVisibleColumns.map(colId => renderTableHeader(colId))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredVids.map(video => {
+                        const profile = video.user_id ? profiles[video.user_id] : null;
+                        const demographicScore = video.user_id ? demographicScores[video.user_id] : null;
+                        const isSelected = selectedVideos.has(video.id);
+                        return (
+                          <TableRow key={video.id} className={cn("border-border/30 group font-['Inter'] hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
+                            <TableCell className="w-8 p-0 pl-2">
+                              <div className={cn("h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all", isSelected ? "border-primary bg-primary" : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50")} onClick={() => toggleVideoSelection(video.id)}>
+                                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                              </div>
+                            </TableCell>
+                            {orderedVisibleColumns.map(colId => renderTableCell(colId, video, profile, demographicScore))}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                );
               }
 
               // Grid View - Visual thumbnails with keyboard navigation
@@ -1682,6 +1939,10 @@ export function VideoSubmissionsTab({
                             key={video.id}
                             data-grid-index={index}
                             onClick={() => setFocusedVideoIndex(index)}
+                            onDoubleClick={() => {
+                              setSelectedVideoForPlayback(video);
+                              setVideoModalOpen(true);
+                            }}
                             className={cn(
                               "relative aspect-[9/16] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group",
                               isFocused ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]" : "hover:ring-1 hover:ring-border",
@@ -1812,7 +2073,13 @@ export function VideoSubmissionsTab({
                       {/* Main Content Row */}
                       <div className="flex gap-3 p-3">
                         {/* Thumbnail with overlay */}
-                        <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb">
+                        <div
+                          onClick={() => {
+                            setSelectedVideoForPlayback(video);
+                            setVideoModalOpen(true);
+                          }}
+                          className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb cursor-pointer"
+                        >
                           {/* Video Thumbnail */}
                           <VideoPreview
                             thumbnailUrl={video.source === "tracked" ? getTrackedThumbnailUrl(video) || video.video_thumbnail_url : video.video_thumbnail_url}
@@ -1826,20 +2093,26 @@ export function VideoSubmissionsTab({
                           {/* Views overlay - top right */}
                           <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm">
                             <span className="text-[10px] font-medium text-white flex items-center gap-0.5">
-                              
+
                               {formatNumber(video.views)}
                             </span>
                           </div>
-                        </a>
+                        </div>
 
                         {/* Content Section */}
                         <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                           {/* Header */}
                           <div>
                             {/* Title & Username */}
-                            <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:underline transition-all leading-tight">
+                            <button
+                              onClick={() => {
+                                setSelectedVideoForPlayback(video);
+                                setVideoModalOpen(true);
+                              }}
+                              className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:underline transition-all leading-tight text-left"
+                            >
                               {video.video_title || video.video_description || "Untitled Video"}
-                            </a>
+                            </button>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs text-muted-foreground">
                                 @{video.video_author_username || profile?.username || "Unknown"}
@@ -1953,5 +2226,12 @@ export function VideoSubmissionsTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Video Playback Modal */}
+      <ProxatoreVideoModal
+        open={videoModalOpen}
+        onOpenChange={setVideoModalOpen}
+        video={selectedVideoForPlayback}
+      />
     </div>;
 }

@@ -178,14 +178,18 @@ export function BoostCard({
   });
   const approvedThisMonth = thisMonthSubmissions.filter(s => s.status === "approved").length;
   const pendingThisMonth = thisMonthSubmissions.filter(s => s.status === "pending").length;
+  // Only count approved + pending toward the quota (rejected videos don't count)
+  const activeSubmissionsThisMonth = approvedThisMonth + pendingThisMonth;
   const earnedThisMonth = approvedThisMonth * payoutPerVideo;
   const dailyLimit = Math.ceil(boost.videos_per_month / 30);
+  // Only count approved + pending submissions in last 24 hours (rejected don't count against daily limit)
   const last24Hours = submissions.filter(s => {
     const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
-    return hoursDiff < 24;
+    return hoursDiff < 24 && s.status !== "rejected";
   });
   const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
-  const requiredPosts = Math.max(0, boost.videos_per_month - thisMonthSubmissions.length);
+  // Remaining posts should be based on active submissions (approved + pending), not all submissions
+  const requiredPosts = Math.max(0, boost.videos_per_month - activeSubmissionsThisMonth);
   const totalQuota = boost.videos_per_month;
   const earnedPercent = approvedThisMonth / totalQuota * 100;
   const pendingPercent = pendingThisMonth / totalQuota * 100;
@@ -210,13 +214,13 @@ export function BoostCard({
             </div>
 
             {/* Submit Button - Desktop only */}
-            <Button onClick={() => setSubmitDialogOpen(true)} size="sm" className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}>
+            <Button onClick={() => setSubmitDialogOpen(true)} size="sm" className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={(approvedThisMonth + pendingThisMonth) >= boost.videos_per_month || dailyRemaining === 0}>
               Submit post
             </Button>
           </div>
 
           {/* Submit Button - Mobile only (full width at bottom) */}
-          <Button onClick={() => setSubmitDialogOpen(true)} className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}>
+          <Button onClick={() => setSubmitDialogOpen(true)} className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={(approvedThisMonth + pendingThisMonth) >= boost.videos_per_month || dailyRemaining === 0}>
             Submit post
           </Button>
 
@@ -332,7 +336,7 @@ export function BoostCard({
                 </svg>
                 {/* Center text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
-                  <span className="text-lg font-bold">{thisMonthSubmissions.length}/{boost.videos_per_month}</span>
+                  <span className="text-lg font-bold">{approvedThisMonth + pendingThisMonth}/{boost.videos_per_month}</span>
                 </div>
               </div>
 
@@ -340,7 +344,7 @@ export function BoostCard({
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Monthly Progress</span>
-                  <span className="font-semibold">{thisMonthSubmissions.length} / {boost.videos_per_month} videos</span>
+                  <span className="font-semibold">{approvedThisMonth + pendingThisMonth} / {boost.videos_per_month} videos</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                   {approvedThisMonth > 0 && <div className="h-full bg-green-500 transition-all duration-500" style={{
