@@ -1,4 +1,5 @@
 import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { WalletDropdown } from "@/components/WalletDropdown";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
@@ -135,8 +136,8 @@ const creatorMenuItems: MenuItem[] = [{
   tab: "discover",
   icon: Compass
 }, {
-  title: "Referrals",
-  tab: "referrals",
+  title: "Payments",
+  tab: "wallet",
   icon: null
 }, {
   title: "Settings",
@@ -353,7 +354,12 @@ export function AppSidebar() {
     } else {
       newParams.delete("subtab");
     }
-    setSearchParams(newParams);
+    // If not already on dashboard, navigate there with the new params
+    if (location.pathname !== '/dashboard') {
+      navigate(`/dashboard?${newParams.toString()}`);
+    } else {
+      setSearchParams(newParams);
+    }
   };
   const handleSubtabClick = (subtab: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -362,7 +368,12 @@ export function AppSidebar() {
     newParams.delete("blueprint");
     newParams.delete("campaign");
     newParams.delete("boost");
-    setSearchParams(newParams);
+    // If not already on dashboard, navigate there with the new params
+    if (location.pathname !== '/dashboard') {
+      navigate(`/dashboard?${newParams.toString()}`);
+    } else {
+      setSearchParams(newParams);
+    }
   };
   const handleWorkspaceChange = (newWorkspace: string) => {
     const newParams = new URLSearchParams();
@@ -545,10 +556,7 @@ export function AppSidebar() {
                 </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
                   <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "referrals" ? <div className="relative h-6 w-6">
-                  <img src={referralsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={referralsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "education" ? <div className="relative h-6 w-6">
+                </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-6 w-6">
                   <img src={educationInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "analytics" ? <div className="relative h-6 w-6">
@@ -760,10 +768,7 @@ export function AppSidebar() {
                     </div> : item.tab === "scope" ? <div className="relative h-[24px] w-[24px]">
                       <img src={scopeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={scopeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "referrals" ? <div className="relative h-[24px] w-[24px]">
-                      <img src={referralsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={referralsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "education" ? <div className="relative h-[24px] w-[24px]">
+                    </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-[24px] w-[24px]">
                       <img src={educationInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={educationActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "analytics" ? <div className="relative h-[24px] w-[24px]">

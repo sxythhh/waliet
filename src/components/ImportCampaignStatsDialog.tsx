@@ -194,10 +194,10 @@ export function ImportCampaignStatsDialog({
             }
 
             const amountOfVideosTracked = values[cols.amount_of_videos_tracked] || '0';
-            const totalViews = parseInt(values[cols.total_views]) || 0;
-            const totalLikes = parseInt(values[cols.total_likes]) || 0;
-            const totalComments = parseInt(values[cols.total_comments]) || 0;
-            const totalVideos = parseInt(amountOfVideosTracked) || 0;
+            const totalViews = parseInt(values[cols.total_views], 10) || 0;
+            const totalLikes = parseInt(values[cols.total_likes], 10) || 0;
+            const totalComments = parseInt(values[cols.total_comments], 10) || 0;
+            const totalVideos = parseInt(amountOfVideosTracked, 10) || 0;
             const outperformingRate = cols.outperforming_video_rate >= 0 ? (parseFloat(values[cols.outperforming_video_rate]) || 0) : 0;
             const avgVideoViews = cols.average_video_views >= 0
               ? (parseFloat(values[cols.average_video_views]) || 0)

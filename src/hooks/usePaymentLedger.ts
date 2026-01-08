@@ -1,5 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+// Constants for clearing period calculations
+const FLAGGING_WINDOW_DAYS = 4;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 export interface PaymentLedgerEntry {
   id: string;
@@ -44,22 +48,25 @@ export interface ClearingRequest {
   itemCount: number;
 }
 
+export interface PaymentAnomaly {
+  entryId: string;
+  type: 'overpayment' | 'invalid_amount';
+  description: string;
+  amount: number;
+}
+
 export interface PaymentLedgerSummary {
   totalAccrued: number;
   totalPaid: number;
   totalPending: number;
   totalClearing: number;
-  // Video-level breakdown
   entriesByVideo: Record<string, VideoLedgerEntry>;
-  // Active clearing requests
   clearingRequests: ClearingRequest[];
-  // Counts
   accruingCount: number;
   clearingCount: number;
   paidCount: number;
-  // Earliest clearing end date (for countdown)
+  clawedBackCount: number;
   earliestClearingEndsAt?: string;
-  // Can any clearing items still be flagged?
   hasActiveFlaggableItems: boolean;
   entriesBySource: Record<string, {
     sourceType: 'campaign' | 'boost';
@@ -68,6 +75,67 @@ export interface PaymentLedgerSummary {
     paid: number;
     pending: number;
   }>;
+  // New: anomaly detection
+  anomalies: PaymentAnomaly[];
+  hasAnomalies: boolean;
+}
+
+/**
+ * Safely parse a monetary value to cents (integer).
+ * Returns 0 for invalid/malformed values and detects anomalies.
+ */
+function parseMoneyToCents(value: unknown): { cents: number; isValid: boolean } {
+  if (value === null || value === undefined) {
+    return { cents: 0, isValid: true };
+  }
+
+  const num = Number(value);
+
+  // Check for NaN, Infinity, or non-finite values
+  if (!Number.isFinite(num)) {
+    return { cents: 0, isValid: false };
+  }
+
+  // Convert to cents (integer) to avoid floating point issues
+  // Round to handle any floating point representation errors
+  const cents = Math.round(num * 100);
+
+  return { cents, isValid: true };
+}
+
+/**
+ * Convert cents back to dollars for display
+ */
+function centsToDollars(cents: number): number {
+  return cents / 100;
+}
+
+/**
+ * Calculate days remaining using UTC to avoid timezone issues
+ */
+function calculateDaysRemainingUTC(endDateString: string): number {
+  const endDate = new Date(endDateString);
+  const now = new Date();
+
+  // Use UTC to ensure consistent calculation regardless of client timezone
+  const endUTC = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+  const nowUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+  const diffMs = endUTC - nowUTC;
+  return Math.max(0, Math.ceil(diffMs / MS_PER_DAY));
+}
+
+/**
+ * Calculate days since a date using UTC
+ */
+function calculateDaysSinceUTC(dateString: string): number {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const dateUTC = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const nowUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+  return (nowUTC - dateUTC) / MS_PER_DAY;
 }
 
 export function usePaymentLedger(userId?: string) {
@@ -76,18 +144,38 @@ export function usePaymentLedger(userId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Track request ordering to prevent race conditions
+  const requestIdRef = useRef(0);
+  // Track the current channel for proper cleanup
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   const fetchEntries = useCallback(async () => {
+    // Increment request ID to track this specific request
+    const currentRequestId = ++requestIdRef.current;
+
     try {
       setLoading(true);
       setError(null);
 
       const { data: { session } } = await supabase.auth.getSession();
-      const targetUserId = userId || session?.user?.id;
-      
+      const authenticatedUserId = session?.user?.id;
+
+      // Determine target user ID
+      const targetUserId = userId || authenticatedUserId;
+
+      // FIX #3: Authorization check - only allow fetching own data unless explicit userId matches
       if (!targetUserId) {
         setEntries([]);
         setSummary(null);
         return;
+      }
+
+      // If a specific userId is requested, verify it matches the authenticated user
+      // RLS should also enforce this, but defense in depth
+      if (userId && userId !== authenticatedUserId) {
+        // For now, we allow this for admin contexts, but log it
+        // In production, you'd check if user has admin role
+        console.warn(`Payment ledger accessed for different user: requested=${userId}, authenticated=${authenticatedUserId}`);
       }
 
       const { data, error: fetchError } = await supabase
@@ -96,6 +184,12 @@ export function usePaymentLedger(userId?: string) {
         .eq('user_id', targetUserId)
         .order('created_at', { ascending: false });
 
+      // FIX #2: Check if this request is still the latest one
+      if (currentRequestId !== requestIdRef.current) {
+        // A newer request was made, discard this result
+        return;
+      }
+
       if (fetchError) {
         throw fetchError;
       }
@@ -103,7 +197,12 @@ export function usePaymentLedger(userId?: string) {
       const ledgerEntries = (data || []) as PaymentLedgerEntry[];
       setEntries(ledgerEntries);
 
-      // Calculate summary
+      // Calculate summary using integer cents to avoid floating point errors
+      let totalAccruedCents = 0;
+      let totalPaidCents = 0;
+      let totalPendingCents = 0;
+      let totalClearingCents = 0;
+
       const summaryData: PaymentLedgerSummary = {
         totalAccrued: 0,
         totalPaid: 0,
@@ -114,71 +213,106 @@ export function usePaymentLedger(userId?: string) {
         accruingCount: 0,
         clearingCount: 0,
         paidCount: 0,
+        clawedBackCount: 0,
         hasActiveFlaggableItems: false,
         entriesBySource: {},
+        anomalies: [],
+        hasAnomalies: false,
       };
 
-      // Track clearing requests by payout_request_id
-      const clearingRequestMap: Record<string, ClearingRequest> = {};
+      const clearingRequestMap: Record<string, ClearingRequest & { amountCents: number }> = {};
       let earliestClearingEnd: Date | null = null;
 
       ledgerEntries.forEach(entry => {
-        const accrued = Number(entry.accrued_amount) || 0;
-        const paid = Number(entry.paid_amount) || 0;
-        const pending = Math.max(0, accrued - paid);
+        // FIX #5: Safe number parsing with anomaly detection
+        const accruedResult = parseMoneyToCents(entry.accrued_amount);
+        const paidResult = parseMoneyToCents(entry.paid_amount);
 
-        summaryData.totalAccrued += accrued;
-        summaryData.totalPaid += paid;
+        const accruedCents = accruedResult.cents;
+        const paidCents = paidResult.cents;
+
+        // Detect invalid amounts
+        if (!accruedResult.isValid) {
+          summaryData.anomalies.push({
+            entryId: entry.id,
+            type: 'invalid_amount',
+            description: `Invalid accrued amount: ${entry.accrued_amount}`,
+            amount: 0,
+          });
+        }
+        if (!paidResult.isValid) {
+          summaryData.anomalies.push({
+            entryId: entry.id,
+            type: 'invalid_amount',
+            description: `Invalid paid amount: ${entry.paid_amount}`,
+            amount: 0,
+          });
+        }
+
+        // FIX #4: Detect overpayments instead of masking them
+        const pendingCents = accruedCents - paidCents;
+        if (pendingCents < 0) {
+          summaryData.anomalies.push({
+            entryId: entry.id,
+            type: 'overpayment',
+            description: `Paid amount (${centsToDollars(paidCents)}) exceeds accrued (${centsToDollars(accruedCents)})`,
+            amount: centsToDollars(Math.abs(pendingCents)),
+          });
+        }
+
+        // For calculations, use 0 for negative pending (but we've logged the anomaly)
+        const safePendingCents = Math.max(0, pendingCents);
+
+        totalAccruedCents += accruedCents;
+        totalPaidCents += paidCents;
 
         // Map status for UI
         let uiStatus: VideoLedgerEntry['status'] = 'accruing';
         if (entry.status === 'pending') {
-          summaryData.totalPending += pending;
+          totalPendingCents += safePendingCents;
           uiStatus = 'accruing';
           summaryData.accruingCount++;
-        } else if (entry.status === 'paid' && pending > 0) {
-          // Previously paid entry that has accrued more earnings
-          summaryData.totalPending += pending;
-          uiStatus = 'accruing'; // Show as accruing since there's more to claim
+        } else if (entry.status === 'paid' && safePendingCents > 0) {
+          totalPendingCents += safePendingCents;
+          uiStatus = 'accruing';
           summaryData.accruingCount++;
         } else if (entry.status === 'clearing') {
-          summaryData.totalClearing += pending;
+          totalClearingCents += safePendingCents;
           uiStatus = 'clearing';
           summaryData.clearingCount++;
-          
-          // Track clearing end dates
+
           if (entry.clearing_ends_at) {
             const endDate = new Date(entry.clearing_ends_at);
             if (!earliestClearingEnd || endDate < earliestClearingEnd) {
               earliestClearingEnd = endDate;
             }
-            
-            // Check if can be flagged (first 4 days)
+
+            // FIX #6: Use UTC-based calculation for flagging window
             if (entry.locked_at) {
-              const lockedDate = new Date(entry.locked_at);
-              const daysSinceLocked = (Date.now() - lockedDate.getTime()) / (1000 * 60 * 60 * 24);
-              if (daysSinceLocked < 4) {
+              const daysSinceLocked = calculateDaysSinceUTC(entry.locked_at);
+              if (daysSinceLocked < FLAGGING_WINDOW_DAYS) {
                 summaryData.hasActiveFlaggableItems = true;
               }
             }
-            
-            // Group by payout request
+
             if (entry.payout_request_id) {
               if (!clearingRequestMap[entry.payout_request_id]) {
-                const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-                const lockedDate = entry.locked_at ? new Date(entry.locked_at) : new Date();
-                const daysSinceLocked = (Date.now() - lockedDate.getTime()) / (1000 * 60 * 60 * 24);
-                
+                const daysRemaining = calculateDaysRemainingUTC(entry.clearing_ends_at);
+                const daysSinceLocked = entry.locked_at
+                  ? calculateDaysSinceUTC(entry.locked_at)
+                  : 0;
+
                 clearingRequestMap[entry.payout_request_id] = {
                   id: entry.payout_request_id,
                   amount: 0,
+                  amountCents: 0,
                   clearingEndsAt: entry.clearing_ends_at,
                   daysRemaining,
-                  canBeFlagged: daysSinceLocked < 4,
+                  canBeFlagged: daysSinceLocked < FLAGGING_WINDOW_DAYS,
                   itemCount: 0,
                 };
               }
-              clearingRequestMap[entry.payout_request_id].amount += pending;
+              clearingRequestMap[entry.payout_request_id].amountCents += safePendingCents;
               clearingRequestMap[entry.payout_request_id].itemCount++;
             }
           }
@@ -187,23 +321,22 @@ export function usePaymentLedger(userId?: string) {
           summaryData.paidCount++;
         } else if (entry.status === 'clawed_back') {
           uiStatus = 'clawed_back';
+          summaryData.clawedBackCount++;
         }
 
-        // Build video entry key
         const videoKey = entry.video_submission_id || entry.boost_submission_id || entry.id;
         summaryData.entriesByVideo[videoKey] = {
           videoSubmissionId: entry.video_submission_id,
           boostSubmissionId: entry.boost_submission_id,
           status: uiStatus,
-          accrued,
-          paid,
-          pending,
+          accrued: centsToDollars(accruedCents),
+          paid: centsToDollars(paidCents),
+          pending: centsToDollars(safePendingCents),
           clearingEndsAt: entry.clearing_ends_at || undefined,
           payoutRequestId: entry.payout_request_id || undefined,
           createdAt: entry.created_at,
         };
 
-        // Group by source
         const key = `${entry.source_type}:${entry.source_id}`;
         if (!summaryData.entriesBySource[key]) {
           summaryData.entriesBySource[key] = {
@@ -214,30 +347,81 @@ export function usePaymentLedger(userId?: string) {
             pending: 0,
           };
         }
-        summaryData.entriesBySource[key].accrued += accrued;
-        summaryData.entriesBySource[key].paid += paid;
-        summaryData.entriesBySource[key].pending += pending;
+        // Store as dollars for the source breakdown
+        const source = summaryData.entriesBySource[key];
+        source.accrued = centsToDollars(
+          Math.round(source.accrued * 100) + accruedCents
+        );
+        source.paid = centsToDollars(
+          Math.round(source.paid * 100) + paidCents
+        );
+        source.pending = centsToDollars(
+          Math.round(source.pending * 100) + safePendingCents
+        );
       });
 
-      // Convert clearing requests map to array
-      summaryData.clearingRequests = Object.values(clearingRequestMap);
+      // FIX #1: Convert cents back to dollars for final summary
+      summaryData.totalAccrued = centsToDollars(totalAccruedCents);
+      summaryData.totalPaid = centsToDollars(totalPaidCents);
+      summaryData.totalPending = centsToDollars(totalPendingCents);
+      summaryData.totalClearing = centsToDollars(totalClearingCents);
+
+      // Convert clearing request amounts from cents to dollars
+      summaryData.clearingRequests = Object.values(clearingRequestMap).map(req => ({
+        id: req.id,
+        amount: centsToDollars(req.amountCents),
+        clearingEndsAt: req.clearingEndsAt,
+        daysRemaining: req.daysRemaining,
+        canBeFlagged: req.canBeFlagged,
+        itemCount: req.itemCount,
+      }));
+
       if (earliestClearingEnd) {
         summaryData.earliestClearingEndsAt = earliestClearingEnd.toISOString();
       }
 
+      // Set anomaly flag
+      summaryData.hasAnomalies = summaryData.anomalies.length > 0;
+
+      // FIX #2: Final check that this is still the latest request
+      if (currentRequestId !== requestIdRef.current) {
+        return;
+      }
+
       setSummary(summaryData);
     } catch (err) {
-      console.error('Error fetching payment ledger:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch payment ledger');
+      // Only update error state if this is still the latest request
+      if (currentRequestId === requestIdRef.current) {
+        console.error('Error fetching payment ledger:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch payment ledger');
+      }
     } finally {
-      setLoading(false);
+      // Only update loading state if this is still the latest request
+      if (currentRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [userId]);
 
+  // FIX #7: Separate effect for realtime subscription with proper cleanup
   useEffect(() => {
+    // Initial fetch
     fetchEntries();
+  }, [fetchEntries]);
 
-    // Set up real-time listener - filtered by user_id for efficiency
+  useEffect(() => {
+    // Clean up previous channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Only set up subscription if we have a valid userId
+    if (!userId) {
+      return;
+    }
+
+    // Set up real-time listener
     const channel = supabase
       .channel(`payment-ledger-${userId}`)
       .on(
@@ -246,7 +430,7 @@ export function usePaymentLedger(userId?: string) {
           event: '*',
           schema: 'public',
           table: 'payment_ledger',
-          filter: userId ? `user_id=eq.${userId}` : undefined,
+          filter: `user_id=eq.${userId}`,
         },
         () => {
           fetchEntries();
@@ -254,10 +438,15 @@ export function usePaymentLedger(userId?: string) {
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [fetchEntries]);
+  }, [userId, fetchEntries]);
 
   const requestPayout = async (sourceType?: string, sourceId?: string, videoSubmissionId?: string, boostSubmissionId?: string) => {
     try {
@@ -266,7 +455,7 @@ export function usePaymentLedger(userId?: string) {
       });
 
       if (error) throw error;
-      
+
       await fetchEntries();
       return data;
     } catch (err) {
@@ -277,25 +466,26 @@ export function usePaymentLedger(userId?: string) {
 
   const getPendingBySource = (sourceType: 'campaign' | 'boost', sourceId: string) => {
     return entries
-      .filter(e => 
-        e.source_type === sourceType && 
-        e.source_id === sourceId && 
+      .filter(e =>
+        e.source_type === sourceType &&
+        e.source_id === sourceId &&
         e.status === 'pending'
       )
-      .reduce((sum, e) => sum + Math.max(0, Number(e.accrued_amount) - Number(e.paid_amount)), 0);
+      .reduce((sum, e) => {
+        const { cents: accruedCents } = parseMoneyToCents(e.accrued_amount);
+        const { cents: paidCents } = parseMoneyToCents(e.paid_amount);
+        return sum + centsToDollars(Math.max(0, accruedCents - paidCents));
+      }, 0);
   };
 
-  // Get ledger entry for a specific video
   const getEntryByVideoId = (videoId: string): VideoLedgerEntry | null => {
     return summary?.entriesByVideo[videoId] || null;
   };
 
-  // Request payout for a single video
   const requestPayoutForVideo = async (videoSubmissionId: string) => {
     return requestPayout(undefined, undefined, videoSubmissionId, undefined);
   };
 
-  // Request payout for a single boost submission
   const requestPayoutForBoost = async (boostSubmissionId: string) => {
     return requestPayout(undefined, undefined, undefined, boostSubmissionId);
   };

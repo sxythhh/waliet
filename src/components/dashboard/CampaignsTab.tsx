@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search, RotateCcw, Copy, Check, Hourglass } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, Play, RotateCcw, Copy, Check, Hourglass } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "@/components/ThemeProvider";
@@ -224,6 +225,7 @@ export function CampaignsTab({
   const [recommendedCampaigns, setRecommendedCampaigns] = useState<RecommendedCampaign[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [connectedAccountsCount, setConnectedAccountsCount] = useState(0);
+  const [isDiscordConnected, setIsDiscordConnected] = useState(false);
   const [hasPaymentMethod, setHasPaymentMethod] = useState(false);
   const [walletTransactions, setWalletTransactions] = useState<Transaction[]>([]);
   const [totalEarned, setTotalEarned] = useState(0);
@@ -372,6 +374,14 @@ export function CampaignsTab({
       head: true
     }).eq("user_id", user.id);
     setConnectedAccountsCount(count || 0);
+
+    // Check if Discord is connected
+    const { data: discordProfile } = await supabase
+      .from("profiles")
+      .select("discord_id")
+      .eq("id", user.id)
+      .single();
+    setIsDiscordConnected(!!discordProfile?.discord_id);
 
     // Fetch recommended campaigns (public campaigns user hasn't joined)
     const {
@@ -754,93 +764,75 @@ export function CampaignsTab({
         </div>
       </div>
 
-      {/* Earnings & Transactions Section */}
-      {(walletTransactions.length > 0 || totalEarned > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left Column - Chart + Quick Actions */}
-          <div className="space-y-4">
-            {/* Earnings Chart */}
-            <div className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-emerald-500 font-geist tracking-[-0.5px]">
-                    ${totalEarned.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
-                </div>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Discord Action - Connect or Discover Campaigns */}
+        {!isDiscordConnected ? (
+          <button
+            onClick={() => navigate('/dashboard?tab=settings')}
+            className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
+                <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
               </div>
-              <EarningsChart transactions={walletTransactions} totalEarned={totalEarned} showPeriodSelector={true} />
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
             </div>
-
-            {/* Quick Actions */}
-            <div className="bg-card border border-border rounded-xl p-4">
-              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm mb-3">Quick Actions</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => window.open('https://discord.gg/virality', '_blank')}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-left group"
-                >
-                  <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center flex-shrink-0">
-                    <img src={discordWhiteIcon} alt="" className="w-4 h-4 invert dark:invert-0" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] flex-1">Join Discord</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </button>
-
-                <button
-                  onClick={() => navigate('/resources')}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-left group"
-                >
-                  <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center flex-shrink-0">
-                    <img src={resolvedTheme === 'dark' ? schoolIcon : schoolIconBlack} alt="" className="w-4 h-4" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] flex-1">Start Learning</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </button>
-
-                <button
-                  onClick={() => navigate('/dashboard?tab=profile')}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-left group"
-                >
-                  <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center flex-shrink-0">
-                    <img src={creditCardIcon} alt="" className="w-4 h-4 invert dark:invert-0" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] flex-1">Manage Payouts</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </button>
+            <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Connect Discord</span>
+            <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">Get notified about opportunities and payments</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/dashboard?tab=discover')}
+            className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
+                <Icon icon="material-symbols:search" className="w-5 h-5 text-foreground" />
               </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
             </div>
-          </div>
+            <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Discover Campaigns</span>
+            <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">Find new opportunities to earn</span>
+          </button>
+        )}
 
-          {/* Right Column - Transactions */}
-          <div className="bg-card border border-border rounded-xl p-5 lg:self-start">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Transactions</h3>
-              <TransactionFilterDropdown
-                typeFilter={homeTypeFilter}
-                statusFilter={homeStatusFilter}
-                onTypeFilterChange={setHomeTypeFilter}
-                onStatusFilterChange={setHomeStatusFilter}
-              />
+        {/* Learning Action */}
+        <button
+          onClick={() => navigate('/training')}
+          className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
+              <Icon icon="material-symbols:school" className="w-5 h-5 text-foreground" />
             </div>
-            <TransactionsTable
-              transactions={walletTransactions.filter(t => {
-                if (homeTypeFilter !== 'all' && t.type !== homeTypeFilter && !(homeTypeFilter === 'earning' && t.type === 'boost_earning')) return false;
-                if (homeStatusFilter !== 'all' && t.status !== homeStatusFilter) return false;
-                return true;
-              })}
-              showPagination={false}
-              variant="compact"
-              maxHeight="400px"
-              onTransactionClick={(t) => {
-                setSelectedTransaction(t);
-                setTransactionSheetOpen(true);
-              }}
-            />
+            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
           </div>
-        </div>
-      )}
+          <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Creator Academy</span>
+          <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">Learn tips to grow your earnings</span>
+        </button>
+
+        {/* Payouts Action */}
+        <button
+          onClick={() => navigate('/dashboard?tab=wallet')}
+          className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
+              <Icon icon="material-symbols:account-balance-wallet" className="w-5 h-5 text-foreground" />
+            </div>
+            {!hasPaymentMethod ? (
+              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Setup Required</span>
+            ) : (
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+            )}
+          </div>
+          <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Manage Payouts</span>
+          <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">
+            {hasPaymentMethod ? 'View and update payment methods' : 'Add a payout method to get paid'}
+          </span>
+        </button>
+      </div>
 
       {/* Your Campaigns & Boosts Section - Combined */}
       {(campaigns.length > 0 || boostApplications.filter(app => app.status === 'accepted').length > 0) && (

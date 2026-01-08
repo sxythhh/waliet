@@ -1,9 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Sentinel value for unlimited resources
+// Using -1 instead of Infinity because:
+// 1. JSON.stringify(Infinity) = null, which breaks serialization
+// 2. -1 is a common convention for "unlimited" in APIs
+// 3. Number.MAX_SAFE_INTEGER could cause issues in comparisons
+export const UNLIMITED = -1;
+
+/**
+ * Check if a limit value represents unlimited access
+ */
+export function isUnlimited(limit: number): boolean {
+  return limit === UNLIMITED;
+}
+
 export const PLAN_LIMITS = {
   starter: { campaigns: 1, boosts: 1, hires: 10 },
   growth: { campaigns: 5, boosts: 3, hires: 30 },
-  enterprise: { campaigns: Infinity, boosts: Infinity, hires: Infinity },
+  enterprise: { campaigns: UNLIMITED, boosts: UNLIMITED, hires: UNLIMITED },
 } as const;
 
 export type PlanKey = keyof typeof PLAN_LIMITS;
@@ -19,11 +33,27 @@ export interface EffectivePlanLimits extends PlanLimits {
   customPlanName: string | null;
 }
 
+/**
+ * Normalize plan name for lookup
+ * Handles case-insensitivity and whitespace
+ */
+function normalizePlanName(plan: string | null | undefined): string | null {
+  if (!plan) return null;
+  return plan.trim().toLowerCase();
+}
+
+/**
+ * Get plan limits for a given plan name
+ * Returns zero limits for unknown/null plans
+ */
 export function getPlanLimits(plan: string | null | undefined): PlanLimits {
-  if (!plan || !(plan in PLAN_LIMITS)) {
-    return { campaigns: 0, boosts: 0, hires: 0 }; // No subscription = no access
+  const normalizedPlan = normalizePlanName(plan);
+
+  if (!normalizedPlan || !(normalizedPlan in PLAN_LIMITS)) {
+    return { campaigns: 0, boosts: 0, hires: 0 };
   }
-  return PLAN_LIMITS[plan as PlanKey];
+
+  return { ...PLAN_LIMITS[normalizedPlan as PlanKey] };
 }
 
 /**
@@ -55,7 +85,7 @@ export async function getEffectivePlanLimits(
     // Convert custom plan limits: null = use standard, -1 = unlimited
     const resolveLimits = (customValue: number | null, standardValue: number) => {
       if (customValue === null) return standardValue;
-      if (customValue === -1) return Infinity;
+      if (customValue === UNLIMITED) return UNLIMITED;
       return customValue;
     };
 
@@ -76,22 +106,79 @@ export async function getEffectivePlanLimits(
   }
 }
 
+/**
+ * Check if a campaign can be created given current count and limit
+ */
 export function canCreateCampaign(plan: string | null | undefined, currentCampaignCount: number): boolean {
+  if (currentCampaignCount < 0) {
+    console.warn('Negative campaign count detected:', currentCampaignCount);
+    return false;
+  }
   const limits = getPlanLimits(plan);
-  return currentCampaignCount < limits.campaigns;
+  return isUnlimited(limits.campaigns) || currentCampaignCount < limits.campaigns;
 }
 
+/**
+ * Check if a boost can be created given current count and limit
+ */
 export function canCreateBoost(plan: string | null | undefined, currentBoostCount: number): boolean {
+  if (currentBoostCount < 0) {
+    console.warn('Negative boost count detected:', currentBoostCount);
+    return false;
+  }
   const limits = getPlanLimits(plan);
-  return currentBoostCount < limits.boosts;
+  return isUnlimited(limits.boosts) || currentBoostCount < limits.boosts;
 }
 
+/**
+ * Check if a creator can be hired given current hire count and limit
+ */
 export function canHireCreator(plan: string | null | undefined, currentHireCount: number): boolean {
+  if (currentHireCount < 0) {
+    console.warn('Negative hire count detected:', currentHireCount);
+    return false;
+  }
   const limits = getPlanLimits(plan);
-  return currentHireCount < limits.hires;
+  return isUnlimited(limits.hires) || currentHireCount < limits.hires;
 }
 
-// Enhanced versions that check custom plans
+/**
+ * Generic check if creation is allowed given current count and limit
+ * Handles unlimited (-1) as a special case
+ */
 export function canCreateWithLimit(currentCount: number, limit: number): boolean {
+  if (!Number.isFinite(currentCount) || !Number.isFinite(limit)) {
+    console.warn('Invalid count or limit:', { currentCount, limit });
+    return false;
+  }
+  if (currentCount < 0) {
+    console.warn('Negative count detected:', currentCount);
+    return false;
+  }
+  if (isUnlimited(limit)) {
+    return true;
+  }
   return currentCount < limit;
+}
+
+/**
+ * Get remaining count until limit
+ * Returns null for unlimited plans
+ */
+export function getRemainingCount(currentCount: number, limit: number): number | null {
+  if (isUnlimited(limit)) {
+    return null;
+  }
+  return Math.max(0, limit - currentCount);
+}
+
+/**
+ * Format limit for display
+ * Shows "Unlimited" for unlimited plans
+ */
+export function formatLimit(limit: number): string {
+  if (isUnlimited(limit)) {
+    return "Unlimited";
+  }
+  return limit.toString();
 }

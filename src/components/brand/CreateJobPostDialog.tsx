@@ -193,7 +193,7 @@ export function CreateJobPostDialog({
         return;
       }
       const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-      const maxCreators = parseInt(formData.max_accepted_creators) || 1;
+      const maxCreators = parseInt(formData.max_accepted_creators, 10) || 1;
       const totalBudgetNeeded = monthlyRetainer * maxCreators;
 
       if (totalBudgetNeeded > availableBalance) {
@@ -250,9 +250,9 @@ export function CreateJobPostDialog({
         title: formData.title,
         description: formData.description || null,
         monthly_retainer: parseFloat(formData.monthly_retainer),
-        videos_per_month: parseInt(formData.videos_per_month) || 1,
+        videos_per_month: parseInt(formData.videos_per_month, 10) || 1,
         content_style_requirements: fullRequirements,
-        max_accepted_creators: parseInt(formData.max_accepted_creators) || 1,
+        max_accepted_creators: parseInt(formData.max_accepted_creators, 10) || 1,
         start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : null,
         end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
         banner_url,
@@ -529,7 +529,7 @@ export function CreateJobPostDialog({
                 {/* Total Budget Display */}
                 {(() => {
                   const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-                  const maxCreators = parseInt(formData.max_accepted_creators) || 1;
+                  const maxCreators = parseInt(formData.max_accepted_creators, 10) || 1;
                   const totalBudget = monthlyRetainer * maxCreators;
                   const exceedsBalance = totalBudget > availableBalance;
 

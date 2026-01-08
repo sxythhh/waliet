@@ -1,14 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check, CheckCircle2, Circle, ExternalLink } from "lucide-react";
+import { Copy, Check, CheckCircle2, Circle, ExternalLink, ArrowDownLeft, ArrowUpRight, Gift, Wallet, ChevronLeft, ChevronRight, Users, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { X, Clock, Hourglass } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis } from "recharts";
 import { format, subMonths } from "date-fns";
 import { Link } from "react-router-dom";
+import { EarningsChart, EarningsChartPeriod } from "@/components/dashboard/EarningsChart";
+import { TransactionShareDialog } from "@/components/dashboard/TransactionShareDialog";
+import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
+import { TransferDialog } from "@/components/dashboard/TransferDialog";
+import { Share2, ArrowRightLeft } from "lucide-react";
+
+interface WalletTransaction {
+  id: string;
+  type: string;
+  amount: number;
+  date: Date;
+  status?: string;
+  rejection_reason?: string;
+  campaign?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url?: string | null;
+  } | null;
+  boost?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url?: string | null;
+  } | null;
+  metadata?: {
+    sender_username?: string;
+    recipient_username?: string;
+    period_start?: string;
+    period_end?: string;
+  };
+}
 
 interface Milestone {
   id: string;
@@ -61,7 +96,92 @@ export function ReferralsTab(): JSX.Element {
   const [brandCommission, setBrandCommission] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [earningsChartPeriod, setEarningsChartPeriod] = useState<EarningsChartPeriod>("3M");
+  const [selectedTransaction, setSelectedTransaction] = useState<WalletTransaction | null>(null);
+  const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const transactionsPerPage = 10;
   const { toast } = useToast();
+
+  const fetchTransactions = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch wallet for total earned and balance
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("total_earned, balance")
+      .eq("user_id", user.id)
+      .single();
+
+    if (walletData) {
+      setTotalEarned(walletData.total_earned || 0);
+      setWalletBalance(walletData.balance || 0);
+    }
+
+    // Fetch transactions
+    const { data: txns } = await supabase
+      .from("wallet_transactions")
+      .select("id, type, amount, status, created_at, metadata")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (!txns) return;
+
+    // Get campaign and boost IDs
+    const campaignIds = txns.map(t => (t.metadata as any)?.campaign_id).filter(Boolean);
+    const boostIds = txns.map(t => (t.metadata as any)?.boost_id).filter(Boolean);
+
+    // Fetch campaign details
+    let campaignsMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }> = {};
+    if (campaignIds.length > 0) {
+      const { data: campaigns } = await supabase
+        .from("campaigns")
+        .select("id, title, brand_name, brand_logo_url")
+        .in("id", campaignIds);
+      campaignsMap = (campaigns || []).reduce((acc, c) => {
+        acc[c.id] = { id: c.id, title: c.title, brand_name: c.brand_name, brand_logo_url: c.brand_logo_url };
+        return acc;
+      }, {} as Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }>);
+    }
+
+    // Fetch boost details
+    let boostsMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }> = {};
+    if (boostIds.length > 0) {
+      const { data: boosts } = await supabase
+        .from("bounty_campaigns")
+        .select("id, title, brands(name, logo_url)")
+        .in("id", boostIds);
+      boostsMap = (boosts || []).reduce((acc, b) => {
+        acc[b.id] = { id: b.id, title: b.title, brand_name: (b.brands as any)?.name || '', brand_logo_url: (b.brands as any)?.logo_url || null };
+        return acc;
+      }, {} as Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }>);
+    }
+
+    const formattedTransactions: WalletTransaction[] = txns.map(txn => {
+      const metadata = txn.metadata as any;
+      const isBoostEarning = txn.type === 'earning' && metadata?.boost_id;
+
+      return {
+        id: txn.id,
+        type: isBoostEarning ? 'boost_earning' : txn.type,
+        amount: Number(txn.amount) || 0,
+        date: new Date(txn.created_at),
+        status: txn.status,
+        campaign: metadata?.campaign_id ? campaignsMap[metadata.campaign_id] || null : null,
+        boost: metadata?.boost_id ? boostsMap[metadata.boost_id] || null : null,
+        metadata: metadata || undefined,
+      };
+    });
+
+    setTransactions(formattedTransactions);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -71,12 +191,13 @@ export function ReferralsTab(): JSX.Element {
         fetchReferrals(),
         fetchMilestones(),
         fetchAffiliateEarningsData(),
-        fetchBrandCommission()
+        fetchBrandCommission(),
+        fetchTransactions()
       ]);
       setLoading(false);
     };
     loadData();
-  }, []);
+  }, [fetchTransactions]);
 
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -235,7 +356,288 @@ export function ReferralsTab(): JSX.Element {
   const creatorEarnings = referrals.reduce((sum, r) => sum + (Number(r.reward_earned) || 0), 0);
 
   return (
-    <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 w-full">
+    <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 w-full space-y-4">
+      {/* Earnings Chart & Payment Methods - 2 Column */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Earnings Chart */}
+        <Card className="bg-card border border-border rounded-2xl">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
+                Earnings Over Time
+              </CardTitle>
+              <div className="text-right">
+                <p className="text-lg font-bold text-blue-500 tracking-[-0.5px]">
+                  ${totalEarned.toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">Total Earned</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <EarningsChart
+              transactions={transactions}
+              totalEarned={totalEarned}
+              period={earningsChartPeriod}
+              onPeriodChange={setEarningsChartPeriod}
+              showPeriodSelector={true}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Payment Methods */}
+        <Card className="bg-card border border-border rounded-2xl">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
+                Payment Methods
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTransferDialogOpen(true)}
+                className="text-sm font-medium tracking-[-0.3px] gap-1.5"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                Transfer
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <PaymentMethodsSection />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Transactions Table - Full Width */}
+      {(() => {
+        const totalPages = Math.ceil(transactions.length / transactionsPerPage);
+        const startIndex = (currentPage - 1) * transactionsPerPage;
+        const paginatedTransactions = transactions.slice(startIndex, startIndex + transactionsPerPage);
+
+        const getTransactionIcon = (type: string, isOutgoing: boolean) => {
+          if (type === 'withdrawal') return <ArrowUpRight className="h-4 w-4" />;
+          if (type === 'transfer_sent' || type === 'transfer_out') return <Users className="h-4 w-4" />;
+          if (type === 'transfer_received' || type === 'transfer_in') return <Users className="h-4 w-4" />;
+          if (type === 'referral') return <Gift className="h-4 w-4" />;
+          if (type === 'balance_correction') return <Minus className="h-4 w-4" />;
+          return <ArrowDownLeft className="h-4 w-4" />;
+        };
+
+        const getIconBgColor = (type: string, isOutgoing: boolean) => {
+          if (type === 'withdrawal') return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400';
+          if (type === 'transfer_sent' || type === 'transfer_out') return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400';
+          if (type === 'transfer_received' || type === 'transfer_in') return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400';
+          if (type === 'referral') return 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400';
+          if (type === 'balance_correction') return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400';
+          return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
+        };
+
+        return (
+          <Card className="bg-card border border-border rounded-2xl overflow-hidden">
+            <CardHeader className="pb-0 pt-5 px-5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
+                  Transactions
+                </CardTitle>
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  {transactions.length} total
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 mt-4">
+              {transactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-5">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <Wallet className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground mb-1 tracking-[-0.3px]">
+                    No transactions yet
+                  </p>
+                  <p className="text-sm text-muted-foreground tracking-[-0.2px]">
+                    Your earnings and payouts will appear here
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/30">
+                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px]">Transaction</th>
+                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden md:table-cell">Type</th>
+                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden sm:table-cell">Date</th>
+                          <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px]">Amount</th>
+                          <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden sm:table-cell">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedTransactions.map((transaction, index) => {
+                          const brandName = transaction.boost?.brand_name || transaction.campaign?.brand_name;
+                          const brandLogo = transaction.boost?.brand_logo_url || transaction.campaign?.brand_logo_url;
+                          const isOutgoing = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0);
+                          const isIncomingTransfer = transaction.type === 'transfer_received' || transaction.type === 'transfer_in';
+                          const isOutgoingTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_out';
+
+                          const displayName = brandName ||
+                            (isIncomingTransfer ? `From @${transaction.metadata?.sender_username || 'user'}` :
+                            isOutgoingTransfer ? `To @${transaction.metadata?.recipient_username || 'user'}` :
+                            transaction.type === 'withdrawal' ? 'Withdrawal' :
+                            transaction.type === 'referral' ? 'Referral Bonus' :
+                            transaction.type === 'balance_correction' ? 'Balance Adjustment' :
+                            'Transaction');
+
+                          const typeLabel = transaction.type === 'earning' || transaction.type === 'boost_earning'
+                            ? 'Campaign Payout'
+                            : transaction.type === 'withdrawal'
+                            ? 'Withdrawal'
+                            : isOutgoingTransfer
+                            ? 'Transfer Sent'
+                            : isIncomingTransfer
+                            ? 'Transfer Received'
+                            : transaction.type === 'referral'
+                            ? 'Referral Bonus'
+                            : transaction.type === 'balance_correction'
+                            ? 'Adjustment'
+                            : 'Transaction';
+
+                          return (
+                            <tr
+                              key={transaction.id}
+                              onClick={() => {
+                                setSelectedTransaction(transaction);
+                                setTransactionSheetOpen(true);
+                              }}
+                              className={`cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${
+                                index !== paginatedTransactions.length - 1 ? 'border-b border-border/50' : ''
+                              }`}
+                            >
+                              <td className="px-5 py-3.5">
+                                <div className="flex items-center gap-3">
+                                  {brandLogo ? (
+                                    <img src={brandLogo} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+                                  ) : (
+                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconBgColor(transaction.type, isOutgoing)}`}>
+                                      {getTransactionIcon(transaction.type, isOutgoing)}
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <span className="text-sm font-medium text-foreground truncate block tracking-[-0.3px]">
+                                      {displayName}
+                                    </span>
+                                    {(transaction.campaign?.title || transaction.boost?.title) && (
+                                      <span className="text-xs text-muted-foreground truncate block tracking-[-0.2px]">
+                                        {transaction.campaign?.title || transaction.boost?.title}
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-muted-foreground md:hidden tracking-[-0.2px]">
+                                      {typeLabel}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-5 py-3.5 hidden md:table-cell">
+                                <span className="text-sm text-muted-foreground tracking-[-0.3px]">
+                                  {typeLabel}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 hidden sm:table-cell">
+                                <span className="text-sm text-muted-foreground tracking-[-0.3px]">
+                                  {format(transaction.date, 'MMM d, yyyy')}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 text-right">
+                                <span className={`text-sm font-semibold tabular-nums tracking-[-0.3px] ${
+                                  isOutgoing
+                                    ? 'text-foreground'
+                                    : 'text-emerald-600 dark:text-emerald-500'
+                                }`}>
+                                  {isOutgoing ? '−' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 text-right hidden sm:table-cell">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium tracking-[-0.2px] ${
+                                  transaction.status === 'completed'
+                                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                    : transaction.status === 'pending'
+                                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                    : transaction.status === 'in_transit'
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                                    : transaction.status === 'rejected'
+                                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  {transaction.status === 'completed' ? 'Completed' :
+                                   transaction.status === 'pending' ? 'Pending' :
+                                   transaction.status === 'in_transit' ? 'In Transit' :
+                                   transaction.status === 'rejected' ? 'Rejected' : '—'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-5 py-4 border-t border-border">
+                      <span className="text-sm text-muted-foreground tracking-[-0.3px]">
+                        Showing {startIndex + 1}-{Math.min(startIndex + transactionsPerPage, transactions.length)} of {transactions.length}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(page => {
+                            if (totalPages <= 5) return true;
+                            if (page === 1 || page === totalPages) return true;
+                            if (Math.abs(page - currentPage) <= 1) return true;
+                            return false;
+                          })
+                          .map((page, index, arr) => (
+                            <React.Fragment key={page}>
+                              {index > 0 && arr[index - 1] !== page - 1 && (
+                                <span className="px-1 text-muted-foreground">...</span>
+                              )}
+                              <Button
+                                variant={currentPage === page ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                                className="h-8 w-8 p-0 text-xs"
+                              >
+                                {page}
+                              </Button>
+                            </React.Fragment>
+                          ))}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {/* Referrals Section */}
       <div className="border border-border rounded-2xl overflow-hidden">
         <div className="p-4 space-y-5">
           {/* Stats Cards - Funnel Metrics */}
@@ -470,6 +872,173 @@ export function ReferralsTab(): JSX.Element {
           </div>
         </div>
       </div>
+
+      {/* Transaction Receipt Sheet */}
+      <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0 font-inter tracking-[-0.3px]">
+          {selectedTransaction && (
+            <div className="flex flex-col h-full">
+              {/* Status Badge */}
+              {selectedTransaction.status && selectedTransaction.status !== 'completed' && (
+                <div className="px-6 pt-4 pb-2 text-center relative">
+                  <button
+                    onClick={() => setTransactionSheetOpen(false)}
+                    className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <Badge
+                    variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'}
+                    className="capitalize"
+                  >
+                    {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
+                  </Badge>
+                </div>
+              )}
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {/* Source */}
+                <div>
+                  <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium">Source</span>
+                  <div className="flex items-center gap-3 mt-2">
+                    {(selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url) ? (
+                      <img
+                        src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url || ''}
+                        alt={selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || "Brand"}
+                        className="w-10 h-10 rounded-[7px] object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
+                        <span className="text-base font-semibold text-muted-foreground">
+                          {(selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || selectedTransaction.type === 'referral' ? 'R' : selectedTransaction.type === 'withdrawal' ? 'W' : 'T')?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-base font-semibold tracking-[-0.5px] block">
+                        {selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name ||
+                          (selectedTransaction.type === 'referral' ? 'Referral Bonus' :
+                           selectedTransaction.type === 'withdrawal' ? 'Withdrawal' : 'Transaction')}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium">Date</span>
+                    <div className="mt-1.5">
+                      <span className="text-sm font-medium tracking-[-0.5px] block">
+                        {format(selectedTransaction.date, 'MMM d, yyyy')}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(selectedTransaction.date, 'h:mm a')}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium">Paid</span>
+                    <div className="mt-1.5">
+                      {selectedTransaction.status === 'completed' ? (
+                        <>
+                          <span className="text-sm font-medium tracking-[-0.5px] block">
+                            {format(selectedTransaction.date, 'MMM d, yyyy')}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(selectedTransaction.date, 'h:mm a')}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium">Amount</span>
+                  <span className="text-lg font-bold tracking-[-0.5px] block mt-1">
+                    ${Math.abs(selectedTransaction.amount).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Transaction ID */}
+                <div>
+                  <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium">Transaction ID</span>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-xs font-mono text-muted-foreground break-all">
+                      {selectedTransaction.id}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0"
+                      aria-label="Copy transaction ID"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedTransaction.id);
+                        toast({ title: "Copied!", description: "Transaction ID copied to clipboard" });
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Rejection Reason */}
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && (
+                  <div className="p-3 bg-destructive/10 rounded-xl">
+                    <div className="flex items-start gap-2">
+                      <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs font-medium tracking-[-0.5px] text-destructive mb-1">Rejection Reason</div>
+                        <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Share Button */}
+                {selectedTransaction.status === 'completed' && (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning') && (
+                  <Button
+                    onClick={() => {
+                      setTransactionSheetOpen(false);
+                      setShareDialogOpen(true);
+                    }}
+                    className="w-full gap-2"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share Transaction
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Share Transaction Dialog */}
+      <TransactionShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        transaction={selectedTransaction as any}
+        userProfile={profile}
+      />
+
+      {/* Transfer Dialog */}
+      <TransferDialog
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        currentBalance={walletBalance}
+        onSuccess={fetchTransactions}
+      />
     </div>
   );
 }

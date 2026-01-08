@@ -224,7 +224,7 @@ export function CreateBountyDialog({
 
       // Calculate total cost and validate against balance
       const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-      const maxCreators = parseInt(formData.max_accepted_creators) || 0;
+      const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
       const totalBudgetNeeded = monthlyRetainer * maxCreators;
       if (totalBudgetNeeded > availableBalance) {
         toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', {
@@ -306,9 +306,9 @@ export function CreateBountyDialog({
         title: formData.title,
         description: formData.description || null,
         monthly_retainer: parseFloat(formData.monthly_retainer),
-        videos_per_month: parseInt(formData.videos_per_month),
+        videos_per_month: parseInt(formData.videos_per_month, 10),
         content_style_requirements: fullRequirements,
-        max_accepted_creators: parseInt(formData.max_accepted_creators),
+        max_accepted_creators: parseInt(formData.max_accepted_creators, 10),
         start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : null,
         end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
         banner_url,
@@ -640,8 +640,8 @@ export function CreateBountyDialog({
                       <div className="flex items-center justify-between py-2">
                         <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video rate</span>
                         <span className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">
-                          ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 
-                            ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) 
+                          ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month, 10) > 0
+                            ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month, 10)).toFixed(2)
                             : '0.00'}
                         </span>
                       </div>
@@ -651,7 +651,7 @@ export function CreateBountyDialog({
                       {/* Total Budget */}
                       {(() => {
                         const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-                        const maxCreators = parseInt(formData.max_accepted_creators) || 0;
+                        const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
                         const totalBudget = monthlyRetainer * maxCreators;
                         const exceedsBalance = totalBudget > availableBalance;
                         
@@ -1154,15 +1154,15 @@ export function CreateBountyDialog({
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video rate</span>
                       <span className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">
-                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0
-                          ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)
+                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month, 10) > 0
+                          ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month, 10)).toFixed(2)
                           : '0.00'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Total monthly budget</span>
                       <span className="text-base font-bold text-primary font-geist tracking-[-0.5px]">
-                        ${((parseFloat(formData.monthly_retainer) || 0) * (parseInt(formData.max_accepted_creators) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${((parseFloat(formData.monthly_retainer) || 0) * (parseInt(formData.max_accepted_creators, 10) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>

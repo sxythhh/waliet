@@ -10,6 +10,7 @@ import { Loader2, X, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { FLAGS } from "@/assets/flags";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -53,25 +54,25 @@ const CONTENT_STYLES = [
   "ASMR",
 ];
 
-const CONTENT_LANGUAGES = [
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Portuguese",
-  "Italian",
-  "Dutch",
-  "Russian",
-  "Japanese",
-  "Korean",
-  "Chinese",
-  "Arabic",
-  "Hindi",
-  "Indonesian",
-  "Turkish",
-  "Polish",
-  "Vietnamese",
-  "Thai",
+const CONTENT_LANGUAGES: { name: string; flag?: string }[] = [
+  { name: "English", flag: FLAGS.US },
+  { name: "Spanish", flag: FLAGS.ES },
+  { name: "French", flag: FLAGS.FR },
+  { name: "German", flag: FLAGS.DE },
+  { name: "Portuguese", flag: FLAGS.PT },
+  { name: "Italian", flag: FLAGS.IT },
+  { name: "Dutch", flag: FLAGS.NL },
+  { name: "Russian", flag: FLAGS.RU },
+  { name: "Japanese", flag: FLAGS.JP },
+  { name: "Korean", flag: FLAGS.KR },
+  { name: "Chinese", flag: FLAGS.CN },
+  { name: "Arabic", flag: FLAGS.SA },
+  { name: "Hindi", flag: FLAGS.IN },
+  { name: "Indonesian", flag: FLAGS.ID },
+  { name: "Turkish", flag: FLAGS.TR },
+  { name: "Polish", flag: FLAGS.PL },
+  { name: "Vietnamese", flag: FLAGS.VN },
+  { name: "Thai", flag: FLAGS.TH },
 ];
 
 const CONTENT_NICHES = [
@@ -304,20 +305,27 @@ export function EditProfileDialog({
                 <div className="flex flex-wrap gap-2">
                   {CONTENT_LANGUAGES.map(lang => (
                     <button
-                      key={lang}
+                      key={lang.name}
                       type="button"
                       onClick={() => setFormData({
                         ...formData,
-                        content_languages: toggleArrayItem(formData.content_languages, lang)
+                        content_languages: toggleArrayItem(formData.content_languages, lang.name)
                       })}
                       className={cn(
-                        "px-3 py-1.5 text-sm font-inter tracking-[-0.3px] rounded-full border transition-all",
-                        formData.content_languages.includes(lang)
+                        "px-3 py-1.5 text-sm font-inter tracking-[-0.3px] rounded-full border transition-all inline-flex items-center gap-1.5",
+                        formData.content_languages.includes(lang.name)
                           ? "bg-foreground text-background border-foreground"
                           : "bg-transparent text-muted-foreground border-border/50 hover:border-foreground/50 hover:text-foreground"
                       )}
                     >
-                      {lang}
+                      {lang.flag && (
+                        <img
+                          src={lang.flag}
+                          alt=""
+                          className="w-4 h-4 rounded-sm object-cover"
+                        />
+                      )}
+                      {lang.name}
                     </button>
                   ))}
                 </div>

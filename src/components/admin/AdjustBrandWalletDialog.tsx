@@ -64,7 +64,7 @@ export function AdjustBrandWalletDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       toast.error("Please enter a valid amount");
@@ -79,29 +79,31 @@ export function AdjustBrandWalletDialog({
     setIsSubmitting(true);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      
-      const { error } = await supabase
-        .from("brand_wallet_transactions")
-        .insert({
+      // Use secure Edge Function with server-side admin verification
+      const { data, error } = await supabase.functions.invoke('admin-adjust-brand-wallet', {
+        body: {
           brand_id: brandId,
-          type: adjustmentType === "add" ? "admin_credit" : "admin_debit",
+          adjustment_type: adjustmentType,
           amount: numAmount,
-          status: "completed",
-          description: description || `Admin ${adjustmentType === "add" ? "credit" : "debit"}`,
-          created_by: userData?.user?.id
-        });
+          description: description || undefined,
+        },
+      });
 
       if (error) throw error;
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to adjust wallet');
+      }
 
       toast.success(`Successfully ${adjustmentType === "add" ? "added" : "removed"} $${numAmount.toFixed(2)}`);
       setOpen(false);
       setAmount("");
       setDescription("");
       onSuccess?.();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error adjusting balance:", error);
-      toast.error("Failed to adjust balance");
+      const message = error instanceof Error ? error.message : "Failed to adjust balance";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

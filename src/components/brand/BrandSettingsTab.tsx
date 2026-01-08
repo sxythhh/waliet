@@ -403,7 +403,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
                 type="number"
                 placeholder="e.g., 1000 (leave empty for any)"
                 value={settings.auto_approve_min_followers || ""}
-                onChange={(e) => updateSetting("auto_approve_min_followers", e.target.value ? parseInt(e.target.value) : null)}
+                onChange={(e) => updateSetting("auto_approve_min_followers", e.target.value ? parseInt(e.target.value, 10) : null)}
                 className="mt-1.5 h-9"
               />
             </div>
@@ -447,7 +447,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
           <p className="text-xs text-muted-foreground mt-0.5 mb-2">Time to review submissions before payouts are released</p>
           <Select
             value={settings.payout_clearing_days.toString()}
-            onValueChange={(v) => updateSetting("payout_clearing_days", parseInt(v))}
+            onValueChange={(v) => updateSetting("payout_clearing_days", parseInt(v, 10))}
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -713,7 +713,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
                   </div>
                   <div className="space-y-2">
                     <Label>Severity</Label>
-                    <Select value={strikeSeverity.toString()} onValueChange={(v) => setStrikeSeverity(parseInt(v))}>
+                    <Select value={strikeSeverity.toString()} onValueChange={(v) => setStrikeSeverity(parseInt(v, 10))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {SEVERITY_LEVELS.map((l) => (

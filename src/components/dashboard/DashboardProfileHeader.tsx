@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Plus, Link2, Check } from "lucide-react";
+import { Calendar, Camera, Plus, Link2, Check, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +33,8 @@ interface DashboardProfileHeaderProps {
     avatar_url: string | null;
     banner_url?: string | null;
     created_at: string;
+    country?: string | null;
+    city?: string | null;
   };
   socialAccounts: SocialAccount[];
   onEditProfile: () => void;
@@ -330,12 +332,22 @@ export function DashboardProfileHeader({
             </button>
           </div>
 
-          {/* Join Date */}
-          <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span className="font-['Inter'] tracking-[-0.5px]">
-              Joined {format(new Date(profile.created_at), "MMMM yyyy")}
-            </span>
+          {/* Location & Join Date */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-sm text-muted-foreground">
+            {(profile.city || profile.country) && (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span className="font-['Inter'] tracking-[-0.5px]">
+                  {[profile.city, profile.country].filter(Boolean).join(", ")}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span className="font-['Inter'] tracking-[-0.5px]">
+                Joined {format(new Date(profile.created_at), "MMMM yyyy")}
+              </span>
+            </div>
           </div>
         </div>
       </div>

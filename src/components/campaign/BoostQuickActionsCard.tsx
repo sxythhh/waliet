@@ -1,10 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import VideocamIcon from "@mui/icons-material/Videocam";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import DescriptionIcon from "@mui/icons-material/Description";
-import SupportAgentIcon from "@mui/icons-material/SupportAgent";
-import LogoutIcon from "@mui/icons-material/Logout";
+import { Icon } from "@iconify/react";
+import { ChevronRight } from "lucide-react";
 
 interface BoostQuickActionsCardProps {
   boost: {
@@ -33,17 +29,16 @@ export function BoostQuickActionsCard({
       id: 'submit-video',
       label: 'Submit Video',
       description: 'Submit a new video for this boost',
-      icon: VideocamIcon,
+      icon: 'material-symbols:videocam',
       onClick: onSubmitVideo,
       disabled: !canSubmit,
-      primary: true,
       show: true
     },
     {
       id: 'view-brand',
       label: 'View Brand',
       description: `Learn more about ${boost.brand_name || 'the brand'}`,
-      icon: StorefrontIcon,
+      icon: 'material-symbols:storefront',
       onClick: () => {
         if (boost.brand_slug) {
           navigate(`/b/${boost.brand_slug}`);
@@ -56,7 +51,7 @@ export function BoostQuickActionsCard({
       id: 'view-blueprint',
       label: 'View Guidelines',
       description: 'Full content brief and guidelines',
-      icon: DescriptionIcon,
+      icon: 'material-symbols:description',
       onClick: () => {
         if (boost.blueprint_id) {
           navigate(`/blueprint/${boost.blueprint_id}`);
@@ -69,7 +64,7 @@ export function BoostQuickActionsCard({
       id: 'get-support',
       label: 'Get Support',
       description: 'Need help? Contact support',
-      icon: SupportAgentIcon,
+      icon: 'material-symbols:support-agent',
       onClick: () => navigate('/support'),
       disabled: false,
       show: true
@@ -78,7 +73,7 @@ export function BoostQuickActionsCard({
       id: 'leave-boost',
       label: 'Leave Boost',
       description: 'Withdraw from this boost',
-      icon: LogoutIcon,
+      icon: 'material-symbols:logout',
       onClick: onLeaveBoost || (() => {}),
       disabled: !onLeaveBoost,
       danger: true,
@@ -89,58 +84,48 @@ export function BoostQuickActionsCard({
   const visibleActions = actions.filter(a => a.show);
 
   return (
-    <div className={`rounded-2xl bg-card border border-border p-4 ${className || ""}`}>
-      <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-        Quick Actions
-      </h3>
-
-      <div className="space-y-2">
-        {visibleActions.map((action) => {
-          const Icon = action.icon;
-          const isDanger = 'danger' in action && action.danger;
-          return (
-            <Button
-              key={action.id}
-              variant={action.primary ? "default" : "outline"}
-              size="sm"
-              className={`w-full justify-start h-auto py-2.5 px-3 ${
-                action.primary
-                  ? "bg-[#2061de] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7]"
-                  : isDanger
-                    ? "hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                    : "hover:bg-muted/50"
-              }`}
-              onClick={action.onClick}
-              disabled={action.disabled}
-            >
+    <div className={`space-y-1.5 ${className || ""}`}>
+      {visibleActions.map((action) => {
+        const isDanger = 'danger' in action && action.danger;
+        return (
+          <button
+            key={action.id}
+            onClick={action.onClick}
+            disabled={action.disabled}
+            className={`group relative flex items-center gap-3 p-3 rounded-lg w-full text-left transition-all duration-200 ${
+              action.disabled
+                ? "opacity-50 cursor-not-allowed bg-muted/20 dark:bg-muted/30"
+                : isDanger
+                  ? "bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-destructive/5 dark:hover:bg-destructive/10"
+                  : "bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70"
+            }`}
+          >
+            <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${
+              isDanger ? "bg-destructive/10" : "bg-muted dark:bg-muted/80"
+            }`}>
               <Icon
-                sx={{ fontSize: 18 }}
-                className={`mr-2.5 flex-shrink-0 ${
-                  action.primary
-                    ? "text-white"
-                    : isDanger
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                }`}
+                icon={action.icon}
+                className={`w-4 h-4 ${isDanger ? "text-destructive" : "text-foreground"}`}
               />
-              <div className="text-left">
-                <p className={`text-xs font-medium ${isDanger ? "text-destructive" : ""}`} style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                  {action.label}
-                </p>
-                <p className={`text-[10px] ${
-                  action.primary
-                    ? "text-white/70"
-                    : isDanger
-                      ? "text-destructive/70"
-                      : "text-muted-foreground"
-                }`} style={{ fontFamily: 'Inter' }}>
-                  {action.description}
-                </p>
-              </div>
-            </Button>
-          );
-        })}
-      </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className={`text-xs font-semibold font-inter tracking-[-0.3px] block ${
+                isDanger ? "text-destructive" : "text-foreground"
+              }`}>
+                {action.label}
+              </span>
+              <span className={`text-[10px] font-inter tracking-[-0.2px] block truncate ${
+                isDanger ? "text-destructive/70" : "text-muted-foreground"
+              }`}>
+                {action.description}
+              </span>
+            </div>
+            <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-all ${
+              isDanger ? "text-destructive/50" : "text-muted-foreground"
+            }`} />
+          </button>
+        );
+      })}
     </div>
   );
 }

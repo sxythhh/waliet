@@ -494,7 +494,7 @@ export function TierConfigurationTab({
                   min={1}
                   value={formData.level}
                   onChange={(e) =>
-                    setFormData({ ...formData, level: parseInt(e.target.value) || 1 })
+                    setFormData({ ...formData, level: parseInt(e.target.value, 10) || 1 })
                   }
                   className="h-9"
                 />
@@ -527,7 +527,7 @@ export function TierConfigurationTab({
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      videos_per_month: parseInt(e.target.value) || 1,
+                      videos_per_month: parseInt(e.target.value, 10) || 1,
                     })
                   }
                   className="h-9"
@@ -666,7 +666,7 @@ export function TierConfigurationTab({
                             ...formData,
                             promotion_criteria: {
                               ...formData.promotion_criteria,
-                              min_months_active: parseInt(e.target.value) || 1,
+                              min_months_active: parseInt(e.target.value, 10) || 1,
                             },
                           })
                         }
@@ -686,7 +686,7 @@ export function TierConfigurationTab({
                             ...formData,
                             promotion_criteria: {
                               ...formData.promotion_criteria,
-                              min_avg_views: parseInt(e.target.value) || 0,
+                              min_avg_views: parseInt(e.target.value, 10) || 0,
                             },
                           })
                         }
@@ -759,7 +759,7 @@ export function TierConfigurationTab({
                             ...formData,
                             demotion_criteria: {
                               ...formData.demotion_criteria,
-                              consecutive_missed_quotas: parseInt(e.target.value) || 1,
+                              consecutive_missed_quotas: parseInt(e.target.value, 10) || 1,
                             },
                           })
                         }

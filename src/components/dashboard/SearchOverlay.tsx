@@ -209,60 +209,53 @@ export function SearchOverlay({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-6 max-h-[60vh] overflow-y-auto">
-          {/* Type Filter */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Type
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'campaigns', label: 'Campaigns' },
-                { id: 'boosts', label: 'Boosts' },
-              ].map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => setLocalTypeFilter(type.id as 'all' | 'campaigns' | 'boosts')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                    localTypeFilter === type.id
-                      ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
-                      : 'bg-muted/50 hover:bg-muted text-foreground'
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
-              {/* Saved Toggle */}
+        <div className="px-4 pb-4 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Type & Saved Row */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'campaigns', label: 'Campaigns' },
+              { id: 'boosts', label: 'Boosts' },
+            ].map((type) => (
               <button
-                onClick={() => setLocalSavedFilter(!localSavedFilter)}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                  localSavedFilter
-                    ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
+                key={type.id}
+                onClick={() => setLocalTypeFilter(type.id as 'all' | 'campaigns' | 'boosts')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                  localTypeFilter === type.id
+                    ? 'bg-foreground text-background'
                     : 'bg-muted/50 hover:bg-muted text-foreground'
                 }`}
               >
-                <Bookmark className={`h-4 w-4 ${localSavedFilter ? 'fill-current' : ''}`} />
-                Saved
+                {type.label}
               </button>
-            </div>
+            ))}
+            <div className="w-px h-4 bg-border mx-1" />
+            <button
+              onClick={() => setLocalSavedFilter(!localSavedFilter)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                localSavedFilter
+                  ? 'bg-foreground text-background'
+                  : 'bg-muted/50 hover:bg-muted text-foreground'
+              }`}
+            >
+              <Bookmark className={`h-3 w-3 ${localSavedFilter ? 'fill-current' : ''}`} />
+              Saved
+            </button>
           </div>
 
-          {/* Platform Filter */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Platform
-            </h3>
-            <div className="flex flex-wrap gap-2">
+          {/* Platform Row */}
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Platform</h3>
+            <div className="flex flex-wrap gap-1.5">
               {PLATFORM_FILTERS.map((platform) => {
                 const isActive = (localPlatformFilter === null && platform.id === 'all') || localPlatformFilter === platform.id;
                 return (
                   <button
                     key={platform.id}
                     onClick={() => setLocalPlatformFilter(platform.id === 'all' ? null : (localPlatformFilter === platform.id ? null : platform.id))}
-                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
                       isActive
-                        ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
+                        ? 'bg-foreground text-background'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
                     }`}
                   >
@@ -270,35 +263,33 @@ export function SearchOverlay({
                       <img
                         src={isActive ? platform.iconDark : platform.iconLight}
                         alt={platform.label}
-                        className={`h-4 w-4 ${!isActive ? 'dark:invert' : 'dark:invert-0'}`}
+                        className={`h-3 w-3 ${!isActive ? 'dark:invert' : 'dark:invert-0'}`}
                       />
                     )}
-                    {platform.label}
+                    {platform.id === 'all' ? 'All' : platform.label}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Browse Filters */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Browse
-            </h3>
-            <div className="flex flex-wrap gap-2">
+          {/* Browse Row */}
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Browse</h3>
+            <div className="flex flex-wrap gap-1.5">
               {BROWSE_FILTERS.map((filter) => {
                 const Icon = filter.icon;
                 return (
                   <button
                     key={filter.id}
                     onClick={() => setLocalBrowseFilter(localBrowseFilter === filter.id ? null : filter.id)}
-                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
                       localBrowseFilter === filter.id
-                        ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
+                        ? 'bg-foreground text-background'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3 w-3" />
                     {filter.label}
                   </button>
                 );
@@ -306,47 +297,44 @@ export function SearchOverlay({
             </div>
           </div>
 
-          {/* Sort Filter */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Sort By
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {SORT_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => setLocalSortFilter(option.id)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                    localSortFilter === option.id
-                      ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
-                      : 'bg-muted/50 hover:bg-muted text-foreground'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+          {/* Sort & Status Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Sort</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setLocalSortFilter(option.id)}
+                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                      localSortFilter === option.id
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted/50 hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Status Filter */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Status
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {STATUS_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => setLocalStatusFilter(option.id)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                    localStatusFilter === option.id
-                      ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
-                      : 'bg-muted/50 hover:bg-muted text-foreground'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Status</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {STATUS_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setLocalStatusFilter(option.id)}
+                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                      localStatusFilter === option.id
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted/50 hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

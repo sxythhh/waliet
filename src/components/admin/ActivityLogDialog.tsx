@@ -50,7 +50,7 @@ export function ActivityLogDialog({
         note: note.trim(),
         subject: subject.trim() || undefined,
         direction: activityType === "note" ? undefined : direction,
-        duration_seconds: durationMinutes ? parseInt(durationMinutes) * 60 : undefined,
+        duration_seconds: durationMinutes ? parseInt(durationMinutes, 10) * 60 : undefined,
       },
       {
         onSuccess: () => {

@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import voteIconLight from "@/assets/vote-icon-light.svg";
 import voteIconDark from "@/assets/vote-icon-dark.svg";
+import { EarningsChart, EarningsChartPeriod } from "@/components/dashboard/EarningsChart";
+
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  date: Date;
+  status?: string;
+}
 
 interface ReferredUser {
   id: string;
@@ -28,12 +37,51 @@ export default function Referrals() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [earningsChartPeriod, setEarningsChartPeriod] = useState<EarningsChartPeriod>("3M");
   const { toast } = useToast();
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     fetchReferralData();
+    fetchTransactions();
   }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const authResponse = await supabase.auth.getUser();
+      const user = authResponse.data.user;
+      if (!user) return;
+
+      // Fetch wallet transactions for the earnings chart
+      const { data: walletTransactions, error } = await supabase
+        .from("wallet_transactions")
+        .select("id, type, amount, status, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const transformedTransactions: Transaction[] = (walletTransactions || []).map((t: any) => ({
+        id: t.id,
+        type: t.type,
+        amount: Number(t.amount) || 0,
+        date: new Date(t.created_at),
+        status: t.status,
+      }));
+
+      setTransactions(transformedTransactions);
+
+      // Calculate total earned
+      const total = transformedTransactions
+        .filter(t => (t.type === 'earning' || t.type === 'boost_earning' || t.type === 'referral' || t.type === 'team_earning' || t.type === 'affiliate_earning') && t.status === 'completed')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      setTotalEarned(total);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
 
   const fetchReferralData = async () => {
     try {
@@ -117,11 +165,27 @@ export default function Referrals() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Your Referrals</h1>
+          <h1 className="text-3xl font-bold">Payments</h1>
           <p className="text-muted-foreground">
-            Track users who joined using your referral code
+            Track your earnings and referrals
           </p>
         </div>
+
+        {/* Earnings Over Time Chart */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">Earnings Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EarningsChart
+              transactions={transactions}
+              totalEarned={totalEarned}
+              period={earningsChartPeriod}
+              onPeriodChange={setEarningsChartPeriod}
+              showPeriodSelector={true}
+            />
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-3">

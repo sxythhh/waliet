@@ -66,7 +66,7 @@ export const BoostCardCompact = memo(function BoostCardCompact({
   return (
     <div className="group">
       <Card
-        className="relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg border border-border/50 bg-card"
+        className="relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out border border-border/50 bg-card"
         onClick={onClick}
       >
         {/* Full-width Banner - Top */}

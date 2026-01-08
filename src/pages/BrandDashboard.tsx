@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandSidebar } from "@/components/BrandSidebar";
+import { BrandOnboardingSteps } from "@/components/brand/BrandOnboardingSteps";
 interface Brand {
   id: string;
   name: string;
@@ -70,6 +71,7 @@ export default function BrandDashboard() {
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [activeView, setActiveView] = useState<"campaigns" | "bounties" | "home">("home");
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
+  const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -194,10 +196,13 @@ export default function BrandDashboard() {
   // Determine which views are available
   const hasHomeEmbed = !!brand.home_url;
   const hasCampaigns = campaigns.length > 0;
-  const showToggle = hasHomeEmbed && hasCampaigns;
+  const hasBounties = bounties.length > 0;
+  const hasAnyOpportunities = hasCampaigns || hasBounties;
+  const showToggle = hasHomeEmbed && hasAnyOpportunities;
 
-  // If only one view is available, set it as active
-  const effectiveView = !hasHomeEmbed ? "campaigns" : !hasCampaigns ? "home" : activeView;
+  // If brand has no campaigns/bounties, show campaigns view (with onboarding)
+  // Otherwise, if no home embed, show campaigns. If has both, use activeView.
+  const effectiveView = !hasAnyOpportunities ? "campaigns" : !hasHomeEmbed ? "campaigns" : activeView;
   
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -215,7 +220,13 @@ export default function BrandDashboard() {
                 </h1>
               </div>
               <div className="flex gap-2">
-                <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
+                <CreateCampaignDialog
+                  brandId={brand.id}
+                  brandName={brand.name}
+                  onSuccess={fetchBrandData}
+                  open={createCampaignOpen}
+                  onOpenChange={setCreateCampaignOpen}
+                />
                 <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
                   <Users className="h-4 w-4" />
                   Create Bounty
@@ -247,7 +258,13 @@ export default function BrandDashboard() {
       {/* Floating buttons when on home view */}
       {effectiveView === "home" && showToggle && (
         <div className="fixed top-4 right-4 z-50 flex gap-2">
-          <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
+          <CreateCampaignDialog
+            brandId={brand.id}
+            brandName={brand.name}
+            onSuccess={fetchBrandData}
+            open={createCampaignOpen}
+            onOpenChange={setCreateCampaignOpen}
+          />
           <Button
             onClick={() => setActiveView("campaigns")}
             className="bg-primary hover:bg-primary/90"
@@ -349,16 +366,10 @@ export default function BrandDashboard() {
                       </div> : null}
                   
                   {campaigns.length === 0 && bounties.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-muted-foreground mb-4">No campaigns or bounties yet</p>
-                      <div className="flex gap-2">
-                        <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
-                        <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
-                          <Users className="h-4 w-4" />
-                          Create Bounty
-                        </Button>
-                      </div>
-                    </div>
+                    <BrandOnboardingSteps
+                      onLaunchOpportunity={() => setCreateCampaignOpen(true)}
+                      className="py-6"
+                    />
                   )}
                 </div>
               )}
@@ -425,10 +436,10 @@ export default function BrandDashboard() {
                       </CardContent>
                     </Card>;
         })}
-              </div> : <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-muted-foreground mb-4">No campaigns yet</p>
-                <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
-              </div>}
+              </div> : <BrandOnboardingSteps
+                onLaunchOpportunity={() => setCreateCampaignOpen(true)}
+                className="py-6"
+              />}
           </div>}
 
           {/* Bounties View */}

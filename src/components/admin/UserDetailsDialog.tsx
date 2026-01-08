@@ -369,7 +369,7 @@ export function UserDetailsDialog({
         platform: linkPlatform,
         username: linkUsername.replace('@', ''),
         account_link: accountLink,
-        follower_count: linkFollowerCount ? parseInt(linkFollowerCount) : null,
+        follower_count: linkFollowerCount ? parseInt(linkFollowerCount, 10) : null,
         is_verified: true, // Admin-verified
         connected_at: new Date().toISOString()
       });
@@ -992,7 +992,7 @@ export function UserDetailsDialog({
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Trust Score</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Input type="number" min={0} max={100} value={trustScore} onChange={e => setTrustScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))} className="flex-1 bg-[#0a0a0a] border-0" disabled={isUpdatingTrustScore} />
+                    <Input type="number" min={0} max={100} value={trustScore} onChange={e => setTrustScore(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))} className="flex-1 bg-[#0a0a0a] border-0" disabled={isUpdatingTrustScore} />
                     <Button size="sm" onClick={() => handleTrustScoreUpdate(trustScore)} disabled={isUpdatingTrustScore || trustScore === (user.trust_score ?? 0)} className="h-9 px-4">
                       {isUpdatingTrustScore ? "Saving..." : "Save"}
                     </Button>

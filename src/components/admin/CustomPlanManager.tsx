@@ -151,9 +151,9 @@ export function CustomPlanManager({
       const planData = {
         brand_id: brand.id,
         name: name.trim(),
-        campaigns_limit: campaignsUnlimited ? -1 : (campaignsLimit ? parseInt(campaignsLimit) : null),
-        boosts_limit: boostsUnlimited ? -1 : (boostsLimit ? parseInt(boostsLimit) : null),
-        hires_limit: hiresUnlimited ? -1 : (hiresLimit ? parseInt(hiresLimit) : null),
+        campaigns_limit: campaignsUnlimited ? -1 : (campaignsLimit ? parseInt(campaignsLimit, 10) : null),
+        boosts_limit: boostsUnlimited ? -1 : (boostsLimit ? parseInt(boostsLimit, 10) : null),
+        hires_limit: hiresUnlimited ? -1 : (hiresLimit ? parseInt(hiresLimit, 10) : null),
         monthly_price: monthlyPrice ? parseFloat(monthlyPrice) : null,
         whop_plan_id: whopPlanId.trim() || null,
         whop_product_type: whopProductType || null,

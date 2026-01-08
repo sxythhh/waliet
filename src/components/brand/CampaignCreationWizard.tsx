@@ -1386,7 +1386,7 @@ export function CampaignCreationWizard({
                                   <Badge variant="outline" className="text-xs">Admin</Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground mb-2">Demographics due 1 day before</p>
-                                <Select onValueChange={val => field.onChange(parseInt(val))} value={field.value?.toString()}>
+                                <Select onValueChange={val => field.onChange(parseInt(val, 10))} value={field.value?.toString()}>
                                   <SelectTrigger className="h-9 bg-muted/30 border-0">
                                     <SelectValue placeholder="Select payout day" />
                                   </SelectTrigger>

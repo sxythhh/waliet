@@ -83,11 +83,11 @@ export function ManualMetricsDialog({ campaignId, brandId, onSuccess }: ManualMe
         .insert({
           campaign_id: campaignId,
           brand_id: brandId,
-          total_views: parseInt(views) || 0,
-          total_likes: parseInt(likes) || 0,
-          total_shares: parseInt(shares) || 0,
-          total_bookmarks: parseInt(bookmarks) || 0,
-          total_comments: parseInt(comments) || 0,
+          total_views: parseInt(views, 10) || 0,
+          total_likes: parseInt(likes, 10) || 0,
+          total_shares: parseInt(shares, 10) || 0,
+          total_bookmarks: parseInt(bookmarks, 10) || 0,
+          total_comments: parseInt(comments, 10) || 0,
           total_videos: 0,
           recorded_at: recordedAt.toISOString(),
         });

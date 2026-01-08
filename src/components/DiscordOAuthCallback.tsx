@@ -82,7 +82,7 @@ export function DiscordOAuthCallback() {
       }
 
       // Parse state to determine if this is account linking or auth
-      let stateData: { userId?: string; action?: string } = {};
+      let stateData: { userId?: string; action?: string; nonce?: string } = {};
       try {
         if (state) {
           stateData = JSON.parse(atob(state));
@@ -93,6 +93,19 @@ export function DiscordOAuthCallback() {
 
       // If we have a userId in state, this is account linking (popup flow)
       if (stateData.userId && window.opener) {
+        // Verify CSRF nonce for account linking flow
+        const storedNonce = sessionStorage.getItem('discord_oauth_nonce');
+        sessionStorage.removeItem('discord_oauth_nonce'); // Clear immediately
+
+        if (!stateData.nonce || !storedNonce || stateData.nonce !== storedNonce) {
+          console.error('OAuth state nonce mismatch - potential CSRF attack');
+          window.opener.postMessage({
+            type: 'discord-oauth-error',
+            error: 'Security verification failed. Please try again.'
+          }, window.location.origin);
+          window.close();
+          return;
+        }
         try {
           const redirectUri = `${window.location.origin}/discord/callback`;
 

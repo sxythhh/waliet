@@ -122,7 +122,8 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
           ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
           : 0;
 
-      // Simple forecast based on average daily
+      // Simple forecast based on average daily with deterministic decay
+      // NOTE: This is a simple projection, not ML-based forecasting
       const avgDaily =
         daily.length > 0
           ? daily.reduce((sum, d) => sum + d.amount, 0) / daily.length
@@ -130,11 +131,13 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
       const forecast = [];
       for (let i = 1; i <= 7; i++) {
         const forecastDate = format(subDays(new Date(), -i), "yyyy-MM-dd");
-        const variance = 0.1 + Math.random() * 0.2; // 10-30% variance
+        // Deterministic confidence decay, no random variance
+        // Confidence decreases further into the future
+        const confidence = Math.max(30, 100 - i * 10);
         forecast.push({
           date: forecastDate,
-          amount: avgDaily * (1 + (Math.random() - 0.5) * 0.3),
-          confidence: 100 - i * 10,
+          amount: avgDaily, // Use flat average, no random variance
+          confidence,
         });
       }
 
@@ -198,6 +201,54 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
         current.earnings += Math.abs(t.amount);
       });
 
+      // Get submission counts for top earners
+      const topEarnerIds = Array.from(earnerMap.entries())
+        .sort((a, b) => b[1].earnings - a[1].earnings)
+        .slice(0, 10)
+        .map(([id]) => id);
+
+      // Fetch submission counts for top performers
+      const { data: submissionCounts } = topEarnerIds.length > 0
+        ? await supabase
+            .from("campaign_submissions")
+            .select("creator_id")
+            .in("creator_id", topEarnerIds)
+            .gte("created_at", fromDate)
+            .lte("created_at", toDate + "T23:59:59")
+        : { data: [] };
+
+      // Count submissions per creator
+      const submissionCountMap = new Map<string, number>();
+      submissionCounts?.forEach((s) => {
+        submissionCountMap.set(s.creator_id, (submissionCountMap.get(s.creator_id) || 0) + 1);
+      });
+
+      // Fetch daily earnings for sparkline (last 7 days of data)
+      const { data: dailyEarnings } = topEarnerIds.length > 0
+        ? await supabase
+            .from("wallet_transactions")
+            .select("user_id, amount, created_at")
+            .in("user_id", topEarnerIds)
+            .eq("type", "earning")
+            .gte("created_at", format(subDays(new Date(), 7), "yyyy-MM-dd"))
+            .lte("created_at", format(new Date(), "yyyy-MM-dd") + "T23:59:59")
+        : { data: [] };
+
+      // Build sparkline data per user (last 7 days)
+      const sparklineMap = new Map<string, number[]>();
+      topEarnerIds.forEach((id) => sparklineMap.set(id, Array(7).fill(0)));
+
+      dailyEarnings?.forEach((e) => {
+        const dayIndex = 6 - Math.floor(
+          (Date.now() - new Date(e.created_at).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (dayIndex >= 0 && dayIndex < 7) {
+          const current = sparklineMap.get(e.user_id) || Array(7).fill(0);
+          current[dayIndex] += Math.abs(e.amount);
+          sparklineMap.set(e.user_id, current);
+        }
+      });
+
       const topPerformers = Array.from(earnerMap.entries())
         .sort((a, b) => b[1].earnings - a[1].earnings)
         .slice(0, 10)
@@ -206,8 +257,8 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
           username: data.username,
           avatar_url: data.avatar_url,
           earnings: data.earnings,
-          submissions: 0,
-          sparkline: Array.from({ length: 7 }, () => Math.random() * 100),
+          submissions: submissionCountMap.get(id) || 0,
+          sparkline: sparklineMap.get(id) || Array(7).fill(0),
         }));
 
       // Fetch campaign stats
@@ -241,16 +292,38 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
         .order("budget_used", { ascending: false })
         .limit(10);
 
+      // Fetch actual view counts from campaign submissions
+      const campaignIds = campaignData?.map((c) => c.id) || [];
+      const { data: viewData } = campaignIds.length > 0
+        ? await supabase
+            .from("campaign_submissions")
+            .select("campaign_id, verified_views")
+            .in("campaign_id", campaignIds)
+        : { data: [] };
+
+      // Aggregate views per campaign
+      const viewsMap = new Map<string, number>();
+      viewData?.forEach((v) => {
+        const current = viewsMap.get(v.campaign_id) || 0;
+        viewsMap.set(v.campaign_id, current + (v.verified_views || 0));
+      });
+
       const topByROI =
-        campaignData?.map((c) => ({
-          id: c.id,
-          title: c.title,
-          brand_name: (c.brands as any)?.name || "Unknown",
-          budget: c.budget,
-          spent: c.budget_used || 0,
-          views: Math.floor(Math.random() * 1000000), // Placeholder
-          roi: c.budget_used ? (c.budget_used / c.budget) * 100 : 0,
-        })) || [];
+        campaignData?.map((c) => {
+          const views = viewsMap.get(c.id) || 0;
+          const spent = c.budget_used || 0;
+          // ROI calculated as views per dollar spent (CPM efficiency)
+          const roi = spent > 0 ? (views / spent) : 0;
+          return {
+            id: c.id,
+            title: c.title,
+            brand_name: (c.brands as any)?.name || "Unknown",
+            budget: c.budget,
+            spent,
+            views,
+            roi,
+          };
+        }) || [];
 
       // Payout stats
       const { data: payoutStats } = await supabase

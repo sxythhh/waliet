@@ -589,7 +589,7 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
 
             <div className="space-y-2">
               <Label>Severity</Label>
-              <Select value={severity.toString()} onValueChange={(v) => setSeverity(parseInt(v))}>
+              <Select value={severity.toString()} onValueChange={(v) => setSeverity(parseInt(v, 10))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

@@ -36,8 +36,14 @@ export function DiscordLinkDialog({
       return;
     }
     const REDIRECT_URI = `${window.location.origin}/discord/callback`;
+
+    // Generate cryptographic nonce for CSRF protection
+    const nonce = crypto.randomUUID();
+    sessionStorage.setItem('discord_oauth_nonce', nonce);
+
     const STATE = btoa(JSON.stringify({
-      userId
+      userId,
+      nonce
     }));
     const discordAuthUrl = `https://discord.com/api/oauth2/authorize?` + `client_id=${DISCORD_CLIENT_ID}&` + `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` + `response_type=code&` + `scope=identify%20email%20guilds.join&` + `state=${STATE}`;
 

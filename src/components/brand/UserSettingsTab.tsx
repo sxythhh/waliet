@@ -1042,9 +1042,6 @@ export function UserSettingsTab() {
             }, {
               key: "team",
               label: "Team"
-            }, {
-              key: "privacy",
-              label: "Privacy"
             }].map(tab => <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab.key ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                   {tab.label}
                 </button>)}
@@ -1062,8 +1059,8 @@ export function UserSettingsTab() {
               {/* Left Column - Brand Identity & Business Info */}
               <div className="space-y-6">
                 {/* Brand Identity Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-white dark:bg-muted/20 space-y-4">
-                  <h3 className="text-sm font-medium tracking-[-0.5px]">Brand Identity</h3>
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
+                  <h3 className="text-sm font-medium tracking-[-0.5px] text-foreground">Brand Identity</h3>
 
                   {/* Icon Section */}
                   <div className="flex items-center gap-2.5">
@@ -1120,8 +1117,8 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Business Information Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-white dark:bg-muted/20 space-y-4">
-                  <h3 className="text-sm font-medium tracking-[-0.5px]">Business Information</h3>
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
+                  <h3 className="text-sm font-medium tracking-[-0.5px] text-foreground">Business Information</h3>
 
                   {/* Legal Business Name */}
                   <div className="space-y-2">
@@ -1173,8 +1170,8 @@ export function UserSettingsTab() {
               {/* Right Column - Social Media & Danger Zone */}
               <div className="space-y-6">
                 {/* Social Media Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
-                  <h3 className="text-sm font-medium tracking-[-0.5px]">Social Media</h3>
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
+                  <h3 className="text-sm font-medium tracking-[-0.5px] text-foreground">Social Media</h3>
 
                   {/* Instagram */}
                   <div className="space-y-2">
@@ -1288,7 +1285,7 @@ export function UserSettingsTab() {
               {/* Left Column - Analytics Integrations */}
               <div className="space-y-6">
                 {/* Shortimize API Key */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
                   <div className="flex items-center gap-3">
                     <img src={shortimizeLogo} alt="Shortimize" className="w-10 h-10 rounded-lg object-cover" />
                     <div>
@@ -1308,7 +1305,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Dub.co Link Tracking */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
                   <div className="flex items-center gap-3">
                     <img src={dubLogo} alt="Dub" className="w-10 h-10 rounded-lg object-cover bg-white p-1" />
                     <div>
@@ -1331,7 +1328,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Slack Webhook */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
                   <div className="flex items-center gap-3">
                     <img alt="Slack" className="w-10 h-10 rounded-lg object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
                     <div>
@@ -1353,7 +1350,7 @@ export function UserSettingsTab() {
                 <CustomWebhooksTab brandId={brand.id} />
 
                 {/* Notifications Section */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-muted/20">
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive webhook and email alerts</p>
@@ -1409,7 +1406,7 @@ export function UserSettingsTab() {
             </div>
 
             {/* Discord Integration - Full Width Section */}
-            <div className="mt-6 rounded-xl border border-border/50 bg-white dark:bg-muted/20 overflow-hidden">
+            <div className="mt-6 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] overflow-hidden">
               <DiscordIntegrationTab brandId={brand.id} />
             </div>
             </>
@@ -1428,7 +1425,7 @@ export function UserSettingsTab() {
               {/* Left Column - Subscription & Usage */}
               <div className="space-y-6">
                 {/* Subscription Info */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
                     {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
@@ -1477,7 +1474,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Usage Tracking */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20">
+                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e]">
                   <BillingUsageCard
                     brandId={brand.id}
                     subscriptionPlan={brand.subscription_plan}
@@ -1486,7 +1483,7 @@ export function UserSettingsTab() {
                 </div>
 
                 {/* Low Balance Protection */}
-                {currentBrand && <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-muted/20">
+                {currentBrand && <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e]">
                     <LowBalanceSettingsTab ref={lowBalanceRef} brandId={currentBrand.id} />
                   </div>}
               </div>
@@ -1512,51 +1509,6 @@ export function UserSettingsTab() {
           }} />}
         </TabsContent>
 
-        {/* Privacy Tab */}
-        <TabsContent value="privacy" className="mt-6">
-          <div className="max-w-2xl space-y-6">
-            {/* Privacy & Data Section */}
-            <div className="p-5 rounded-xl border border-border/50 bg-white dark:bg-muted/20 space-y-4">
-              <div>
-                <h3 className="text-sm font-medium tracking-[-0.5px]">Privacy & Data</h3>
-                <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-1">
-                  Manage your personal data and privacy settings
-                </p>
-              </div>
-
-              <div className="space-y-4 pt-2">
-                {/* Data Export */}
-                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border/30">
-                  <div>
-                    <h4 className="text-sm font-medium tracking-[-0.5px]">Export Your Data</h4>
-                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-1">
-                      Download a copy of all your personal data stored on Virality, including your profile, transactions, and submissions.
-                    </p>
-                  </div>
-                  <DataExportDialog />
-                </div>
-
-                {/* Account Deletion */}
-                <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                  <div>
-                    <h4 className="text-sm font-medium tracking-[-0.5px] text-destructive">Delete Account</h4>
-                    <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-1">
-                      Permanently delete your account and all associated data. This action cannot be undone.
-                    </p>
-                  </div>
-                  <AccountDeletionDialog />
-                </div>
-              </div>
-            </div>
-
-            {/* GDPR Info */}
-            <div className="p-4 rounded-lg bg-muted/20 border border-border/30">
-              <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                <span className="font-medium text-foreground">Your Privacy Rights:</span> Under GDPR and CCPA, you have the right to access, export, and delete your personal data at any time. We process your data in accordance with our Privacy Policy.
-              </p>
-            </div>
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* Create Brand Dialog */}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlanLimits, getEffectivePlanLimits, EffectivePlanLimits } from "@/utils/subscriptionLimits";
+import { getPlanLimits, getEffectivePlanLimits, EffectivePlanLimits, isUnlimited } from "@/utils/subscriptionLimits";
 
 export interface BrandUsage {
   campaignsUsed: number;
@@ -125,10 +125,19 @@ export function useBrandUsage(brandId: string | undefined, plan: string | null |
     fetchUsage();
   }, [brandId, plan]);
 
-  // Computed boolean helpers
-  const canCreateCampaign = useMemo(() => campaignsUsed < effectiveLimits.campaigns, [campaignsUsed, effectiveLimits.campaigns]);
-  const canCreateBoost = useMemo(() => boostsUsed < effectiveLimits.boosts, [boostsUsed, effectiveLimits.boosts]);
-  const canHireCreator = useMemo(() => hiresUsed < effectiveLimits.hires, [hiresUsed, effectiveLimits.hires]);
+  // Computed boolean helpers - must check for UNLIMITED (-1) sentinel value
+  const canCreateCampaign = useMemo(
+    () => isUnlimited(effectiveLimits.campaigns) || campaignsUsed < effectiveLimits.campaigns,
+    [campaignsUsed, effectiveLimits.campaigns]
+  );
+  const canCreateBoost = useMemo(
+    () => isUnlimited(effectiveLimits.boosts) || boostsUsed < effectiveLimits.boosts,
+    [boostsUsed, effectiveLimits.boosts]
+  );
+  const canHireCreator = useMemo(
+    () => isUnlimited(effectiveLimits.hires) || hiresUsed < effectiveLimits.hires,
+    [hiresUsed, effectiveLimits.hires]
+  );
 
   return {
     campaignsUsed,

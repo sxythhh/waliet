@@ -203,14 +203,14 @@ export function CreatorInfoSection({
             type="number"
             placeholder="Min"
             value={rateRange?.min || ""}
-            onChange={(e) => updateRateRange("min", parseInt(e.target.value) || 0)}
+            onChange={(e) => updateRateRange("min", parseInt(e.target.value, 10) || 0)}
             className="bg-muted/30 border-0 focus-visible:ring-1"
           />
           <Input
             type="number"
             placeholder="Max"
             value={rateRange?.max || ""}
-            onChange={(e) => updateRateRange("max", parseInt(e.target.value) || 0)}
+            onChange={(e) => updateRateRange("max", parseInt(e.target.value, 10) || 0)}
             className="bg-muted/30 border-0 focus-visible:ring-1"
           />
           <Select

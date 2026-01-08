@@ -399,32 +399,12 @@ export default function CreatorBoostDetails() {
               </div>
             )}
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <div className="bg-card border border-border rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">Earned this month</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-orange-500">${(pendingThisMonth * payoutPerVideo).toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">Pending payout</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold">${payoutPerVideo.toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">Per video</p>
-              </div>
-              <div className="bg-card border border-border rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold">${boost.monthly_retainer}</p>
-                <p className="text-xs text-muted-foreground mt-1">Max monthly</p>
-              </div>
-            </div>
-
             {/* Progress Section */}
             <div className="bg-card border border-border rounded-xl p-4 mb-6">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 {/* Semi-circle Progress Chart */}
-                <div className="relative w-32 h-16 flex-shrink-0">
-                  <svg viewBox="0 0 100 50" className="w-full h-full overflow-visible">
+                <div className="relative w-32 h-20 flex-shrink-0">
+                  <svg viewBox="0 0 100 55" className="w-full h-full overflow-visible">
                     <defs>
                       <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
                         <rect width="3" height="6" fill="#f97316" />
@@ -433,21 +413,37 @@ export default function CreatorBoostDetails() {
                     </defs>
 
                     {/* Background arc */}
-                    <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" className="stroke-black/10 dark:stroke-white/10" strokeWidth="8" strokeLinecap="round" />
+                    <path d="M 8 50 A 42 42 0 0 1 92 50" fill="none" className="stroke-muted" strokeWidth="8" strokeLinecap="butt" />
 
                     {/* Approved arc (green) */}
-                    {approvedThisMonth > 0 && <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${approvedThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />}
+                    {approvedThisMonth > 0 && (
+                      <path
+                        d="M 8 50 A 42 42 0 0 1 92 50"
+                        fill="none"
+                        stroke="#22c55e"
+                        strokeWidth="8"
+                        strokeLinecap="butt"
+                        strokeDasharray={`${(approvedThisMonth / boost.videos_per_month) * 131.95} 131.95`}
+                        className="transition-all duration-500"
+                      />
+                    )}
 
-                    {/* Pending arc (orange animated stripes) */}
-                    {pendingThisMonth > 0 && <g style={{
-                    transform: `rotate(${approvedThisMonth / boost.videos_per_month * 180}deg)`,
-                    transformOrigin: '50px 50px'
-                  }}>
-                        <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="url(#orangeStripes)" strokeWidth="8" strokeDasharray={`${pendingThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />
-                      </g>}
+                    {/* Pending arc (orange) */}
+                    {pendingThisMonth > 0 && (
+                      <path
+                        d="M 8 50 A 42 42 0 0 1 92 50"
+                        fill="none"
+                        stroke="#f97316"
+                        strokeWidth="8"
+                        strokeLinecap="butt"
+                        strokeDasharray={`${(pendingThisMonth / boost.videos_per_month) * 131.95} 131.95`}
+                        strokeDashoffset={`${-(approvedThisMonth / boost.videos_per_month) * 131.95}`}
+                        className="transition-all duration-500"
+                      />
+                    )}
                   </svg>
                   {/* Center text */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
+                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
                     <span className="text-lg font-bold">{activeSubmissionsThisMonth}/{boost.videos_per_month}</span>
                   </div>
                 </div>
@@ -480,23 +476,33 @@ export default function CreatorBoostDetails() {
               </div>
             </div>
 
-            {/* Content Guidelines */}
-            {(boost.blueprint?.content || boost.content_style_requirements) && (
-              <div className="mb-6">
-                <h4 className="text-sm font-semibold mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Content Guidelines</h4>
-                {boost.blueprint?.content ? (
-                  <div
-                    className="text-sm text-foreground/90 leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words p-4 bg-card border border-border rounded-xl"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(boost.blueprint.content) }}
-                  />
-                ) : (
-                  <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line break-words p-4 bg-card border border-border rounded-xl">
-                    {boost.content_style_requirements}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Content Guidelines - only show if there's meaningful content */}
+            {(() => {
+              const blueprintContent = boost.blueprint?.content;
+              const styleReqs = boost.content_style_requirements;
+              // Strip HTML and check if there's actual text content (more than just "PLATFORMS:" or whitespace)
+              const strippedContent = blueprintContent ? blueprintContent.replace(/<[^>]*>/g, '').replace(/PLATFORMS:\s*/gi, '').trim() : '';
+              const hasContent = strippedContent.length > 10 || (styleReqs && styleReqs.trim().length > 10);
+
+              if (!hasContent) return null;
+
+              return (
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Content Guidelines</h4>
+                  {blueprintContent && strippedContent.length > 10 ? (
+                    <div
+                      className="text-sm text-foreground/90 leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words p-4 bg-card border border-border rounded-xl"
+                      style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blueprintContent) }}
+                    />
+                  ) : styleReqs ? (
+                    <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line break-words p-4 bg-card border border-border rounded-xl">
+                      {styleReqs}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })()}
 
             {/* Blueprint Details */}
             {boost.blueprint && (

@@ -1445,15 +1445,13 @@ export function CreatorDatabaseTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCreators.length === 0 ? (
+                  {filteredCreators.length === 0 && (searchQuery || selectedCampaignFilter !== 'all') ? (
                     <TableRow>
                       <TableCell
                         colSpan={orderedVisibleColumns.length + 1}
                         className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]"
                       >
-                        {searchQuery || selectedCampaignFilter !== 'all'
-                          ? 'No creators match your filters'
-                          : 'No creators in your database yet'}
+                        No creators match your filters
                       </TableCell>
                     </TableRow>
                   ) : (

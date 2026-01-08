@@ -228,7 +228,7 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
         brand_id: brandId,
         name: tierName.trim(),
         description: tierDescription.trim() || null,
-        tier_order: parseInt(tierOrder) || 1,
+        tier_order: parseInt(tierOrder, 10) || 1,
         rpm_multiplier: parseFloat(rpmMultiplier) || 1.0,
         color: tierColor,
         is_default: isDefault
@@ -278,7 +278,7 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
         to_tier_id: toTierId,
         rule_type: ruleType,
         threshold_value: parseFloat(thresholdValue),
-        evaluation_period_days: evaluationPeriod ? parseInt(evaluationPeriod) : null
+        evaluation_period_days: evaluationPeriod ? parseInt(evaluationPeriod, 10) : null
       };
 
       if (editingRule) {

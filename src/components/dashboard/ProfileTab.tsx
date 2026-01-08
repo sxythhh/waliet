@@ -30,7 +30,7 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { PortfolioSection, PortfolioItem } from "@/components/dashboard/PortfolioSection";
-import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard, NotificationSettingsCard } from "@/components/dashboard/settings";
+import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard, NotificationSettingsCard, DataExportDialog, AccountDeletionDialog } from "@/components/dashboard/settings";
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { useTheme } from "@/components/ThemeProvider";
@@ -929,6 +929,18 @@ export function ProfileTab() {
 
       {/* Security Section */}
       <SecuritySection />
+
+      {/* Privacy & Data Section */}
+      <SettingsCard
+        title="Privacy & Data"
+        description="Manage your data and account"
+        footerHint="Export your data or permanently delete your account."
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <DataExportDialog />
+          <AccountDeletionDialog />
+        </div>
+      </SettingsCard>
 
       {/* Portfolio Section - Hidden for now */}
       {/* {profile && (

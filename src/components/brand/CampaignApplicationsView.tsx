@@ -529,13 +529,34 @@ export function CampaignApplicationsView({
     }
   };
   if (applications.length === 0 && !loading) {
-    return <div className="flex flex-col items-center justify-center h-64 text-center">
-        <User className="h-12 w-12 text-muted-foreground/50 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No applications</h3>
-        <p className="text-muted-foreground text-sm">
-          When creators apply to {isAllMode ? "your campaigns" : isBoost ? "this boost" : "this campaign"}, they'll appear here for review.
-        </p>
-      </div>;
+    return (
+      <div className="flex items-center justify-center h-full min-h-[500px] p-8">
+        <div className="max-w-md w-full text-center">
+          {/* Title */}
+          <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter'] tracking-[-0.5px]">
+            No applications yet
+          </h3>
+
+          {/* Description */}
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6 font-['Inter'] tracking-[-0.3px]">
+            When creators apply to {isAllMode ? "your campaigns" : isBoost ? "this boost" : "this campaign"}, they'll appear here for review.
+          </p>
+
+          {/* CTA Button */}
+          <Button
+            className="bg-foreground text-background hover:bg-foreground/90 font-medium px-6"
+            onClick={() => {
+              // Copy campaign link or navigate to share
+              const baseUrl = window.location.origin;
+              navigator.clipboard.writeText(`${baseUrl}/campaigns`);
+              toast.success("Link copied to clipboard");
+            }}
+          >
+            Share campaign
+          </Button>
+        </div>
+      </div>
+    );
   }
   return <>
     <div className="flex h-full">

@@ -22,8 +22,6 @@ import youtubeIconBlack from "@/assets/youtube-logo-black-new.png";
 import xIcon from "@/assets/x-logo.png";
 import xIconLight from "@/assets/x-logo-light.png";
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
-import { CampaignLeaderboardCard } from "@/components/campaign/CampaignLeaderboardCard";
-import { CampaignTipsCard } from "@/components/campaign/CampaignTipsCard";
 import { CampaignQuickActionsCard } from "@/components/campaign/CampaignQuickActionsCard";
 import { CampaignMobileTabs } from "@/components/campaign/CampaignMobileTabs";
 
@@ -468,14 +466,6 @@ export default function CreatorCampaignDetails() {
   return (
     <>
       <div className="w-full px-4 sm:px-6 py-6">
-      {/* Mobile Tabs - shown on mobile only */}
-      <CampaignMobileTabs
-        campaign={sidebarCampaignData}
-        hasConnectedAccounts={hasConnectedAccounts || false}
-        onSubmitVideo={() => setShowSubmitVideoDialog(true)}
-        className="lg:hidden mb-6"
-      />
-
       {/* Two-column layout on desktop */}
       <div className="flex gap-6">
         {/* Main Content Column */}
@@ -544,6 +534,14 @@ export default function CreatorCampaignDetails() {
               )}
             </div>
           </div>
+
+          {/* Mobile Tabs - shown on mobile only, positioned AFTER header */}
+          <CampaignMobileTabs
+            campaign={sidebarCampaignData}
+            hasConnectedAccounts={hasConnectedAccounts || false}
+            onSubmitVideo={() => setShowSubmitVideoDialog(true)}
+            className="lg:hidden mb-6"
+          />
 
           {/* Campaign Update Banner */}
           {campaign.campaign_update && (
@@ -866,8 +864,6 @@ export default function CreatorCampaignDetails() {
         {/* Right Sidebar - hidden on mobile, shown on lg+ */}
         <aside className="hidden lg:block w-80 flex-shrink-0">
           <div className="sticky top-6 space-y-4">
-            <CampaignLeaderboardCard campaignId={campaign.id} />
-            <CampaignTipsCard blueprintId={campaign.blueprint_id || null} />
             <CampaignQuickActionsCard
               campaign={sidebarCampaignData}
               hasConnectedAccounts={hasConnectedAccounts || false}

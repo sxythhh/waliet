@@ -34,7 +34,7 @@ export function ViewBonusesConfig({
 
   const addTier = () => {
     if (bonusType === 'milestone') {
-      const threshold = parseInt(newThreshold);
+      const threshold = parseInt(newThreshold, 10);
       const amount = parseFloat(newAmount);
       
       if (isNaN(threshold) || threshold <= 0) return;
@@ -56,8 +56,8 @@ export function ViewBonusesConfig({
       setNewAmount("");
     } else {
       // CPM type
-      const maxViews = parseInt(newThreshold);
-      const minViews = parseInt(newMinViews) || 0;
+      const maxViews = parseInt(newThreshold, 10);
+      const minViews = parseInt(newMinViews, 10) || 0;
       const cpmRate = parseFloat(newCpmRate);
       
       if (isNaN(maxViews) || maxViews <= 0) return;

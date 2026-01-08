@@ -310,15 +310,13 @@ export default function Dashboard() {
         return <DiscoverTab />;
       case "training":
         return <TrainingTab />;
-      case "referrals":
-        return <ReferralsTab />;
       case "profile":
         return <WalletTab />;
       case "settings":
         return <ProfileTab />;
-      // Legacy support for old URL
+      // Payments tab (wallet)
       case "wallet":
-        return <WalletTab />;
+        return <ReferralsTab />;
       default:
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }
@@ -330,8 +328,8 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 h-screen overflow-hidden flex flex-col bg-background">
         <div className={`
-          pt-14 md:pt-0 flex-1 overflow-y-auto pb-[50px] md:pb-0 bg-background
-          ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
+          pt-14 md:pt-0 flex-1 overflow-y-auto pb-20 md:pb-0 bg-background
+          ${currentTab === "discover" || currentTab === "wallet" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
           {renderContent()}
         </div>

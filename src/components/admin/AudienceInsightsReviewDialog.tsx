@@ -133,7 +133,7 @@ export function AudienceInsightsReviewDialog({
 
   const handleApprove = useCallback(async () => {
     if (!submission || isProcessing) return;
-    const numScore = parseInt(score) || submission.tier1_percentage;
+    const numScore = parseInt(score, 10) || submission.tier1_percentage;
     await onApprove(submission, numScore);
     // Auto-advance to next
     if (hasNext) {
@@ -205,7 +205,7 @@ export function AudienceInsightsReviewDialog({
         case "8":
         case "9":
           e.preventDefault();
-          setScore((parseInt(e.key) * 10).toString());
+          setScore((parseInt(e.key, 10) * 10).toString());
           break;
         case "0":
           e.preventDefault();

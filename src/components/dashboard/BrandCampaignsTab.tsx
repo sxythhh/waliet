@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { CampaignCreationWizard, CampaignTemplate } from "@/components/brand/CampaignCreationWizard";
+import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
@@ -17,6 +18,7 @@ import { CreateJobPostDialog } from "@/components/brand/CreateJobPostDialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
+import { BrandOnboardingSteps } from "@/components/brand/BrandOnboardingSteps";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
@@ -99,6 +101,10 @@ export function BrandCampaignsTab({
     id: string;
     type: 'campaign' | 'boost';
   } | null>(null);
+  const [editCampaignOpen, setEditCampaignOpen] = useState(false);
+  const [editBoostOpen, setEditBoostOpen] = useState(false);
+  const [selectedCampaignForEdit, setSelectedCampaignForEdit] = useState<Campaign | null>(null);
+  const [selectedBoostForEdit, setSelectedBoostForEdit] = useState<string | null>(null);
   const {
     isAdmin,
     loading: adminLoading
@@ -312,6 +318,140 @@ export function BrandCampaignsTab({
     newParams.set("campaign", campaign.id);
     setSearchParams(newParams);
   };
+
+  const handleDuplicateCampaign = async (campaign: Campaign) => {
+    try {
+      const { data: clonedCampaign, error } = await supabase
+        .from('campaigns')
+        .insert({
+          title: `${campaign.title} (Copy)`,
+          description: campaign.description,
+          brand_id: brandId,
+          rpm_rate: campaign.rpm_rate,
+          banner_url: campaign.banner_url,
+          allowed_platforms: campaign.allowed_platforms,
+          status: 'draft',
+          budget: 0,
+          budget_used: 0
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      toast.success('Campaign duplicated as draft');
+      fetchBrandData();
+    } catch (error) {
+      toast.error('Failed to duplicate campaign');
+    }
+  };
+
+  const handleDuplicateBounty = async (bounty: BountyCampaign) => {
+    try {
+      const { data: clonedBoost, error: cloneError } = await supabase
+        .from('bounty_campaigns')
+        .insert({
+          title: `${bounty.title} (Copy)`,
+          description: bounty.description,
+          brand_id: brandId,
+          monthly_retainer: bounty.monthly_retainer,
+          videos_per_month: bounty.videos_per_month,
+          content_style_requirements: bounty.content_style_requirements,
+          max_accepted_creators: bounty.max_accepted_creators,
+          content_distribution: bounty.content_distribution,
+          position_type: bounty.position_type,
+          availability_requirement: bounty.availability_requirement,
+          work_location: bounty.work_location,
+          banner_url: bounty.banner_url,
+          blueprint_id: bounty.blueprint_id,
+          blueprint_embed_url: bounty.blueprint_embed_url,
+          is_private: bounty.is_private,
+          tags: bounty.tags,
+          application_questions: bounty.application_questions,
+          discord_guild_id: bounty.discord_guild_id,
+          discord_role_id: bounty.discord_role_id,
+          shortimize_collection_name: bounty.shortimize_collection_name,
+          view_bonuses_enabled: bounty.view_bonuses_enabled,
+          status: 'draft',
+          budget: 0,
+          budget_used: 0,
+          accepted_creators_count: 0
+        })
+        .select()
+        .single();
+
+      if (cloneError) throw cloneError;
+
+      // Copy view bonuses if enabled
+      if (bounty.view_bonuses_enabled && clonedBoost) {
+        const { data: bonuses } = await supabase
+          .from('boost_view_bonuses')
+          .select('*')
+          .eq('bounty_campaign_id', bounty.id);
+
+        if (bonuses && bonuses.length > 0) {
+          await supabase
+            .from('boost_view_bonuses')
+            .insert(
+              bonuses.map(b => ({
+                bounty_campaign_id: clonedBoost.id,
+                bonus_type: b.bonus_type,
+                view_threshold: b.view_threshold,
+                bonus_amount: b.bonus_amount,
+                min_views: b.min_views,
+                cpm_rate: b.cpm_rate,
+                is_active: b.is_active
+              }))
+            );
+        }
+      }
+
+      toast.success('Boost duplicated as draft');
+      fetchBrandData();
+    } catch (error) {
+      toast.error('Failed to duplicate boost');
+    }
+  };
+
+  const handlePauseBounty = async (bounty: BountyCampaign) => {
+    const newStatus = bounty.status === 'paused' ? 'active' : 'paused';
+
+    try {
+      // Handle pausing - auto-waitlist pending applications
+      if (newStatus === 'paused') {
+        await supabase
+          .from('bounty_applications')
+          .update({
+            status: 'waitlisted',
+            auto_waitlisted_from_pause: true
+          })
+          .eq('bounty_campaign_id', bounty.id)
+          .eq('status', 'pending');
+      }
+
+      // Handle resuming - restore auto-waitlisted applications
+      if (newStatus === 'active') {
+        await supabase
+          .from('bounty_applications')
+          .update({
+            status: 'pending',
+            auto_waitlisted_from_pause: false
+          })
+          .eq('bounty_campaign_id', bounty.id)
+          .eq('auto_waitlisted_from_pause', true);
+      }
+
+      const { error } = await supabase
+        .from('bounty_campaigns')
+        .update({ status: newStatus })
+        .eq('id', bounty.id);
+
+      if (error) throw error;
+      toast.success(newStatus === 'paused' ? 'Boost paused' : 'Boost resumed');
+      fetchBrandData();
+    } catch (error) {
+      toast.error('Failed to update boost status');
+    }
+  };
   if (loading) {
     return (
       <div className="space-y-8 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-300">
@@ -385,10 +525,10 @@ export function BrandCampaignsTab({
             <div className="flex-1 min-w-0">
               <GlobalBrandSearch brandId={brandId} />
             </div>
-            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-semibold text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8] shrink-0">
+            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8] shrink-0">
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Create Campaign</span>
-              <span className="sm:hidden">Create</span>
+              <span className="hidden sm:inline">Launch Opportunity</span>
+              <span className="sm:hidden">Launch</span>
             </Button>
             <CreateCampaignTypeDialog brandId={brandId} subscriptionPlan={subscriptionPlan} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={(blueprintId, template) => {
           setSelectedTemplate(template);
@@ -402,10 +542,10 @@ export function BrandCampaignsTab({
         }} />
           </div>
 
-          {/* Subscription Required CTA and Embed - Only show if not subscribed and in dark mode */}
-          {subscriptionStatus !== "active" && resolvedTheme === "dark" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden mt-4">
-              <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
-            </div>}
+          {/* Subscription CTA Embed - Only show in dark mode */}
+          <div className="hidden dark:block w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden mt-4">
+            <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
+          </div>
 
           {/* Combined Campaigns & Boosts Grid */}
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
@@ -430,7 +570,10 @@ export function BrandCampaignsTab({
               const campaign = item as Campaign & {
                 type: "campaign";
               };
-              return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} brandColor={brandColor || null} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} slug={campaign.slug} onClick={() => handleCampaignClick(campaign)} onTopUp={() => {
+              return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} brandColor={brandColor || null} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} slug={campaign.slug} onClick={() => handleCampaignClick(campaign)} onEdit={() => {
+                setSelectedCampaignForEdit(campaign);
+                setEditCampaignOpen(true);
+              }} onDuplicate={() => handleDuplicateCampaign(campaign)} onDelete={() => handleDeleteClick(campaign)} onTopUp={() => {
                 setSelectedCampaignForFunding({
                   id: campaign.id,
                   type: 'campaign'
@@ -442,7 +585,10 @@ export function BrandCampaignsTab({
                 type: "boost";
               };
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)} onTopUp={() => {
+              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)} onEdit={() => {
+                setSelectedBoostForEdit(bounty.id);
+                setEditBoostOpen(true);
+              }} onDuplicate={() => handleDuplicateBounty(bounty)} onPause={bounty.status !== 'ended' && bounty.status !== 'draft' ? () => handlePauseBounty(bounty) : undefined} onDelete={() => handleDeleteBountyClick(bounty)} onTopUp={() => {
                 setSelectedCampaignForFunding({
                   id: bounty.id,
                   type: 'boost'
@@ -454,15 +600,13 @@ export function BrandCampaignsTab({
               </div>
             </div>}
 
-          {/* Empty State */}
-          {campaigns.length === 0 && bounties.length === 0 && <div className="px-4 items-center justify-center flex flex-col py-[23px]">
-              
-              
-              <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-4">
-                Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
-              </p>
-              
-            </div>}
+          {/* Empty State - Onboarding */}
+          {campaigns.length === 0 && bounties.length === 0 && (
+            <BrandOnboardingSteps
+              onLaunchOpportunity={() => setCampaignTypeDialogOpen(true)}
+              className="mt-4"
+            />
+          )}
         </>}
 
 
@@ -471,6 +615,35 @@ export function BrandCampaignsTab({
         setCreateCampaignOpen(open);
         if (!open) setSelectedTemplate(undefined);
       }} template={selectedTemplate} />
+
+      {/* Edit Campaign Dialog */}
+      {selectedCampaignForEdit && (
+        <CampaignCreationWizard
+          brandId={brandId}
+          brandName={brandName}
+          brandLogoUrl={brandLogoUrl}
+          campaign={selectedCampaignForEdit}
+          open={editCampaignOpen}
+          onOpenChange={(open) => {
+            setEditCampaignOpen(open);
+            if (!open) setSelectedCampaignForEdit(null);
+          }}
+          onSuccess={fetchBrandData}
+        />
+      )}
+
+      {/* Edit Boost Dialog */}
+      {selectedBoostForEdit && (
+        <EditBountyDialog
+          bountyId={selectedBoostForEdit}
+          open={editBoostOpen}
+          onOpenChange={(open) => {
+            setEditBoostOpen(open);
+            if (!open) setSelectedBoostForEdit(null);
+          }}
+          onSuccess={fetchBrandData}
+        />
+      )}
 
       {/* Create Bounty Dialog (Managed) */}
       <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} subscriptionPlan={subscriptionPlan} onSuccess={fetchBrandData} />

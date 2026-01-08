@@ -2,7 +2,21 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ChevronRight } from "lucide-react";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import PauseCircleRoundedIcon from "@mui/icons-material/PauseCircleRounded";
+import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
@@ -42,7 +56,9 @@ interface CampaignRowCardProps {
   slug?: string;
   onClick: () => void;
   onEdit?: () => void;
-  onArchive?: () => void;
+  onDuplicate?: () => void;
+  onPause?: () => void;
+  onDelete?: () => void;
   onTopUp?: () => void;
 }
 export function CampaignRowCard({
@@ -63,6 +79,10 @@ export function CampaignRowCard({
   members = [],
   slug,
   onClick,
+  onEdit,
+  onDuplicate,
+  onPause,
+  onDelete,
   onTopUp
 }: CampaignRowCardProps) {
   const {
@@ -101,7 +121,7 @@ export function CampaignRowCard({
   };
   const visibleMembers = members.slice(0, 3);
   const remainingCount = members.length - 3;
-  return <Card className="group bg-[#ffffff] dark:bg-card hover:bg-[#f9f9f9] dark:hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border-0" onClick={onClick}>
+  return <Card className="group bg-[#ffffff] dark:bg-[#0e0e0e] hover:bg-[#f9f9f9] dark:hover:bg-[#121212] transition-all duration-200 overflow-hidden cursor-pointer border-0" onClick={onClick}>
       <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px] border border-border dark:border-[#0e0e0e] rounded-lg overflow-hidden">
         {/* Banner */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-28 flex-shrink-0 overflow-hidden bg-muted">
@@ -187,30 +207,111 @@ export function CampaignRowCard({
                 <ChevronRight className="w-3 h-3" />
               </button>}
 
-            <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515]" onClick={e => {
-              e.stopPropagation();
-              const url = type === "campaign" ? `${window.location.origin}/c/${slug}` : `${window.location.origin}/boost/${slug}`;
-              navigator.clipboard.writeText(url);
-              toast({
-                title: "Link copied",
-                description: "URL copied to clipboard"
-              });
-            }}>
-                <img src={copyIconBlack} alt="" className="w-3.5 h-3.5 dark:hidden" />
-                <img src={copyIconWhite} alt="" className="w-3.5 h-3.5 hidden dark:block" />
-              </Button>}
+            <div className="hidden sm:flex items-center gap-1.5">
+              {/* Other action buttons - visible on hover */}
+              <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515] text-foreground hover:text-foreground" onClick={e => e.stopPropagation()}>
+                    Resume
+                  </Button>}
 
-              {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515] text-foreground hover:text-foreground" onClick={e => e.stopPropagation()}>
-                  Resume
+                {onTopUp && <Button size="sm" className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground" onClick={e => {
+                e.stopPropagation();
+                onTopUp();
+              }}>
+                    Fund Campaign
+                  </Button>}
+              </div>
+
+              {/* Copy link + Three-dot menu - visible on hover */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {slug && <Button size="sm" variant="outline" className="h-7 w-7 p-0 border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515] text-foreground hover:text-foreground" onClick={e => {
+                  e.stopPropagation();
+                  const url = type === "campaign" ? `${window.location.origin}/c/${slug}` : `${window.location.origin}/boost/${slug}`;
+                  navigator.clipboard.writeText(url);
+                  toast({
+                    title: "Link copied",
+                    description: "URL copied to clipboard"
+                  });
+                }}>
+                  <img src={copyIconBlack} alt="" className="w-3.5 h-3.5 dark:hidden" />
+                  <img src={copyIconWhite} alt="" className="w-3.5 h-3.5 hidden dark:block" />
                 </Button>}
 
-              {onTopUp && <Button size="sm" className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground" onClick={e => {
-              e.stopPropagation();
-              onTopUp();
-            }}>
-                  Fund Campaign
-                </Button>}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 w-7 p-0 border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515] text-foreground hover:text-foreground"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <MoreVertRoundedIcon className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36 bg-popover dark:bg-[#0a0a0a] border-border dark:border-[#1a1a1a]" onClick={e => e.stopPropagation()}>
+                    {slug && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          const url = type === "campaign"
+                            ? `${window.location.origin}/c/${slug}`
+                            : `${window.location.origin}/boost/${slug}`;
+                          navigator.clipboard.writeText(url);
+                          toast({
+                            title: "Link copied",
+                            description: "URL copied to clipboard"
+                          });
+                        }}
+                        className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item"
+                      >
+                        <LinkRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                        Copy link
+                      </DropdownMenuItem>
+                    )}
+                    {onEdit && (
+                      <DropdownMenuItem onClick={onEdit} className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item">
+                        <EditRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {onDuplicate && (
+                      <DropdownMenuItem onClick={onDuplicate} className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item">
+                        <ContentCopyRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                        Duplicate
+                      </DropdownMenuItem>
+                    )}
+                    {onPause && (
+                      <>
+                        <DropdownMenuSeparator className="bg-border dark:bg-[#1a1a1a]" />
+                        <DropdownMenuItem onClick={onPause} className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item">
+                          {status === "paused" ? (
+                            <>
+                              <PlayCircleRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                              Resume
+                            </>
+                          ) : (
+                            <>
+                              <PauseCircleRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                              Pause
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {onDelete && (
+                      <>
+                        <DropdownMenuSeparator className="bg-border dark:bg-[#1a1a1a]" />
+                        <DropdownMenuItem
+                          onClick={onDelete}
+                          className="cursor-pointer text-xs py-1.5 gap-1.5 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
+                        >
+                          <DeleteRoundedIcon className="w-2 h-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>

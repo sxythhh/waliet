@@ -298,7 +298,7 @@ export function CreatorContractsTab({
     const template = newContract.template_id ? templates.find(t => t.id === newContract.template_id) : null;
     const startDate = new Date(newContract.start_date);
     const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + parseInt(newContract.duration_months));
+    endDate.setMonth(endDate.getMonth() + parseInt(newContract.duration_months, 10));
     try {
       const {
         error
@@ -309,10 +309,10 @@ export function CreatorContractsTab({
         creator_email: newContract.creator_email,
         title: boost ? `${boost.title} - Creator Agreement` : template ? template.name : 'Creator Agreement',
         monthly_rate: parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || template?.default_monthly_rate || 0,
-        videos_per_month: parseInt(newContract.videos_per_month) || boost?.videos_per_month || template?.default_videos_per_month || 1,
+        videos_per_month: parseInt(newContract.videos_per_month, 10) || boost?.videos_per_month || template?.default_videos_per_month || 1,
         start_date: newContract.start_date,
         end_date: endDate.toISOString().split('T')[0],
-        duration_months: parseInt(newContract.duration_months),
+        duration_months: parseInt(newContract.duration_months, 10),
         custom_terms: newContract.custom_terms,
         status: 'sent'
       });
@@ -381,8 +381,8 @@ export function CreatorContractsTab({
         description: templateForm.description.trim() || null,
         content: templateForm.content,
         default_monthly_rate: templateForm.default_monthly_rate ? parseFloat(templateForm.default_monthly_rate) : null,
-        default_videos_per_month: templateForm.default_videos_per_month ? parseInt(templateForm.default_videos_per_month) : null,
-        default_duration_months: parseInt(templateForm.default_duration_months) || 12,
+        default_videos_per_month: templateForm.default_videos_per_month ? parseInt(templateForm.default_videos_per_month, 10) : null,
+        default_duration_months: parseInt(templateForm.default_duration_months, 10) || 12,
         is_default: templateForm.is_default,
         is_active: true
       };

@@ -26,7 +26,7 @@ interface EarningsChartProps {
 const chartConfig = {
   earnings: {
     label: "Earnings",
-    color: "hsl(142.1 76.2% 36.3%)", // emerald-500
+    color: "hsl(217.2 91.2% 59.8%)", // blue-500
   },
 };
 
@@ -237,8 +237,8 @@ export function EarningsChart({
         >
           <defs>
             <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(142.1 76.2% 36.3%)" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="hsl(142.1 76.2% 36.3%)" stopOpacity={0} />
+              <stop offset="0%" stopColor="hsl(217.2 91.2% 59.8%)" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="hsl(217.2 91.2% 59.8%)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -268,7 +268,7 @@ export function EarningsChart({
                 formatter={(value, name) => (
                   <div className="flex items-center justify-between gap-8">
                     <span className="text-muted-foreground">Total</span>
-                    <span className="font-semibold text-emerald-500">${Number(value).toFixed(2)}</span>
+                    <span className="font-semibold text-blue-500">${Number(value).toFixed(2)}</span>
                   </div>
                 )}
               />
@@ -277,11 +277,11 @@ export function EarningsChart({
           <Area
             type="monotone"
             dataKey="earnings"
-            stroke="hsl(142.1 76.2% 36.3%)"
+            stroke="hsl(217.2 91.2% 59.8%)"
             strokeWidth={2}
             fill="url(#earningsGradient)"
             dot={false}
-            activeDot={{ r: 4, strokeWidth: 0, fill: "hsl(142.1 76.2% 36.3%)" }}
+            activeDot={{ r: 4, strokeWidth: 0, fill: "hsl(217.2 91.2% 59.8%)" }}
           />
         </AreaChart>
       </ChartContainer>

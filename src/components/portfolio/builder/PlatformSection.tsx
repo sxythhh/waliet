@@ -257,7 +257,7 @@ function SortablePlatformCard({
                   type="number"
                   value={form.followers || ""}
                   onChange={(e) =>
-                    setForm({ ...form, followers: parseInt(e.target.value) || undefined })
+                    setForm({ ...form, followers: parseInt(e.target.value, 10) || undefined })
                   }
                   placeholder="50000"
                 />
@@ -439,7 +439,7 @@ function AddPlatformForm({
               type="number"
               value={form.followers || ""}
               onChange={(e) =>
-                setForm({ ...form, followers: parseInt(e.target.value) || undefined })
+                setForm({ ...form, followers: parseInt(e.target.value, 10) || undefined })
               }
               placeholder="50000"
             />

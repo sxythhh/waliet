@@ -148,7 +148,7 @@ export function ViewBonusesTab({ boostId, brandId }: ViewBonusesTabProps) {
   };
 
   const addTier = async () => {
-    const threshold = parseInt(newThreshold);
+    const threshold = parseInt(newThreshold, 10);
     const amount = parseFloat(newAmount);
     
     if (isNaN(threshold) || threshold <= 0) {

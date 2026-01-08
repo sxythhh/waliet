@@ -11,7 +11,7 @@ export function ResumeDisplay({ workExperience, education, certifications }: Res
     if (!date) return "";
     const [year, month] = date.split("-");
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
+    return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
   };
 
   return (

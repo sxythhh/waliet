@@ -34,6 +34,7 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import { FLAGS } from "@/assets/flags";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 
@@ -80,14 +81,24 @@ const FOLLOWER_RANGES = [
 
 const LOCATIONS = [
   { id: "any", label: "Worldwide", description: "Creators from anywhere" },
-  { id: "us", label: "United States", country: "United States" },
-  { id: "uk", label: "United Kingdom", country: "United Kingdom" },
-  { id: "ca", label: "Canada", country: "Canada" },
-  { id: "au", label: "Australia", country: "Australia" },
-  { id: "de", label: "Germany", country: "Germany" },
-  { id: "fr", label: "France", country: "France" },
-  { id: "in", label: "India", country: "India" },
-  { id: "br", label: "Brazil", country: "Brazil" },
+  { id: "us", label: "United States", country: "United States", flag: FLAGS.US },
+  { id: "ca", label: "Canada", country: "Canada", flag: FLAGS.CA },
+  { id: "gb", label: "United Kingdom", country: "United Kingdom", flag: FLAGS.GB },
+  { id: "ie", label: "Ireland", country: "Ireland", flag: FLAGS.IE },
+  { id: "au", label: "Australia", country: "Australia", flag: FLAGS.AU },
+  { id: "nz", label: "New Zealand", country: "New Zealand", flag: FLAGS.NZ },
+  { id: "de", label: "Germany", country: "Germany", flag: FLAGS.DE },
+  { id: "fr", label: "France", country: "France", flag: FLAGS.FR },
+  { id: "it", label: "Italy", country: "Italy", flag: FLAGS.IT },
+  { id: "es", label: "Spain", country: "Spain", flag: FLAGS.ES },
+  { id: "nl", label: "Netherlands", country: "Netherlands", flag: FLAGS.NL },
+  { id: "ch", label: "Switzerland", country: "Switzerland", flag: FLAGS.CH },
+  { id: "at", label: "Austria", country: "Austria", flag: FLAGS.AT },
+  { id: "be", label: "Belgium", country: "Belgium", flag: FLAGS.BE },
+  { id: "dk", label: "Denmark", country: "Denmark", flag: FLAGS.DK },
+  { id: "no", label: "Norway", country: "Norway", flag: FLAGS.NO },
+  { id: "se", label: "Sweden", country: "Sweden", flag: FLAGS.SE },
+  { id: "fi", label: "Finland", country: "Finland", flag: FLAGS.FI },
 ] as const;
 
 const NICHES = [
@@ -454,32 +465,43 @@ export function CreatorDiscoveryWizard({
                 Target creators in specific regions
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {LOCATIONS.map(location => {
-                const isSelected = selectedLocation === location.id;
-                return (
-                  <button
-                    key={location.id}
-                    onClick={() => setSelectedLocation(location.id)}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-xl border-2 transition-all",
-                      isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-border/80 hover:bg-muted/30",
-                      location.id === "any" && "col-span-2"
-                    )}
-                  >
-                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="font-medium text-sm">{location.label}</span>
-                    {isSelected && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center ml-auto flex-shrink-0">
-                        <Check className="h-3 w-3 text-white" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <ScrollArea className="h-[320px] pr-4">
+              <div className="grid grid-cols-2 gap-3">
+                {LOCATIONS.map(location => {
+                  const isSelected = selectedLocation === location.id;
+                  const hasFlag = "flag" in location;
+                  return (
+                    <button
+                      key={location.id}
+                      onClick={() => setSelectedLocation(location.id)}
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-xl border-2 transition-all",
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-border/80 hover:bg-muted/30",
+                        location.id === "any" && "col-span-2"
+                      )}
+                    >
+                      {hasFlag ? (
+                        <img
+                          src={location.flag}
+                          alt={location.label}
+                          className="w-5 h-5 rounded-sm object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <span className="font-medium text-sm">{location.label}</span>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center ml-auto flex-shrink-0">
+                          <Check className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
           </div>
         );
 

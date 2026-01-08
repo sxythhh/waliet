@@ -874,9 +874,6 @@ export function CreatorsTab({
             {/* Empty state */}
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center max-w-[280px]">
-                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="h-8 w-8 text-muted-foreground/50" />
-                </div>
                 <h3 className="font-semibold text-sm mb-1">No conversation selected</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Select a conversation from the list or start messaging a creator from the right panel.

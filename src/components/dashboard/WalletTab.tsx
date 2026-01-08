@@ -1634,6 +1634,8 @@ export function WalletTab() {
             avatar_url: onboardingProfile.avatar_url,
             banner_url: onboardingProfile.banner_url,
             created_at: onboardingProfile.created_at,
+            country: onboardingProfile.country,
+            city: onboardingProfile.city,
           }}
           socialAccounts={socialAccounts}
           onEditProfile={() => setEditProfileDialogOpen(true)}

@@ -209,7 +209,7 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
           mappingData.min_earnings = parseFloat(minEarnings);
           break;
         case "active_creator":
-          mappingData.active_days = parseInt(activeDays) || 30;
+          mappingData.active_days = parseInt(activeDays, 10) || 30;
           break;
       }
 
