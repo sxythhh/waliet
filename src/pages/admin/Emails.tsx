@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { format } from "date-fns";
 import { Send, FileText, History, Plus, Pencil, Trash2, Eye, Loader2, Mail, Users, Building2, UserCheck } from "lucide-react";
+import DOMPurify from "dompurify";
 
 interface EmailTemplate {
   id: string;
@@ -633,9 +634,15 @@ export default function AdminEmails() {
                 <div
                   className="bg-white rounded border"
                   dangerouslySetInnerHTML={{
-                    __html: htmlContent
-                      .replace(/\{\{name\}\}/g, "John")
-                      .replace(/\{\{email\}\}/g, "john@example.com")
+                    __html: DOMPurify.sanitize(
+                      htmlContent
+                        .replace(/\{\{name\}\}/g, "John")
+                        .replace(/\{\{email\}\}/g, "john@example.com"),
+                      {
+                        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'div', 'span', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'img', 'hr', 'blockquote', 'pre', 'code'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'style', 'class', 'width', 'height', 'border', 'cellpadding', 'cellspacing', 'align', 'valign', 'bgcolor']
+                      }
+                    )
                   }}
                 />
               </div>
@@ -719,7 +726,12 @@ export default function AdminEmails() {
             {selectedBroadcast && (
               <div
                 className="bg-white rounded border"
-                dangerouslySetInnerHTML={{ __html: selectedBroadcast.html_content }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(selectedBroadcast.html_content, {
+                    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'div', 'span', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'img', 'hr', 'blockquote', 'pre', 'code'],
+                    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'style', 'class', 'width', 'height', 'border', 'cellpadding', 'cellspacing', 'align', 'valign', 'bgcolor']
+                  })
+                }}
               />
             )}
           </DialogContent>

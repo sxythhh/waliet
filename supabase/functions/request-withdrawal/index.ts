@@ -1,9 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsOptions } from '../_shared/cors.ts';
 
 interface WithdrawalRequest {
   amount: number;
@@ -12,9 +8,12 @@ interface WithdrawalRequest {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight with origin validation
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -85,129 +84,119 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch wallet and verify balance (SERVER-SIDE validation)
-    const { data: wallet, error: walletError } = await supabase
-      .from('wallets')
-      .select('id, balance, total_withdrawn')
-      .eq('user_id', user.id)
-      .single();
-
-    if (walletError || !wallet) {
-      console.error('Wallet fetch error:', walletError);
-      return new Response(JSON.stringify({ error: 'Wallet not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Check tax form requirement (read-only check before atomic operation)
+    const { data: taxRequirement, error: taxError } = await supabase
+      .rpc('check_tax_form_required', {
+        p_user_id: user.id,
+        p_payout_amount: amount
       });
-    }
 
-    // CRITICAL: Server-side balance validation
-    const currentBalance = parseFloat(wallet.balance);
-    if (amount > currentBalance) {
-      console.warn(`Withdrawal attempt exceeds balance: user=${user.id}, requested=${amount}, available=${currentBalance}`);
-      return new Response(JSON.stringify({ error: 'Insufficient balance' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Check for existing pending/in-transit withdrawals
-    const { data: existingRequests, error: checkError } = await supabase
-      .from('payout_requests')
-      .select('id')
-      .eq('user_id', user.id)
-      .in('status', ['pending', 'in_transit']);
-
-    if (checkError) {
-      console.error('Existing request check error:', checkError);
-      return new Response(JSON.stringify({ error: 'Failed to verify withdrawal status' }), {
+    if (taxError) {
+      console.error('Tax form check error:', taxError);
+      return new Response(JSON.stringify({ error: 'Failed to verify tax form status' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (existingRequests && existingRequests.length > 0) {
+    // Check if tax form is required
+    const taxReq = taxRequirement?.[0];
+    let taxFormId: string | null = null;
+    let taxFormVerified = false;
+    let withholdingRate = 0;
+    let withholdingAmount = 0;
+
+    if (taxReq?.required) {
+      // Tax form is required but not submitted - reject withdrawal
+      const formTypeLabel = taxReq.form_type === 'w9' ? 'W-9' : 'W-8BEN';
       return new Response(JSON.stringify({
-        error: 'You already have a pending withdrawal request. Please wait for it to be processed.'
+        error: `A ${formTypeLabel} tax form is required before you can withdraw. Please submit your tax form in Settings.`,
+        tax_form_required: true,
+        form_type: taxReq.form_type
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const balance_before = currentBalance;
-    const balance_after = currentBalance - amount;
+    // If tax form exists, get the ID and calculate withholding
+    if (taxReq?.existing_form_id && taxReq?.existing_form_status === 'verified') {
+      taxFormId = taxReq.existing_form_id;
+      taxFormVerified = true;
 
-    // Create payout request
-    const { data: payoutRequest, error: payoutError } = await supabase
-      .from('payout_requests')
-      .insert({
-        user_id: user.id,
-        amount: amount,
-        payout_method: payout_method,
-        payout_details: payout_details,
-        status: 'pending'
-      })
-      .select('id')
-      .single();
+      // Get withholding rate for non-US payees
+      const { data: rateData } = await supabase
+        .rpc('get_withholding_rate', {
+          p_user_id: user.id,
+          p_tax_form_id: taxFormId
+        });
 
-    if (payoutError) {
-      console.error('Payout request creation error:', payoutError);
-      return new Response(JSON.stringify({ error: 'Failed to create payout request' }), {
+      if (rateData !== null) {
+        withholdingRate = rateData;
+        withholdingAmount = amount * (withholdingRate / 100);
+      }
+    }
+
+    // Execute atomic withdrawal - database handles all locking and rollback
+    const { data: result, error: withdrawalError } = await supabase
+      .rpc('atomic_request_withdrawal', {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_payout_method: payout_method,
+        p_payout_details: payout_details,
+        p_tax_form_id: taxFormId,
+        p_tax_form_verified: taxFormVerified,
+        p_withholding_rate: withholdingRate,
+        p_withholding_amount: withholdingAmount
+      });
+
+    if (withdrawalError) {
+      console.error('Atomic withdrawal error:', withdrawalError);
+
+      // Parse specific error messages for user-friendly responses
+      const errorMessage = withdrawalError.message || 'Failed to process withdrawal';
+
+      if (errorMessage.includes('Insufficient balance')) {
+        return new Response(JSON.stringify({ error: 'Insufficient balance' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (errorMessage.includes('pending withdrawal request')) {
+        return new Response(JSON.stringify({
+          error: 'You already have a pending withdrawal request. Please wait for it to be processed.'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (errorMessage.includes('Wallet not found')) {
+        return new Response(JSON.stringify({ error: 'Wallet not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ error: 'Failed to process withdrawal' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Create wallet transaction
-    const { error: txnError } = await supabase
-      .from('wallet_transactions')
-      .insert({
-        user_id: user.id,
-        amount: -amount,
-        type: 'withdrawal',
-        status: 'pending',
-        description: `Withdrawal to ${payout_method === 'paypal' ? 'PayPal' : payout_method === 'crypto' ? 'Crypto' : payout_method}`,
-        metadata: {
-          payout_method: payout_method,
-          payout_request_id: payoutRequest.id,
-          network: (payout_details as Record<string, string>).network || null,
-          balance_before: balance_before,
-          balance_after: balance_after
-        },
-        created_by: user.id
+    // Update cumulative payouts for tax tracking (non-blocking)
+    try {
+      await supabase.rpc('update_cumulative_payouts', {
+        p_user_id: user.id,
+        p_amount: amount
       });
-
-    if (txnError) {
-      console.error('Transaction creation error:', txnError);
-      // Rollback: delete payout request
-      await supabase.from('payout_requests').delete().eq('id', payoutRequest.id);
-      return new Response(JSON.stringify({ error: 'Failed to create transaction' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    } catch (cumulativeError) {
+      // Log but don't fail the withdrawal for this
+      console.error('Failed to update cumulative payouts:', cumulativeError);
     }
 
-    // Update wallet balance (using service role, bypasses user restrictions)
-    const { error: walletUpdateError } = await supabase
-      .from('wallets')
-      .update({
-        balance: balance_after,
-        total_withdrawn: parseFloat(wallet.total_withdrawn) + amount
-      })
-      .eq('id', wallet.id);
-
-    if (walletUpdateError) {
-      console.error('Wallet update error:', walletUpdateError);
-      // Rollback: delete payout request and transaction
-      await supabase.from('payout_requests').delete().eq('id', payoutRequest.id);
-      await supabase.from('wallet_transactions').delete().eq('user_id', user.id).eq('type', 'withdrawal').eq('status', 'pending');
-      return new Response(JSON.stringify({ error: 'Failed to update wallet' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Send Discord notification (non-blocking)
+    // Send Discord notification (non-blocking, errors here don't affect the withdrawal)
     try {
       await supabase.functions.invoke('notify-withdrawal', {
         body: {
@@ -216,28 +205,35 @@ Deno.serve(async (req) => {
           amount: amount,
           payout_method: payout_method,
           payout_details: payout_details,
-          balance_before: balance_before,
-          balance_after: balance_after,
+          balance_before: (result.balance_after as number) + amount,
+          balance_after: result.balance_after,
           date: new Date().toISOString()
         }
       });
     } catch (notifError) {
+      // Don't fail for notification errors - the withdrawal itself succeeded
       console.error('Failed to send Discord notification:', notifError);
     }
 
-    console.log(`Withdrawal request created: user=${user.id}, amount=${amount}, method=${payout_method}`);
+    console.log(`Withdrawal request created: user=${user.id}, amount=${amount}, method=${payout_method}, payout_request_id=${result.payout_request_id}, transaction_id=${result.transaction_id}`);
 
     return new Response(JSON.stringify({
       success: true,
-      payout_request_id: payoutRequest.id,
-      amount: amount,
-      balance_after: balance_after
+      payout_request_id: result.payout_request_id,
+      transaction_id: result.transaction_id,
+      amount: result.amount,
+      balance_after: result.balance_after,
+      withholding_rate: result.withholding_rate,
+      withholding_amount: result.withholding_amount,
+      net_amount: result.net_amount,
+      tax_form_verified: result.tax_form_verified
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error: unknown) {
     console.error('Withdrawal error:', error);
+
     return new Response(JSON.stringify({
       error: error instanceof Error ? error.message : 'Internal server error'
     }), {
