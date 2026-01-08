@@ -38,6 +38,7 @@ const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Apply = lazy(() => import("./pages/Apply"));
 const Admin = lazy(() => import("./pages/Admin"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
+const DiscordBotOAuthCallback = lazy(() => import("./components/DiscordBotOAuthCallback").then(m => ({ default: m.DiscordBotOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
@@ -155,6 +156,7 @@ const App = () => (
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+                  <Route path="/discord/bot-callback" element={<DiscordBotOAuthCallback />} />
                   <Route path="/x/callback" element={<XOAuthCallback />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/discover" element={<Discover />} />

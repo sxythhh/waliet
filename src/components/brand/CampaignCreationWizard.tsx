@@ -22,6 +22,7 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useBrandUsage } from "@/hooks/useBrandUsage";
+import { DiscordRoleSelector } from "./DiscordRoleSelector";
 const SUGGESTED_TAGS = ['growth', 'retargeting', 'seasonal', 'awareness', 'retention', 'acquisition', 'promo', 'reactivation', 'launch', 'evergreen', 'holiday', 'influencer', 'performance', 'branding', 'viral'];
 const CAMPAIGN_NICHES = [{
   id: 'tech',
@@ -341,7 +342,7 @@ export function CampaignCreationWizard({
   const [pendingRateType, setPendingRateType] = useState<'cpm' | 'per_post'>('cpm');
   const [pendingRatePlatform, setPendingRatePlatform] = useState<string | null>(null);
   const [pendingRateValue, setPendingRateValue] = useState<string>('5');
-  const [discordGuildId, setDiscordGuildId] = useState<string>(campaign?.discord_guild_id || "");
+  const [brandDiscordGuildId, setBrandDiscordGuildId] = useState<string | null>(null);
   const [discordRoleId, setDiscordRoleId] = useState<string>(campaign?.discord_role_id || "");
   const [requireAudienceInsights, setRequireAudienceInsights] = useState<boolean>(campaign?.require_audience_insights || false);
   const [minInsightsScore, setMinInsightsScore] = useState<number>(campaign?.min_insights_score || 0);
@@ -371,12 +372,13 @@ export function CampaignCreationWizard({
           if (walletError && walletError.code !== 'PGRST116') throw walletError;
           setAvailableBalance(walletData?.balance || 0);
 
-          // Fetch subscription status if brandId is provided
+          // Fetch subscription status and Discord guild if brandId is provided
           if (brandId) {
             const {
               data: brandData
-            } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
+            } = await supabase.from('brands').select('subscription_status, discord_guild_id').eq('id', brandId).single();
             setSubscriptionStatus(brandData?.subscription_status || null);
+            setBrandDiscordGuildId(brandData?.discord_guild_id || null);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -553,10 +555,9 @@ export function CampaignCreationWizard({
       setPendingRateType('cpm');
       setPendingRatePlatform(null);
       setPendingRateValue('5');
-      setDiscordGuildId(campaign?.discord_guild_id || "");
       setDiscordRoleId(campaign?.discord_role_id || "");
     }
-  }, [open, campaign?.blueprint_id, campaign?.shortimize_collection_name, campaign?.platform_rates, campaign?.discord_guild_id, campaign?.discord_role_id, initialBlueprintId]);
+  }, [open, campaign?.blueprint_id, campaign?.shortimize_collection_name, campaign?.platform_rates, campaign?.discord_role_id, initialBlueprintId]);
 
   // Helper functions for platform rates
   const addPlatformRate = (platform: string, type: 'cpm' | 'per_post', value: number) => {
@@ -745,7 +746,7 @@ export function CampaignCreationWizard({
           blueprint_id: selectedBlueprintId || null,
           shortimize_collection_name: shortimizeCollectionName || null,
           platform_rates: Object.keys(platformRates).length > 0 ? platformRates : null,
-          discord_guild_id: discordGuildId || null,
+          discord_guild_id: brandDiscordGuildId || null,
           discord_role_id: discordRoleId || null,
           require_audience_insights: requireAudienceInsights,
           min_insights_score: requireAudienceInsights ? minInsightsScore : 0,
@@ -799,7 +800,7 @@ export function CampaignCreationWizard({
           blueprint_id: selectedBlueprintId || initialBlueprintId || null,
           shortimize_collection_name: shortimizeCollectionName || null,
           platform_rates: Object.keys(platformRates).length > 0 ? platformRates : null,
-          discord_guild_id: discordGuildId || null,
+          discord_guild_id: brandDiscordGuildId || null,
           discord_role_id: discordRoleId || null,
           require_audience_insights: requireAudienceInsights,
           min_insights_score: requireAudienceInsights ? minInsightsScore : 0
@@ -1337,23 +1338,18 @@ export function CampaignCreationWizard({
 
                     {/* Discord Integration */}
                     <div className="space-y-3 p-4 rounded-xl bg-muted/20 px-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <svg className="h-4 w-4 text-[#5865F2]" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
                         </svg>
                         <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Discord Integration (Optional)</Label>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Server ID</Label>
-                          <Input value={discordGuildId} onChange={e => setDiscordGuildId(e.target.value)} placeholder="e.g., 123456789" className="h-9 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Role ID</Label>
-                          <Input value={discordRoleId} onChange={e => setDiscordRoleId(e.target.value)} placeholder="e.g., 123456789" className="h-9 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 text-sm" />
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">Auto-add accepted users to Discord with a role. Enable Developer Mode to copy IDs.</p>
+                      <DiscordRoleSelector
+                        brandId={brandId}
+                        guildId={brandDiscordGuildId}
+                        selectedRoleId={discordRoleId}
+                        onRoleChange={setDiscordRoleId}
+                      />
                     </div>
 
 

@@ -20,6 +20,7 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { DiscordConnectPrompt } from "@/components/DiscordConnectPrompt";
 import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 import fullscreenIconDark from "@/assets/expand-icon-dark.svg";
 interface Blueprint {
@@ -90,6 +91,9 @@ export function JoinCampaignSheet({
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loadingBlueprint, setLoadingBlueprint] = useState(false);
   const [userInsightsScore, setUserInsightsScore] = useState<number | null>(null);
+  const [userDiscordConnected, setUserDiscordConnected] = useState(false);
+  const [campaignHasDiscord, setCampaignHasDiscord] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const {
     resolvedTheme
@@ -115,8 +119,41 @@ export function JoinCampaignSheet({
       checkAuthentication();
       loadSocialAccounts();
       loadBlueprint();
+      loadDiscordStatus();
     }
-  }, [open, campaign?.blueprint_id]);
+  }, [open, campaign?.blueprint_id, campaign?.id]);
+
+  // Load Discord connection status and campaign Discord settings
+  const loadDiscordStatus = async () => {
+    if (!campaign?.id) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setCurrentUserId(user.id);
+
+      // Check if user has Discord connected
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('discord_id')
+        .eq('id', user.id)
+        .single();
+
+      setUserDiscordConnected(!!profile?.discord_id);
+
+      // Check if campaign has Discord configured
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('discord_guild_id')
+        .eq('id', campaign.id)
+        .single();
+
+      setCampaignHasDiscord(!!campaignData?.discord_guild_id);
+    } catch (error) {
+      console.error('Error loading Discord status:', error);
+    }
+  };
   const loadBlueprint = async () => {
     if (!campaign?.blueprint_id) {
       setBlueprint(null);
@@ -382,6 +419,36 @@ export function JoinCampaignSheet({
           }
         } catch (error) {
           console.error('Error calling track function:', error);
+        }
+
+        // Auto-join Discord server if auto-approved and campaign has Discord configured
+        try {
+          // Fetch campaign's Discord settings
+          const { data: campaignData } = await supabase
+            .from('campaigns')
+            .select('discord_guild_id, discord_role_id')
+            .eq('id', campaign.id)
+            .single();
+
+          if (campaignData?.discord_guild_id) {
+            console.log('Adding user to Discord server...');
+            const { error: discordError } = await supabase.functions.invoke('add-to-discord-server', {
+              body: {
+                userId: user.id,
+                guildId: campaignData.discord_guild_id,
+                roleId: campaignData.discord_role_id || undefined
+              }
+            });
+
+            if (discordError) {
+              console.error('Error adding to Discord:', discordError);
+              // Don't fail the submission if Discord join fails
+            } else {
+              console.log('Successfully added to Discord server');
+            }
+          }
+        } catch (error) {
+          console.error('Error with Discord auto-join:', error);
         }
       }
 
@@ -690,6 +757,16 @@ export function JoinCampaignSheet({
           return (
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-[#dadce2]/0">
               <div className="flex flex-col gap-3">
+                {/* Discord Connect Prompt */}
+                {currentUserId && campaignHasDiscord && !userDiscordConnected && (
+                  <DiscordConnectPrompt
+                    userId={currentUserId}
+                    hasDiscordConnected={userDiscordConnected}
+                    campaignHasDiscord={campaignHasDiscord}
+                    variant="banner"
+                    onConnected={loadDiscordStatus}
+                  />
+                )}
                 <Button style={{
                   fontFamily: 'Geist',
                   letterSpacing: '-0.5px',
