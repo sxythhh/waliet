@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2 } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2, Rocket } from "lucide-react";
 import videosIcon from "@/assets/videos-icon.svg";
 import personIcon from "@/assets/person-icon.svg";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
@@ -591,7 +591,7 @@ export function DiscoverTab({
         {/* Filters */}
         <div className="space-y-3 font-inter tracking-[-0.5px]">
           {/* Search and Filters Row */}
-          <div className="flex flex-row gap-2 items-center">
+          <div className="flex flex-row gap-2 items-center justify-between">
             {/* Search Input - Click to open overlay (only show if not using external search) */}
             {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 sm:flex-none sm:w-72 text-left group">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -600,6 +600,20 @@ export function DiscoverTab({
                 </div>
               </button>}
 
+            {/* Launch Opportunity Button */}
+            <Button
+              onClick={() => {
+                if (userBrand) {
+                  setCreateCampaignDialogOpen(true);
+                } else {
+                  setCreateBrandDialogOpen(true);
+                }
+              }}
+              className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium tracking-[-0.3px]"
+            >
+              <span className="hidden sm:inline">Launch Opportunity</span>
+              <span className="sm:hidden">Launch</span>
+            </Button>
           </div>
         </div>
         </div>
