@@ -128,7 +128,7 @@ const creatorMenuItems: MenuItem[] = [{
   tab: "campaigns",
   icon: null
 }, {
-  title: "Profile",
+  title: "Wallet",
   tab: "profile",
   icon: Dock
 }, {
@@ -136,7 +136,7 @@ const creatorMenuItems: MenuItem[] = [{
   tab: "discover",
   icon: Compass
 }, {
-  title: "Payments",
+  title: "Referrals",
   tab: "wallet",
   icon: null
 }, {
