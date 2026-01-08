@@ -1,6 +1,7 @@
 "use client";
 
 import { MetricsGrid } from "./MetricsGrid";
+import { InsightsMetricsGrid } from "./InsightsMetricsGrid";
 import { LiveActivityFeed } from "./LiveActivityFeed";
 import { QuickActions } from "./QuickActions";
 import { SendAnnouncementDialog } from "../SendAnnouncementDialog";
@@ -23,8 +24,11 @@ export function CommandCenter() {
           <SendAnnouncementDialog />
         </div>
 
-        {/* Metrics Grid */}
+        {/* Primary Metrics Grid */}
         <MetricsGrid />
+
+        {/* Platform Insights - Additional Metrics */}
+        <InsightsMetricsGrid />
 
         {/* Two column layout for activity and quick actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
