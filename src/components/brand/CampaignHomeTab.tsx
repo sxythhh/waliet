@@ -617,7 +617,7 @@ export function CampaignHomeTab({
   return (
     <div className="p-4 pb-[70px] sm:pb-4 space-y-4">
       {/* Date Range Label */}
-      <p className="text-sm text-muted-foreground font-['Geist'] tracking-[-0.3px]">
+      <p className="text-sm text-muted-foreground font-geist tracking-[-0.3px]">
         {formatTimeframeLabel(timeframe)}
       </p>
 
@@ -666,7 +666,7 @@ export function CampaignHomeTab({
                         )}
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs bg-[#080808] text-white border-0 font-['Inter'] tracking-[-0.5px]">
+                    <TooltipContent side="bottom" className="text-xs bg-[#080808] text-white border-0 font-inter tracking-[-0.5px]">
                       <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-500" />

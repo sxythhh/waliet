@@ -649,7 +649,7 @@ export default function Tickets() {
         <div className="px-6 py-3 shrink-0 border-b border-border/50">
           <div className="flex items-center justify-between gap-4">
             <TabsList className="bg-muted/30 p-1 h-auto">
-              <TabsTrigger value="tickets" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
+              <TabsTrigger value="tickets" className="text-sm font-inter tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
                 Tickets
                 {stats.open > 0 && (
                   <span className="ml-2 bg-blue-500/20 text-blue-400 text-xs px-1.5 py-0.5 rounded-full">
@@ -657,7 +657,7 @@ export default function Tickets() {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="feedback" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
+              <TabsTrigger value="feedback" className="text-sm font-inter tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
                 Feedback
                 {feedbackStats.pending > 0 && (
                   <span className="ml-2 bg-amber-500/20 text-amber-400 text-xs px-1.5 py-0.5 rounded-full">
@@ -802,7 +802,7 @@ export default function Tickets() {
             ) : feedbackSubmissions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <MessageSquare className="h-10 w-10 text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.3px]">No feedback submissions found</p>
+                <p className="text-muted-foreground font-inter tracking-[-0.3px]">No feedback submissions found</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -817,12 +817,12 @@ export default function Tickets() {
                           <Badge variant="secondary" className="capitalize text-xs">
                             {submission.type}
                           </Badge>
-                          <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                             {format(new Date(submission.created_at), "MMM d, yyyy")}
                           </span>
                         </div>
                         {submission.user && (
-                          <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                             {submission.user.username || submission.user.email}
                           </span>
                         )}
@@ -830,7 +830,7 @@ export default function Tickets() {
 
                       {/* Card Body */}
                       <div className="px-4 py-3">
-                        <p className="text-sm font-['Inter'] tracking-[-0.3px] whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm font-inter tracking-[-0.3px] whitespace-pre-wrap leading-relaxed">
                           {submission.message}
                         </p>
                       </div>
@@ -848,7 +848,7 @@ export default function Tickets() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                className={`h-7 px-2.5 text-xs font-inter tracking-[-0.3px] ${
                                   submission.status === "pending"
                                     ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
                                     : "hover:bg-muted text-muted-foreground"
@@ -862,7 +862,7 @@ export default function Tickets() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                className={`h-7 px-2.5 text-xs font-inter tracking-[-0.3px] ${
                                   submission.status === "in_progress"
                                     ? "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
                                     : "hover:bg-muted text-muted-foreground"
@@ -876,7 +876,7 @@ export default function Tickets() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                className={`h-7 px-2.5 text-xs font-inter tracking-[-0.3px] ${
                                   submission.status === "resolved"
                                     ? "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
                                     : "hover:bg-muted text-muted-foreground"
@@ -890,7 +890,7 @@ export default function Tickets() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                className={`h-7 px-2.5 text-xs font-inter tracking-[-0.3px] ${
                                   submission.status === "rejected"
                                     ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
                                     : "hover:bg-muted text-muted-foreground"

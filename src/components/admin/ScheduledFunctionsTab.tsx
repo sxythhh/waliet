@@ -111,13 +111,13 @@ export function ScheduledFunctionsTab() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-[#1a1a1a]">
-              <Clock className="h-5 w-5 text-[#2061de]" />
+              <Clock className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">
                 Scheduled Edge Functions
               </CardTitle>
-              <p className="text-sm text-[#6f6f6f] mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Cron jobs running on your backend
               </p>
             </div>
@@ -140,20 +140,20 @@ export function ScheduledFunctionsTab() {
             <div className="p-3 rounded-full bg-red-500/10 mb-4">
               <Zap className="h-6 w-6 text-red-500" />
             </div>
-            <p className="text-[#6f6f6f] text-sm max-w-md">
+            <p className="text-muted-foreground text-sm max-w-md">
               Unable to fetch scheduled functions. The cron extension may not be enabled or the RPC function needs to be created.
             </p>
-            <code className="mt-3 text-xs text-[#6f6f6f] bg-[#1a1a1a] px-3 py-1.5 rounded">
+            <code className="mt-3 text-xs text-muted-foreground bg-[#1a1a1a] px-3 py-1.5 rounded">
               {error}
             </code>
           </div>
         ) : jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="p-3 rounded-full bg-[#1a1a1a] mb-4">
-              <Calendar className="h-6 w-6 text-[#6f6f6f]" />
+              <Calendar className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-white font-medium mb-1">No scheduled functions</p>
-            <p className="text-[#6f6f6f] text-sm max-w-md">
+            <p className="text-muted-foreground text-sm max-w-md">
               You haven't set up any cron jobs yet. Use pg_cron to schedule edge function invocations.
             </p>
           </div>
@@ -162,11 +162,11 @@ export function ScheduledFunctionsTab() {
             <Table>
               <TableHeader>
                 <TableRow className="border-[#1a1a1a] hover:bg-transparent">
-                  <TableHead className="text-[#6f6f6f] font-medium">Function</TableHead>
-                  <TableHead className="text-[#6f6f6f] font-medium">Schedule</TableHead>
-                  <TableHead className="text-[#6f6f6f] font-medium">Frequency</TableHead>
-                  <TableHead className="text-[#6f6f6f] font-medium">Status</TableHead>
-                  <TableHead className="text-[#6f6f6f] font-medium text-right">Job ID</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Function</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Schedule</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Frequency</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">Status</TableHead>
+                  <TableHead className="text-muted-foreground font-medium text-right">Job ID</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,24 +179,24 @@ export function ScheduledFunctionsTab() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="p-1.5 rounded-md bg-[#1a1a1a]">
-                            <Zap className="h-4 w-4 text-[#2061de]" />
+                            <Zap className="h-4 w-4 text-primary" />
                           </div>
                           <div>
                             <p className="font-medium text-white">{functionName}</p>
                             {job.jobname && (
-                              <p className="text-xs text-[#6f6f6f]">{job.jobname}</p>
+                              <p className="text-xs text-muted-foreground">{job.jobname}</p>
                             )}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-[#6f6f6f]" />
-                          <span className="text-sm text-[#a0a0a0]">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
                             {formatSchedule(job.schedule)}
                           </span>
                         </div>
-                        <code className="text-xs text-[#6f6f6f] mt-0.5 block">
+                        <code className="text-xs text-muted-foreground mt-0.5 block">
                           {job.schedule}
                         </code>
                       </TableCell>
@@ -223,12 +223,12 @@ export function ScheduledFunctionsTab() {
                         ) : (
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-[#6f6f6f]" />
-                            <span className="text-sm text-[#6f6f6f]">Paused</span>
+                            <span className="text-sm text-muted-foreground">Paused</span>
                           </div>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <code className="text-xs text-[#6f6f6f] bg-[#1a1a1a] px-2 py-1 rounded">
+                        <code className="text-xs text-muted-foreground bg-[#1a1a1a] px-2 py-1 rounded">
                           #{job.jobid}
                         </code>
                       </TableCell>

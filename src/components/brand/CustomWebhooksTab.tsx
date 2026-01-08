@@ -476,7 +476,7 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
                     >
                       <Checkbox
                         checked={newWebhook.events.includes(event.id)}
-                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium font-inter tracking-[-0.3px]">{event.label}</p>

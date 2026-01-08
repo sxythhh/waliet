@@ -176,7 +176,7 @@ export function RecentActivity() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => setActiveTab("leaderboard")}
-          className={`text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif] transition-colors ${
+          className={`text-lg font-semibold tracking-[-0.3px] font-geist transition-colors ${
             activeTab === "leaderboard"
               ? "text-foreground"
               : "text-muted-foreground hover:text-foreground/70"
@@ -186,7 +186,7 @@ export function RecentActivity() {
         </button>
         <button
           onClick={() => setActiveTab("activity")}
-          className={`text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif] transition-colors ${
+          className={`text-lg font-semibold tracking-[-0.3px] font-geist transition-colors ${
             activeTab === "activity"
               ? "text-foreground"
               : "text-muted-foreground hover:text-foreground/70"

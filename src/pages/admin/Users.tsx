@@ -872,7 +872,7 @@ export default function AdminUsers() {
                       <Button
                         variant="ghost"
                         className={cn(
-                          "h-8 px-3 text-xs font-['Inter'] tracking-[-0.3px] gap-1.5",
+                          "h-8 px-3 text-xs font-inter tracking-[-0.3px] gap-1.5",
                           filters.campaign !== "all" ? "bg-primary/10 text-primary" : "bg-muted/50"
                         )}
                       >
@@ -908,7 +908,7 @@ export default function AdminUsers() {
                       <Button
                         variant="ghost"
                         className={cn(
-                          "h-8 px-3 text-xs font-['Inter'] tracking-[-0.3px] gap-1.5",
+                          "h-8 px-3 text-xs font-inter tracking-[-0.3px] gap-1.5",
                           filters.signupTimeframe !== "all" ? "bg-primary/10 text-primary" : "bg-muted/50"
                         )}
                       >
@@ -940,7 +940,7 @@ export default function AdminUsers() {
                       <Button
                         variant="ghost"
                         className={cn(
-                          "h-8 px-3 text-xs font-['Inter'] tracking-[-0.3px] gap-1.5",
+                          "h-8 px-3 text-xs font-inter tracking-[-0.3px] gap-1.5",
                           filters.platform !== "all" ? "bg-primary/10 text-primary" : "bg-muted/50"
                         )}
                       >
@@ -978,7 +978,7 @@ export default function AdminUsers() {
                         variant="ghost"
                         size="sm"
                         className={cn(
-                          "h-8 px-2.5 text-xs font-['Inter'] tracking-[-0.3px]",
+                          "h-8 px-2.5 text-xs font-inter tracking-[-0.3px]",
                           filters[key] === true ? activeColor :
                           filters[key] === false ? "bg-muted/80 text-muted-foreground line-through" : "bg-muted/50"
                         )}
@@ -1361,7 +1361,7 @@ export default function AdminUsers() {
         <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-['Inter'] tracking-[-0.3px]">Pay User</DialogTitle>
+              <DialogTitle className="font-inter tracking-[-0.3px]">Pay User</DialogTitle>
               <DialogDescription>
                 {selectedUser && `Send payment to @${selectedUser.username}`}
               </DialogDescription>

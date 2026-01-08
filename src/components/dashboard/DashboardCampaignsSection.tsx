@@ -36,8 +36,8 @@ export function DashboardCampaignsSection({
     return (
       <div className="text-center py-16 text-muted-foreground">
         <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <p className="font-['Inter'] tracking-[-0.5px]">No campaigns yet</p>
-        <p className="text-sm mt-2 font-['Inter'] tracking-[-0.5px]">
+        <p className="font-inter tracking-[-0.5px]">No campaigns yet</p>
+        <p className="text-sm mt-2 font-inter tracking-[-0.5px]">
           Join campaigns from the Discover tab to start earning
         </p>
       </div>

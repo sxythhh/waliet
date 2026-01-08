@@ -202,10 +202,10 @@ export function EditBrandDialog({
                 </div>
               ) : (
                 <div 
-                  className="w-20 h-20 border border-dashed border-border dark:border-[#2a2a2a] rounded-xl flex items-center justify-center cursor-pointer hover:border-muted-foreground dark:hover:border-[#3a3a3a] hover:bg-muted/50 dark:hover:bg-[#111] transition-all shrink-0"
+                  className="w-20 h-20 border border-dashed border-border dark:border-[#2a2a2a] rounded-xl flex items-center justify-center cursor-pointer hover:border-muted-foreground dark:hover:border-[#3a3a3a] hover:bg-muted/50 dark:hover:bg-muted transition-all shrink-0"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload className="h-5 w-5 text-muted-foreground dark:text-[#666]" />
+                  <Upload className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
                 </div>
               )}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
@@ -216,7 +216,7 @@ export function EditBrandDialog({
                     <FormControl>
                       <Input 
                         placeholder="Brand name" 
-                        className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
+                        className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] h-9 text-sm"
                         {...field} 
                       />
                     </FormControl>
@@ -228,10 +228,10 @@ export function EditBrandDialog({
                   <FormItem>
                     <FormControl>
                       <div className="flex items-center">
-                        <span className="text-muted-foreground dark:text-[#666] text-sm pr-1">@</span>
+                        <span className="text-muted-foreground dark:text-muted-foreground text-sm pr-1">@</span>
                         <Input 
                           placeholder="brand-slug" 
-                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
+                          className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] h-9 text-sm"
                           {...field}
                           onChange={e => {
                             field.onChange(sanitizeSlugInput(e.target.value));
@@ -250,11 +250,11 @@ export function EditBrandDialog({
                 <FormLabel className="text-muted-foreground text-xs font-normal">Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm">
+                    <SelectTrigger className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] h-9 text-sm">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-background dark:bg-[#111] border-border dark:border-[#1a1a1a]">
+                  <SelectContent className="bg-background dark:bg-muted border-border dark:border-[#1a1a1a]">
                     <SelectItem value="Lead">Lead</SelectItem>
                     <SelectItem value="DWY">DWY</SelectItem>
                     <SelectItem value="Client">Client</SelectItem>
@@ -270,7 +270,7 @@ export function EditBrandDialog({
                 <FormControl>
                   <Textarea 
                     placeholder="Brief description..." 
-                    className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] text-sm resize-none min-h-[60px]"
+                    className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] text-sm resize-none min-h-[60px]"
                     rows={2}
                     {...field} 
                   />
@@ -288,10 +288,10 @@ export function EditBrandDialog({
                   <FormItem>
                     <FormControl>
                       <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-[#666] shrink-0" />
+                        <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
                         <Textarea 
                           placeholder='Home embed HTML (iframe)' 
-                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] text-xs font-mono resize-none min-h-[36px]"
+                          className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] text-xs font-mono resize-none min-h-[36px]"
                           rows={1}
                           {...field} 
                         />
@@ -305,10 +305,10 @@ export function EditBrandDialog({
                   <FormItem>
                     <FormControl>
                       <div className="flex items-center gap-2">
-                        <Link2 className="h-4 w-4 text-[#666] shrink-0" />
+                        <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
                         <Input 
                           placeholder="Account URL" 
-                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
+                          className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] h-9 text-sm"
                           {...field} 
                         />
                       </div>
@@ -321,10 +321,10 @@ export function EditBrandDialog({
                   <FormItem>
                     <FormControl>
                       <div className="flex items-center gap-2">
-                        <FolderOpen className="h-4 w-4 text-[#666] shrink-0" />
+                        <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
                         <Input 
                           placeholder="Assets URL" 
-                          className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
+                          className="bg-muted/50 dark:bg-muted border-border dark:border-[#1a1a1a] h-9 text-sm"
                           {...field} 
                         />
                       </div>

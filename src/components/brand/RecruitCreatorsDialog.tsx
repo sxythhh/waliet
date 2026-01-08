@@ -275,7 +275,7 @@ export function RecruitCreatorsDialog({
             </p>
             <button
               onClick={() => setSubscriptionGateOpen(true)}
-              className="py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
+              className="py-2 px-4 bg-primary border-t border-primary/70 rounded-lg font-inter text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
             >
               <img src={vpnKeyIcon} alt="" className="h-4 w-4" />
               Upgrade Plan

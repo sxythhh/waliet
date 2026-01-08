@@ -559,7 +559,7 @@ export function UserDetailsDialog({
 
           {/* Stats Row */}
           <div className="grid grid-cols-3 gap-3 mt-5">
-            <div className="bg-[#111] rounded-lg p-3">
+            <div className="bg-muted rounded-lg p-3">
               <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Balance</span>
               <p className="text-lg font-semibold text-green-400 mt-1" style={{
               fontFamily: 'Inter',
@@ -568,7 +568,7 @@ export function UserDetailsDialog({
                 ${(user.wallets?.balance || 0).toFixed(2)}
               </p>
             </div>
-            <div className="bg-[#111] rounded-lg p-3">
+            <div className="bg-muted rounded-lg p-3">
               <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Earned</span>
               <p className="text-lg font-semibold text-foreground mt-1" style={{
               fontFamily: 'Inter',
@@ -577,7 +577,7 @@ export function UserDetailsDialog({
                 ${(user.wallets?.total_earned || 0).toFixed(2)}
               </p>
             </div>
-            <div className="bg-[#111] rounded-lg p-3">
+            <div className="bg-muted rounded-lg p-3">
               <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Withdrawn</span>
               <p className="text-lg font-semibold text-foreground mt-1" style={{
               fontFamily: 'Inter',
@@ -633,7 +633,7 @@ export function UserDetailsDialog({
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="mt-3 text-xs gap-1 border-0 bg-[#111]"
+                    className="mt-3 text-xs gap-1 border-0 bg-muted"
                     onClick={() => setLinkAccountDialogOpen(true)}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -654,7 +654,7 @@ export function UserDetailsDialog({
                   if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
                   return count.toString();
                 };
-                return <div key={account.id} className="p-4 rounded-lg bg-[#111] group">
+                return <div key={account.id} className="p-4 rounded-lg bg-muted group">
                         <div className="flex items-start gap-3">
                           {/* Avatar or Platform Icon */}
                           {account.avatar_url ? (
@@ -758,7 +758,7 @@ export function UserDetailsDialog({
                   <CreditCard className="w-8 h-8 mb-2 opacity-50" />
                   <p className="text-sm">No payment methods</p>
                 </div> : <div className="space-y-3">
-                  {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-[#111]">
+                  {paymentMethods.map((method, index) => <div key={index} className="p-4 rounded-lg bg-muted">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center">
                           {method.method === 'crypto' && <Wallet className="h-5 w-5 text-purple-400" />}
@@ -838,7 +838,7 @@ export function UserDetailsDialog({
                 const metadata = transaction.metadata as any;
                 const isWithdrawal = transaction.type === 'withdrawal' || transaction.type === 'deduction';
                 const isEarning = transaction.type === 'earning';
-                return <div key={transaction.id} className="p-4 rounded-lg bg-[#111]">
+                return <div key={transaction.id} className="p-4 rounded-lg bg-muted">
                         {/* Header Row */}
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -961,7 +961,7 @@ export function UserDetailsDialog({
             <ScrollArea className="h-[280px]">
               <div className="space-y-4">
                 {/* Discord Connection Status */}
-                <div className="p-4 rounded-lg bg-[#111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <div className="flex items-center gap-2 mb-3">
                     <img src={discordIcon} alt="Discord" className="w-4 h-4" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord Connection</span>
@@ -986,7 +986,7 @@ export function UserDetailsDialog({
                 </div>
 
                 {/* Trust Score */}
-                <div className="p-4 rounded-lg bg-[#111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <div className="flex items-center gap-2 mb-3">
                     <Diamond className="w-4 h-4 text-emerald-400 fill-emerald-400" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Trust Score</span>
@@ -1000,7 +1000,7 @@ export function UserDetailsDialog({
                 </div>
 
                 {/* Balance Adjustment */}
-                <div className="p-4 rounded-lg bg-[#111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <div className="flex items-center gap-2 mb-3">
                     <DollarSign className="w-4 h-4 text-emerald-400" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Balance Adjustment</span>
@@ -1016,7 +1016,7 @@ export function UserDetailsDialog({
                 </div>
 
                 {/* IP Ban */}
-                <div className="p-4 rounded-lg bg-[#111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <div className="flex items-center gap-2 mb-3">
                     <Ban className="w-4 h-4 text-red-500" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">IP Ban</span>
@@ -1066,7 +1066,7 @@ export function UserDetailsDialog({
                 </div>
 
                 {/* Impersonate User */}
-                <div className="p-4 rounded-lg bg-[#111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <div className="flex items-center gap-2 mb-3">
                     <LogIn className="w-4 h-4 text-blue-400" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Impersonate User</span>
@@ -1100,13 +1100,13 @@ export function UserDetailsDialog({
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount</Label>
-                <Input id="amount" type="number" step="0.01" placeholder="0.00" value={adjustAmount} onChange={e => setAdjustAmount(e.target.value)} className="bg-[#111] border-0" />
+                <Input id="amount" type="number" step="0.01" placeholder="0.00" value={adjustAmount} onChange={e => setAdjustAmount(e.target.value)} className="bg-muted border-0" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>
-                <Input id="description" placeholder="Balance Correction" value={adjustDescription} onChange={e => setAdjustDescription(e.target.value)} className="bg-[#111] border-0" />
+                <Input id="description" placeholder="Balance Correction" value={adjustDescription} onChange={e => setAdjustDescription(e.target.value)} className="bg-muted border-0" />
               </div>
-              {adjustAmount && !isNaN(parseFloat(adjustAmount)) && <div className="p-3 bg-[#111] rounded-lg space-y-2">
+              {adjustAmount && !isNaN(parseFloat(adjustAmount)) && <div className="p-3 bg-muted rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Current</span>
                     <span>${(user.wallets?.balance || 0).toFixed(2)}</span>
@@ -1129,7 +1129,7 @@ export function UserDetailsDialog({
                 </div>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setAdjustDialogOpen(false)} disabled={isSubmitting} className="border-0 bg-[#111]">
+              <Button variant="outline" onClick={() => setAdjustDialogOpen(false)} disabled={isSubmitting} className="border-0 bg-muted">
                 Cancel
               </Button>
               <Button onClick={handleBalanceAdjustment} disabled={isSubmitting} className={adjustMode === 'add' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}>
@@ -1149,7 +1149,7 @@ export function UserDetailsDialog({
               <div className="space-y-2">
                 <Label>Platform</Label>
                 <Select value={linkPlatform} onValueChange={setLinkPlatform}>
-                  <SelectTrigger className="bg-[#111] border-0">
+                  <SelectTrigger className="bg-muted border-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1181,7 +1181,7 @@ export function UserDetailsDialog({
                   placeholder="@username" 
                   value={linkUsername} 
                   onChange={e => setLinkUsername(e.target.value)} 
-                  className="bg-[#111] border-0" 
+                  className="bg-muted border-0" 
                 />
               </div>
               <div className="space-y-2">
@@ -1192,17 +1192,17 @@ export function UserDetailsDialog({
                   placeholder="10000" 
                   value={linkFollowerCount} 
                   onChange={e => setLinkFollowerCount(e.target.value)} 
-                  className="bg-[#111] border-0" 
+                  className="bg-muted border-0" 
                 />
               </div>
-              <div className="p-3 bg-[#111] rounded-lg">
+              <div className="p-3 bg-muted rounded-lg">
                 <p className="text-xs text-muted-foreground">
                   <span className="text-amber-400 font-medium">Admin Override:</span> This will bypass the normal verification process and immediately link the account to this user.
                 </p>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setLinkAccountDialogOpen(false)} disabled={isLinkingAccount} className="border-0 bg-[#111]">
+              <Button variant="outline" onClick={() => setLinkAccountDialogOpen(false)} disabled={isLinkingAccount} className="border-0 bg-muted">
                 Cancel
               </Button>
               <Button onClick={handleAdminLinkAccount} disabled={isLinkingAccount || !linkUsername.trim()}>

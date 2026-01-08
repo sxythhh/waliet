@@ -511,10 +511,10 @@ export default function PublicProfile() {
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="space-y-1">
-                <h1 className="text-2xl sm:text-3xl font-bold font-['Inter'] tracking-[-0.5px]">
+                <h1 className="text-2xl sm:text-3xl font-bold font-inter tracking-[-0.5px]">
                   {profile.full_name || profile.username}
                 </h1>
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">
                   @{profile.username}
                 </p>
               </div>
@@ -523,7 +523,7 @@ export default function PublicProfile() {
             </div>
 
             {/* Bio */}
-            {profile.bio && <p className="mt-4 text-foreground/80 font-['Inter'] tracking-[-0.3px] leading-relaxed max-w-xl">
+            {profile.bio && <p className="mt-4 text-foreground/80 font-inter tracking-[-0.3px] leading-relaxed max-w-xl">
                 {profile.bio}
               </p>}
 
@@ -531,7 +531,7 @@ export default function PublicProfile() {
             {socialAccounts.length > 0 && <div className="flex flex-wrap items-center gap-3 mt-4">
                 {socialAccounts.map(account => <button key={account.id} onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border hover:bg-muted transition-colors">
                     {getPlatformIcon(account.platform)}
-                    <span className="text-sm font-['Inter'] tracking-[-0.5px] text-foreground">
+                    <span className="text-sm font-inter tracking-[-0.5px] text-foreground">
                       {account.username}
                     </span>
                   </button>)}
@@ -545,14 +545,14 @@ export default function PublicProfile() {
               {(profile.city || profile.country) && (
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  <span className="font-['Inter'] tracking-[-0.5px]">
+                  <span className="font-inter tracking-[-0.5px]">
                     {[profile.city, profile.country].filter(Boolean).join(', ')}
                   </span>
                 </div>
               )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span className="font-['Inter'] tracking-[-0.5px]">
+                <span className="font-inter tracking-[-0.5px]">
                   Joined {format(new Date(profile.created_at), 'MMMM yyyy')}
                 </span>
               </div>
@@ -565,13 +565,13 @@ export default function PublicProfile() {
       {/* <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
-            <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+            <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-inter tracking-[-0.5px] font-medium">
               Portfolio
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+            <TabsTrigger value="history" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-inter tracking-[-0.5px] font-medium">
               History
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+            <TabsTrigger value="reviews" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-inter tracking-[-0.5px] font-medium">
               Reviews {testimonials.length > 0 && `(${testimonials.length})`}
             </TabsTrigger>
           </TabsList>
@@ -586,7 +586,7 @@ export default function PublicProfile() {
               />
             ) : (
               <div className="text-center py-16 text-muted-foreground">
-                <p className="font-['Inter'] tracking-[-0.5px]">No portfolio yet</p>
+                <p className="font-inter tracking-[-0.5px]">No portfolio yet</p>
               </div>
             )}
           </TabsContent>
@@ -636,7 +636,7 @@ export default function PublicProfile() {
       {/* Banner for Logged Out Users */}
       {showBanner && <div onClick={() => navigate("/")} className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] py-5 px-6 cursor-pointer hover:opacity-90 transition-opacity z-50">
           <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
-            <span className="text-white font-['Inter'] font-bold text-lg tracking-[-0.5px]">
+            <span className="text-white font-inter font-bold text-lg tracking-[-0.5px]">
               Go Viral, Get Paid
             </span>
             <ArrowRight className="h-5 w-5 text-white" />

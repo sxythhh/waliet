@@ -11,7 +11,7 @@ export function SkillsDisplay({ skills }: SkillsDisplayProps) {
         <Badge
           key={skill}
           variant="secondary"
-          className="px-3 py-1.5 text-sm font-medium font-['Inter'] tracking-[-0.3px]"
+          className="px-3 py-1.5 text-sm font-medium font-inter tracking-[-0.3px]"
         >
           {skill}
         </Badge>

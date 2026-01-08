@@ -901,7 +901,7 @@ export function PayoutRequestsTable({
   }
 
   return <TooltipProvider>
-      <div className="space-y-6 font-['Inter'] tracking-[-0.5px] h-full py-[10px]">
+      <div className="space-y-6 font-inter tracking-[-0.5px] h-full py-[10px]">
         
         {/* Summary Status Cards */}
         {requests.length > 0 && (

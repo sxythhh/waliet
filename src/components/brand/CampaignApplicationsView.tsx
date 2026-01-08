@@ -533,12 +533,12 @@ export function CampaignApplicationsView({
       <div className="flex items-center justify-center h-full min-h-[500px] p-8">
         <div className="max-w-md w-full text-center">
           {/* Title */}
-          <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter'] tracking-[-0.5px]">
+          <h3 className="text-xl font-semibold text-foreground mb-2 font-inter tracking-[-0.5px]">
             No applications yet
           </h3>
 
           {/* Description */}
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6 font-['Inter'] tracking-[-0.3px]">
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6 font-inter tracking-[-0.3px]">
             When creators apply to {isAllMode ? "your campaigns" : isBoost ? "this boost" : "this campaign"}, they'll appear here for review.
           </p>
 
@@ -569,7 +569,7 @@ export function CampaignApplicationsView({
                 <Checkbox
                   checked={selectedApps.size === pendingAppsInFilter.length && pendingAppsInFilter.length > 0}
                   onCheckedChange={toggleSelectAll}
-                  className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+                  className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
               )}
               <h3 className="font-semibold">Applications</h3>
@@ -619,7 +619,7 @@ export function CampaignApplicationsView({
                             <Checkbox
                               checked={selectedApps.has(app.id)}
                               onCheckedChange={() => toggleAppSelection(app.id)}
-                              className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] bg-background"
+                              className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary bg-background"
                             />
                           </div>
                         )}

@@ -756,7 +756,7 @@ export function CreateCampaignDialog({
           </div>
 
           {/* Right Column - Preview */}
-          <div className="hidden lg:flex flex-col bg-[#111111] p-6 overflow-y-auto">
+          <div className="hidden lg:flex flex-col bg-muted p-6 overflow-y-auto">
             <div className="flex items-center gap-2 text-white/40 mb-6">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -772,14 +772,14 @@ export function CreateCampaignDialog({
                 {/* Budget */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-white/40">Budget</span>
-                  <span className="text-sm font-semibold text-white font-['Geist']">
+                  <span className="text-sm font-semibold text-white font-geist">
                     {form.watch("is_infinite_budget") ? "∞ Unlimited" : form.watch("budget") ? `$${Number(form.watch("budget")).toLocaleString()}` : "—"}
                   </span>
                 </div>
                 {/* RPM Rate */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-white/40">RPM Rate</span>
-                  <span className="text-sm font-semibold text-white font-['Geist']">
+                  <span className="text-sm font-semibold text-white font-geist">
                     {form.watch("rpm_rate") ? `$${Number(form.watch("rpm_rate")).toFixed(2)}` : "—"}
                   </span>
                 </div>
@@ -795,7 +795,7 @@ export function CreateCampaignDialog({
                 {/* Estimated Views */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-white/40">Est. Views</span>
-                  <span className="text-sm font-bold text-primary font-['Geist']">
+                  <span className="text-sm font-bold text-primary font-geist">
                     {(() => {
                       const budget = Number(form.watch("budget")) || 0;
                       const rpm = Number(form.watch("rpm_rate")) || 0;
@@ -813,7 +813,7 @@ export function CreateCampaignDialog({
                 {!form.watch("is_infinite_budget") && form.watch("budget") && form.watch("rpm_rate") && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-white/40">Cost per View</span>
-                    <span className="text-xs font-medium text-white/60 font-['Geist']">
+                    <span className="text-xs font-medium text-white/60 font-geist">
                       ${(Number(form.watch("rpm_rate")) / 1000).toFixed(4)}
                     </span>
                   </div>
@@ -822,7 +822,7 @@ export function CreateCampaignDialog({
             </div>
 
             {/* Campaign Preview Card */}
-            <div className="rounded-xl overflow-hidden bg-[#111111]">
+            <div className="rounded-xl overflow-hidden bg-muted">
               {/* Banner */}
               <div className="relative w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5">
                 {bannerPreview || campaign?.banner_url ? <img src={bannerPreview || campaign?.banner_url || ''} alt="Campaign banner" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">

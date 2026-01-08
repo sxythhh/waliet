@@ -26,8 +26,8 @@ export function DashboardReviewsSection({
     return (
       <div className="text-center py-16 text-muted-foreground">
         <Quote className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <p className="font-['Inter'] tracking-[-0.5px]">No reviews yet</p>
-        <p className="text-sm mt-2 font-['Inter'] tracking-[-0.5px] max-w-sm mx-auto">
+        <p className="font-inter tracking-[-0.5px]">No reviews yet</p>
+        <p className="text-sm mt-2 font-inter tracking-[-0.5px] max-w-sm mx-auto">
           Complete campaigns and deliver great work to receive reviews from brands
         </p>
       </div>
@@ -60,7 +60,7 @@ export function DashboardReviewsSection({
             )}
 
             {/* Quote */}
-            <p className="text-foreground font-['Inter'] tracking-[-0.3px] leading-relaxed mb-4">
+            <p className="text-foreground font-inter tracking-[-0.3px] leading-relaxed mb-4">
               "{testimonial.content}"
             </p>
 
@@ -79,12 +79,12 @@ export function DashboardReviewsSection({
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                     {testimonial.brand.name}
                   </span>
                   {testimonial.brand.is_verified && <VerifiedBadge size="sm" />}
                 </div>
-                <span className="text-xs text-muted-foreground ml-auto font-['Inter'] tracking-[-0.5px]">
+                <span className="text-xs text-muted-foreground ml-auto font-inter tracking-[-0.5px]">
                   {format(new Date(testimonial.created_at), "MMM yyyy")}
                 </span>
               </div>

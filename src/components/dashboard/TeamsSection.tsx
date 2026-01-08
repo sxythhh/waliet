@@ -704,7 +704,7 @@ export function TeamsSection(): JSX.Element {
               <Button type="button" variant="ghost" onClick={() => setEditMemberOpen(false)} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
                 Cancel
               </Button>
-              <Button onClick={handleUpdateCommission} disabled={saving} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg">
+              <Button onClick={handleUpdateCommission} disabled={saving} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg">
                 {saving ? <span className="flex items-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -776,7 +776,7 @@ export function TeamsSection(): JSX.Element {
                 <Label className="text-sm text-foreground font-inter tracking-[-0.5px]">
                   Team Name
                 </Label>
-                <Input id="editTeamName" placeholder="Enter team name" value={teamName} onChange={e => setTeamName(e.target.value)} className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" />
+                <Input id="editTeamName" placeholder="Enter team name" value={teamName} onChange={e => setTeamName(e.target.value)} className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" />
               </div>
             </div>
 
@@ -785,7 +785,7 @@ export function TeamsSection(): JSX.Element {
               <Button type="button" variant="ghost" onClick={() => setEditTeamOpen(false)} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
                 Cancel
               </Button>
-              <Button onClick={handleEditTeam} disabled={saving || !teamName.trim()} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg">
+              <Button onClick={handleEditTeam} disabled={saving || !teamName.trim()} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg">
                 {saving ? <span className="flex items-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -813,7 +813,7 @@ export function TeamsSection(): JSX.Element {
             <Button variant="ghost" className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground rounded-lg">
               How it Works
             </Button>
-            <Button onClick={() => setCreateDialogOpen(true)} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg">
+            <Button onClick={() => setCreateDialogOpen(true)} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg">
               Create Team
             </Button>
           </div>
@@ -871,7 +871,7 @@ export function TeamsSection(): JSX.Element {
                 <Label className="text-sm text-foreground font-inter tracking-[-0.5px]">
                   Team Name
                 </Label>
-                <Input id="teamName" placeholder="Enter team name" value={teamName} onChange={e => setTeamName(e.target.value)} className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" />
+                <Input id="teamName" placeholder="Enter team name" value={teamName} onChange={e => setTeamName(e.target.value)} className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" />
               </div>
             </div>
 
@@ -880,7 +880,7 @@ export function TeamsSection(): JSX.Element {
               <Button type="button" variant="ghost" onClick={() => setCreateDialogOpen(false)} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
                 Cancel
               </Button>
-              <Button onClick={handleCreateTeam} disabled={saving || !teamName.trim()} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg">
+              <Button onClick={handleCreateTeam} disabled={saving || !teamName.trim()} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg">
                 {saving ? <span className="flex items-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

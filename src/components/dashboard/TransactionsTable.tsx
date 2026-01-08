@@ -246,12 +246,12 @@ export function TransactionsTable({
   return (
     <div className={className}>
       <div
-        className="border border-[#dce1eb] dark:border-[#141414] rounded-xl overflow-auto"
+        className="border border-border dark:border-[#141414] rounded-xl overflow-auto"
         style={maxHeight ? { maxHeight } : undefined}
       >
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-card [&_tr]:border-b-0">
-            <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
+            <TableRow className="border-b border-border dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
               <TableHead className="text-foreground font-medium text-sm h-12 bg-card">Source</TableHead>
               <TableHead className="text-foreground font-medium text-sm h-12 bg-card">Destination</TableHead>
               <TableHead className="text-foreground font-medium text-sm h-12 bg-card">Status</TableHead>
@@ -264,7 +264,7 @@ export function TransactionsTable({
               <TableRow
                 key={transaction.id}
                 onClick={() => onTransactionClick?.(transaction)}
-                className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
+                className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-border dark:border-[#141414]"
               >
                 {/* Source */}
                 <TableCell className="py-4">

@@ -158,7 +158,7 @@ export function ManualPayCreatorDialog({
                 <span className="text-sm text-muted-foreground">Loading...</span>
               </div>
             ) : (
-              <p className="text-lg font-bold font-['Geist'] tracking-[-0.5px]">
+              <p className="text-lg font-bold font-geist tracking-[-0.5px]">
                 ${(ownerBalance || 0).toFixed(2)}
               </p>
             )}
@@ -176,7 +176,7 @@ export function ManualPayCreatorDialog({
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-9 font-['Geist'] tracking-[-0.5px]"
+                className="pl-9 font-geist tracking-[-0.5px]"
                 step="0.01"
                 min="0"
               />

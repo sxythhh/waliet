@@ -292,7 +292,7 @@ export function CreateBrandDialog({
                       Name
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter brand name" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" {...field} />
+                      <Input placeholder="Enter brand name" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>} />
@@ -305,7 +305,7 @@ export function CreateBrandDialog({
                       Website URL
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="https://yourbrand.com" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" {...field} />
+                      <Input placeholder="https://yourbrand.com" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>} />
@@ -316,7 +316,7 @@ export function CreateBrandDialog({
               <Button type="button" variant="ghost" onClick={handleCancel} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg">
+              <Button type="submit" disabled={isSubmitting} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg">
                 {isSubmitting ? <span className="flex items-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

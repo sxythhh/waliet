@@ -497,14 +497,14 @@ export function ManageAccountDialog({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-['Inter'] tracking-[-0.5px]">Delete this account?</AlertDialogTitle>
-            <AlertDialogDescription className="font-['Inter'] tracking-[-0.5px]">
+            <AlertDialogTitle className="font-inter tracking-[-0.5px]">Delete this account?</AlertDialogTitle>
+            <AlertDialogDescription className="font-inter tracking-[-0.5px]">
               This will permanently delete this social account and all associated data. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-['Inter'] tracking-[-0.5px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 font-['Inter'] tracking-[-0.5px]">
+            <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 font-inter tracking-[-0.5px]">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -294,7 +294,7 @@ export function AllocateBudgetDialog({
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-9 h-14 bg-transparent border-border text-2xl font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-xl transition-colors"
+                className="pl-9 h-14 bg-transparent border-border text-2xl font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-xl transition-colors"
               />
             </div>
             {/* Quick Amount Buttons */}
@@ -308,7 +308,7 @@ export function AllocateBudgetDialog({
                   onClick={() => handleQuickAmount(value)}
                   className={cn(
                     "flex-1 h-9 text-sm font-medium rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors",
-                    parseFloat(amount) === value && "bg-[#1f60dd] text-white hover:bg-[#1a52c2]"
+                    parseFloat(amount) === value && "bg-primary text-white hover:bg-primary/90"
                   )}
                 >
                   ${value}
@@ -373,7 +373,7 @@ export function AllocateBudgetDialog({
           <Button
             onClick={handleAllocate}
             disabled={loading || !selectedId || parsedAmount <= 0 || insufficientBalance || loadingBalance}
-            className="h-10 px-6 text-sm font-medium bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-xl disabled:opacity-30"
+            className="h-10 px-6 text-sm font-medium bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-xl disabled:opacity-30"
           >
             {loading ? (
               <span className="flex items-center gap-2">

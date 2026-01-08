@@ -237,7 +237,7 @@ export function TeamMembersTab({
           {canManageTeam && (
             <button
               onClick={() => setInviteDialogOpen(true)}
-              className="bg-[#1f60dd] border-t border-[#4b85f7] font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-2 px-3 py-1.5 rounded-md"
+              className="bg-primary border-t border-primary/70 font-inter text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-primary/90 transition-colors flex items-center gap-2 px-3 py-1.5 rounded-md"
             >
               Invite
             </button>
@@ -315,7 +315,7 @@ export function TeamMembersTab({
               <button
                 onClick={generateNewLink}
                 disabled={generatingLink}
-                className="bg-[#1f60dd] border-t border-[#4b85f7] font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-2 px-3 py-1.5 rounded-md disabled:opacity-50"
+                className="bg-primary border-t border-primary/70 font-inter text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-primary/90 transition-colors flex items-center gap-2 px-3 py-1.5 rounded-md disabled:opacity-50"
               >
                 {generatingLink ? "Generating..." : "Generate"}
               </button>

@@ -86,7 +86,7 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder = 
         </div>
         <Button 
           size="sm" 
-          className="h-8 px-3 rounded-lg bg-[#2060de] hover:bg-[#1a50c0] text-white text-xs gap-1.5" 
+          className="h-8 px-3 rounded-lg bg-primary hover:bg-[#1a50c0] text-white text-xs gap-1.5" 
           onClick={onSend} 
           disabled={disabled || !editor.getText().trim()}
         >

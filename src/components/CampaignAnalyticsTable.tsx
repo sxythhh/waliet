@@ -2159,7 +2159,7 @@ export function CampaignAnalyticsTable({
             {userSocialAccounts.length > 0 && <div>
                 <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
                 <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
-                  {userSocialAccounts.map((account: UserSocialAccountWithDemographics) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group">
+                  {userSocialAccounts.map((account: UserSocialAccountWithDemographics) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-[#1a1a1a] transition-colors group">
                       <div className="flex items-center gap-3">
                         {(() => {
                     switch (account.platform.toLowerCase()) {
@@ -2197,13 +2197,13 @@ export function CampaignAnalyticsTable({
 
             {/* Campaign Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-[#111111]">
+              <div className="p-4 rounded-lg bg-muted">
                 <p className="text-xs text-muted-foreground mb-1">Total Views</p>
                 <p className="text-xl font-bold text-white">
                   {selectedUserForDetails.total_views?.toLocaleString() || '0'}
                 </p>
               </div>
-              <div className="p-4 rounded-lg bg-[#111111]">
+              <div className="p-4 rounded-lg bg-muted">
                 <p className="text-xs text-muted-foreground mb-1">Last Payment</p>
                 <p className="text-xl font-bold text-white">
                   ${selectedUserForDetails.last_payment_amount?.toFixed(2) || '0.00'}
@@ -2212,7 +2212,7 @@ export function CampaignAnalyticsTable({
             </div>
 
             {/* Demographics Status */}
-            {selectedUserForDetails.demographic_submission && <div className="p-4 rounded-lg bg-[#111111]">
+            {selectedUserForDetails.demographic_submission && <div className="p-4 rounded-lg bg-muted">
                 <p className="text-xs text-muted-foreground mb-2">Demographics Status</p>
                 <div className="flex items-center justify-between">
                   <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize" style={{
@@ -2397,7 +2397,7 @@ export function CampaignAnalyticsTable({
 
     {/* Transaction User Detail Dialog */}
     <Dialog open={!!selectedTransactionUser} onOpenChange={open => !open && setSelectedTransactionUser(null)}>
-      <DialogContent className="sm:max-w-[480px] bg-white dark:bg-[#0a0a0a] border-border">
+      <DialogContent className="sm:max-w-[480px] bg-background border-border">
         {selectedTransactionUser && <>
             <DialogHeader>
               <DialogTitle className="sr-only">Creator Details</DialogTitle>

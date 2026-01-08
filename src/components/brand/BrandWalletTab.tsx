@@ -309,7 +309,7 @@ export function BrandWalletTab({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
+                  <Button className="justify-center bg-primary hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-primary/70" style={{
                     fontFamily: 'Inter, sans-serif'
                   }}>
                     <Plus className="w-4 h-4 mr-1.5" />
@@ -356,21 +356,21 @@ export function BrandWalletTab({
               {transactions.filter(tx => tx.status === 'pending' && tx.type === 'deposit_intent').map(tx => (
                 <div key={tx.id} className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
+                    <p className="text-foreground font-inter text-sm font-medium tracking-[-0.5px]">
                       {tx.description || 'Deposit Intent'}
                     </p>
-                    <p className="font-['Inter'] text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
+                    <p className="font-inter text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
                       {formatDate(tx.created_at)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="font-['Inter'] text-sm font-medium tracking-[-0.5px] text-yellow-500">
+                    <p className="font-inter text-sm font-medium tracking-[-0.5px] text-yellow-500">
                       {formatCurrency(tx.amount)}
                     </p>
                     <Button
                       size="sm"
                       onClick={() => handleCompletePayment(tx)}
-                      className="h-8 px-3 text-xs bg-[#2060df] hover:bg-[#1850b8] text-white border-t border-[#4b85f7]"
+                      className="h-8 px-3 text-xs bg-primary hover:bg-[#1850b8] text-white border-t border-primary/70"
                     >
                       <CreditCard className="w-3.5 h-3.5 mr-1.5" />
                       Complete Payment
@@ -397,7 +397,7 @@ export function BrandWalletTab({
             if (filteredTx.length === 0) {
               return (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground font-['Inter'] text-sm tracking-[-0.5px]">No transactions yet</p>
+                  <p className="text-muted-foreground font-inter text-sm tracking-[-0.5px]">No transactions yet</p>
                 </div>
               );
             }
@@ -408,14 +408,14 @@ export function BrandWalletTab({
                   {paginatedTx.map(tx => (
                     <div key={tx.id} className="flex items-center justify-between py-3">
                       <div>
-                        <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
+                        <p className="text-foreground font-inter text-sm font-medium tracking-[-0.5px]">
                           {tx.description || getTransactionTypeLabel(tx.type)}
                         </p>
-                        <p className="font-['Inter'] text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
+                        <p className="font-inter text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
                           {formatDate(tx.created_at)}
                         </p>
                       </div>
-                      <p className={`font-['Inter'] text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
+                      <p className={`font-inter text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
                         {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
                       </p>
                     </div>
@@ -425,7 +425,7 @@ export function BrandWalletTab({
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between pt-4 mt-4 border-t border-border">
-                    <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
                       Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTx.length)}-{Math.min(currentPage * itemsPerPage, filteredTx.length)} of {filteredTx.length}
                     </p>
                     <div className="flex gap-1">

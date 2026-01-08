@@ -122,7 +122,7 @@ export function CampaignRowCard({
   const visibleMembers = members.slice(0, 3);
   const remainingCount = members.length - 3;
   return <Card className="group bg-[#ffffff] dark:bg-[#0e0e0e] hover:bg-[#f9f9f9] dark:hover:bg-[#121212] transition-all duration-200 overflow-hidden cursor-pointer border-0" onClick={onClick}>
-      <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px] border border-border dark:border-[#0e0e0e] rounded-lg overflow-hidden">
+      <div className="flex flex-col sm:flex-row font-inter tracking-[-0.5px] border border-border dark:border-[#0e0e0e] rounded-lg overflow-hidden">
         {/* Banner */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-28 flex-shrink-0 overflow-hidden bg-muted">
           {bannerUrl ? <OptimizedImage src={bannerUrl} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full flex items-center justify-center" style={{

@@ -216,7 +216,7 @@ export function EarningsChart({
             <PeriodSelector />
           </div>
         )}
-        <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm font-['Inter'] tracking-[-0.3px]">
+        <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm font-inter tracking-[-0.3px]">
           No earnings data for this period
         </div>
       </div>

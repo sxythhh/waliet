@@ -95,7 +95,7 @@ export function PortfolioDisplay({ portfolio }: PortfolioDisplayProps) {
 
         return (
           <section key={sectionId} className="space-y-4">
-            <h2 className="text-base font-semibold text-foreground font-['Inter'] tracking-[-0.3px]">
+            <h2 className="text-base font-semibold text-foreground font-inter tracking-[-0.3px]">
               {SECTION_TITLES[sectionId]}
             </h2>
             {content}

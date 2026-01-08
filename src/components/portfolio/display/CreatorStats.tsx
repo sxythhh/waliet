@@ -26,10 +26,10 @@ export function CreatorStats({
       {/* Content Niches */}
       {contentNiches.length > 0 && (
         <div className="space-y-2">
-          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Content Niches</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Content Niches</span>
           <div className="flex flex-wrap gap-2">
             {contentNiches.map((niche) => (
-              <Badge key={niche} variant="secondary" className="px-2.5 py-1 font-['Inter']">
+              <Badge key={niche} variant="secondary" className="px-2.5 py-1 font-inter">
                 {niche}
               </Badge>
             ))}
@@ -40,10 +40,10 @@ export function CreatorStats({
       {/* Equipment */}
       {equipment.length > 0 && (
         <div className="space-y-2">
-          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Equipment</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Equipment</span>
           <div className="flex flex-wrap gap-2">
             {equipment.map((item) => (
-              <Badge key={item} variant="secondary" className="px-2.5 py-1 font-['Inter']">
+              <Badge key={item} variant="secondary" className="px-2.5 py-1 font-inter">
                 {item}
               </Badge>
             ))}
@@ -54,10 +54,10 @@ export function CreatorStats({
       {/* Languages */}
       {languages.length > 0 && (
         <div className="space-y-2">
-          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Languages</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Languages</span>
           <div className="flex flex-wrap gap-2">
             {languages.map((lang) => (
-              <Badge key={lang} variant="secondary" className="px-2.5 py-1 font-['Inter']">
+              <Badge key={lang} variant="secondary" className="px-2.5 py-1 font-inter">
                 {lang}
               </Badge>
             ))}
@@ -69,10 +69,10 @@ export function CreatorStats({
       <div className="space-y-4">
         {availability && (
           <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Availability</span>
+            <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Availability</span>
             <Badge
               variant={availability === "not-available" ? "destructive" : "secondary"}
-              className="px-3 py-1.5 font-['Inter']"
+              className="px-3 py-1.5 font-inter"
             >
               {availabilityLabel}
             </Badge>
@@ -81,8 +81,8 @@ export function CreatorStats({
 
         {rateRange && rateRange.min > 0 && rateRange.max > 0 && (
           <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Rate Range</span>
-            <p className="text-lg font-semibold font-['Inter'] tracking-[-0.3px]">
+            <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Rate Range</span>
+            <p className="text-lg font-semibold font-inter tracking-[-0.3px]">
               {currencySymbol}{rateRange.min.toLocaleString()} - {currencySymbol}{rateRange.max.toLocaleString()}
               <span className="text-sm font-normal text-muted-foreground ml-1">
                 {rateTypeLabel}

@@ -48,7 +48,7 @@ export function LoadingState({ className, text, size = "md" }: LoadingStateProps
     <div className={cn("flex flex-col items-center justify-center gap-3", className)}>
       <LoadingBar size={size} />
       {text && (
-        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px] animate-pulse">
+        <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] animate-pulse">
           {text}
         </p>
       )}

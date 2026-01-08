@@ -233,9 +233,9 @@ export function SubscriptionGateDialog({
                     <button
                       onClick={() => handleSelectPlan(plan.key)}
                       disabled={!!loading}
-                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none ${
+                      className={`w-full py-2.5 px-4 rounded-lg font-inter text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none ${
                         plan.popular 
-                          ? 'bg-[#1f60dd] border-t border-[#4b85f7] text-white hover:bg-[#1a50c8]' 
+                          ? 'bg-primary border-t border-primary/70 text-white hover:bg-primary/90' 
                           : 'bg-muted/50 text-foreground hover:bg-muted'
                       }`}
                     >

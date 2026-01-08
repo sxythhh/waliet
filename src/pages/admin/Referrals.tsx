@@ -231,8 +231,8 @@ export default function Referrals() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold font-['Inter'] tracking-[-0.5px]">Referrals</h1>
-          <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+          <h1 className="text-xl font-semibold font-inter tracking-[-0.5px]">Referrals</h1>
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
             Monitor and manage the referral program
           </p>
         </div>
@@ -245,20 +245,20 @@ export default function Referrals() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5 bg-muted/30 border-0 rounded-xl">
-          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Total Referrals</p>
-          <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">{stats.total}</p>
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Total Referrals</p>
+          <p className="text-2xl font-bold font-geist tracking-[-0.5px]">{stats.total}</p>
         </Card>
         <Card className="p-5 bg-muted/30 border-0 rounded-xl">
-          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Successful</p>
-          <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">{stats.successful}</p>
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Successful</p>
+          <p className="text-2xl font-bold font-geist tracking-[-0.5px]">{stats.successful}</p>
         </Card>
         <Card className="p-5 bg-muted/30 border-0 rounded-xl">
-          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Conversion Rate</p>
-          <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">{stats.conversionRate.toFixed(1)}%</p>
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Conversion Rate</p>
+          <p className="text-2xl font-bold font-geist tracking-[-0.5px]">{stats.conversionRate.toFixed(1)}%</p>
         </Card>
         <Card className="p-5 bg-muted/30 border-0 rounded-xl">
-          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Total Rewards</p>
-          <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">${stats.totalRewards.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Total Rewards</p>
+          <p className="text-2xl font-bold font-geist tracking-[-0.5px]">${stats.totalRewards.toFixed(2)}</p>
         </Card>
       </div>
 
@@ -269,7 +269,7 @@ export default function Referrals() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium font-['Inter'] tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${
+              className={`px-4 py-2 text-sm font-medium font-inter tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${
                 activeTab === tab.id
                   ? "border-foreground text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -292,7 +292,7 @@ export default function Referrals() {
                 placeholder="Search by username..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 font-['Inter'] tracking-[-0.5px]"
+                className="pl-9 h-9 font-inter tracking-[-0.5px]"
               />
             </div>
             <div className="flex gap-1">
@@ -302,7 +302,7 @@ export default function Referrals() {
                   variant={statusFilter === status ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setStatusFilter(status)}
-                  className="font-['Inter'] tracking-[-0.5px] capitalize"
+                  className="font-inter tracking-[-0.5px] capitalize"
                 >
                   {status}
                 </Button>
@@ -316,11 +316,11 @@ export default function Referrals() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Referrer</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Referred User</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Status</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Reward</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Date</th>
+                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Referrer</th>
+                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Referred User</th>
+                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Status</th>
+                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Reward</th>
+                    <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -338,10 +338,10 @@ export default function Referrals() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="text-left">
-                            <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                            <p className="text-sm font-medium font-inter tracking-[-0.5px]">
                               {referral.referrer?.full_name || referral.referrer?.username}
                             </p>
-                            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                               @{referral.referrer?.username}
                             </p>
                           </div>
@@ -359,10 +359,10 @@ export default function Referrals() {
                             </AvatarFallback>
                           </Avatar>
                           <div className="text-left">
-                            <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                            <p className="text-sm font-medium font-inter tracking-[-0.5px]">
                               {referral.referred?.full_name || referral.referred?.username}
                             </p>
-                            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                               @{referral.referred?.username}
                             </p>
                           </div>
@@ -371,18 +371,18 @@ export default function Referrals() {
                       <td className="p-4">
                         <Badge
                           variant={referral.status === "completed" ? "default" : "secondary"}
-                          className="font-['Inter'] tracking-[-0.5px] capitalize"
+                          className="font-inter tracking-[-0.5px] capitalize"
                         >
                           {referral.status}
                         </Badge>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm font-medium font-['Geist'] tracking-[-0.5px]">
+                        <span className="text-sm font-medium font-geist tracking-[-0.5px]">
                           ${(referral.reward_earned || 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                           {format(new Date(referral.created_at), "MMM d, yyyy")}
                         </span>
                       </td>
@@ -392,7 +392,7 @@ export default function Referrals() {
               </table>
               {filteredReferrals.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">No referrals found</p>
+                  <p className="text-muted-foreground font-inter tracking-[-0.5px]">No referrals found</p>
                 </div>
               )}
             </div>
@@ -406,19 +406,19 @@ export default function Referrals() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Rank</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">User</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Total</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Successful</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Earnings</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Tier</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Rank</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">User</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Total</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Successful</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Earnings</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Tier</th>
                 </tr>
               </thead>
               <tbody>
                 {topReferrers.map((user, index) => (
                   <tr key={user.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                     <td className="p-4">
-                      <span className="text-sm font-bold font-['Geist'] tracking-[-0.5px]">#{index + 1}</span>
+                      <span className="text-sm font-bold font-geist tracking-[-0.5px]">#{index + 1}</span>
                     </td>
                     <td className="p-4">
                       <button
@@ -432,28 +432,28 @@ export default function Referrals() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="text-left">
-                          <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                          <p className="text-sm font-medium font-inter tracking-[-0.5px]">
                             {user.full_name || user.username}
                           </p>
-                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                             @{user.username}
                           </p>
                         </div>
                       </button>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm font-['Geist'] tracking-[-0.5px]">{user.total_referrals}</span>
+                      <span className="text-sm font-geist tracking-[-0.5px]">{user.total_referrals}</span>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm font-['Geist'] tracking-[-0.5px]">{user.successful_referrals}</span>
+                      <span className="text-sm font-geist tracking-[-0.5px]">{user.successful_referrals}</span>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm font-medium text-emerald-500 font-['Geist'] tracking-[-0.5px]">
+                      <span className="text-sm font-medium text-emerald-500 font-geist tracking-[-0.5px]">
                         ${(user.referral_earnings || 0).toFixed(2)}
                       </span>
                     </td>
                     <td className="p-4">
-                      <Badge variant="outline" className="font-['Inter'] tracking-[-0.5px] capitalize">
+                      <Badge variant="outline" className="font-inter tracking-[-0.5px] capitalize">
                         {user.referral_tier || "beginner"}
                       </Badge>
                     </td>
@@ -463,7 +463,7 @@ export default function Referrals() {
             </table>
             {topReferrers.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">No referrers found</p>
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">No referrers found</p>
               </div>
             )}
           </div>
@@ -476,11 +476,11 @@ export default function Referrals() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Referrer</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Referred User</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Milestone</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Reward</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Date</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Referrer</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Referred User</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Milestone</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Reward</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -497,7 +497,7 @@ export default function Referrals() {
                             {reward.referral?.referrer?.username?.[0]?.toUpperCase() || "R"}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                           @{reward.referral?.referrer?.username}
                         </span>
                       </button>
@@ -513,23 +513,23 @@ export default function Referrals() {
                             {reward.referral?.referred?.username?.[0]?.toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                           @{reward.referral?.referred?.username}
                         </span>
                       </button>
                     </td>
                     <td className="p-4">
-                      <Badge variant="secondary" className="font-['Inter'] tracking-[-0.5px]">
+                      <Badge variant="secondary" className="font-inter tracking-[-0.5px]">
                         {reward.milestone?.display_name}
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm font-medium text-emerald-500 font-['Geist'] tracking-[-0.5px]">
+                      <span className="text-sm font-medium text-emerald-500 font-geist tracking-[-0.5px]">
                         +${reward.reward_amount.toFixed(2)}
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                         {format(new Date(reward.awarded_at), "MMM d, yyyy")}
                       </span>
                     </td>
@@ -539,7 +539,7 @@ export default function Referrals() {
             </table>
             {milestoneRewards.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">No milestone rewards found</p>
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">No milestone rewards found</p>
               </div>
             )}
           </div>
@@ -552,11 +552,11 @@ export default function Referrals() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Referrer</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Brand</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Status</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Reward</th>
-                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">Date</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Referrer</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Brand</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Status</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Reward</th>
+                  <th className="text-left p-4 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -573,7 +573,7 @@ export default function Referrals() {
                             {referral.referrer?.username?.[0]?.toUpperCase() || "R"}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                           @{referral.referrer?.username}
                         </span>
                       </button>
@@ -591,7 +591,7 @@ export default function Referrals() {
                             {referral.brand?.name?.[0] || "B"}
                           </div>
                         )}
-                        <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                           {referral.brand?.name}
                         </span>
                       </div>
@@ -599,18 +599,18 @@ export default function Referrals() {
                     <td className="p-4">
                       <Badge
                         variant={referral.status === "completed" ? "default" : "secondary"}
-                        className="font-['Inter'] tracking-[-0.5px] capitalize"
+                        className="font-inter tracking-[-0.5px] capitalize"
                       >
                         {referral.status}
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm font-medium font-['Geist'] tracking-[-0.5px]">
+                      <span className="text-sm font-medium font-geist tracking-[-0.5px]">
                         ${(referral.reward_earned || 0).toFixed(2)}
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                         {format(new Date(referral.created_at), "MMM d, yyyy")}
                       </span>
                     </td>
@@ -620,7 +620,7 @@ export default function Referrals() {
             </table>
             {brandReferrals.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">No brand referrals found</p>
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">No brand referrals found</p>
               </div>
             )}
           </div>

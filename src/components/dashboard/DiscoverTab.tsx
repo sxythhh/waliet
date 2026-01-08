@@ -589,13 +589,13 @@ export function DiscoverTab({
         
 
         {/* Filters */}
-        <div className="space-y-3 font-['Inter'] tracking-[-0.5px]">
+        <div className="space-y-3 font-inter tracking-[-0.5px]">
           {/* Search and Filters Row */}
           <div className="flex flex-row gap-2 items-center">
             {/* Search Input - Click to open overlay (only show if not using external search) */}
             {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 sm:flex-none sm:w-72 text-left group">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <div className="pl-9 h-9 bg-muted/40 border border-[#efefef] dark:border-transparent rounded-lg text-sm text-muted-foreground flex items-center transition-all group-hover:bg-muted/60">
+                <div className="pl-9 h-9 bg-muted/40 border border-border dark:border-transparent rounded-lg text-sm text-muted-foreground flex items-center transition-all group-hover:bg-muted/60">
                   {searchQuery || 'Search..'}
                 </div>
               </button>}
@@ -643,7 +643,7 @@ export function DiscoverTab({
 
               return (
                 <div className="space-y-3">
-                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-geist">
                     Boosts
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -696,7 +696,7 @@ export function DiscoverTab({
             {typeFilter !== 'boosts' && sortedCampaigns.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-geist">
                     Campaigns
                   </h2>
                   <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
@@ -771,7 +771,7 @@ export function DiscoverTab({
             {typeFilter === 'all' && brands.length > 0 && !searchQuery && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-geist">
                     Brands
                   </h2>
                   <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">

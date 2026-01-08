@@ -1428,10 +1428,10 @@ export function UserSettingsTab() {
                 <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
-                    {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
+                    {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-inter tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
                         Active
                       </span>}
-                    {brand.subscription_status !== 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
+                    {brand.subscription_status !== 'active' && <span className="px-2 py-0.5 text-xs font-medium font-inter tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
                         {brand.subscription_status || 'Inactive'}
                       </span>}
                   </div>

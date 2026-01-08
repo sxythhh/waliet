@@ -525,7 +525,7 @@ export function BrandCampaignsTab({
             <div className="flex-1 min-w-0">
               <GlobalBrandSearch brandId={brandId} />
             </div>
-            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8] shrink-0">
+            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary py-1.5 hover:bg-primary/90 shrink-0">
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Launch Opportunity</span>
               <span className="sm:hidden">Launch</span>
@@ -550,9 +550,9 @@ export function BrandCampaignsTab({
           {/* Combined Campaigns & Boosts Grid */}
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px]">Programs</h2>
+                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Programs</h2>
                 <div className="flex items-center gap-0 border-b border-border">
-                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-inter tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                       {filter}
                     </button>)}
                 </div>

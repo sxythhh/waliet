@@ -19,10 +19,10 @@ export function StatCard({ label, value, subtext, variant = "default" }: StatCar
           : "bg-muted/30"
       )}
     >
-      <span className="text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">{label}</span>
-      <p className="text-2xl font-semibold tracking-tight text-foreground mt-2 font-['Inter']">{value}</p>
+      <span className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">{label}</span>
+      <p className="text-2xl font-semibold tracking-tight text-foreground mt-2 font-inter">{value}</p>
       {subtext && (
-        <p className="text-xs text-muted-foreground mt-1 font-['Inter']">{subtext}</p>
+        <p className="text-xs text-muted-foreground mt-1 font-inter">{subtext}</p>
       )}
     </div>
   );

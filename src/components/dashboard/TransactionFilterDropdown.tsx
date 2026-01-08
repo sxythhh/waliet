@@ -65,7 +65,7 @@ export function TransactionFilterDropdown({
           <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[240px] p-2.5 overflow-hidden bg-white dark:bg-[#0a0a0a] border-border font-['Inter'] tracking-[-0.5px]">
+      <DropdownMenuContent align="end" className="w-[240px] p-2.5 overflow-hidden bg-background border-border font-inter tracking-[-0.5px]">
         <div className="relative min-h-[200px]">
           {/* Main Menu */}
           <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0 pointer-events-none'}`}>

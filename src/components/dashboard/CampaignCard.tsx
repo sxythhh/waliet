@@ -115,7 +115,7 @@ export const CampaignCard = memo(function CampaignCard({
         </div>
 
         {/* Content - Below Banner */}
-        <div className="p-3 space-y-2.5 font-['Inter',sans-serif]" style={{ letterSpacing: '-0.5px' }}>
+        <div className="p-3 space-y-2.5 font-inter" style={{ letterSpacing: '-0.5px' }}>
           {/* Title Row with Status */}
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-semibold text-sm text-foreground leading-tight line-clamp-2 flex-1">

@@ -204,7 +204,7 @@ export function SearchOverlay({
                 handleSearch();
               }
             }}
-            className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 focus-visible:border-transparent font-['Inter'] tracking-[-0.5px]"
+            className="flex-1 border-0 bg-transparent text-lg placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 focus-visible:border-transparent font-inter tracking-[-0.5px]"
           />
         </div>
 
@@ -220,7 +220,7 @@ export function SearchOverlay({
               <button
                 key={type.id}
                 onClick={() => setLocalTypeFilter(type.id as 'all' | 'campaigns' | 'boosts')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all font-inter tracking-[-0.3px] ${
                   localTypeFilter === type.id
                     ? 'bg-foreground text-background'
                     : 'bg-muted/50 hover:bg-muted text-foreground'
@@ -232,7 +232,7 @@ export function SearchOverlay({
             <div className="w-px h-4 bg-border mx-1" />
             <button
               onClick={() => setLocalSavedFilter(!localSavedFilter)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-inter tracking-[-0.3px] ${
                 localSavedFilter
                   ? 'bg-foreground text-background'
                   : 'bg-muted/50 hover:bg-muted text-foreground'
@@ -253,7 +253,7 @@ export function SearchOverlay({
                   <button
                     key={platform.id}
                     onClick={() => setLocalPlatformFilter(platform.id === 'all' ? null : (localPlatformFilter === platform.id ? null : platform.id))}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-inter tracking-[-0.3px] ${
                       isActive
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
@@ -283,7 +283,7 @@ export function SearchOverlay({
                   <button
                     key={filter.id}
                     onClick={() => setLocalBrowseFilter(localBrowseFilter === filter.id ? null : filter.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all font-inter tracking-[-0.3px] ${
                       localBrowseFilter === filter.id
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
@@ -306,7 +306,7 @@ export function SearchOverlay({
                   <button
                     key={option.id}
                     onClick={() => setLocalSortFilter(option.id)}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all font-inter tracking-[-0.3px] ${
                       localSortFilter === option.id
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
@@ -325,7 +325,7 @@ export function SearchOverlay({
                   <button
                     key={option.id}
                     onClick={() => setLocalStatusFilter(option.id)}
-                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all font-['Inter'] tracking-[-0.3px] ${
+                    className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all font-inter tracking-[-0.3px] ${
                       localStatusFilter === option.id
                         ? 'bg-foreground text-background'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
@@ -343,13 +343,13 @@ export function SearchOverlay({
         <div className="p-4 bg-muted/20 border-t border-border/50">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">ESC</kbd> to close
               </span>
               {hasLocalFilters && (
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter'] tracking-[-0.5px]"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px]"
                 >
                   <RotateCcw className="h-3 w-3" />
                   Reset

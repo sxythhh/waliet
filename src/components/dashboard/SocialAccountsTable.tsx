@@ -206,7 +206,7 @@ export function SocialAccountsTable({
       <div className="hidden md:block overflow-x-auto border border-border rounded-xl">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#080808]">
+            <TableRow className="border-b border-border dark:border-[#141414] hover:bg-transparent dark:bg-[#080808]">
               <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Account</TableHead>
               <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Followers</TableHead>
               <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Audience Insights</TableHead>
@@ -223,7 +223,7 @@ export function SocialAccountsTable({
               return (
                 <TableRow
                   key={account.id}
-                  className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
+                  className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-border dark:border-[#141414]"
                 >
                   {/* Account Info */}
                   <TableCell className="py-3">

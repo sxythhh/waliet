@@ -176,7 +176,7 @@ function SortableColumnItem({ id, label, isVisible, isRequired, onToggle }: Sort
         checked={isVisible}
         onCheckedChange={onToggle}
         disabled={isRequired}
-        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
       />
       <label
         htmlFor={`col-${id}`}
@@ -1705,7 +1705,7 @@ export function VideoSubmissionsTab({
               if (viewMode === "table") {
                 // Helper to render table header for a column
                 const renderTableHeader = (colId: ColumnId) => {
-                  const headerClass = "text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground";
+                  const headerClass = "text-[10px] font-inter font-medium tracking-[-0.5px] text-muted-foreground";
                   switch (colId) {
                     case 'title': return <TableHead key={colId} className={`${headerClass} min-w-[140px]`}>Title</TableHead>;
                     case 'user': return <TableHead key={colId} className={`${headerClass} w-[100px]`}>User</TableHead>;
@@ -1733,11 +1733,11 @@ export function VideoSubmissionsTab({
                                 setSelectedVideoForPlayback(video);
                                 setVideoModalOpen(true);
                               }}
-                              className="text-xs font-medium font-['Inter'] tracking-[-0.5px] line-clamp-1 hover:underline text-left"
+                              className="text-xs font-medium font-inter tracking-[-0.5px] line-clamp-1 hover:underline text-left"
                             >
                               {video.video_title || video.video_description || "Untitled Video"}
                             </button>
-                            <span className="text-[10px] text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
                               {format(new Date(video.submitted_at), "MMM d, yyyy")}
                             </span>
                           </div>
@@ -1752,12 +1752,12 @@ export function VideoSubmissionsTab({
                                 <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" />
                               ) : (
                                 <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-[10px] font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground uppercase">
+                                  <span className="text-[10px] font-medium font-inter tracking-[-0.5px] text-muted-foreground uppercase">
                                     {(profile.full_name || profile.username || "U").charAt(0)}
                                   </span>
                                 </div>
                               )}
-                              <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
+                              <span className="text-xs font-inter tracking-[-0.5px] text-foreground">
                                 {profile.full_name || profile.username}
                               </span>
                             </div>
@@ -1772,7 +1772,7 @@ export function VideoSubmissionsTab({
                               <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
                                 <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
                               </div>
-                              <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
+                              <span className="text-xs font-inter tracking-[-0.5px] text-foreground">
                                 {video.video_author_username || profile?.username || "Unknown"}
                               </span>
                             </div>
@@ -1783,7 +1783,7 @@ export function VideoSubmissionsTab({
                     case 'status':
                       return (
                         <TableCell key={colId}>
-                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-['Inter'] tracking-[-0.5px] flex items-center gap-1", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
+                          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-inter tracking-[-0.5px] flex items-center gap-1", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
                             {video.status === "approved" && <Check className="h-3 w-3" />}
                             {video.status === "pending" && <Loader className="h-3 w-3" />}
                             {video.status === "rejected" && <X className="h-3 w-3" />}
@@ -1806,25 +1806,25 @@ export function VideoSubmissionsTab({
                       );
                     case 'views':
                       return (
-                        <TableCell key={colId} className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
+                        <TableCell key={colId} className="text-right text-xs font-inter tracking-[-0.5px] tabular-nums">
                           {formatNumber(video.views)}
                         </TableCell>
                       );
                     case 'likes':
                       return (
-                        <TableCell key={colId} className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
+                        <TableCell key={colId} className="text-right text-xs font-inter tracking-[-0.5px] tabular-nums">
                           {formatNumber(video.likes)}
                         </TableCell>
                       );
                     case 'comments':
                       return (
-                        <TableCell key={colId} className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
+                        <TableCell key={colId} className="text-right text-xs font-inter tracking-[-0.5px] tabular-nums">
                           {formatNumber(video.comments)}
                         </TableCell>
                       );
                     case 'payout':
                       return (
-                        <TableCell key={colId} className="text-right text-xs font-medium font-['Inter'] tracking-[-0.5px] tabular-nums text-green-500">
+                        <TableCell key={colId} className="text-right text-xs font-medium font-inter tracking-[-0.5px] tabular-nums text-green-500">
                           ${getPayoutForSubmission(video).toFixed(2)}
                         </TableCell>
                       );
@@ -1869,7 +1869,7 @@ export function VideoSubmissionsTab({
                         const demographicScore = video.user_id ? demographicScores[video.user_id] : null;
                         const isSelected = selectedVideos.has(video.id);
                         return (
-                          <TableRow key={video.id} className={cn("border-border/30 group font-['Inter'] hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
+                          <TableRow key={video.id} className={cn("border-border/30 group font-inter hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
                             <TableCell className="w-8 p-0 pl-2">
                               <div className={cn("h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all", isSelected ? "border-primary bg-primary" : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50")} onClick={() => toggleVideoSelection(video.id)}>
                                 {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}

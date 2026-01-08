@@ -669,7 +669,7 @@ export default function Finance() {
                   variant="outline"
                   size="sm"
                   onClick={() => setBudgetAdjustmentDialogOpen(true)}
-                  className="gap-2 font-['Inter']"
+                  className="gap-2 font-inter"
                 >
                   <DollarSign className="h-4 w-4" />
                   Adjust Budget
@@ -677,7 +677,7 @@ export default function Finance() {
 
                 {/* Date Preset Dropdown */}
                 <Select value={datePreset} onValueChange={(v) => handleDatePresetChange(v as DatePreset)}>
-                  <SelectTrigger className="w-[150px] h-9 border-0 bg-muted/50 hover:bg-muted transition-colors font-['Inter']">
+                  <SelectTrigger className="w-[150px] h-9 border-0 bg-muted/50 hover:bg-muted transition-colors font-inter">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -691,7 +691,7 @@ export default function Finance() {
                 {datePreset === "custom" && (
                   <Popover open={customDatePickerOpen} onOpenChange={setCustomDatePickerOpen}>
                     <PopoverTrigger asChild>
-                      <button className={cn("px-3 py-2 text-sm rounded-lg bg-muted/50 hover:bg-muted transition-colors font-['Inter']", dateFrom && "text-foreground")}>
+                      <button className={cn("px-3 py-2 text-sm rounded-lg bg-muted/50 hover:bg-muted transition-colors font-inter", dateFrom && "text-foreground")}>
                         {dateFrom ? (dateTo ? `${format(dateFrom, "MMM d")} - ${format(dateTo, "MMM d")}` : format(dateFrom, "MMM d, y")) : "Pick dates"}
                       </button>
                     </PopoverTrigger>
@@ -707,10 +707,10 @@ export default function Finance() {
                   </Popover>
                 )}
 
-                <button onClick={exportToCSV} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-['Inter']">
+                <button onClick={exportToCSV} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-inter">
                   Export
                 </button>
-                <button onClick={fetchAllData} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-['Inter']">
+                <button onClick={fetchAllData} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-inter">
                   Refresh
                 </button>
               </div>
@@ -791,15 +791,15 @@ export default function Finance() {
                           <AvatarFallback className="text-xs">{(request.profiles?.username || '?')[0].toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate font-['Inter'] tracking-[-0.3px]">{request.profiles?.username}</p>
-                          <p className="text-xs text-muted-foreground font-['Inter']">${Number(request.amount).toFixed(2)} • {request.payout_method}</p>
+                          <p className="text-sm font-medium truncate font-inter tracking-[-0.3px]">{request.profiles?.username}</p>
+                          <p className="text-xs text-muted-foreground font-inter">${Number(request.amount).toFixed(2)} • {request.payout_method}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                         {request.payout_method === 'crypto' ? (
                           <button
                             onClick={() => openCryptoPayoutDialog(request)}
-                            className="text-xs text-amber-500 hover:text-amber-400 transition-colors font-['Inter']"
+                            className="text-xs text-amber-500 hover:text-amber-400 transition-colors font-inter"
                           >
                             Send
                           </button>
@@ -807,14 +807,14 @@ export default function Finance() {
                           <button
                             onClick={() => handleCompletePayout(request)}
                             disabled={processingPayout === request.id}
-                            className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors font-['Inter'] disabled:opacity-50"
+                            className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors font-inter disabled:opacity-50"
                           >
                             {processingPayout === request.id ? "..." : "Complete"}
                           </button>
                         )}
                         <button
                           onClick={() => { setSelectedPayout(request); setPayoutAction('reject'); setActionDialogOpen(true); }}
-                          className="text-xs text-muted-foreground hover:text-rose-500 transition-colors font-['Inter']"
+                          className="text-xs text-muted-foreground hover:text-rose-500 transition-colors font-inter"
                         >
                           Reject
                         </button>
@@ -824,7 +824,7 @@ export default function Finance() {
                   {pendingPayouts.length > 6 && (
                     <button
                       onClick={() => { setViewMode('payouts'); setPayoutStatusFilter('pending'); }}
-                      className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter']"
+                      className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter"
                     >
                       View all {pendingPayouts.length} pending payouts
                     </button>

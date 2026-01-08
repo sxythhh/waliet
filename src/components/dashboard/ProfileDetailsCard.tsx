@@ -25,7 +25,7 @@ export function ProfileDetailsCard({ profile, onEdit }: ProfileDetailsCardProps)
   return (
     <div className="bg-card border border-border rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">
+        <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">
           About
         </h3>
         <Button
@@ -41,7 +41,7 @@ export function ProfileDetailsCard({ profile, onEdit }: ProfileDetailsCardProps)
 
       {isEmpty ? (
         <div className="text-center py-6">
-          <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
             Add details about yourself to help brands get to know you
           </p>
           <Button
@@ -57,7 +57,7 @@ export function ProfileDetailsCard({ profile, onEdit }: ProfileDetailsCardProps)
         <div className="space-y-4">
           {/* Bio */}
           {hasBio && (
-            <p className="text-sm text-foreground font-['Inter'] tracking-[-0.5px] leading-relaxed">
+            <p className="text-sm text-foreground font-inter tracking-[-0.5px] leading-relaxed">
               {profile.bio}
             </p>
           )}
@@ -66,7 +66,7 @@ export function ProfileDetailsCard({ profile, onEdit }: ProfileDetailsCardProps)
           {hasLocation && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" />
-              <span className="font-['Inter'] tracking-[-0.5px]">
+              <span className="font-inter tracking-[-0.5px]">
                 {[profile.city, profile.country].filter(Boolean).join(", ")}
               </span>
             </div>
@@ -75,7 +75,7 @@ export function ProfileDetailsCard({ profile, onEdit }: ProfileDetailsCardProps)
           {/* Content Styles */}
           {hasContentStyles && (
             <div className="space-y-1.5">
-              <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 Content Styles
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -96,7 +96,7 @@ export function ProfileDetailsCard({ profile, onEdit }: ProfileDetailsCardProps)
           {hasContentLanguages && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Globe className="h-3.5 w-3.5" />
-              <span className="font-['Inter'] tracking-[-0.5px]">
+              <span className="font-inter tracking-[-0.5px]">
                 {profile.content_languages!.join(", ")}
               </span>
             </div>

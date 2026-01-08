@@ -116,7 +116,7 @@ const renderDescriptionWithLinks = (text: string) => {
   return parts.map((part, index) => {
     if (urlRegex.test(part)) {
       urlRegex.lastIndex = 0; // Reset regex
-      return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-[#2060df] hover:underline">
+      return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
           {part}
         </a>;
     }
@@ -291,10 +291,10 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Campaign Update Banner */}
-        {campaign.campaign_update && <div className="mb-4 p-3 rounded-xl bg-[#2060df]/10 border border-[#2060df]/20 flex items-start gap-3">
-            <Megaphone className="w-4 h-4 text-[#2060df] flex-shrink-0 mt-0.5" />
+        {campaign.campaign_update && <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-start gap-3">
+            <Megaphone className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[#2060df] mb-1" style={{
+              <p className="text-xs font-medium text-primary mb-1" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
           }}>
@@ -331,7 +331,7 @@ export function CampaignDetailsDialog({
             <div className="text-right">
               <div className="flex items-center gap-1.5">
                 <div className="flex gap-0.5">
-                  {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-5 sm:h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-[#2060df]' : 'bg-muted-foreground/20'}`} />)}
+                  {[...Array(7)].map((_, i) => <div key={i} className={`w-1.5 h-5 sm:h-6 rounded-full transition-all ${i < 7 - nextPayout.daysUntil ? 'bg-primary' : 'bg-muted-foreground/20'}`} />)}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-1" style={{
@@ -513,7 +513,7 @@ export function CampaignDetailsDialog({
             <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{
             fontFamily: 'Inter'
           }}>Per 1M Views</p>
-            <p className="font-semibold text-xs sm:text-sm text-[#2060df]" style={{
+            <p className="font-semibold text-xs sm:text-sm text-primary" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>${(campaign.rpm_rate * 1000).toLocaleString()}</p>
@@ -528,7 +528,7 @@ export function CampaignDetailsDialog({
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>Your Connected Accounts</h4>
-              {onConnectAccount && <button onClick={onConnectAccount} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-medium text-white bg-[#2061de] hover:bg-[#1a4db8] transition-colors border-t border-[#4b85f7]" style={{
+              {onConnectAccount && <button onClick={onConnectAccount} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-medium text-white bg-primary hover:bg-[#1a4db8] transition-colors border-t border-primary/70" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
           }}>
@@ -625,7 +625,7 @@ export function CampaignDetailsDialog({
         }}>Campaign Requirements</h4>
             <div className="space-y-2">
               {campaign.requirements!.map((req, index) => <div key={index} className="gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] flex items-center justify-start">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shrink-0 mt-0.5">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shrink-0 mt-0.5">
                     {index + 1}
                   </div>
                   <p className="text-xs sm:text-sm leading-relaxed">{req}</p>

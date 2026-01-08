@@ -388,7 +388,7 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
   }
 
   return (
-    <div className="space-y-5 font-['Inter'] tracking-[-0.5px]">
+    <div className="space-y-5 font-inter tracking-[-0.5px]">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-border/40">
         <div className="space-y-0.5">

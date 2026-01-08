@@ -328,7 +328,7 @@ export function AllCampaignsTab() {
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
                           Budget
                         </span>
-                        <div className="text-xs font-['Inter'] tracking-[-0.5px]">
+                        <div className="text-xs font-inter tracking-[-0.5px]">
                           <span className="font-bold">${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                           <span className="text-muted-foreground"> / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                         </div>

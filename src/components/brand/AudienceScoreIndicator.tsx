@@ -26,7 +26,7 @@ export function AudienceScoreIndicator({ score, className }: AudienceScoreIndica
   if (score === null || score === undefined) {
     return (
       <div className={cn("flex flex-col gap-0.5", className)}>
-        <span className="text-[10px] font-['Inter'] tracking-[-0.3px] text-muted-foreground/70">
+        <span className="text-[10px] font-inter tracking-[-0.3px] text-muted-foreground/70">
           Score: <span className="text-muted-foreground">Not submitted</span>
         </span>
         <div className="flex items-center gap-0.5">
@@ -49,7 +49,7 @@ export function AudienceScoreIndicator({ score, className }: AudienceScoreIndica
       <Tooltip>
         <TooltipTrigger asChild>
           <div className={cn("flex flex-col gap-0.5", className)}>
-            <span className="text-[10px] font-['Inter'] tracking-[-0.3px] text-muted-foreground">
+            <span className="text-[10px] font-inter tracking-[-0.3px] text-muted-foreground">
               Score: <span className="text-foreground font-medium">{label}</span>
             </span>
             <div className="flex items-center gap-0.5">
@@ -65,7 +65,7 @@ export function AudienceScoreIndicator({ score, className }: AudienceScoreIndica
             </div>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top" className="font-['Inter'] tracking-[-0.3px]">
+        <TooltipContent side="top" className="font-inter tracking-[-0.3px]">
           <p className="text-xs">Audience Score: {score}%</p>
           <p className="text-[10px] text-muted-foreground">Based on Tier 1 audience percentage</p>
         </TooltipContent>

@@ -34,8 +34,8 @@ export function DashboardBoostsSection({
     return (
       <div className="text-center py-16 text-muted-foreground">
         <Rocket className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <p className="font-['Inter'] tracking-[-0.5px]">No boosts yet</p>
-        <p className="text-sm mt-2 font-['Inter'] tracking-[-0.5px]">
+        <p className="font-inter tracking-[-0.5px]">No boosts yet</p>
+        <p className="text-sm mt-2 font-inter tracking-[-0.5px]">
           Apply to boost programs to earn monthly retainers
         </p>
       </div>
@@ -74,15 +74,15 @@ export function DashboardBoostsSection({
                 {/* Boost Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                       {boost?.brands?.name}
                     </span>
                     {isVerified && <VerifiedBadge size="sm" />}
                   </div>
-                  <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1">
+                  <h3 className="font-semibold font-inter tracking-[-0.5px] line-clamp-1">
                     {boost?.title}
                   </h3>
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                     <span>${boost?.monthly_retainer}/mo</span>
                     <span className="text-foreground/30">•</span>
                     <span>{participation.videos_submitted || 0} videos</span>
@@ -91,10 +91,10 @@ export function DashboardBoostsSection({
 
                 {/* Earnings */}
                 <div className="text-right flex-shrink-0">
-                  <p className="text-lg font-bold text-emerald-500 font-['Geist'] tracking-[-0.5px]">
+                  <p className="text-lg font-bold text-emerald-500 font-geist tracking-[-0.5px]">
                     ${participation.total_earned?.toLocaleString() || 0}
                   </p>
-                  <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                     earned
                   </p>
                 </div>

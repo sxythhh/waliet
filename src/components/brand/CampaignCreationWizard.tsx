@@ -997,7 +997,7 @@ export function CampaignCreationWizard({
                       {Object.keys(platformRates).length > 0 ? <div className="space-y-2">
                           {Object.values(platformRates).map(rate => {
                       const platformInfo = PLATFORM_OPTIONS.find(p => p.id === rate.platform);
-                      return <div key={rate.platform} className="flex items-center gap-3 p-3 rounded-xl font-['Inter']">
+                      return <div key={rate.platform} className="flex items-center gap-3 p-3 rounded-xl font-inter">
                                 <div className="flex items-center gap-2 min-w-[100px]">
                                   {platformInfo?.icon ? <img src={platformInfo.icon} alt={platformInfo.label} className="h-5 w-5" /> : <span className="h-5 w-5 flex items-center justify-center text-sm font-bold">𝕏</span>}
                                   <span className="text-sm font-medium text-foreground tracking-[-0.5px]">{platformInfo?.label}</span>

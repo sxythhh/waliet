@@ -250,8 +250,8 @@ export function ApplyToBoostDialog({
                 </div>
               )}
               <div>
-                <DialogTitle className="font-['Inter'] tracking-[-0.5px] text-lg">Apply to {bounty.title}</DialogTitle>
-                <DialogDescription className="font-['Inter'] tracking-[-0.5px]">
+                <DialogTitle className="font-inter tracking-[-0.5px] text-lg">Apply to {bounty.title}</DialogTitle>
+                <DialogDescription className="font-inter tracking-[-0.5px]">
                   {bounty.brands?.name} • {spotsRemaining} spots remaining
                 </DialogDescription>
               </div>
@@ -269,17 +269,17 @@ export function ApplyToBoostDialog({
               </div>
               
               <div className="space-y-2">
-                <h3 className="font-['Inter'] tracking-[-0.5px] text-base font-medium text-foreground">
+                <h3 className="font-inter tracking-[-0.5px] text-base font-medium text-foreground">
                   Connect an account to apply
                 </h3>
-                <p className="font-['Inter'] tracking-[-0.5px] text-sm text-muted-foreground max-w-[280px]">
+                <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground max-w-[280px]">
                   Link a social account or Discord to submit your application
                 </p>
               </div>
               
               <Button 
                 onClick={() => setShowAddSocialDialog(true)} 
-                className="font-['Inter'] tracking-[-0.5px] bg-[#2060de] hover:bg-[#2060de]/90 text-white"
+                className="font-inter tracking-[-0.5px] bg-primary hover:bg-primary/90 text-white"
                 style={{ borderTop: '1px solid #4b85f7' }}
               >
                 Connect Account
@@ -289,7 +289,7 @@ export function ApplyToBoostDialog({
             <div className="space-y-4 py-4">
               {/* Video Input */}
               <div className="space-y-2">
-                <Label className="font-['Inter'] tracking-[-0.5px]">Sample Video</Label>
+                <Label className="font-inter tracking-[-0.5px]">Sample Video</Label>
                 <p className="text-xs text-muted-foreground">Provide a link to a video that showcases your content style</p>
                 
                 {uploadedVideoPreview ? (
@@ -314,7 +314,7 @@ export function ApplyToBoostDialog({
                         placeholder="Paste video URL (TikTok, Instagram, YouTube)"
                         value={videoUrl}
                         onChange={(e) => setVideoUrl(e.target.value)}
-                        className="pl-10 font-['Inter'] tracking-[-0.5px]"
+                        className="pl-10 font-inter tracking-[-0.5px]"
                       />
                     </div>
                     
@@ -335,7 +335,7 @@ export function ApplyToBoostDialog({
                       type="button"
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full font-['Inter'] tracking-[-0.5px]"
+                      className="w-full font-inter tracking-[-0.5px]"
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Video
@@ -346,19 +346,19 @@ export function ApplyToBoostDialog({
 
               {/* Application Text */}
               <div className="space-y-2">
-                <Label className="font-['Inter'] tracking-[-0.5px]">Why should we pick you? (optional)</Label>
+                <Label className="font-inter tracking-[-0.5px]">Why should we pick you? (optional)</Label>
                 <Textarea
                   placeholder="Tell us about yourself and why you'd be a great fit..."
                   value={applicationText}
                   onChange={(e) => setApplicationText(e.target.value)}
                   rows={3}
-                  className="font-['Inter'] tracking-[-0.5px]"
+                  className="font-inter tracking-[-0.5px]"
                 />
               </div>
 
               {/* Connected Accounts Display */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Your connected accounts</Label>
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Your connected accounts</Label>
                 <div className="flex flex-wrap gap-2">
                   {socialAccounts.map((account) => (
                     <div 
@@ -386,14 +386,14 @@ export function ApplyToBoostDialog({
               <Button 
                 variant="outline" 
                 onClick={() => onOpenChange(false)} 
-                className="flex-1 font-['Inter'] tracking-[-0.5px]"
+                className="flex-1 font-inter tracking-[-0.5px]"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSubmit}
                 disabled={submitting || isUploading || (!videoUrl.trim() && !uploadedVideoFile)}
-                className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white font-['Inter'] tracking-[-0.5px]"
+                className="flex-1 bg-primary hover:bg-primary/90 text-white font-inter tracking-[-0.5px]"
                 style={{ borderTop: '1px solid #4b85f7' }}
               >
                 {isUploading ? "Uploading..." : submitting ? "Submitting..." : "Submit Application"}

@@ -75,7 +75,7 @@ export function BudgetProgressCard({
           </div>
           
           {/* Budget info */}
-          <div className="flex justify-center gap-4 mt-2 font-['Inter'] tracking-[-0.5px]">
+          <div className="flex justify-center gap-4 mt-2 font-inter tracking-[-0.5px]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400" />
               <span className="text-xs text-muted-foreground">
@@ -131,7 +131,7 @@ export function BudgetProgressCard({
           </div>
           
           {/* Slots info */}
-          <div className="flex justify-center gap-4 mt-2 font-['Inter'] tracking-[-0.5px]">
+          <div className="flex justify-center gap-4 mt-2 font-inter tracking-[-0.5px]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-600 to-violet-400" />
               <span className="text-xs text-muted-foreground">

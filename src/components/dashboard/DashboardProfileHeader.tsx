@@ -266,10 +266,10 @@ export function DashboardProfileHeader({
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl font-bold font-['Inter'] tracking-[-0.5px]">
+              <h1 className="text-2xl sm:text-3xl font-bold font-inter tracking-[-0.5px]">
                 {displayName}
               </h1>
-              <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">
                 @{profile.username}
               </p>
             </div>
@@ -291,7 +291,7 @@ export function DashboardProfileHeader({
               <Button
                 variant="ghost"
                 onClick={onEditProfile}
-                className="font-['Inter'] tracking-[-0.5px] bg-muted/50 hover:bg-muted border-0"
+                className="font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted border-0"
               >
                 Edit Profile
               </Button>
@@ -300,11 +300,11 @@ export function DashboardProfileHeader({
 
           {/* Bio */}
           {profile.bio ? (
-            <p className="mt-4 text-foreground/80 font-['Inter'] tracking-[-0.3px] leading-relaxed max-w-xl">
+            <p className="mt-4 text-foreground/80 font-inter tracking-[-0.3px] leading-relaxed max-w-xl">
               {profile.bio}
             </p>
           ) : (
-            <p className="mt-4 text-muted-foreground font-['Inter'] tracking-[-0.3px] italic">
+            <p className="mt-4 text-muted-foreground font-inter tracking-[-0.3px] italic">
               No bio yet. Click "Edit Profile" to add one.
             </p>
           )}
@@ -318,7 +318,7 @@ export function DashboardProfileHeader({
                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors"
               >
                 {getPlatformIcon(account.platform)}
-                <span className="text-sm font-medium font-['Inter'] tracking-[-0.3px] text-foreground">
+                <span className="text-sm font-medium font-inter tracking-[-0.3px] text-foreground">
                   {account.username}
                 </span>
               </button>
@@ -328,7 +328,7 @@ export function DashboardProfileHeader({
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
             >
               <Plus className="h-4 w-4" />
-              <span className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Add</span>
+              <span className="text-sm font-medium font-inter tracking-[-0.3px]">Add</span>
             </button>
           </div>
 
@@ -337,14 +337,14 @@ export function DashboardProfileHeader({
             {(profile.city || profile.country) && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span className="font-['Inter'] tracking-[-0.5px]">
+                <span className="font-inter tracking-[-0.5px]">
                   {[profile.city, profile.country].filter(Boolean).join(", ")}
                 </span>
               </div>
             )}
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              <span className="font-['Inter'] tracking-[-0.5px]">
+              <span className="font-inter tracking-[-0.5px]">
                 Joined {format(new Date(profile.created_at), "MMMM yyyy")}
               </span>
             </div>

@@ -1764,7 +1764,7 @@ export function WalletTab() {
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-white dark:bg-[#0a0a0a] border-[#dce1eb] dark:border-[#141414] font-['Inter'] tracking-[-0.5px]">
+            <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-background border-border dark:border-[#141414] font-inter tracking-[-0.5px]">
               <div className="relative">
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
@@ -2065,10 +2065,10 @@ export function WalletTab() {
           {transactions.length === 0 ? <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
             </div> : <>
-              <div className="overflow-x-auto border border-[#dce1eb] dark:border-[#141414] rounded-xl">
+              <div className="overflow-x-auto border border-border dark:border-[#141414] rounded-xl">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
+                    <TableRow className="border-b border-border dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
                       <TableHead className="text-foreground font-medium text-sm h-12">Source</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Destination</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
@@ -2089,7 +2089,7 @@ export function WalletTab() {
                 }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <TableRow key={transaction.id} onClick={() => {
                   setSelectedTransaction(transaction);
                   setTransactionSheetOpen(true);
-                }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
+                }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-border dark:border-[#141414]">
                         {/* Source */}
                         <TableCell className="py-4">
                           {transaction.boost?.brand_name ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {

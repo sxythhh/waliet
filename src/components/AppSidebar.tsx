@@ -439,7 +439,7 @@ export function AppSidebar() {
           {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
           {(isCreatorMode || !isCreatorMode && currentBrandSubscriptionStatus === "active") && <WalletDropdown variant="header" />}
           {/* Upgrade Plan Button - Mobile (only for brands without active plan) */}
-          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
+          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-inter text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
               <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
               Upgrade
             </button>}
@@ -556,20 +556,20 @@ export function AppSidebar() {
                 </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
                   <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-6 w-6">
+                </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-6 w-6 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-6 w-6">
                   <img src={educationInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "analytics" ? <div className="relative h-6 w-6">
                   <img src={campaignsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={campaignsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
+                </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-primary' : ''}`} /> : null}
               <span className="text-[12px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
       })}
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-[#dedede] dark:border-border transition-all duration-200`}>
+      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border transition-all duration-200`}>
         {/* Logo */}
         <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-[14px] pl-[17px]'} py-[8px]`}>
           <Link to="/" className={`flex items-center gap-0 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center' : ''}`}>
@@ -729,7 +729,7 @@ export function AppSidebar() {
                         <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                         <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                       </div>
-                      {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
+                      {!isCollapsed && <span className="font-inter text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                     </div>
                     {!isCollapsed && <ChevronDown className={`w-4 h-4 transition-transform ${creatorsExpanded ? 'rotate-180' : ''}`} />}
                   </button>
@@ -740,7 +740,7 @@ export function AppSidebar() {
                     const isSubActive = isActive && currentSubtab === subItem.subtab;
                     return <button key={subItem.subtab} onClick={() => handleSubtabClick(subItem.subtab)} className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isSubActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                             
-                            <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px]">{subItem.title}</span>
+                            <span className="font-inter text-[13px] font-medium tracking-[-0.5px]">{subItem.title}</span>
                           </button>;
                   })}
                     </div>}
@@ -768,14 +768,14 @@ export function AppSidebar() {
                     </div> : item.tab === "scope" ? <div className="relative h-[24px] w-[24px]">
                       <img src={scopeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={scopeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-[24px] w-[24px]">
+                    </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-[24px] w-[24px] ${isActive ? 'text-primary' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-[24px] w-[24px]">
                       <img src={educationInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={educationActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "analytics" ? <div className="relative h-[24px] w-[24px]">
                       <img src={campaignsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={campaignsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.icon ? <item.icon className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
-                  {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
+                    </div> : item.icon ? <item.icon className={`h-[24px] w-[24px] ${isActive ? 'text-primary' : ''}`} /> : null}
+                  {!isCollapsed && <span className="font-inter text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                 </button>;
             
             return isCollapsed ? (
@@ -783,7 +783,7 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   {buttonContent}
                 </TooltipTrigger>
-                <TooltipContent side="right" className="z-[100] font-['Inter'] font-medium tracking-[-0.3px] bg-popover border border-border shadow-lg">
+                <TooltipContent side="right" className="z-[100] font-inter font-medium tracking-[-0.3px] bg-popover border border-border shadow-lg">
                   {item.title}
                 </TooltipContent>
               </Tooltip>
@@ -796,7 +796,7 @@ export function AppSidebar() {
         {/* Joined Campaigns Section - Hidden, campaigns shown on home page instead */}
 
         {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && <div className="px-2 py-1">
-            <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+            <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-lg font-inter text-[14px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
               <img src={nutFillIcon} alt="" className="h-4 w-4" />
               Upgrade Plan
             </button>

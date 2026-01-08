@@ -54,7 +54,7 @@ export function PerformanceStatsCard({ stats, loading }: PerformanceStatsCardPro
 
   return (
     <div className="bg-card border border-border rounded-xl p-5">
-      <h3 className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] mb-4">
+      <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.5px] mb-4">
         Performance
       </h3>
 
@@ -66,19 +66,19 @@ export function PerformanceStatsCard({ stats, loading }: PerformanceStatsCardPro
           >
             <div className="flex items-center gap-2 mb-1.5">
               <item.icon className={cn("h-3.5 w-3.5", item.color)} />
-              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 {item.label}
               </span>
             </div>
             <div className="flex items-baseline gap-0.5">
               <span className={cn(
-                "text-lg font-semibold font-['Geist'] tracking-[-0.5px]",
+                "text-lg font-semibold font-geist tracking-[-0.5px]",
                 loading && "animate-pulse bg-muted rounded w-16 h-6"
               )}>
                 {loading ? "" : item.value}
               </span>
               {item.suffix && !loading && (
-                <span className="text-xs text-muted-foreground font-['Geist'] tracking-[-0.5px]">
+                <span className="text-xs text-muted-foreground font-geist tracking-[-0.5px]">
                   {item.suffix}
                 </span>
               )}

@@ -255,8 +255,8 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
     return (
       <div className="space-y-4">
         <div className="p-8 rounded-2xl bg-muted/30 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[#2060df]/10 flex items-center justify-center mx-auto mb-5">
-            <Users className="w-8 h-8 text-[#2060df]" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+            <Users className="w-8 h-8 text-primary" />
           </div>
           <h3 className="font-semibold text-xl mb-2" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
             Create a Partner Team
@@ -266,7 +266,7 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
           </p>
           <Button 
             onClick={() => setShowCreateDialog(true)} 
-            className="bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4b85f7]"
+            className="bg-primary hover:bg-primary/90 border-t border-primary/70"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Team
@@ -293,7 +293,7 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
           <div className="relative group">
             <Avatar className="w-20 h-20 rounded-xl border-2 border-border">
               <AvatarImage src={team.logo_url || undefined} className="object-cover" />
-              <AvatarFallback className="rounded-xl bg-[#2060df]/10 text-[#2060df] text-2xl font-semibold">
+              <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-2xl font-semibold">
                 {team.name[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -320,7 +320,7 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
               {team.name}
             </h3>
             <div className="flex items-center gap-3 mt-1">
-              <Badge variant="secondary" className="bg-[#2060df]/10 text-[#2060df] border-0">
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-0">
                 {team.commission_rate}% commission
               </Badge>
               <Button
@@ -337,7 +337,7 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
           {/* Invite Button */}
           <Button
             onClick={() => setShowInviteDialog(true)}
-            className="shrink-0 bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4b85f7]"
+            className="shrink-0 bg-primary hover:bg-primary/90 border-t border-primary/70"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Invite
@@ -350,7 +350,7 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
             <div className="p-4 rounded-xl bg-background/50 space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Commission Rate</Label>
-                <span className="text-sm font-semibold text-[#2060df]">{newCommissionRate}%</span>
+                <span className="text-sm font-semibold text-primary">{newCommissionRate}%</span>
               </div>
               <Slider
                 value={[newCommissionRate]}
@@ -412,7 +412,7 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
             <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
           </div>
           <div className="p-4 text-center">
-            <p className="text-2xl font-semibold text-[#2060df]" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+            <p className="text-2xl font-semibold text-primary" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
               ${(team.total_earnings || 0).toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Earned</p>

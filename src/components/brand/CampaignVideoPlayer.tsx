@@ -272,7 +272,7 @@ export function CampaignVideoPlayer({
               {selectedUser.social_accounts && selectedUser.social_accounts.length > 0 && <div>
                   <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
                   <div className="grid grid-cols-1 gap-2">
-                    {selectedUser.social_accounts.map((account: any) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group">
+                    {selectedUser.social_accounts.map((account: any) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-[#1a1a1a] transition-colors group">
                         <div className="flex items-center gap-3">
                           {(() => {
                     switch (account.platform.toLowerCase()) {
@@ -302,13 +302,13 @@ export function CampaignVideoPlayer({
 
               {/* Campaign Stats */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-[#111111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <p className="text-xs text-muted-foreground mb-1">Total Paid</p>
                   <p className="text-xl font-bold text-white">
                     ${selectedUser.total_paid?.toFixed(2) || '0.00'}
                   </p>
                 </div>
-                <div className="p-4 rounded-lg bg-[#111111]">
+                <div className="p-4 rounded-lg bg-muted">
                   <p className="text-xs text-muted-foreground mb-1">Videos Submitted</p>
                   <p className="text-xl font-bold text-white">
                     {selectedUser.video_count || 0}
@@ -317,7 +317,7 @@ export function CampaignVideoPlayer({
               </div>
 
               {/* Application Status */}
-              {selectedUser.status && <div className="p-4 rounded-lg bg-[#111111]">
+              {selectedUser.status && <div className="p-4 rounded-lg bg-muted">
                   <p className="text-xs text-muted-foreground mb-2">Application Status</p>
                   <div className="flex items-center justify-between">
                     <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize" style={{

@@ -908,7 +908,7 @@ export function CampaignsTab({
                     <img src={application.boost_campaigns.banner_url} alt={application.boost_campaigns.title} className="w-full h-full object-cover object-center" />
                   </div>}
 
-                <CardContent className="p-4 flex-1 flex flex-col gap-4 font-['Inter'] tracking-[-0.5px]">
+                <CardContent className="p-4 flex-1 flex flex-col gap-4 font-inter tracking-[-0.5px]">
                   {/* Brand + Title Row */}
                   <div className="flex items-center gap-3">
                     {application.boost_campaigns.brands?.logo_url && <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-muted">

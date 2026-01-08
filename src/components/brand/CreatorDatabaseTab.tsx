@@ -227,7 +227,7 @@ function SortableColumnItem({
       <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted/70">
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
-      <Checkbox id={`col-${id}`} checked={isVisible} onCheckedChange={onToggle} disabled={isRequired} className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]" />
+      <Checkbox id={`col-${id}`} checked={isVisible} onCheckedChange={onToggle} disabled={isRequired} className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
       <label htmlFor={`col-${id}`} className={`text-sm font-inter tracking-[-0.5px] cursor-pointer flex-1 ${isRequired ? 'text-muted-foreground' : 'text-foreground'}`}>
         {label}
       </label>
@@ -1159,7 +1159,7 @@ export function CreatorDatabaseTab({
               <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 hover:text-muted-foreground dark:hover:text-foreground ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
-                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0) && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center font-medium">
+                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0) && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-[10px] text-white flex items-center justify-center font-medium">
                     {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all', demographicScoreFilter !== 'all', reliabilityScoreFilter !== 'all', selectedTagFilters.length > 0].filter(Boolean).length}
                   </span>}
               </Button>
@@ -1314,7 +1314,7 @@ export function CreatorDatabaseTab({
           </Popover>
 
           <div className="flex items-center gap-1.5 ml-auto">
-            <Button size="sm" onClick={() => setDiscoveryWizardOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
+            <Button size="sm" onClick={() => setDiscoveryWizardOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-primary/70 bg-primary hover:bg-primary/90">
               <Plus className="h-3.5 w-3.5" />
               Find Creators
             </Button>
@@ -1365,7 +1365,7 @@ export function CreatorDatabaseTab({
                       <Checkbox
                         checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
                         onCheckedChange={toggleSelectAll}
-                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                     </TableHead>
                     {orderedVisibleColumns.map(colId => {
@@ -1469,7 +1469,7 @@ export function CreatorDatabaseTab({
                           <Checkbox
                             checked={selectedCreators.has(creator.id)}
                             onCheckedChange={() => toggleCreatorSelection(creator.id)}
-                            className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${
+                            className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-opacity ${
                               selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                             }`}
                           />
@@ -1516,7 +1516,7 @@ export function CreatorDatabaseTab({
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span
-                                        className={`text-[11px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(
+                                        className={`text-[11px] font-geist tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(
                                           creator.source_type,
                                           creator.campaigns.length > 0,
                                         )}`}
@@ -1741,7 +1741,7 @@ export function CreatorDatabaseTab({
                 <div>
                   <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Source</p>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[11px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}`}>
+                    <span className={`text-[11px] font-geist tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}`}>
                       {getSourceLabel(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}
                     </span>
                     {selectedCreatorPanel.source_campaign_title && <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
@@ -2136,7 +2136,7 @@ export function CreatorDatabaseTab({
                 <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   Manually added creators are marked as external until they join.
                 </p>
-                <button className="w-fit py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-inter text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={manualAddLoading || !manualCreator.username && !manualCreator.email} onClick={async () => {
+                <button className="w-fit py-2 px-4 bg-primary border-t border-primary/70 rounded-lg font-inter text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={manualAddLoading || !manualCreator.username && !manualCreator.email} onClick={async () => {
                 setManualAddLoading(true);
                 try {
                   await supabase.from('brand_creator_relationships').insert({

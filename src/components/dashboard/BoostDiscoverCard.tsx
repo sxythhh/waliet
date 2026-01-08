@@ -72,16 +72,16 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         {/* Stats */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-['Inter'] tracking-[-0.5px]">
+            <span className="font-inter tracking-[-0.5px]">
               <span className="text-foreground font-medium">${monthly_retainer}</span>/mo
             </span>
             <span className="text-border">·</span>
-            <span className="font-['Inter'] tracking-[-0.5px]">
+            <span className="font-inter tracking-[-0.5px]">
               <span className="text-foreground font-medium">{videos_per_month}</span>
               <span className="text-muted-foreground">videos</span>
             </span>
             <span className="text-border">·</span>
-            <span className="font-['Inter'] tracking-[-0.5px]">
+            <span className="font-inter tracking-[-0.5px]">
               <span className="text-foreground font-medium">${perVideoRate.toFixed(0)}</span>/video
             </span>
           </div>
@@ -108,7 +108,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         </div>
 
         {/* Spots Info */}
-        <div className="flex items-center gap-2 font-['Inter'] tracking-[-0.5px]">
+        <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
           {isEnded ? <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
               Ended
             </span> : isFull ? <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
@@ -121,7 +121,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
       </div>
 
       {/* Brand Footer */}
-      <div className="px-3 py-2 bg-muted/40 dark:bg-[#111111] border-t border-border/40 flex items-center justify-between gap-2">
+      <div className="px-3 py-2 bg-muted/40 dark:bg-muted border-t border-border/40 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {brand_logo_url ? <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 bg-background">
               <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-cover" />
@@ -131,7 +131,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
               </span>
             </div>}
           <div className="flex items-center gap-1 min-w-0">
-            <span className="font-['Inter'] tracking-[-0.5px] text-xs font-medium text-foreground truncate hover:underline cursor-pointer transition-colors" onClick={e => {
+            <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground truncate hover:underline cursor-pointer transition-colors" onClick={e => {
             e.stopPropagation();
             if (brand_slug) navigate(`/b/${brand_slug}`);
           }}>
@@ -140,7 +140,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
             {brand_is_verified && <VerifiedBadge size="sm" />}
           </div>
         </div>
-        <span className="text-[11px] text-muted-foreground font-['Inter'] tracking-[-0.3px] flex-shrink-0">
+        <span className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px] flex-shrink-0">
           {created_at ? formatDistanceToNow(new Date(created_at), { addSuffix: true }) : 'Recently'}
         </span>
       </div>

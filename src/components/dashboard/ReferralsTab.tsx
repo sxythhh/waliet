@@ -643,18 +643,18 @@ export function ReferralsTab(): JSX.Element {
           {/* Stats Cards - Funnel Metrics */}
           <div className="grid grid-cols-3 gap-3">
             <Card className={`p-4 bg-muted/20 border-0 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
-              <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Clicks</p>
-              <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">{formatNumber(clicks)}</p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Clicks</p>
+              <p className="text-2xl font-bold font-geist tracking-[-0.5px]">{formatNumber(clicks)}</p>
             </Card>
 
             <Card className={`p-4 bg-muted/20 border-0 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
-              <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Signed Up</p>
-              <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">{formatNumber(signedUp)}</p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Signed Up</p>
+              <p className="text-2xl font-bold font-geist tracking-[-0.5px]">{formatNumber(signedUp)}</p>
             </Card>
 
             <Card className={`p-4 bg-muted/20 border-0 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
-              <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Converted</p>
-              <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">{formatNumber(converted)}</p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Converted</p>
+              <p className="text-2xl font-bold font-geist tracking-[-0.5px]">{formatNumber(converted)}</p>
             </Card>
           </div>
 
@@ -662,16 +662,16 @@ export function ReferralsTab(): JSX.Element {
           <Card className={`p-4 bg-muted/20 border-0 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
             <div className="grid grid-cols-3 divide-x divide-border">
               <div className="pr-4">
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Total Rewards</p>
-                <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">${totalRewards.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Total Rewards</p>
+                <p className="text-2xl font-bold font-geist tracking-[-0.5px]">${totalRewards.toFixed(2)}</p>
               </div>
               <div className="px-4">
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Creator Earnings</p>
-                <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">${creatorEarnings.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Creator Earnings</p>
+                <p className="text-2xl font-bold font-geist tracking-[-0.5px]">${creatorEarnings.toFixed(2)}</p>
               </div>
               <div className="pl-4">
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] mb-1">Brand Commission</p>
-                <p className="text-2xl font-bold font-['Geist'] tracking-[-0.5px]">${brandCommission.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Brand Commission</p>
+                <p className="text-2xl font-bold font-geist tracking-[-0.5px]">${brandCommission.toFixed(2)}</p>
               </div>
             </div>
           </Card>
@@ -681,12 +681,12 @@ export function ReferralsTab(): JSX.Element {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex items-center justify-between flex-1 gap-4">
                 <div>
-                  <h3 className="font-semibold text-sm font-['Inter'] tracking-[-0.5px]">Your Referral Link</h3>
-                  <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Share to earn rewards on signups & brand subscriptions</p>
+                  <h3 className="font-semibold text-sm font-inter tracking-[-0.5px]">Your Referral Link</h3>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Share to earn rewards on signups & brand subscriptions</p>
                 </div>
                 <Link
                   to="/affiliate"
-                  className="text-xs text-primary hover:underline flex items-center gap-1 font-['Inter'] tracking-[-0.5px] shrink-0"
+                  className="text-xs text-primary hover:underline flex items-center gap-1 font-inter tracking-[-0.5px] shrink-0"
                 >
                   How it works
                   <ExternalLink className="h-3 w-3" />
@@ -699,11 +699,11 @@ export function ReferralsTab(): JSX.Element {
                 <Input
                   value={referralLink}
                   readOnly
-                  className="font-['Geist'] text-sm bg-background/50 border-0 h-10 tracking-[-0.5px]"
+                  className="font-geist text-sm bg-background/50 border-0 h-10 tracking-[-0.5px]"
                 />
                 <Button
                   onClick={copyReferralLink}
-                  className="gap-2 shrink-0 h-10 bg-foreground text-background hover:bg-foreground/90 font-['Inter'] tracking-[-0.5px]"
+                  className="gap-2 shrink-0 h-10 bg-foreground text-background hover:bg-foreground/90 font-inter tracking-[-0.5px]"
                 >
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   {copied ? "Copied" : "Copy"}
@@ -715,8 +715,8 @@ export function ReferralsTab(): JSX.Element {
           {/* Activity Chart */}
           <Card className="p-4 bg-muted/20 border-0">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm font-['Inter'] tracking-[-0.5px]">Referral Activity</h3>
-              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Last 30 days</span>
+              <h3 className="font-semibold text-sm font-inter tracking-[-0.5px]">Referral Activity</h3>
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Last 30 days</span>
             </div>
 
             <div className="h-40">
@@ -744,7 +744,7 @@ export function ReferralsTab(): JSX.Element {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                          <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter'] tracking-[-0.3px]">
+                          <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-inter tracking-[-0.3px]">
                             <p className="text-[10px] text-muted-foreground mb-1">{data.date}</p>
                             <div className="space-y-0.5">
                               <p className="text-xs"><span className="text-blue-500">●</span> {data.referrals} referrals</p>
@@ -784,11 +784,11 @@ export function ReferralsTab(): JSX.Element {
             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Total Referrals</span>
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Total Referrals</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Successful</span>
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Successful</span>
               </div>
             </div>
           </Card>
@@ -796,14 +796,14 @@ export function ReferralsTab(): JSX.Element {
           {/* Referrals List */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm font-['Inter'] tracking-[-0.5px]">Your Referrals</h3>
-              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{referrals.length} total</span>
+              <h3 className="font-semibold text-sm font-inter tracking-[-0.5px]">Your Referrals</h3>
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{referrals.length} total</span>
             </div>
 
             {referrals.length === 0 ? (
               <Card className="p-8 bg-muted/20 border-0 text-center">
-                <h4 className="font-semibold text-sm font-['Inter'] tracking-[-0.5px] mb-1">No referrals yet</h4>
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] max-w-xs mx-auto">
+                <h4 className="font-semibold text-sm font-inter tracking-[-0.5px] mb-1">No referrals yet</h4>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] max-w-xs mx-auto">
                   Share your referral link to invite creators and brands, and earn rewards
                 </p>
               </Card>
@@ -825,19 +825,19 @@ export function ReferralsTab(): JSX.Element {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-sm font-['Inter'] tracking-[-0.5px]">
+                            <p className="font-medium text-sm font-inter tracking-[-0.5px]">
                               {referral.profiles?.full_name || referral.profiles?.username}
                             </p>
-                            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                               @{referral.profiles?.username}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
+                          <p className="text-sm font-semibold text-emerald-500 font-inter tracking-[-0.5px]">
                             +${totalEarned.toFixed(2)}
                           </p>
-                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                             {achievedMilestones}/{totalMilestones} milestones
                           </p>
                         </div>
@@ -850,7 +850,7 @@ export function ReferralsTab(): JSX.Element {
                           return (
                             <div
                               key={milestone.id}
-                              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium font-['Inter'] tracking-[-0.5px] ${
+                              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium font-inter tracking-[-0.5px] ${
                                 achieved
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                   : 'bg-muted/50 text-muted-foreground'

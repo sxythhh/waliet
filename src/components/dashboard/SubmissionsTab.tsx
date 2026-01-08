@@ -519,11 +519,11 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
             }}>Filter</span>
-              {hasActiveFilters && <span className="w-5 h-5 rounded-full bg-[#2060df] text-white text-xs font-medium flex items-center justify-center">{activeFilterCount}</span>}
+              {hasActiveFilters && <span className="w-5 h-5 rounded-full bg-primary text-white text-xs font-medium flex items-center justify-center">{activeFilterCount}</span>}
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-white dark:bg-[#0a0a0a] border-[#dce1eb] dark:border-[#141414]" style={{
+          <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-background border-border dark:border-[#141414]" style={{
           fontFamily: 'Inter',
           letterSpacing: 'normal'
         }}>
@@ -679,7 +679,7 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
             <div className="overflow-x-auto border border-border rounded-xl">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
+                  <TableRow className="border-b border-border dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
                     <TableHead className="text-foreground font-medium text-sm h-12">Video</TableHead>
                     {!campaignId && !boostId && <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>}
                     <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
@@ -701,7 +701,7 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
                 const clearingEndsAt = ledgerEntry?.clearingEndsAt;
                 const isRpm = submission.program.payment_model !== 'pay_per_post' && submission.type === 'campaign';
                 const canRequestPayout = payoutStatus === 'accruing' && (submission.estimated_payout || 0) >= 1;
-                return <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
+                return <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-border dark:border-[#141414]">
                         {/* Video Thumbnail & Title */}
                         <TableCell className="py-3">
                           <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">

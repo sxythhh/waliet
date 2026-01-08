@@ -53,7 +53,7 @@ export function PlatformLinks({ platforms }: PlatformLinksProps) {
           href={platform.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors font-['Inter'] ${getPlatformColor(platform.platform)}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors font-inter ${getPlatformColor(platform.platform)}`}
         >
           <span className="font-medium text-sm">
             {getPlatformName(platform.platform)}

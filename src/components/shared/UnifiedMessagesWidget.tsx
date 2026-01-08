@@ -483,7 +483,7 @@ export function UnifiedMessagesWidget() {
       {/* Floating Button - Mobile (Circle) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-[#2060de] hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group"
+        className="md:hidden fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-primary hover:bg-[#1a50c0] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group"
       >
         <img src={mailIcon} alt="Messages" className="w-6 h-6" />
         {totalUnread > 0 && (
@@ -496,9 +496,9 @@ export function UnifiedMessagesWidget() {
       {/* Floating Button - Desktop (Card) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-2 px-5 py-3 rounded-2xl bg-white dark:bg-[#0a0a0a] hover:bg-gray-50 dark:hover:bg-[#111] transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-2 px-5 py-3 rounded-2xl bg-background hover:bg-gray-50 dark:hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl"
       >
-        <span className="font-medium text-sm text-foreground font-['Inter'] tracking-[-0.5px]">Messages</span>
+        <span className="font-medium text-sm text-foreground font-inter tracking-[-0.5px]">Messages</span>
         {totalUnread > 0 && (
           <span className="w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
             {totalUnread > 9 ? "9+" : totalUnread}
@@ -610,7 +610,7 @@ export function UnifiedMessagesWidget() {
                         const isUserMessage = message.sender_type === "user";
                         return (
                           <div key={message.id} className={`flex ${isUserMessage ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isUserMessage ? "bg-[#2060de] text-white" : "bg-muted"}`}>
+                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isUserMessage ? "bg-primary text-white" : "bg-muted"}`}>
                               <p className="text-sm font-inter tracking-[-0.5px] whitespace-pre-wrap break-words">
                                 {message.content}
                               </p>
@@ -654,7 +654,7 @@ export function UnifiedMessagesWidget() {
 
                         return (
                           <div key={message.id} className={`flex ${isCreatorMessage ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 overflow-hidden ${isCreatorMessage ? "bg-[#2060de] text-white" : "bg-muted"}`}>
+                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 overflow-hidden ${isCreatorMessage ? "bg-primary text-white" : "bg-muted"}`}>
                               <p className="text-sm font-inter tracking-[-0.5px] whitespace-pre-wrap break-words">
                                 {message.content}
                               </p>
@@ -786,7 +786,7 @@ export function UnifiedMessagesWidget() {
                           </p>
                         </div>
                         {thread.unread_count > 0 && (
-                          <span className="w-5 h-5 bg-[#2060de] rounded-full text-white text-xs font-medium flex items-center justify-center flex-shrink-0">
+                          <span className="w-5 h-5 bg-primary rounded-full text-white text-xs font-medium flex items-center justify-center flex-shrink-0">
                             {thread.unread_count}
                           </span>
                         )}

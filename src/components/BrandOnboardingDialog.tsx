@@ -212,7 +212,7 @@ export function BrandOnboardingDialog({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
-                    className="bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors resize-none"
+                    className="bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors resize-none"
                   />
                 </div>
               </div>
@@ -237,7 +237,7 @@ export function BrandOnboardingDialog({
                         placeholder="teammate@company.com"
                         value={invite.email}
                         onChange={(e) => updateInvite(index, "email", e.target.value)}
-                        className="flex-1 h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors"
+                        className="flex-1 h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors"
                       />
                       <Select
                         value={invite.role}
@@ -339,7 +339,7 @@ export function BrandOnboardingDialog({
                   <button
                     onClick={() => handleComplete(true)}
                     disabled={isSubmitting}
-                    className="w-full p-4 bg-[#1f60dd] text-white rounded-xl hover:bg-[#1a52c2] transition-colors text-left border-t border-[#3672ea]"
+                    className="w-full p-4 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-left border-t border-primary/80"
                   >
                     <p className="text-sm font-medium font-inter tracking-[-0.5px]">
                       Create Your First Campaign
@@ -380,7 +380,7 @@ export function BrandOnboardingDialog({
               <Button
                 onClick={handleNext}
                 disabled={isSubmitting}
-                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg"
+                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">

@@ -95,7 +95,7 @@ export function BrandPortalSidebar({ brand, currentTab }: BrandPortalSidebarProp
   const displayName = userProfile?.full_name || userProfile?.username || "Creator";
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-[#dedede] dark:border-border">
+    <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border">
       {/* Brand Header */}
       <div className="flex items-center gap-2 px-[14px] pl-[17px] py-[8px]">
         <Link to={`/portal/${brand.slug}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -167,7 +167,7 @@ export function BrandPortalSidebar({ brand, currentTab }: BrandPortalSidebarProp
                     />
                   )}
                 </div>
-                <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">
+                <span className="font-inter text-[15px] font-medium tracking-[-0.5px]">
                   {item.title}
                 </span>
               </button>

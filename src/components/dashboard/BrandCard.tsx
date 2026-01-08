@@ -52,7 +52,7 @@ export const BrandCard = memo(function BrandCard({
       className={cn(
         "group relative rounded-xl overflow-hidden transition-colors duration-200",
         "bg-card border border-border/50 hover:border-border",
-        "cursor-pointer font-['Inter',sans-serif]"
+        "cursor-pointer font-inter"
       )}
       style={{ letterSpacing: '-0.5px' }}
       onClick={handleClick}

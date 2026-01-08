@@ -51,7 +51,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
   };
 
   return (
-    <Card className="p-4 sm:p-5 bg-card/30 border border-[#efefef] dark:border-transparent">
+    <Card className="p-4 sm:p-5 bg-card/30 border border-border dark:border-transparent">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
         <h3 className="text-sm font-medium tracking-[-0.5px]">Activity Over Time</h3>
       </div>
@@ -139,7 +139,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
                   const dataPoint = payload[0]?.payload as ActivityData;
                   const displayLabel = dataPoint?.datetime || dataPoint?.date || '';
                   return (
-                    <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md rounded-lg px-3 py-2.5 shadow-xl min-w-[140px] border border-[#dedede] dark:border-transparent">
+                    <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md rounded-lg px-3 py-2.5 shadow-xl min-w-[140px] border border-border dark:border-transparent">
                       <p className="text-xs font-medium font-inter text-muted-foreground dark:text-white/50 tracking-[-0.5px] mb-2">
                         {displayLabel}
                       </p>

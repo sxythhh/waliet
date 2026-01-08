@@ -99,7 +99,7 @@ export default function PublicNavbar({
   }, []);
   const isActive = (path: string) => location.pathname === path;
   return <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#0a0a0a] border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-6">
@@ -116,7 +116,7 @@ export default function PublicNavbar({
                         Platform
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-64 p-3 bg-white dark:bg-[#0a0a0a] border border-border rounded-xl shadow-2xl py-[7px] px-[7px]">
+                        <div className="w-64 p-3 bg-background border border-border rounded-xl shadow-2xl py-[7px] px-[7px]">
                           <NavigationMenuLink asChild>
                             <Link to="/discover" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
                               <img alt="" className="w-5 h-5 dark:hidden" src={exploreIconDark} />
@@ -163,12 +163,12 @@ export default function PublicNavbar({
             </div>
             
             {/* Search Input - Desktop only */}
-            <button onClick={handleSearchClick} className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-[#f3f5f7] dark:bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-[#787f8c] dark:text-muted-foreground/50 hover:bg-[#e5e7e9] dark:hover:bg-muted/30 transition-colors min-w-[280px]">
+            <button onClick={handleSearchClick} className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-[#f3f5f7] dark:bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-muted-foreground dark:text-muted-foreground/50 hover:bg-[#e5e7e9] dark:hover:bg-muted/30 transition-colors min-w-[280px]">
               <div className="flex items-center gap-2">
                 <img src={searchIcon} alt="" className="h-4 w-4 opacity-100 dark:opacity-60" />
                 <span>{searchQuery || 'Search opportunities'}</span>
               </div>
-              <div className="flex items-center justify-center h-5 w-5 rounded bg-[#787f8c]/20 dark:bg-white/10 text-[11px] font-medium text-[#787f8c] dark:text-white/50">
+              <div className="flex items-center justify-center h-5 w-5 rounded bg-[#787f8c]/20 dark:bg-white/10 text-[11px] font-medium text-muted-foreground dark:text-white/50">
                 /
               </div>
             </button>
@@ -186,7 +186,7 @@ export default function PublicNavbar({
                       </Link>
                     )}
                     <Link to="/dashboard">
-                      <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
+                      <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-primary hover:bg-primary/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
                         Dashboard
                       </Button>
                     </Link>
@@ -221,7 +221,7 @@ export default function PublicNavbar({
                 )}
                 {isAuthenticated === true && (
                   <Link to="/dashboard">
-                    <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
+                    <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-primary hover:bg-primary/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
                       Dashboard
                     </Button>
                   </Link>

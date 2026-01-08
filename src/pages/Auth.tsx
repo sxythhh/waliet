@@ -143,7 +143,7 @@ export default function Auth() {
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5f5f5] dark:bg-[#0a0a0a]">
       <SEOHead title="Sign In" description="Sign in to your Virality account" noIndex={true} />
-      <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-white dark:bg-[#111111]/50">
+      <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-white dark:bg-muted/50">
         <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">
             <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/05566301-7c21-4e5b-9e22-a097cbaf1442.png" />

@@ -296,7 +296,7 @@ export function CreateCampaignTypeDialog({
   }
   return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button className="gap-2 font-geist font-normal tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7]">
+        {trigger || <Button className="gap-2 font-geist font-normal tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-primary/70">
             <Plus className="h-4 w-4" />
             Create Campaign
           </Button>}

@@ -731,7 +731,7 @@ export function CreatorsTab({
               } else {
                 setRecruitDialogOpen(true);
               }
-            }} className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-[#1f60dd] text-white hover:bg-[#1a50c8] shadow-md">
+            }} className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-primary text-white hover:bg-primary/90 shadow-md">
                 <Plus className="h-3.5 w-3.5" />
                 Recruit Creators
               </Button>

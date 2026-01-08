@@ -28,7 +28,7 @@ export function OnboardingCard({ onSelect, inline = false }: OnboardingCardProps
 
   const cardContent = (
     <div className="w-full max-w-[440px]">
-      <h2 className="font-['Geist'] text-lg font-semibold tracking-[-0.5px] text-foreground mb-4">
+      <h2 className="font-geist text-lg font-semibold tracking-[-0.5px] text-foreground mb-4">
         I am joining as..
       </h2>
       
@@ -36,16 +36,16 @@ export function OnboardingCard({ onSelect, inline = false }: OnboardingCardProps
         {/* Creator Option */}
         <button
           onClick={handleCreatorSelect}
-          className="w-full flex items-center gap-4 p-4 rounded-lg bg-[#2060de] hover:bg-[#1a50c8] transition-colors text-left group border-t border-[#4b85f7]"
+          className="w-full flex items-center gap-4 p-4 rounded-lg bg-primary hover:bg-primary/90 transition-colors text-left group border-t border-primary/70"
         >
           <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
             <img src={creatorIcon} alt="" className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <p className="font-['Geist'] text-[15px] font-medium tracking-[-0.5px] text-white">
+            <p className="font-geist text-[15px] font-medium tracking-[-0.5px] text-white">
               Creator
             </p>
-            <p className="font-['Inter'] text-[13px] tracking-[-0.5px] text-white/70">
+            <p className="font-inter text-[13px] tracking-[-0.5px] text-white/70">
               Discover opportunities and get paid
             </p>
           </div>
@@ -56,14 +56,14 @@ export function OnboardingCard({ onSelect, inline = false }: OnboardingCardProps
           onClick={handleBrandSelect}
           className="w-full flex items-center gap-4 p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left group"
         >
-          <div className="w-10 h-10 rounded-lg bg-[#2060de] flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <img src={brandIcon} alt="" className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <p className="font-['Geist'] text-[15px] font-medium tracking-[-0.5px] text-foreground">
+            <p className="font-geist text-[15px] font-medium tracking-[-0.5px] text-foreground">
               Brand
             </p>
-            <p className="font-['Inter'] text-[13px] tracking-[-0.5px] text-muted-foreground">
+            <p className="font-inter text-[13px] tracking-[-0.5px] text-muted-foreground">
               Hire creators and launch campaigns
             </p>
           </div>

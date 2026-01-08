@@ -63,10 +63,10 @@ export function PayoutStatusCards({
             </TooltipProvider>
           </div>
         </div>
-        <p className="text-2xl font-bold text-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>
+        <p className="text-2xl font-bold text-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
           ${accruing.amount.toFixed(2)}
         </p>
-        <p className="text-xs text-muted-foreground mt-1 font-['Inter']">
+        <p className="text-xs text-muted-foreground mt-1 font-inter">
           {accruing.videoCount} video{accruing.videoCount !== 1 ? 's' : ''} • Ready to withdraw
         </p>
         
@@ -106,7 +106,7 @@ export function PayoutStatusCards({
         <Button
           onClick={onRequestPayout}
           disabled={!canRequest || isRequesting}
-          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-['Inter']"
+          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-inter"
           size="sm"
         >
           {isRequesting ? 'Requesting...' : canRequest ? 'Request Payout' : `Min $${minPayout.toFixed(2)}`}
@@ -136,10 +136,10 @@ export function PayoutStatusCards({
             </TooltipProvider>
           </div>
         </div>
-        <p className="text-2xl font-bold text-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>
+        <p className="text-2xl font-bold text-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
           ${clearing.amount.toFixed(2)}
         </p>
-        <p className="text-xs text-muted-foreground mt-1 font-['Inter']">
+        <p className="text-xs text-muted-foreground mt-1 font-inter">
           {clearing.videoCount} video{clearing.videoCount !== 1 ? 's' : ''} • 7-day period
         </p>
         {clearing.clearingEndsAt && clearing.amount > 0 && (
@@ -151,7 +151,7 @@ export function PayoutStatusCards({
           </div>
         )}
         {clearing.amount === 0 && (
-          <p className="text-[10px] text-muted-foreground mt-4 font-['Inter']">
+          <p className="text-[10px] text-muted-foreground mt-4 font-inter">
             No pending payouts in clearing
           </p>
         )}
@@ -167,13 +167,13 @@ export function PayoutStatusCards({
             Completed
           </span>
         </div>
-        <p className="text-2xl font-bold text-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>
+        <p className="text-2xl font-bold text-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
           ${paid.amount.toFixed(2)}
         </p>
-        <p className="text-xs text-muted-foreground mt-1 font-['Inter']">
+        <p className="text-xs text-muted-foreground mt-1 font-inter">
           {paid.videoCount} video{paid.videoCount !== 1 ? 's' : ''} • All time
         </p>
-        <p className="text-[10px] text-muted-foreground mt-4 font-['Inter']">
+        <p className="text-[10px] text-muted-foreground mt-4 font-inter">
           Paid to your wallet
         </p>
       </Card>

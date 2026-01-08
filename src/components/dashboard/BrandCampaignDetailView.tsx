@@ -365,7 +365,7 @@ export function BrandCampaignDetailView({
       </div>;
   }
   return <div className="p-0 md:p-[10px] h-full flex flex-col">
-      <div className="flex flex-col h-full border md:rounded-[20px] rounded-none overflow-hidden border-[#dedede] dark:border-[#141414]">
+      <div className="flex flex-col h-full border md:rounded-[20px] rounded-none overflow-hidden border-border dark:border-[#141414]">
         {/* Header with title and campaign selector */}
         <div className="flex-shrink-0 flex items-center justify-between px-2 bg-background gap-2 sm:px-[15px] py-[8px]">
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -383,7 +383,7 @@ export function BrandCampaignDetailView({
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 z-50 bg-white dark:bg-[#080808] border-[#dedede] dark:border-[#1f1f1f] rounded-[7px]">
+              <DropdownMenuContent align="start" className="w-64 z-50 bg-white dark:bg-[#080808] border-border dark:border-[#1f1f1f] rounded-[7px]">
                 {/* All Programs option */}
                 <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={isAllMode ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
                   <span className="font-medium">All Programs</span>
@@ -415,13 +415,13 @@ export function BrandCampaignDetailView({
             {/* Timeframe selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-[#efefef] dark:border-transparent">
+                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-border dark:border-transparent">
                   <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
                   <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
                   <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50 bg-white dark:bg-[#080808] border-[#dedede] dark:border-[#1f1f1f]">
+              <DropdownMenuContent align="end" className="z-50 bg-white dark:bg-[#080808] border-border dark:border-[#1f1f1f]">
                 {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} onClick={() => setTimeframe(option)}>
                     {TIMEFRAME_LABELS[option]}
                   </DropdownMenuItem>)}
@@ -429,7 +429,7 @@ export function BrandCampaignDetailView({
             </DropdownMenu>
 
             {/* Edit button - only when specific entity selected */}
-            {!isAllMode && <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-[#efefef] dark:border-transparent" onClick={() => setEditDialogOpen(true)}>
+            {!isAllMode && <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-border dark:border-transparent" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
               </Button>}

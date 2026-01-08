@@ -224,7 +224,7 @@ export function InviteTeammatesDialog({ open, onOpenChange, teamId, teamName, on
                 <Button
                   onClick={handleSendUserInvite}
                   disabled={sending || !selectedUser.email}
-                  className="w-full bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4b85f7]"
+                  className="w-full bg-primary hover:bg-primary/90 border-t border-primary/70"
                 >
                   {sending ? (
                     <>
@@ -343,7 +343,7 @@ export function InviteTeammatesDialog({ open, onOpenChange, teamId, teamName, on
             <Button
               onClick={handleSendInvites}
               disabled={sending}
-              className="w-full bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4b85f7]"
+              className="w-full bg-primary hover:bg-primary/90 border-t border-primary/70"
             >
               {sending ? (
                 <>

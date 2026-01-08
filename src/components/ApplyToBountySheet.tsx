@@ -240,10 +240,10 @@ export function ApplyToBountySheet({
               )}
 
               <div className="flex gap-3 fixed bottom-0 left-0 right-0 bg-background py-4 px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border sm:left-auto sm:right-0 sm:w-full sm:max-w-xl">
-                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-['Inter'] tracking-[-0.5px]" disabled={submitting || isUploading}>
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-inter tracking-[-0.5px]" disabled={submitting || isUploading}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting || isPaused || isUploading || questions.length === 0} className="flex-1 font-['Inter'] tracking-[-0.5px]">
+                <Button type="submit" disabled={submitting || isPaused || isUploading || questions.length === 0} className="flex-1 font-inter tracking-[-0.5px]">
                   {isUploading ? "Uploading..." : submitting ? "Submitting..." : isPaused ? "Boost Paused" : isFull ? "Join Waitlist" : "Submit Application"}
                 </Button>
               </div>

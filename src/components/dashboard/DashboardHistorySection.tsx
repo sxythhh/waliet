@@ -26,8 +26,8 @@ export function DashboardHistorySection({
     return (
       <div className="text-center py-16 text-muted-foreground">
         <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <p className="font-['Inter'] tracking-[-0.5px]">No history yet</p>
-        <p className="text-sm mt-2 font-['Inter'] tracking-[-0.5px]">
+        <p className="font-inter tracking-[-0.5px]">No history yet</p>
+        <p className="text-sm mt-2 font-inter tracking-[-0.5px]">
           Join campaigns or boosts from the Discover tab to start earning
         </p>
       </div>
@@ -68,12 +68,12 @@ export function DashboardHistorySection({
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   {item.brandName}
                 </span>
                 {item.brandIsVerified && <VerifiedBadge size="sm" />}
               </div>
-              <h3 className="font-medium font-['Inter'] tracking-[-0.5px] line-clamp-1">
+              <h3 className="font-medium font-inter tracking-[-0.5px] line-clamp-1">
                 {item.title}
               </h3>
             </div>
@@ -81,11 +81,11 @@ export function DashboardHistorySection({
             {/* Date & Earnings */}
             <div className="text-right flex-shrink-0">
               {item.earnings !== undefined && item.earnings > 0 && (
-                <p className="text-sm font-semibold text-emerald-500 font-['Geist'] tracking-[-0.5px]">
+                <p className="text-sm font-semibold text-emerald-500 font-geist tracking-[-0.5px]">
                   ${item.earnings.toLocaleString()}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 {format(new Date(item.joinedAt), "MMM d, yyyy")}
               </p>
             </div>

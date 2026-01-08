@@ -234,11 +234,11 @@ export function GlobalBrandSearch({
   return <>
       {/* Search Trigger Bar */}
       <button onClick={() => setOpen(true)} className="flex items-center gap-3 w-full max-w-xs h-10 px-4 rounded-lg transition-colors bg-[#f0f0f0] dark:bg-[#0e0e0e]">
-        <Search className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
-        <span className="flex-1 text-left text-sm font-inter text-[#6b6b6b] dark:text-[#616161] tracking-tight">
+        <Search className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
+        <span className="flex-1 text-left text-sm font-inter text-muted-foreground dark:text-muted-foreground tracking-tight">
           Browse workspace
         </span>
-        <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
+        <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground">
           /
         </div>
       </button>
@@ -248,23 +248,23 @@ export function GlobalBrandSearch({
         <DialogContent className="p-0 gap-0 overflow-hidden max-w-2xl border-0 bg-white dark:bg-[#0e0e0e]">
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[#e0e0e0] dark:border-[#1f1f1f]">
-            <Search className="h-5 w-5 flex-shrink-0 text-[#6b6b6b] dark:text-[#616161]" />
-            <input ref={inputRef} type="text" placeholder="Search campaigns, creators, blueprints, videos..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={handleKeyDown} className="flex-1 bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.5px] text-black dark:text-white placeholder:text-[#6b6b6b] dark:placeholder:text-[#616161]" />
+            <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground dark:text-muted-foreground" />
+            <input ref={inputRef} type="text" placeholder="Search campaigns, creators, blueprints, videos..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={handleKeyDown} className="flex-1 bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.5px] text-black dark:text-white placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" />
             {query && <button onClick={() => setQuery("")} className="p-1 hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] rounded">
-                <X className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
+                <X className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
               </button>}
-            <div className="flex items-center justify-center h-6 px-1.5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
+            <div className="flex items-center justify-center h-6 px-1.5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground">
               ESC
             </div>
           </div>
 
           {/* Results */}
           <ScrollArea className="max-h-[400px]">
-            {loading ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
+            {loading ? <div className="p-8 text-center text-muted-foreground dark:text-muted-foreground">
                 <span className="text-sm font-inter">Searching...</span>
-              </div> : results.length === 0 && query.length >= 2 ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
+              </div> : results.length === 0 && query.length >= 2 ? <div className="p-8 text-center text-muted-foreground dark:text-muted-foreground">
                 <span className="text-sm font-inter">No results found for "{query}"</span>
-              </div> : results.length === 0 ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
+              </div> : results.length === 0 ? <div className="p-8 text-center text-muted-foreground dark:text-muted-foreground">
                 <span className="text-sm font-inter">Start typing to search...</span>
               </div> : <div className="py-2">
                 {Object.entries(groupedResults).map(([type, items]) => <div key={type}>
@@ -301,16 +301,16 @@ export function GlobalBrandSearch({
           {/* Footer hint */}
           <div className="px-4 py-2 border-t border-[#e0e0e0] dark:border-[#1f1f1f] flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">↑↓</span>
-              <span className="text-xs font-inter text-[#6b6b6b] dark:text-[#616161]">Navigate</span>
+              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground">↑↓</span>
+              <span className="text-xs font-inter text-muted-foreground dark:text-muted-foreground">Navigate</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">↵</span>
-              <span className="text-xs font-inter text-[#6b6b6b] dark:text-[#616161]">Select</span>
+              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground">↵</span>
+              <span className="text-xs font-inter text-muted-foreground dark:text-muted-foreground">Select</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">⌘F</span>
-              <span className="text-xs font-inter text-[#6b6b6b] dark:text-[#616161]">Open</span>
+              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground">⌘F</span>
+              <span className="text-xs font-inter text-muted-foreground dark:text-muted-foreground">Open</span>
             </div>
           </div>
         </DialogContent>

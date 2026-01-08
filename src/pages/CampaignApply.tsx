@@ -581,12 +581,12 @@ export default function CampaignApply() {
             {/* Header section */}
             <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-16 relative z-10">
               <div className="flex flex-col md:flex-row md:items-end gap-4 mb-8">
-                <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-[#e0e0e0] dark:bg-[#111111]" />
+                <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-[#e0e0e0] dark:bg-muted" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-7 w-40 bg-[#e0e0e0] dark:bg-[#111111]" />
+                  <Skeleton className="h-7 w-40 bg-[#e0e0e0] dark:bg-muted" />
                   <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-24 bg-[#e0e0e0] dark:bg-[#111111]" />
-                    <Skeleton className="h-5 w-16 rounded-full bg-[#e0e0e0] dark:bg-[#111111]" />
+                    <Skeleton className="h-5 w-24 bg-[#e0e0e0] dark:bg-muted" />
+                    <Skeleton className="h-5 w-16 rounded-full bg-[#e0e0e0] dark:bg-muted" />
                   </div>
                 </div>
               </div>
@@ -601,7 +601,7 @@ export default function CampaignApply() {
               
               {/* About section skeleton */}
               <div className="mb-8">
-                <Skeleton className="h-5 w-20 mb-4 bg-[#e0e0e0] dark:bg-[#111111]" />
+                <Skeleton className="h-5 w-20 mb-4 bg-[#e0e0e0] dark:bg-muted" />
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full bg-[#e5e5e5] dark:bg-[#0c0c0c]" />
                   <Skeleton className="h-4 w-full bg-[#e5e5e5] dark:bg-[#0c0c0c]" />
@@ -615,7 +615,7 @@ export default function CampaignApply() {
           <div className="hidden lg:block w-80 border-l border-[#e0e0e0] dark:border-white/5 p-6 bg-[#f5f5f5] dark:bg-[#080808]">
             <div className="bg-[#ebebeb] dark:bg-[#0c0c0c] rounded-2xl p-5">
               <Skeleton className="h-5 w-32 mb-2 bg-[#e0e0e0] dark:bg-[#151515]" />
-              <Skeleton className="h-4 w-48 mb-6 bg-[#e0e0e0] dark:bg-[#111111]" />
+              <Skeleton className="h-4 w-48 mb-6 bg-[#e0e0e0] dark:bg-muted" />
               <Skeleton className="h-10 w-full rounded-lg bg-[#e0e0e0] dark:bg-[#151515]" />
             </div>
           </div>
@@ -853,7 +853,7 @@ export default function CampaignApply() {
             
             {/* Breadcrumb Navigation */}
             <div className="absolute top-4 left-4 z-10">
-              <nav className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 font-['Inter'] tracking-[-0.5px]">
+              <nav className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 font-inter tracking-[-0.5px]">
                 <Link to="/discover" className="hover:text-white transition-colors">
                   Marketplace
                 </Link>
@@ -889,33 +889,33 @@ export default function CampaignApply() {
                 </Avatar>
                 <div className="flex-1 pb-1 md:pb-2">
                   <div className="flex items-center gap-2">
-                    {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-xs md:text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
+                    {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-xs md:text-sm font-medium text-foreground font-inter tracking-[-0.5px] hover:underline">
                         {brandName}
-                      </Link> : <span className="text-xs md:text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>}
+                      </Link> : <span className="text-xs md:text-sm font-medium text-foreground font-inter tracking-[-0.5px]">{brandName}</span>}
                     {brandVerified && <VerifiedBadge size="sm" />}
                   </div>
                   {(campaign?.created_at || boostCampaign?.created_at) && (
-                    <p className="text-[10px] md:text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                    <p className="text-[10px] md:text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                       Posted on {format(new Date(campaign?.created_at || boostCampaign?.created_at || ''), 'MMM d, yyyy')}
                     </p>
                   )}
                   <div className="flex items-center gap-1.5 md:gap-2">
                     <h1 className="text-base md:text-3xl font-bold tracking-tight">{title}</h1>
-                    {isEnded ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    {isEnded ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-inter tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#b60b0b',
                     borderTop: '1px solid #ed3030',
                     borderRadius: '20px'
                   }}>
                         <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                         Ended
-                      </span> : status === 'active' ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                      </span> : status === 'active' ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-inter tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#1f6d36',
                     borderTop: '1px solid #3c8544',
                     borderRadius: '20px'
                   }}>
                         <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
                         Active
-                      </span> : <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                      </span> : <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-inter tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#6b7280',
                     borderRadius: '20px'
                   }}>
@@ -952,11 +952,11 @@ export default function CampaignApply() {
                       <div className={`w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center ${stat.color}`}>
                         {stat.icon}
                       </div>
-                      <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{stat.label}</p>
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{stat.label}</p>
                     </div>
-                    <p className="text-xl font-bold font-['Inter'] tracking-[-0.5px]">{stat.value}</p>
+                    <p className="text-xl font-bold font-inter tracking-[-0.5px]">{stat.value}</p>
                     {stat.description && (
-                      <p className="text-[10px] text-muted-foreground font-['Inter'] tracking-[-0.3px] mt-0.5">{stat.description}</p>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">{stat.description}</p>
                     )}
                   </div>)}
               </div>}
@@ -966,7 +966,7 @@ export default function CampaignApply() {
               <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Platforms:</span>
+                  <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Platforms:</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {campaign.allowed_platforms.map((platform) => {
@@ -974,7 +974,7 @@ export default function CampaignApply() {
                     return (
                       <div key={platform} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background border border-border">
                         {icon && <img src={icon} alt={platform} className="w-4 h-4 object-contain" />}
-                        <span className="text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize">{platform}</span>
+                        <span className="text-xs font-medium font-inter tracking-[-0.5px] capitalize">{platform}</span>
                       </div>
                     );
                   })}
@@ -984,7 +984,7 @@ export default function CampaignApply() {
                     <div className="w-px h-4 bg-border hidden sm:block" />
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-amber-500" />
-                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Application required</span>
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Application required</span>
                     </div>
                   </>
                 )}
@@ -993,7 +993,7 @@ export default function CampaignApply() {
                     <div className="w-px h-4 bg-border hidden sm:block" />
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Instant join</span>
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Instant join</span>
                     </div>
                   </>
                 )}
@@ -1007,7 +1007,7 @@ export default function CampaignApply() {
             {/* Description */}
             {description && <div>
                 <h2 className="text-lg font-semibold mb-3">About</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-inter tracking-[-0.5px]">
                   {parseTextWithLinks(description)}
                 </p>
               </div>}
@@ -1015,7 +1015,7 @@ export default function CampaignApply() {
             {/* Blueprint Content */}
             {blueprint?.content_guidelines && <div>
                 <h2 className="text-lg font-semibold mb-3">Content Guidelines</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">{blueprint.content_guidelines}</p>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-inter tracking-[-0.5px]">{blueprint.content_guidelines}</p>
               </div>}
 
             {blueprint?.content && <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-xl prose-h1:mb-3 prose-h2:text-lg prose-h2:mb-2 prose-h3:text-base prose-h3:mb-2 prose-p:text-[13px] prose-p:leading-relaxed prose-li:text-[13px]" style={{ '--tw-prose-body': 'hsl(220 9% 40%)', '--tw-prose-invert-body': 'hsl(220 9% 60%)' } as React.CSSProperties} dangerouslySetInnerHTML={{
@@ -1025,7 +1025,7 @@ export default function CampaignApply() {
             {blueprint?.hooks && blueprint.hooks.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Hook Ideas</h2>
                 <div className="space-y-2">
-                  {blueprint.hooks.map((hook: string | HookItem, i: number) => <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-['Inter'] tracking-[-0.5px]">
+                  {blueprint.hooks.map((hook: string | HookItem, i: number) => <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-inter tracking-[-0.5px]">
                       {typeof hook === 'string' ? hook : hook.text || hook.content}
                     </div>)}
                 </div>
@@ -1034,7 +1034,7 @@ export default function CampaignApply() {
             {blueprint?.talking_points && blueprint.talking_points.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Talking Points</h2>
                 <ul className="space-y-2">
-                  {blueprint.talking_points.map((point: string | TalkingPointItem, i: number) => <li key={i} className="flex items-start gap-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  {blueprint.talking_points.map((point: string | TalkingPointItem, i: number) => <li key={i} className="flex items-start gap-2 text-muted-foreground font-inter tracking-[-0.5px]">
                       <span className="text-primary mt-1">•</span>
                       <span>{typeof point === 'string' ? point : point.text || point.content}</span>
                     </li>)}
@@ -1045,7 +1045,7 @@ export default function CampaignApply() {
                 {blueprint.dos_and_donts.dos?.length > 0 && <div>
                     <h2 className="text-lg font-semibold mb-3 text-green-500">Do's</h2>
                     <ul className="space-y-2">
-                      {blueprint.dos_and_donts.dos.map((item: string, i: number) => <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-green-500/10 border border-green-500/20 font-['Inter'] tracking-[-0.5px]">
+                      {blueprint.dos_and_donts.dos.map((item: string, i: number) => <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-green-500/10 border border-green-500/20 font-inter tracking-[-0.5px]">
                           <span className="text-green-500">✓</span>
                           <span>{item}</span>
                         </li>)}
@@ -1054,7 +1054,7 @@ export default function CampaignApply() {
                 {blueprint.dos_and_donts.donts?.length > 0 && <div>
                     <h2 className="text-lg font-semibold mb-3 text-red-500">Don'ts</h2>
                     <ul className="space-y-2">
-                      {blueprint.dos_and_donts.donts.map((item: string, i: number) => <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-500/10 border border-red-500/20 font-['Inter'] tracking-[-0.5px]">
+                      {blueprint.dos_and_donts.donts.map((item: string, i: number) => <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-500/10 border border-red-500/20 font-inter tracking-[-0.5px]">
                           <span className="text-red-500">✗</span>
                           <span>{item}</span>
                         </li>)}
@@ -1064,19 +1064,19 @@ export default function CampaignApply() {
 
             {blueprint?.call_to_action && <div>
                 <h2 className="text-lg font-semibold mb-3">Call to Action</h2>
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.call_to_action}</p>
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">{blueprint.call_to_action}</p>
               </div>}
 
             {blueprint?.hashtags && blueprint.hashtags.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Hashtags</h2>
                 <div className="flex flex-wrap gap-2">
-                  {blueprint.hashtags.map((tag, i) => <Badge key={i} variant="secondary" className="font-['Inter'] tracking-[-0.5px]">#{tag.replace('#', '')}</Badge>)}
+                  {blueprint.hashtags.map((tag, i) => <Badge key={i} variant="secondary" className="font-inter tracking-[-0.5px]">#{tag.replace('#', '')}</Badge>)}
                 </div>
               </div>}
 
             {blueprint?.brand_voice && <div>
                 <h2 className="text-lg font-semibold mb-3">Brand Voice</h2>
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.brand_voice}</p>
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">{blueprint.brand_voice}</p>
               </div>}
 
             {/* Example Videos Carousel */}
@@ -1098,14 +1098,14 @@ export default function CampaignApply() {
                   <Check className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div>
-                  <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] text-emerald-600 dark:text-emerald-400">You're a Member</h3>
-                  <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Connected to this campaign</p>
+                  <h3 className="font-semibold font-inter tracking-[-0.5px] text-emerald-600 dark:text-emerald-400">You're a Member</h3>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Connected to this campaign</p>
                 </div>
               </div>
 
               {/* Connected Accounts */}
               <div className="space-y-3">
-                <h4 className="text-sm font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground">Connected Accounts</h4>
+                <h4 className="text-sm font-medium font-inter tracking-[-0.5px] text-muted-foreground">Connected Accounts</h4>
                 <div className="space-y-2">
                   {connectedAccounts.map(account => {
                     const platformIcon = getPlatformIcon(account.platform);
@@ -1113,7 +1113,7 @@ export default function CampaignApply() {
                       <div key={account.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
                         {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px] truncate">{account.username}</p>
+                          <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{account.username}</p>
                           {account.follower_count && (
                             <p className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
                           )}
@@ -1129,7 +1129,7 @@ export default function CampaignApply() {
               {(availableToConnect.length > 0 || campaign?.allowed_platforms) && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground">Add More Accounts</h4>
+                    <h4 className="text-sm font-medium font-inter tracking-[-0.5px] text-muted-foreground">Add More Accounts</h4>
                   </div>
                   {availableToConnect.length > 0 ? (
                     <div className="space-y-2">
@@ -1146,7 +1146,7 @@ export default function CampaignApply() {
                               {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                             </div>
                             {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
-                            <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
+                            <span className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{account.username}</span>
                           </button>
                         );
                       })}
@@ -1154,7 +1154,7 @@ export default function CampaignApply() {
                         <Button
                           onClick={handleSubmit}
                           disabled={submitting}
-                          className="w-full mt-3 font-['Inter'] tracking-[-0.5px]"
+                          className="w-full mt-3 font-inter tracking-[-0.5px]"
                           style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
                         >
                           {submitting ? "Connecting..." : `Connect ${selectedAccounts.length} Account${selectedAccounts.length > 1 ? 's' : ''}`}
@@ -1163,10 +1163,10 @@ export default function CampaignApply() {
                     </div>
                   ) : (
                     <div className="text-center py-6 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
-                      <p className="text-sm text-muted-foreground mb-3 font-['Inter'] tracking-[-0.5px]">
+                      <p className="text-sm text-muted-foreground mb-3 font-inter tracking-[-0.5px]">
                         Connect another {campaign?.allowed_platforms?.join(' or ')} account
                       </p>
-                      <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
+                      <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-inter tracking-[-0.5px]">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Account
                       </Button>
@@ -1179,7 +1179,7 @@ export default function CampaignApply() {
               <div className="pt-4 border-t border-border space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full justify-start font-['Inter'] tracking-[-0.5px]"
+                  className="w-full justify-start font-inter tracking-[-0.5px]"
                   onClick={() => navigate('/dashboard?tab=campaigns')}
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -1195,8 +1195,8 @@ export default function CampaignApply() {
             <div className="space-y-6">
               {/* Header */}
               <div>
-                <h2 className="text-xl font-semibold font-['Inter'] tracking-[-0.5px]">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
-                <p className="text-sm text-muted-foreground mt-1 font-['Inter'] tracking-[-0.5px]">
+                <h2 className="text-xl font-semibold font-inter tracking-[-0.5px]">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
+                <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
                   {isBoost ? 'Join this creator program' : 'Connect your accounts to get started'}
                 </p>
               </div>
@@ -1211,8 +1211,8 @@ export default function CampaignApply() {
                         <Calendar className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Starts</p>
-                        <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">{format(new Date(boostCampaign.start_date), 'MMMM d, yyyy')}</p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Starts</p>
+                        <p className="text-sm font-medium font-inter tracking-[-0.5px]">{format(new Date(boostCampaign.start_date), 'MMMM d, yyyy')}</p>
                       </div>
                     </div>
                   )}
@@ -1224,8 +1224,8 @@ export default function CampaignApply() {
                         <Briefcase className="h-4 w-4 text-amber-500" />
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Experience</p>
-                        <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize">{boostCampaign.experience_level}</p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Experience</p>
+                        <p className="text-sm font-medium font-inter tracking-[-0.5px] capitalize">{boostCampaign.experience_level}</p>
                       </div>
                     </div>
                   )}
@@ -1237,8 +1237,8 @@ export default function CampaignApply() {
                         <Film className="h-4 w-4 text-purple-500" />
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Content Type</p>
-                        <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Content Type</p>
+                        <p className="text-sm font-medium font-inter tracking-[-0.5px]">
                           {boostCampaign.content_type === 'short_form' ? 'Short Form' :
                            boostCampaign.content_type === 'long_form' ? 'Long Form' :
                            'Any Format'}
@@ -1249,14 +1249,14 @@ export default function CampaignApply() {
 
                   {boostCampaign.position_type && (
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Role</span>
-                      <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">{boostCampaign.position_type}</span>
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Role</span>
+                      <span className="text-sm font-medium font-inter tracking-[-0.5px]">{boostCampaign.position_type}</span>
                     </div>
                   )}
                   {boostCampaign.availability_requirement && (
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Availability</span>
-                      <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Availability</span>
+                      <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                         {boostCampaign.availability_requirement === 'part_time' ? 'Part-time' :
                          boostCampaign.availability_requirement === 'full_time' ? 'Full-time' :
                          boostCampaign.availability_requirement === 'projects_gigs' ? 'Projects & Gigs' :
@@ -1266,8 +1266,8 @@ export default function CampaignApply() {
                   )}
                   {boostCampaign.work_location && (
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Location</span>
-                      <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize">{boostCampaign.work_location}</span>
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Location</span>
+                      <span className="text-sm font-medium font-inter tracking-[-0.5px] capitalize">{boostCampaign.work_location}</span>
                     </div>
                   )}
 
@@ -1276,11 +1276,11 @@ export default function CampaignApply() {
                     <div className="pt-2 border-t border-border/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Categories</span>
+                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Categories</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {boostCampaign.categories.map((cat, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs font-['Inter'] tracking-[-0.5px]">
+                          <Badge key={i} variant="secondary" className="text-xs font-inter tracking-[-0.5px]">
                             {cat}
                           </Badge>
                         ))}
@@ -1293,11 +1293,11 @@ export default function CampaignApply() {
                     <div className="pt-2 border-t border-border/50">
                       <div className="flex items-center gap-2 mb-2">
                         <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Skills Needed</span>
+                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Skills Needed</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {boostCampaign.skills.map((skill, i) => (
-                          <Badge key={i} variant="outline" className="text-xs font-['Inter'] tracking-[-0.5px]">
+                          <Badge key={i} variant="outline" className="text-xs font-inter tracking-[-0.5px]">
                             {skill}
                           </Badge>
                         ))}
@@ -1309,12 +1309,12 @@ export default function CampaignApply() {
 
               {!isLoggedIn ? <>
                 <div className="text-center py-10 px-8 rounded-2xl bg-[#f5f5f5] dark:bg-[#0e0e0e]">
-                  <h3 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px] mb-2">Join to Apply</h3>
-                  <p className="text-muted-foreground text-sm font-['Inter'] tracking-[-0.5px] mb-8 max-w-[260px] mx-auto leading-relaxed">
+                  <h3 className="text-lg font-semibold font-inter tracking-[-0.5px] mb-2">Join to Apply</h3>
+                  <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px] mb-8 max-w-[260px] mx-auto leading-relaxed">
                     Create an account or sign in to apply for this {isBoost ? 'boost' : 'campaign'}
                   </p>
                   <div className="flex flex-col gap-2.5">
-                    <Button onClick={() => setShowAuthDialog(true)} className="w-full font-['Inter'] tracking-[-0.5px] font-medium" size="lg">
+                    <Button onClick={() => setShowAuthDialog(true)} className="w-full font-inter tracking-[-0.5px] font-medium" size="lg">
                       Create Account
                     </Button>
 
@@ -1322,9 +1322,9 @@ export default function CampaignApply() {
                 </div>
                 <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
               </> : isBoost ? <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Ready to join this boost program?</p>
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Ready to join this boost program?</p>
                   <Button 
-                    className="w-full font-['Inter'] tracking-[-0.5px]" 
+                    className="w-full font-inter tracking-[-0.5px]" 
                     size="lg" 
                     onClick={handleApplyClick} 
                     disabled={isFull || isEnded}
@@ -1335,7 +1335,7 @@ export default function CampaignApply() {
                 </div> : <div className="space-y-6">
                   {/* Account Selection */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                    <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
                       Select Social Accounts <span className="text-destructive">*</span>
                     </Label>
                     
@@ -1344,8 +1344,8 @@ export default function CampaignApply() {
                         <Skeleton className="h-14 w-full rounded-lg" />
                       </div> : socialAccounts.length === 0 ? <div className="text-center py-8 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
                         <img src={emptyAccountsImage} alt="No accounts" className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                        <p className="text-sm text-muted-foreground mb-4 font-['Inter'] tracking-[-0.5px]">No matching accounts found</p>
-                        <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
+                        <p className="text-sm text-muted-foreground mb-4 font-inter tracking-[-0.5px]">No matching accounts found</p>
+                        <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-inter tracking-[-0.5px]">
                           <Plus className="h-4 w-4 mr-2" />
                           Add Account
                         </Button>
@@ -1358,12 +1358,12 @@ export default function CampaignApply() {
                                 {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                               </div>
                               {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain flex-shrink-0" />}
-                              <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
+                              <span className="font-medium text-sm font-inter tracking-[-0.5px] truncate">{account.username}</span>
                             </button>;
                   })}
                         <button onClick={() => setShowAddAccountDialog(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-transparent hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground">
                           <Plus className="h-4 w-4" />
-                          <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
+                          <span className="text-sm font-inter tracking-[-0.5px]">Add another account</span>
                         </button>
                       </div>}
                   </div>
@@ -1386,13 +1386,13 @@ export default function CampaignApply() {
                     <Button 
                       onClick={handleSubmit} 
                       disabled={isEnded || submitting || selectedAccounts.length === 0} 
-                      className="w-full font-['Inter'] tracking-[-0.5px]" 
+                      className="w-full font-inter tracking-[-0.5px]" 
                       size="lg"
                       style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
                     >
                       {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                     </Button>
-                    {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
+                    {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && <p className="text-xs text-muted-foreground text-center mt-3 font-inter tracking-[-0.5px]">
                         Select at least one account to continue
                       </p>}
                   </div>
@@ -1406,7 +1406,7 @@ export default function CampaignApply() {
       {/* Fixed bottom CTA for mobile */}
       {!isCampaignMember && !isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
           <Button 
-            className="w-full font-['Inter'] tracking-[-0.5px]" 
+            className="w-full font-inter tracking-[-0.5px]" 
             size="lg" 
             onClick={handleApplyClick}
             style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
@@ -1447,12 +1447,12 @@ export default function CampaignApply() {
         <Sheet open={showMobileApplySheet} onOpenChange={setShowMobileApplySheet}>
           <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl pt-6">
             <SheetHeader className="pb-4">
-              <SheetTitle className="font-['Inter'] tracking-[-0.5px]">Apply to Campaign</SheetTitle>
+              <SheetTitle className="font-inter tracking-[-0.5px]">Apply to Campaign</SheetTitle>
             </SheetHeader>
             <div className="overflow-y-auto h-[calc(100%-60px)] space-y-6 pb-8">
               {/* Account Selection */}
               <div className="space-y-3">
-                <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
                   Select Social Accounts <span className="text-destructive">*</span>
                 </Label>
                 
@@ -1464,8 +1464,8 @@ export default function CampaignApply() {
                 ) : socialAccounts.length === 0 ? (
                   <div className="text-center py-8 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
                     <img src={emptyAccountsImage} alt="No accounts" className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm text-muted-foreground mb-4 font-['Inter'] tracking-[-0.5px]">No matching accounts found</p>
-                    <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
+                    <p className="text-sm text-muted-foreground mb-4 font-inter tracking-[-0.5px]">No matching accounts found</p>
+                    <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-inter tracking-[-0.5px]">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Account
                     </Button>
@@ -1485,7 +1485,7 @@ export default function CampaignApply() {
                             {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                           </div>
                           {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain flex-shrink-0" />}
-                          <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
+                          <span className="font-medium text-sm font-inter tracking-[-0.5px] truncate">{account.username}</span>
                         </button>
                       );
                     })}
@@ -1494,7 +1494,7 @@ export default function CampaignApply() {
                       className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-transparent hover:bg-muted/30 transition-colors text-muted-foreground hover:text-foreground"
                     >
                       <Plus className="h-4 w-4" />
-                      <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
+                      <span className="text-sm font-inter tracking-[-0.5px]">Add another account</span>
                     </button>
                   </div>
                 )}
@@ -1521,14 +1521,14 @@ export default function CampaignApply() {
                     setShowMobileApplySheet(false);
                   }} 
                   disabled={isEnded || submitting || selectedAccounts.length === 0} 
-                  className="w-full font-['Inter'] tracking-[-0.5px]" 
+                  className="w-full font-inter tracking-[-0.5px]" 
                   size="lg"
                   style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
                 >
                   {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                 </Button>
                 {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && (
-                  <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
+                  <p className="text-xs text-muted-foreground text-center mt-3 font-inter tracking-[-0.5px]">
                     Select at least one account to continue
                   </p>
                 )}

@@ -325,7 +325,7 @@ export default function BrandDashboard() {
                                   {/* Budget Progress Bar - Refined */}
                                   <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
                                     <div className="flex items-baseline justify-between">
-                                      <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
+                                      <div className="flex items-baseline gap-1.5 font-inter tracking-[-0.5px]">
                                         <span className="text-base font-bold tabular-nums">${Math.ceil(usedBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                                         <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                                       </div>

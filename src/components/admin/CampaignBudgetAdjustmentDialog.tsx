@@ -173,10 +173,10 @@ export function CampaignBudgetAdjustmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-['Inter'] tracking-[-0.5px]">
+          <DialogTitle className="font-inter tracking-[-0.5px]">
             Adjust Campaign Budget
           </DialogTitle>
-          <DialogDescription className="font-['Inter'] tracking-[-0.5px]">
+          <DialogDescription className="font-inter tracking-[-0.5px]">
             Manually adjust the used budget for a campaign. All adjustments are logged in the transaction history.
           </DialogDescription>
         </DialogHeader>
@@ -185,13 +185,13 @@ export function CampaignBudgetAdjustmentDialog({
           {/* Campaign Search/Selection */}
           {!selectedCampaign ? (
             <div className="space-y-3">
-              <Label className="font-['Inter'] tracking-[-0.5px]">Search Campaign</Label>
+              <Label className="font-inter tracking-[-0.5px]">Search Campaign</Label>
               <div className="relative">
                 <Input
                   placeholder="Search by campaign or brand name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="font-['Inter'] tracking-[-0.5px]"
+                  className="font-inter tracking-[-0.5px]"
                 />
                 {searching && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -224,11 +224,11 @@ export function CampaignBudgetAdjustmentDialog({
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate font-['Inter'] tracking-[-0.5px]">{campaign.title}</p>
-                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}</p>
+                        <p className="text-sm font-medium truncate font-inter tracking-[-0.5px]">{campaign.title}</p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{campaign.brand_name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium font-['Inter'] tracking-[-0.5px]">
+                        <p className="text-xs font-medium font-inter tracking-[-0.5px]">
                           ${(campaign.budget_used ?? 0).toLocaleString()} / ${campaign.budget.toLocaleString()}
                         </p>
                         <Badge variant="secondary" className="text-[10px] capitalize">{campaign.status}</Badge>
@@ -256,12 +256,12 @@ export function CampaignBudgetAdjustmentDialog({
                       </div>
                     )}
                     <div>
-                      <p className="font-semibold font-['Inter'] tracking-[-0.5px]">{selectedCampaign.title}</p>
-                      <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">{selectedCampaign.brand_name}</p>
+                      <p className="font-semibold font-inter tracking-[-0.5px]">{selectedCampaign.title}</p>
+                      <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{selectedCampaign.brand_name}</p>
                     </div>
                   </div>
                   {!preselectedCampaign && (
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedCampaign(null)} className="font-['Inter'] tracking-[-0.5px]">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedCampaign(null)} className="font-inter tracking-[-0.5px]">
                       Change
                     </Button>
                   )}
@@ -269,13 +269,13 @@ export function CampaignBudgetAdjustmentDialog({
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">Current Budget Used</span>
-                    <span className="font-semibold font-['Inter'] tracking-[-0.5px]">
+                    <span className="text-muted-foreground font-inter tracking-[-0.5px]">Current Budget Used</span>
+                    <span className="font-semibold font-inter tracking-[-0.5px]">
                       ${currentBudgetUsed.toLocaleString()} / ${totalBudget.toLocaleString()}
                     </span>
                   </div>
                   <Progress value={budgetPercentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground text-right font-['Inter'] tracking-[-0.5px]">
+                  <p className="text-xs text-muted-foreground text-right font-inter tracking-[-0.5px]">
                     {budgetPercentage.toFixed(1)}% used
                   </p>
                 </div>
@@ -283,12 +283,12 @@ export function CampaignBudgetAdjustmentDialog({
 
               {/* Adjustment Type */}
               <div className="space-y-2">
-                <Label className="font-['Inter'] tracking-[-0.5px]">Adjustment Type</Label>
+                <Label className="font-inter tracking-[-0.5px]">Adjustment Type</Label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setAdjustmentType("increase")}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all font-['Inter'] tracking-[-0.5px]",
+                      "flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all font-inter tracking-[-0.5px]",
                       adjustmentType === "increase"
                         ? "bg-foreground text-background"
                         : "bg-muted/50 hover:bg-muted text-foreground"
@@ -299,7 +299,7 @@ export function CampaignBudgetAdjustmentDialog({
                   <button
                     onClick={() => setAdjustmentType("decrease")}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all font-['Inter'] tracking-[-0.5px]",
+                      "flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all font-inter tracking-[-0.5px]",
                       adjustmentType === "decrease"
                         ? "bg-foreground text-background"
                         : "bg-muted/50 hover:bg-muted text-foreground"
@@ -310,7 +310,7 @@ export function CampaignBudgetAdjustmentDialog({
                   <button
                     onClick={() => setAdjustmentType("set")}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all font-['Inter'] tracking-[-0.5px]",
+                      "flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all font-inter tracking-[-0.5px]",
                       adjustmentType === "set"
                         ? "bg-foreground text-background"
                         : "bg-muted/50 hover:bg-muted text-foreground"
@@ -323,17 +323,17 @@ export function CampaignBudgetAdjustmentDialog({
 
               {/* Amount Input */}
               <div className="space-y-2">
-                <Label className="font-['Inter'] tracking-[-0.5px]">
+                <Label className="font-inter tracking-[-0.5px]">
                   {adjustmentType === "set" ? "New Budget Used Amount" : "Adjustment Amount"}
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-['Inter']">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-inter">$</span>
                   <Input
                     type="number"
                     placeholder="0.00"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="pl-7 font-['Inter'] tracking-[-0.5px]"
+                    className="pl-7 font-inter tracking-[-0.5px]"
                     min="0"
                     step="0.01"
                   />
@@ -343,10 +343,10 @@ export function CampaignBudgetAdjustmentDialog({
               {/* Preview */}
               {amount && parseFloat(amount) > 0 && (
                 <div className="bg-muted/50 rounded-xl p-4 space-y-3">
-                  <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">Preview</p>
+                  <p className="text-sm font-medium font-inter tracking-[-0.5px]">Preview</p>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">New Budget Used</span>
-                    <span className="font-semibold font-['Inter'] tracking-[-0.5px]">
+                    <span className="text-muted-foreground font-inter tracking-[-0.5px]">New Budget Used</span>
+                    <span className="font-semibold font-inter tracking-[-0.5px]">
                       ${previewAmount.toLocaleString()} / ${totalBudget.toLocaleString()}
                     </span>
                   </div>
@@ -354,7 +354,7 @@ export function CampaignBudgetAdjustmentDialog({
                     value={previewPercentage}
                     className={cn("h-2", previewPercentage > 100 && "[&>div]:bg-destructive")}
                   />
-                  <p className="text-xs text-muted-foreground text-right font-['Inter'] tracking-[-0.5px]">
+                  <p className="text-xs text-muted-foreground text-right font-inter tracking-[-0.5px]">
                     {previewPercentage.toFixed(1)}% {previewPercentage > 100 && "(over budget)"}
                   </p>
                 </div>
@@ -362,15 +362,15 @@ export function CampaignBudgetAdjustmentDialog({
 
               {/* Reason */}
               <div className="space-y-2">
-                <Label className="font-['Inter'] tracking-[-0.5px]">Reason for Adjustment *</Label>
+                <Label className="font-inter tracking-[-0.5px]">Reason for Adjustment *</Label>
                 <Textarea
                   placeholder="Explain why this adjustment is being made..."
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
-                  className="font-['Inter'] tracking-[-0.5px]"
+                  className="font-inter tracking-[-0.5px]"
                 />
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   This will be logged in the transaction history for audit purposes.
                 </p>
               </div>
@@ -380,13 +380,13 @@ export function CampaignBudgetAdjustmentDialog({
 
         {/* Actions */}
         <div className="flex gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 font-['Inter'] tracking-[-0.5px]">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 font-inter tracking-[-0.5px]">
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!selectedCampaign || !amount || !reason.trim() || submitting}
-            className="flex-1 font-['Inter'] tracking-[-0.5px]"
+            className="flex-1 font-inter tracking-[-0.5px]"
           >
             {submitting ? "Adjusting..." : "Apply Adjustment"}
           </Button>

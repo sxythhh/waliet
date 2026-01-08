@@ -95,7 +95,7 @@ export function CreateTeamDialog({ open, onOpenChange, onTeamCreated, profileNam
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Commission Rate</Label>
-              <span className="text-sm font-semibold text-[#2060df]">{commissionRate}%</span>
+              <span className="text-sm font-semibold text-primary">{commissionRate}%</span>
             </div>
             <Slider
               value={[commissionRate]}

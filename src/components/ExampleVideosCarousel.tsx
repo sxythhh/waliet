@@ -75,7 +75,7 @@ export function ExampleVideosCarousel({ videos, className }: ExampleVideosCarous
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] min-w-[3rem] text-center">
+          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px] min-w-[3rem] text-center">
             {currentIndex + 1} / {videos.length}
           </span>
           <Button
@@ -138,7 +138,7 @@ export function ExampleVideosCarousel({ videos, className }: ExampleVideosCarous
               {/* Title & external link */}
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <div className="flex items-end justify-between gap-2">
-                  <p className="text-sm font-medium text-white truncate font-['Inter'] tracking-[-0.3px]">
+                  <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.3px]">
                     {title}
                   </p>
                   <ExternalLink className="h-4 w-4 text-white/70 flex-shrink-0" />

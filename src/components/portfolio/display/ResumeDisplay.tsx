@@ -19,7 +19,7 @@ export function ResumeDisplay({ workExperience, education, certifications }: Res
       {/* Work Experience */}
       {workExperience.length > 0 && (
         <div className="space-y-4">
-          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Work Experience</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Work Experience</span>
           <div className="space-y-4 pl-6 border-l-2 border-muted">
             {workExperience.map((exp) => (
               <div key={exp.id} className="relative">
@@ -53,7 +53,7 @@ export function ResumeDisplay({ workExperience, education, certifications }: Res
       {/* Education */}
       {education.length > 0 && (
         <div className="space-y-4">
-          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Education</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Education</span>
           <div className="space-y-4 pl-6 border-l-2 border-muted">
             {education.map((edu) => (
               <div key={edu.id} className="relative">
@@ -74,7 +74,7 @@ export function ResumeDisplay({ workExperience, education, certifications }: Res
       {/* Certifications */}
       {certifications.length > 0 && (
         <div className="space-y-4">
-          <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">Certifications</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Certifications</span>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {certifications.map((cert) => (
               <a
@@ -84,9 +84,9 @@ export function ResumeDisplay({ workExperience, education, certifications }: Res
                 rel="noopener noreferrer"
                 className="p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors block"
               >
-                <h4 className="font-medium text-sm font-['Inter'] tracking-[-0.3px]">{cert.name}</h4>
-                <p className="text-xs text-muted-foreground font-['Inter']">{cert.issuer}</p>
-                <p className="text-xs text-muted-foreground font-['Inter']">{formatDate(cert.date)}</p>
+                <h4 className="font-medium text-sm font-inter tracking-[-0.3px]">{cert.name}</h4>
+                <p className="text-xs text-muted-foreground font-inter">{cert.issuer}</p>
+                <p className="text-xs text-muted-foreground font-inter">{formatDate(cert.date)}</p>
               </a>
             ))}
           </div>

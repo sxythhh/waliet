@@ -29,7 +29,7 @@ export function VerifiedBadge({ className = "", size = "sm" }: VerifiedBadgeProp
           />
         </TooltipTrigger>
         <TooltipContent 
-          className="bg-[#0a0a0a] text-white px-3 py-1.5 text-xs font-medium tracking-[-0.5px] font-['Inter'] rounded-md shadow-lg border-0"
+          className="bg-[#0a0a0a] text-white px-3 py-1.5 text-xs font-medium tracking-[-0.5px] font-inter rounded-md shadow-lg border-0"
           sideOffset={4}
         >
           Verified Brand

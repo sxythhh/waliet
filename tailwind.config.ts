@@ -70,7 +70,19 @@ export default {
   			]
   		},
   		letterSpacing: {
-  			'tighter-custom': '-0.5px'
+  			'tighter-custom': '-0.5px',
+  			// Semantic letter spacing scale
+  			'tighter': '-0.05em',     // Headlines (h1, h2)
+  			'tight': '-0.025em',      // Subheadings (h3, h4)
+  			// 'normal': '0',         // Body text (default)
+  			'wide': '0.025em',        // Labels, badges
+  			'wider': '0.05em',        // All caps, small text
+  		},
+  		fontSize: {
+  			// Extended font size scale for common pixel values
+  			'2xs': ['0.625rem', { lineHeight: '0.875rem' }],   // 10px
+  			'2sm': ['0.8125rem', { lineHeight: '1.125rem' }],  // 13px
+  			'2base': ['0.9375rem', { lineHeight: '1.375rem' }], // 15px
   		},
   		colors: {
   			border: 'hsl(var(--border))',
@@ -147,7 +159,11 @@ export default {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			// Extended border radius scale
+  			xl: 'calc(var(--radius) + 4px)',
+  			'2xl': 'calc(var(--radius) + 8px)',
+  			'3xl': '1.5rem',
   		},
   		keyframes: {
   			'accordion-down': {

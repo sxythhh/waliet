@@ -73,10 +73,10 @@ export function BrandOnboardingSteps({
   return (
     <div className={cn("w-full", className)}>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-foreground tracking-tight font-['Inter']">
+        <h2 className="text-xl font-semibold text-foreground tracking-tight font-inter">
           Get Started
         </h2>
-        <p className="text-sm text-muted-foreground mt-1 font-['Inter'] tracking-[-0.3px]">
+        <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.3px]">
           Complete these steps to set up your brand for success
         </p>
       </div>
@@ -87,7 +87,7 @@ export function BrandOnboardingSteps({
             key={step.id}
             className={cn(
               "group relative overflow-hidden transition-all duration-300 cursor-pointer",
-              "bg-white dark:bg-[#0e0e0e] border border-[#dedede] dark:border-transparent",
+              "bg-white dark:bg-[#0e0e0e] border border-border dark:border-transparent",
               step.completed && "bg-primary/5 border-primary/20"
             )}
             onClick={() => handleStepClick(step)}
@@ -110,17 +110,17 @@ export function BrandOnboardingSteps({
                     step.icon
                   )}
                 </div>
-                <span className="text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                <span className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">
                   Step {index + 1}
                 </span>
               </div>
 
               {/* Title & Description */}
               <div className="flex-1">
-                <h3 className="text-base font-semibold text-foreground mb-1.5 font-['Inter'] tracking-[-0.4px]">
+                <h3 className="text-base font-semibold text-foreground mb-1.5 font-inter tracking-[-0.4px]">
                   {step.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed font-['Inter'] tracking-[-0.3px]">
+                <p className="text-sm text-muted-foreground leading-relaxed font-inter tracking-[-0.3px]">
                   {step.description}
                 </p>
               </div>
@@ -138,7 +138,7 @@ export function BrandOnboardingSteps({
                     step.completed && "text-primary"
                   )}
                 >
-                  <span className="font-['Inter'] tracking-[-0.3px]">
+                  <span className="font-inter tracking-[-0.3px]">
                     {step.completed ? "Completed" : step.action}
                   </span>
                   <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
