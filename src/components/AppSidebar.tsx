@@ -531,7 +531,7 @@ export function AppSidebar() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2 pb-safe-bottom">
         {menuItems.map(item => {
         const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}`}>

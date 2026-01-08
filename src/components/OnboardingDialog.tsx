@@ -291,7 +291,14 @@ export function OnboardingDialog({
     }
   };
   return <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[420px] border-0 bg-[#0a0a0a] p-0 [&>button]:hidden" onInteractOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
+      <DialogContent
+        className="sm:max-w-[420px] border-0 bg-background dark:bg-[#0a0a0a] p-0 [&>button]:hidden"
+        onInteractOutside={e => e.preventDefault()}
+        aria-describedby="onboarding-description"
+      >
+        <p id="onboarding-description" className="sr-only">
+          Complete the onboarding steps to set up your Virality account
+        </p>
         <div className="p-6 space-y-5">
           {/* Step 1: Choose account type */}
           {step === 1 && <div className="space-y-6">

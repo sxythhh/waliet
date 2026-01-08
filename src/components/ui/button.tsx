@@ -18,9 +18,10 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
+        sm: "h-10 rounded-md px-3", // Min 40px for touch targets
         lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        icon: "h-10 w-10", // 40px minimum
+        "icon-sm": "h-9 w-9", // 36px for tight spaces (desktop only)
       },
     },
     defaultVariants: {

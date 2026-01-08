@@ -80,7 +80,7 @@ export function FloatingFooter({
   }, [setupScrollListener]);
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#0a0a0a] border-t border-border transition-all duration-300 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}>
+    <div className={`fixed bottom-0 left-0 right-0 z-40 bg-background dark:bg-[#0a0a0a] border-t border-border transition-all duration-300 ease-out pb-safe-bottom ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-auto py-2.5 md:h-10 md:py-0">
           {/* Left side - Links */}

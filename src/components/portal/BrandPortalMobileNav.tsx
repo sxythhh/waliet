@@ -163,7 +163,7 @@ export function BrandPortalMobileNav({ brand, currentTab }: BrandPortalMobileNav
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2 pb-safe-bottom">
         {menuItems.map((item) => {
           const isActive = currentTab === item.tab;
           const brandColor = brand.brand_color || '#2061de';

@@ -330,7 +330,7 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4" role="group" aria-label="6-digit verification code">
           <InputOTP
             maxLength={6}
             value={otpCode}
@@ -341,16 +341,18 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
               }
             }}
             disabled={loading}
+            aria-describedby="otp-hint"
           >
             <InputOTPGroup>
-              <InputOTPSlot index={0} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
-              <InputOTPSlot index={1} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
-              <InputOTPSlot index={2} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
-              <InputOTPSlot index={3} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
-              <InputOTPSlot index={4} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
-              <InputOTPSlot index={5} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" />
+              <InputOTPSlot index={0} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" aria-label="Digit 1 of 6" />
+              <InputOTPSlot index={1} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" aria-label="Digit 2 of 6" />
+              <InputOTPSlot index={2} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" aria-label="Digit 3 of 6" />
+              <InputOTPSlot index={3} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" aria-label="Digit 4 of 6" />
+              <InputOTPSlot index={4} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" aria-label="Digit 5 of 6" />
+              <InputOTPSlot index={5} className="bg-muted/50 dark:bg-black/50 border-border dark:border-white/20 text-foreground" aria-label="Digit 6 of 6" />
             </InputOTPGroup>
           </InputOTP>
+          <p id="otp-hint" className="sr-only">Enter the 6-digit verification code sent to your email</p>
 
           {loading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

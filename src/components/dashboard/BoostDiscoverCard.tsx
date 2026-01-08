@@ -52,8 +52,8 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   const isFull = spotsRemaining <= 0;
   const perVideoRate = videos_per_month > 0 ? monthly_retainer / videos_per_month : 0;
   return <div className={cn("group relative rounded-xl overflow-hidden transition-all duration-200", "border border-border/60 hover:border-border", "bg-transparent hover:bg-muted/20", isEnded ? "opacity-50 cursor-not-allowed" : "cursor-pointer")} onClick={onClick}>
-      {/* Bookmark & Fullscreen Buttons */}
-      <div className="absolute top-3 right-3 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      {/* Bookmark & Fullscreen Buttons - Always visible on mobile, hover on desktop */}
+      <div className="absolute top-3 right-3 z-[5] flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
         {onFullscreenClick && <button onClick={onFullscreenClick} className="md:hidden p-1.5 rounded-md bg-background/90 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors">
             <Maximize2 className="h-3.5 w-3.5" />
           </button>}

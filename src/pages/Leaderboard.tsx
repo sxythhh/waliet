@@ -382,7 +382,7 @@ export default function Leaderboard() {
 
       {/* Floating Current User Card */}
       {currentUserStats && (
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 z-50">
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 z-50 pb-safe-bottom">
           <div className="container mx-auto px-4 py-3 max-w-5xl">
             <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-4">
               <div className="flex items-center gap-4">
