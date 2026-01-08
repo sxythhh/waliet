@@ -135,15 +135,14 @@ Deno.serve(async (req) => {
 
             console.log(`CPM bonus for video ${submission.id}: ${eligibleViews} eligible views (${minViews}-${tier.view_threshold}) at $${tier.cpm_rate}/CPM = $${totalEarned.toFixed(2)} (already paid: $${alreadyPaid.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
 
-            // Create wallet transaction for the creator
-            const { data: transaction, error: txError } = await supabase
-              .from('wallet_transactions')
-              .insert({
-                user_id: submission.user_id,
-                amount: amountToPay,
-                type: 'boost',
-                description: `CPM bonus: $${tier.cpm_rate}/1K views (${eligibleViews.toLocaleString()} views)`,
-                metadata: {
+            // Use atomic RPC function to create transaction and update balance atomically
+            const { data: paymentResult, error: paymentError } = await supabase
+              .rpc('atomic_view_bonus_payment', {
+                p_creator_id: submission.user_id,
+                p_boost_id: boost.id,
+                p_amount: amountToPay,
+                p_description: `CPM bonus: $${tier.cpm_rate}/1K views (${eligibleViews.toLocaleString()} views)`,
+                p_metadata: {
                   boost_id: boost.id,
                   bonus_id: tier.id,
                   video_submission_id: submission.id,
@@ -151,31 +150,14 @@ Deno.serve(async (req) => {
                   bonus_type: 'cpm',
                   cpm_rate: tier.cpm_rate
                 }
-              })
-              .select()
-              .single();
+              });
 
-            if (txError) {
-              console.error('Error creating CPM transaction:', txError);
+            if (paymentError) {
+              console.error('Error processing atomic view bonus payment:', paymentError);
               continue;
             }
 
-            // Update creator's wallet balance
-            const { data: wallet } = await supabase
-              .from('wallets')
-              .select('balance, total_earned')
-              .eq('user_id', submission.user_id)
-              .single();
-
-            if (wallet) {
-              await supabase
-                .from('wallets')
-                .update({
-                  balance: (wallet.balance || 0) + amountToPay,
-                  total_earned: (wallet.total_earned || 0) + amountToPay
-                })
-                .eq('user_id', submission.user_id);
-            }
+            const transaction = paymentResult;
 
             // Upsert the bonus payout record
             if (existingPayout) {
@@ -184,7 +166,7 @@ Deno.serve(async (req) => {
                 .update({
                   views_at_payout: currentViews,
                   amount_paid: totalEarned,
-                  transaction_id: transaction?.id
+                  transaction_id: transaction?.transaction_id
                 })
                 .eq('bonus_id', tier.id)
                 .eq('video_submission_id', submission.id);
@@ -197,7 +179,7 @@ Deno.serve(async (req) => {
                   creator_id: submission.user_id,
                   views_at_payout: currentViews,
                   amount_paid: totalEarned,
-                  transaction_id: transaction?.id
+                  transaction_id: transaction?.transaction_id
                 });
             }
 
@@ -227,46 +209,28 @@ Deno.serve(async (req) => {
 
             console.log(`Milestone bonus for video ${submission.id}: crossed ${tier.view_threshold} views, paying $${tier.bonus_amount}`);
 
-            // Create wallet transaction for the creator
-            const { data: transaction, error: txError } = await supabase
-              .from('wallet_transactions')
-              .insert({
-                user_id: submission.user_id,
-                amount: tier.bonus_amount,
-                type: 'boost',
-                description: `View bonus: ${tier.view_threshold.toLocaleString()} views reached`,
-                metadata: {
+            // Use atomic RPC function to create transaction and update balance atomically
+            const { data: milestonePaymentResult, error: milestonePaymentError } = await supabase
+              .rpc('atomic_view_bonus_payment', {
+                p_creator_id: submission.user_id,
+                p_boost_id: boost.id,
+                p_amount: tier.bonus_amount,
+                p_description: `View bonus: ${tier.view_threshold.toLocaleString()} views reached`,
+                p_metadata: {
                   boost_id: boost.id,
                   bonus_id: tier.id,
                   video_submission_id: submission.id,
                   views_at_payout: currentViews,
                   bonus_type: 'milestone'
                 }
-              })
-              .select()
-              .single();
+              });
 
-            if (txError) {
-              console.error('Error creating milestone transaction:', txError);
+            if (milestonePaymentError) {
+              console.error('Error processing atomic milestone bonus payment:', milestonePaymentError);
               continue;
             }
 
-            // Update creator's wallet balance
-            const { data: wallet } = await supabase
-              .from('wallets')
-              .select('balance, total_earned')
-              .eq('user_id', submission.user_id)
-              .single();
-
-            if (wallet) {
-              await supabase
-                .from('wallets')
-                .update({
-                  balance: (wallet.balance || 0) + tier.bonus_amount,
-                  total_earned: (wallet.total_earned || 0) + tier.bonus_amount
-                })
-                .eq('user_id', submission.user_id);
-            }
+            const transaction = milestonePaymentResult;
 
             // Record the bonus payout
             await supabase
@@ -277,7 +241,7 @@ Deno.serve(async (req) => {
                 creator_id: submission.user_id,
                 views_at_payout: currentViews,
                 amount_paid: tier.bonus_amount,
-                transaction_id: transaction?.id
+                transaction_id: transaction?.transaction_id
               });
 
             // Update boost budget_used

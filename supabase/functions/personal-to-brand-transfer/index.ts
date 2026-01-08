@@ -111,94 +111,32 @@ serve(async (req) => {
 
     console.log(`Transferring $${transferAmount} from user ${user.id} to brand ${brand.name}`);
 
-    // Start transaction: Deduct from personal wallet
-    const { error: deductError } = await supabase
-      .from('wallets')
-      .update({
-        balance: currentBalance - transferAmount,
-        total_withdrawn: (await supabase
-          .from('wallets')
-          .select('total_withdrawn')
-          .eq('user_id', user.id)
-          .single()
-        ).data?.total_withdrawn + transferAmount,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
+    // Use atomic RPC function to perform the entire transfer atomically
+    const { data: transferResult, error: transferError } = await supabase
+      .rpc('atomic_personal_to_brand_transfer', {
+        p_user_id: user.id,
+        p_brand_id: brand_id,
+        p_amount: transferAmount,
+        p_description: description || null
+      });
 
-    if (deductError) {
-      console.error('Error deducting from personal wallet:', deductError);
-      return new Response(JSON.stringify({ error: 'Failed to deduct from personal wallet' }), {
+    if (transferError) {
+      console.error('Error in atomic transfer:', transferError);
+      // Check for specific error messages
+      if (transferError.message?.includes('Insufficient balance')) {
+        return new Response(JSON.stringify({
+          error: 'Insufficient balance',
+          current_balance: currentBalance,
+          requested_amount: transferAmount
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ error: 'Failed to complete transfer' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    }
-
-    // Record personal wallet transaction
-    const { error: personalTxError } = await supabase
-      .from('wallet_transactions')
-      .insert({
-        user_id: user.id,
-        amount: transferAmount,
-        type: 'transfer_out',
-        status: 'completed',
-        description: description || `Transfer to brand: ${brand.name}`,
-        metadata: {
-          destination_type: 'brand_wallet',
-          brand_id: brand_id,
-          brand_name: brand.name
-        }
-      });
-    
-    if (personalTxError) {
-      console.error('Error recording personal wallet transaction:', personalTxError);
-    }
-
-    // Credit brand wallet
-    const { data: brandWallet } = await supabase
-      .from('brand_wallets')
-      .select('id, balance, total_deposited')
-      .eq('brand_id', brand_id)
-      .single();
-
-    if (brandWallet) {
-      await supabase
-        .from('brand_wallets')
-        .update({
-          balance: Number(brandWallet.balance) + transferAmount,
-          total_deposited: Number(brandWallet.total_deposited) + transferAmount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('brand_id', brand_id);
-    } else {
-      await supabase
-        .from('brand_wallets')
-        .insert({
-          brand_id: brand_id,
-          balance: transferAmount,
-          total_deposited: transferAmount,
-          currency: 'usd'
-        });
-    }
-
-    // Record brand wallet transaction
-    const { error: brandTxError } = await supabase
-      .from('brand_wallet_transactions')
-      .insert({
-        brand_id: brand_id,
-        type: 'transfer_in',
-        amount: transferAmount,
-        status: 'completed',
-        description: description || `Transfer from personal wallet`,
-        created_by: user.id,
-        metadata: {
-          source_type: 'personal_wallet',
-          source_user_id: user.id
-        }
-      });
-
-    if (brandTxError) {
-      console.error('Error recording brand wallet transaction:', brandTxError);
     }
 
     console.log(`Successfully transferred $${transferAmount} to brand ${brand.name}`);
