@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
-import { SupportChat } from "@/components/support/SupportChat";
 import PublicNavbar from "@/components/PublicNavbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +10,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import EmailIcon from "@mui/icons-material/Email";
 import ChatIcon from "@mui/icons-material/Chat";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import HelpIcon from "@mui/icons-material/Help";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import BoltIcon from "@mui/icons-material/Bolt";
@@ -22,16 +20,13 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LinkIcon from "@mui/icons-material/Link";
 import CheckIcon from "@mui/icons-material/Check";
-import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import AddIcon from "@mui/icons-material/Add";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
 import CancelIcon from "@mui/icons-material/Cancel";
 import LoopIcon from "@mui/icons-material/Loop";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import SendIcon from "@mui/icons-material/Send";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -64,6 +59,8 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { UnifiedMessagesWidget } from "@/components/shared/UnifiedMessagesWidget";
+import ReactMarkdown from "react-markdown";
+import supportAvatar from "@/assets/support-avatar.png";
 
 // Ticket types
 interface SupportTicket {
@@ -90,17 +87,25 @@ interface TicketMessage {
   created_at: string;
 }
 
+// AI Chat types
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  ticketCreated?: {
+    ticketNumber: string;
+    ticketId: string;
+  };
+}
+
 // Ticket categories
 const TICKET_CATEGORIES = [
-  { id: "billing", name: "Billing & Payments", icon: AccountBalanceWalletIcon },
-  { id: "technical", name: "Technical Issue", icon: ErrorIcon },
-  { id: "account", name: "Account & Profile", icon: GroupIcon },
-  { id: "campaign", name: "Campaign Issue", icon: BoltIcon },
-  { id: "payout", name: "Payout Request", icon: AccountBalanceWalletIcon },
-  { id: "other", name: "Other", icon: HelpIcon },
+  { id: "billing", name: "Billing & Payments" },
+  { id: "technical", name: "Technical Issue" },
+  { id: "account", name: "Account & Profile" },
+  { id: "campaign", name: "Campaign Issue" },
+  { id: "payout", name: "Payout Request" },
+  { id: "other", name: "Other" },
 ];
-
-
 
 // Help article categories
 const CATEGORIES = [
@@ -108,37 +113,37 @@ const CATEGORIES = [
     id: "getting-started",
     name: "Getting Started",
     icon: RocketLaunchIcon,
-    description: "Learn the basics and set up your account"
+    description: "Learn the basics"
   },
   {
     id: "campaigns",
     name: "Campaigns",
     icon: BoltIcon,
-    description: "Join and manage your campaigns"
+    description: "Join campaigns"
   },
   {
     id: "earnings",
     name: "Earnings & Payouts",
     icon: AccountBalanceWalletIcon,
-    description: "Understand how you earn and get paid"
+    description: "Get paid"
   },
   {
     id: "referrals",
     name: "Referrals",
     icon: ShareIcon,
-    description: "Grow your network and earn bonuses"
+    description: "Earn bonuses"
   },
   {
     id: "account",
-    name: "Account & Profile",
+    name: "Account",
     icon: GroupIcon,
-    description: "Manage your profile and settings"
+    description: "Manage profile"
   },
   {
     id: "security",
-    name: "Security & Privacy",
+    name: "Security",
     icon: ShieldIcon,
-    description: "Keep your account secure"
+    description: "Stay safe"
   },
 ];
 
@@ -284,36 +289,17 @@ const FAQ_ITEMS = [
 
 const POPULAR_ARTICLES = FAQ_ITEMS.filter(item => item.popular);
 
-// Generate a URL-friendly slug from a question
-function generateSlug(question: string): string {
-  return question
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .slice(0, 50);
-}
-
-// Find FAQ item by hash (id or slug)
-function findFaqByHash(hash: string): typeof FAQ_ITEMS[0] | undefined {
-  const cleanHash = hash.replace('#', '');
-  if (cleanHash.startsWith('q-')) {
-    const id = cleanHash.replace('q-', '');
-    return FAQ_ITEMS.find(item => item.id === id);
-  }
-  return FAQ_ITEMS.find(item => generateSlug(item.question) === cleanHash);
-}
-
 // Status styling
 function getStatusStyles(status: SupportTicket["status"]) {
   switch (status) {
     case "open":
-      return { bg: "bg-muted", text: "text-foreground", icon: ErrorIcon };
+      return { bg: "bg-blue-500/10", text: "text-blue-500", icon: HelpIcon };
     case "in_progress":
-      return { bg: "bg-muted", text: "text-foreground", icon: LoopIcon };
+      return { bg: "bg-yellow-500/10", text: "text-yellow-500", icon: LoopIcon };
     case "awaiting_reply":
-      return { bg: "bg-muted", text: "text-foreground", icon: ScheduleIcon };
+      return { bg: "bg-orange-500/10", text: "text-orange-500", icon: ScheduleIcon };
     case "resolved":
-      return { bg: "bg-muted", text: "text-foreground", icon: CheckCircleIcon };
+      return { bg: "bg-green-500/10", text: "text-green-500", icon: CheckCircleIcon };
     case "closed":
       return { bg: "bg-muted", text: "text-muted-foreground", icon: CancelIcon };
     default:
@@ -321,20 +307,7 @@ function getStatusStyles(status: SupportTicket["status"]) {
   }
 }
 
-function getPriorityStyles(priority: SupportTicket["priority"]) {
-  switch (priority) {
-    case "urgent":
-      return { bg: "bg-muted", text: "text-foreground" };
-    case "high":
-      return { bg: "bg-muted", text: "text-foreground" };
-    case "medium":
-      return { bg: "bg-muted", text: "text-foreground" };
-    case "low":
-      return { bg: "bg-muted", text: "text-muted-foreground" };
-    default:
-      return { bg: "bg-muted", text: "text-muted-foreground" };
-  }
-}
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 
 const Support = () => {
   const location = useLocation();
@@ -343,38 +316,49 @@ const Support = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [showChat, setShowChat] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const faqRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const resultsRef = useRef<HTMLDivElement>(null);
+
+  // AI Chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      content: "Hi! I'm the Virality AI assistant. How can I help you today?",
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Ticket state
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
-  const [showTickets, setShowTickets] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [ticketSheetOpen, setTicketSheetOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // New ticket form
   const [newTicket, setNewTicket] = useState({
     subject: "",
     category: "",
     priority: "medium" as SupportTicket["priority"],
     description: "",
   });
-
-  // Reply state
   const [replyText, setReplyText] = useState("");
 
-  // Fetch user's tickets from database
+  // Scroll chat to bottom
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  // Fetch user's tickets
   const fetchUserTickets = async () => {
     if (!user) return;
-
     setTicketsLoading(true);
     try {
-      // Fetch tickets
       const { data: ticketsData, error: ticketsError } = await supabase
         .from("support_tickets")
         .select("*")
@@ -383,7 +367,6 @@ const Support = () => {
 
       if (ticketsError) throw ticketsError;
 
-      // Fetch messages for each ticket
       const ticketsWithMessages = await Promise.all(
         (ticketsData || []).map(async (ticket) => {
           const { data: messagesData } = await supabase
@@ -392,14 +375,9 @@ const Support = () => {
             .eq("ticket_id", ticket.id)
             .eq("is_internal", false)
             .order("created_at", { ascending: true });
-
-          return {
-            ...ticket,
-            messages: messagesData || [],
-          };
+          return { ...ticket, messages: messagesData || [] };
         })
       );
-
       setTickets(ticketsWithMessages as SupportTicket[]);
     } catch (error) {
       console.error("Error fetching tickets:", error);
@@ -408,76 +386,28 @@ const Support = () => {
     }
   };
 
-  // Fetch tickets when user is available
   useEffect(() => {
-    if (user) {
-      fetchUserTickets();
-    }
+    if (user) fetchUserTickets();
   }, [user]);
 
-  // Real-time subscription for ticket updates
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel("user-tickets")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "support_tickets",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchUserTickets();
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "ticket_messages",
-        },
-        (payload) => {
-          // Refresh tickets to get new messages
-          fetchUserTickets();
-          // Update selected ticket if it's the one with new message
-          if (selectedTicket && payload.new.ticket_id === selectedTicket.id) {
-            setSelectedTicket((prev) => {
-              if (!prev) return prev;
-              const newMessage = payload.new as TicketMessage;
-              if (newMessage.is_internal) return prev; // Don't show internal notes
-              return {
-                ...prev,
-                messages: [...(prev.messages || []), newMessage],
-              };
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, selectedTicket?.id]);
-
-  // Handle URL hash on mount and hash changes
+  // Handle URL hash
   useEffect(() => {
     const hash = location.hash;
     if (hash) {
-      const faq = findFaqByHash(hash);
-      if (faq) {
-        setExpandedItems(new Set([faq.id]));
-        setSelectedCategory(faq.category);
-        setTimeout(() => {
-          const element = faqRefs.current.get(faq.id);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
+      const cleanHash = hash.replace('#', '');
+      if (cleanHash.startsWith('q-')) {
+        const id = cleanHash.replace('q-', '');
+        const faq = FAQ_ITEMS.find(item => item.id === id);
+        if (faq) {
+          setExpandedItems(new Set([faq.id]));
+          setSelectedCategory(faq.category);
+          setTimeout(() => {
+            const element = faqRefs.current.get(faq.id);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+        }
       }
     }
   }, [location.hash]);
@@ -515,85 +445,153 @@ const Support = () => {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(id);
-      toast({
-        title: "Link copied!",
-        description: "FAQ link has been copied to your clipboard.",
-      });
+      toast({ title: "Link copied!" });
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Failed to copy",
-        description: "Please copy the URL manually from your browser.",
-      });
+    } catch {
+      toast({ variant: "destructive", title: "Failed to copy" });
     }
   };
 
+  // AI Chat handlers
+  const handleChatSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!chatInput.trim() || chatLoading) return;
+
+    const userMessage: ChatMessage = { role: "user", content: chatInput.trim() };
+    setChatMessages((prev) => [...prev, userMessage]);
+    setChatInput("");
+    setChatLoading(true);
+
+    let assistantContent = "";
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Please sign in to use the chat");
+
+      const response = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          messages: [...chatMessages, userMessage].map(m => ({ role: m.role, content: m.content }))
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to get response");
+
+      const contentType = response.headers.get("content-type");
+      if (contentType?.includes("application/json")) {
+        const data = await response.json();
+        if (data.type === "ticket_created") {
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: data.message,
+              ticketCreated: { ticketNumber: data.ticket_number, ticketId: data.ticket_id },
+            },
+          ]);
+          toast({ title: "Support Ticket Created", description: `Ticket ${data.ticket_number} has been created.` });
+          return;
+        }
+        if (data.error) throw new Error(data.error);
+      }
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setChatMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant" && prev.length > 1) {
+                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m);
+                }
+                return [...prev, { role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to send message", variant: "destructive" });
+      setChatMessages((prev) => prev.slice(0, -1));
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleChatKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleChatSubmit();
+    }
+  };
+
+  // Ticket handlers
   const handleCreateTicket = async () => {
     if (!newTicket.subject || !newTicket.category || !newTicket.description) {
-      toast({
-        variant: "destructive",
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-      });
+      toast({ variant: "destructive", title: "Missing fields", description: "Please fill in all required fields." });
       return;
     }
-
     if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Not logged in",
-        description: "Please log in to submit a support ticket.",
-      });
+      toast({ variant: "destructive", title: "Not logged in", description: "Please log in to submit a ticket." });
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      // Create the ticket - cast to any to work around type sync issues
-      // ticket_number is generated by a database trigger
       const { data: ticketData, error: ticketError } = await supabase
         .from("support_tickets")
         .insert({
           user_id: user.id,
           subject: newTicket.subject,
-          category: newTicket.category as "billing" | "technical" | "account" | "campaign" | "payout" | "other",
-          priority: newTicket.priority as "low" | "medium" | "high" | "urgent",
+          category: newTicket.category as any,
+          priority: newTicket.priority as any,
         } as any)
         .select()
         .single();
 
       if (ticketError) throw ticketError;
 
-      // Create the first message with the description
-      const { error: messageError } = await supabase
-        .from("ticket_messages")
-        .insert({
-          ticket_id: ticketData.id,
-          sender_id: user.id,
-          sender_type: "user",
-          content: newTicket.description,
-        });
-
-      if (messageError) throw messageError;
+      await supabase.from("ticket_messages").insert({
+        ticket_id: ticketData.id,
+        sender_id: user.id,
+        sender_type: "user",
+        content: newTicket.description,
+      });
 
       setNewTicket({ subject: "", category: "", priority: "medium", description: "" });
       setCreateDialogOpen(false);
-      setShowTickets(true);
       fetchUserTickets();
-
-      toast({
-        title: "Ticket created!",
-        description: `Your ticket ${ticketData.ticket_number} has been submitted. We'll respond within 24 hours.`,
-      });
+      toast({ title: "Ticket created!", description: `Ticket ${ticketData.ticket_number} has been submitted.` });
     } catch (error: any) {
-      console.error("Error creating ticket:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create ticket. Please try again.",
-      });
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to create ticket." });
     } finally {
       setIsSubmitting(false);
     }
@@ -601,42 +599,19 @@ const Support = () => {
 
   const handleSendReply = async () => {
     if (!replyText.trim() || !selectedTicket || !user) return;
-
     try {
-      // Insert the message
-      const { error: messageError } = await supabase
-        .from("ticket_messages")
-        .insert({
-          ticket_id: selectedTicket.id,
-          sender_id: user.id,
-          sender_type: "user",
-          content: replyText.trim(),
-        });
-
-      if (messageError) throw messageError;
-
-      // Update ticket status to awaiting_reply
-      await supabase
-        .from("support_tickets")
-        .update({ status: "awaiting_reply" })
-        .eq("id", selectedTicket.id);
-
-      setReplyText("");
-
-      toast({
-        title: "Reply sent",
-        description: "Your message has been sent to support.",
+      await supabase.from("ticket_messages").insert({
+        ticket_id: selectedTicket.id,
+        sender_id: user.id,
+        sender_type: "user",
+        content: replyText.trim(),
       });
-
-      // Refresh tickets to get latest data
+      await supabase.from("support_tickets").update({ status: "awaiting_reply" }).eq("id", selectedTicket.id);
+      setReplyText("");
+      toast({ title: "Reply sent" });
       fetchUserTickets();
     } catch (error: any) {
-      console.error("Error sending reply:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to send reply. Please try again.",
-      });
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to send reply." });
     }
   };
 
@@ -646,429 +621,242 @@ const Support = () => {
   return (
     <div className="h-screen overflow-y-auto bg-background">
       <SEOHead
-        title="Help Center & Support"
-        description="Get help with Virality. Browse FAQs, chat with our AI assistant, or contact our support team."
-        keywords={["support", "help", "FAQ", "customer service", "AI assistant", "help center"]}
-        breadcrumbs={[
-          { name: "Home", url: "/" },
-          { name: "Support", url: "/support" },
-        ]}
+        title="Help Center"
+        description="Get help with Virality. Browse FAQs or chat with our AI assistant."
+        keywords={["support", "help", "FAQ", "help center"]}
       />
 
       <PublicNavbar />
 
-      <main className="pt-14 pb-16">
-        {/* Hero Section - Modern Gradient */}
-        <div className="relative overflow-hidden mb-8">
-          {/* Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-purple-500/5" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+      <main className="pt-20 pb-16">
+        {/* Hero - Compact */}
+        <div className="max-w-5xl mx-auto px-6 py-12 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">
+            Help Center
+          </h1>
+          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            Find answers or get help from our team
+          </p>
 
-          <div className="relative max-w-4xl mx-auto px-6 py-16 md:py-20 text-center">
-            {/* Icon Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <AutoAwesomeIcon className="text-primary" sx={{ fontSize: 16 }} />
-              <span className="text-sm font-medium text-primary">AI-Powered Support</span>
-            </div>
-
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
-              How can we help?
-            </h1>
-            <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
-              Get instant answers from our AI assistant or browse our knowledge base
-            </p>
-
-            {/* Search Bar - Enhanced */}
-            <div className="relative max-w-xl mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/20 rounded-2xl blur-xl opacity-50" />
-              <div className="relative">
-                <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 20 }} />
-                <Input
-                  type="text"
-                  placeholder="Search help articles..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSearchQuery(value);
-                    setSelectedCategory(null);
-                    if (value.trim()) {
-                      setTimeout(() => {
-                        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 100);
-                    }
-                  }}
-                  className="pl-14 pr-6 h-14 rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm shadow-lg shadow-primary/5 text-base placeholder:text-muted-foreground/70 focus-visible:ring-primary/30"
-                />
-              </div>
-            </div>
+          {/* Search */}
+          <div className="relative max-w-lg mx-auto mb-8">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 18 }} />
+            <Input
+              type="text"
+              placeholder="Search for help..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSelectedCategory(null);
+              }}
+              className="pl-11 h-12 rounded-xl border-border bg-muted/50"
+            />
           </div>
-        </div>
 
-        {/* AI Chat Section - Always Visible, Primary Focus */}
-        <div className="max-w-3xl mx-auto px-6 mb-8">
-          <SupportChat />
-        </div>
-
-        {/* Quick Actions - Horizontal Pills */}
-        <div className="max-w-4xl mx-auto px-6 mb-8">
-          <div className="flex flex-wrap justify-center gap-2">
+          {/* Quick Actions */}
+          <div className="flex flex-wrap justify-center gap-3">
             <Button
-              variant={showTickets ? "default" : "outline"}
-              size="sm"
+              variant="ghost"
               className="gap-2 rounded-full"
-              onClick={() => setShowTickets(!showTickets)}
+              onClick={() => setChatOpen(true)}
             >
-              <ConfirmationNumberIcon sx={{ fontSize: 16 }} />
-              My Tickets
-              {openTicketCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[10px]">
-                  {openTicketCount}
-                </Badge>
-              )}
+              <ChatIcon sx={{ fontSize: 18 }} />
+              Ask AI
             </Button>
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="gap-2 rounded-full">
-                  <AddIcon sx={{ fontSize: 16 }} />
+                <Button className="gap-2 rounded-full">
+                  <AddIcon sx={{ fontSize: 18 }} />
                   Submit Ticket
                 </Button>
               </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Submit a Support Ticket</DialogTitle>
-                    <DialogDescription>
-                      Describe your issue and we'll get back to you within 24 hours.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Submit a Support Ticket</DialogTitle>
+                  <DialogDescription>
+                    Describe your issue and we'll get back to you within 24 hours.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject *</Label>
+                    <Input
+                      id="subject"
+                      placeholder="Brief description of your issue"
+                      value={newTicket.subject}
+                      onChange={(e) => setNewTicket(prev => ({ ...prev, subject: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Subject *</Label>
-                      <Input
-                        id="subject"
-                        placeholder="Brief description of your issue"
-                        value={newTicket.subject}
-                        onChange={(e) => setNewTicket(prev => ({ ...prev, subject: e.target.value }))}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Category *</Label>
-                        <Select
-                          value={newTicket.category}
-                          onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TICKET_CATEGORIES.map((cat) => (
-                              <SelectItem key={cat.id} value={cat.id}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Priority</Label>
-                        <Select
-                          value={newTicket.priority}
-                          onValueChange={(value) => setNewTicket(prev => ({ ...prev, priority: value as SupportTicket["priority"] }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="urgent">Urgent</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Label>Category *</Label>
+                      <Select
+                        value={newTicket.category}
+                        onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TICKET_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="description">Description *</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Please provide as much detail as possible..."
-                        rows={5}
-                        value={newTicket.description}
-                        onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
-                      />
+                      <Label>Priority</Label>
+                      <Select
+                        value={newTicket.priority}
+                        onValueChange={(value) => setNewTicket(prev => ({ ...prev, priority: value as SupportTicket["priority"] }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateTicket} disabled={isSubmitting} className="gap-2">
-                      {isSubmitting && <LoopIcon className="animate-spin" sx={{ fontSize: 16 }} />}
-                      Submit Ticket
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description *</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Please provide details..."
+                      rows={4}
+                      value={newTicket.description}
+                      onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleCreateTicket} disabled={isSubmitting}>
+                    {isSubmitting && <LoopIcon className="animate-spin mr-2" sx={{ fontSize: 16 }} />}
+                    Submit
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        {/* Tickets Section (collapsible) */}
-        {showTickets && (
-          <div className="max-w-4xl mx-auto px-6 mb-12">
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                    <ConfirmationNumberIcon className="text-foreground" sx={{ fontSize: 20 }} />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold">My Support Tickets</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {tickets.length} ticket{tickets.length !== 1 && 's'} total
-                    </p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowTickets(false)}>
-                  <ExpandLessIcon sx={{ fontSize: 16 }} />
-                </Button>
-              </div>
-
-              {tickets.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <ConfirmationNumberIcon className="text-muted-foreground" sx={{ fontSize: 32 }} />
-                  </div>
-                  <h3 className="font-semibold mb-2">No tickets yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Submit a ticket when you need help from our team
-                  </p>
-                  <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-                    <AddIcon sx={{ fontSize: 16 }} />
-                    Create Ticket
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {tickets.map((ticket) => {
-                    const statusStyles = getStatusStyles(ticket.status);
-                    const priorityStyles = getPriorityStyles(ticket.priority);
-                    const categoryData = TICKET_CATEGORIES.find(c => c.id === ticket.category);
-
-                    return (
-                      <button
-                        key={ticket.id}
-                        onClick={() => {
-                          setSelectedTicket(ticket);
-                          setTicketSheetOpen(true);
-                        }}
-                        className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-xl border border-border/50 text-left",
-                          "bg-background/50 hover:bg-background/80 transition-all hover:shadow-md group"
-                        )}
-                      >
-                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", statusStyles.bg)}>
-                          <statusStyles.icon className={cn(statusStyles.text, ticket.status === "in_progress" && "animate-spin")} sx={{ fontSize: 20 }} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-muted-foreground font-mono">{ticket.ticket_number}</span>
-                            <Badge variant="outline" className={cn("text-[10px] capitalize", priorityStyles.text, priorityStyles.bg)}>
-                              {ticket.priority}
-                            </Badge>
-                          </div>
-                          <h4 className="font-medium truncate">{ticket.subject}</h4>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                            <span className="capitalize">{ticket.status.replace("_", " ")}</span>
-                            <span>•</span>
-                            <span>Updated {format(new Date(ticket.updated_at), "MMM d, h:mm a")}</span>
-                          </div>
-                        </div>
-                        <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" sx={{ fontSize: 20 }} />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="max-w-6xl mx-auto px-6">
-          {/* Back Button when category selected */}
+        <div className="max-w-5xl mx-auto px-6">
+          {/* Back button when category selected */}
           {selectedCategory && (
             <Button
               variant="ghost"
               className="mb-6 gap-2"
               onClick={() => setSelectedCategory(null)}
             >
-              <ArrowBackIcon sx={{ fontSize: 16 }} />
-              Back to all categories
+              <ArrowBackIcon sx={{ fontSize: 18 }} />
+              All categories
             </Button>
           )}
 
-          {/* Category Header when selected */}
+          {/* Category header */}
           {selectedCategoryData && (
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-muted">
-                <selectedCategoryData.icon className="text-foreground" sx={{ fontSize: 28 }} />
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted">
+                <selectedCategoryData.icon sx={{ fontSize: 20 }} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{selectedCategoryData.name}</h2>
-                <p className="text-muted-foreground">{selectedCategoryData.description}</p>
+                <h2 className="text-xl font-semibold">{selectedCategoryData.name}</h2>
+                <p className="text-sm text-muted-foreground">{selectedCategoryData.description}</p>
               </div>
             </div>
           )}
 
-          {/* Show categories grid when no category selected and no search */}
+          {/* Categories Grid - Only when no category and no search */}
           {!selectedCategory && !searchQuery && (
-            <>
-              {/* Categories Grid */}
-              <div className="mb-12">
-                <h2 className="text-xl font-semibold mb-6">Browse by Category</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {CATEGORIES.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={cn(
-                        "flex items-center gap-4 p-5 rounded-2xl border border-border/50 text-left",
-                        "bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all",
-                        "hover:border-border hover:shadow-lg group"
-                      )}
-                    >
-                      <div className="flex-1">
-                        <h3 className="font-semibold mb-0.5">{category.name}</h3>
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
-                      </div>
-                      <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-1 transition-transform" sx={{ fontSize: 20 }} />
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className="flex items-center gap-4 p-5 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-muted flex-shrink-0">
+                    <category.icon sx={{ fontSize: 24 }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{category.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
+                  </div>
+                  <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-0.5 transition-transform flex-shrink-0" sx={{ fontSize: 20 }} />
+                </button>
+              ))}
+            </div>
+          )}
 
-              {/* Popular Articles */}
-              <div className="mb-12">
-                <div className="flex items-center gap-2 mb-6">
-                  <AutoAwesomeIcon className="text-foreground" sx={{ fontSize: 20 }} />
-                  <h2 className="text-xl font-semibold">Popular Articles</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {POPULAR_ARTICLES.map((article) => {
-                    const category = CATEGORIES.find(c => c.id === article.category);
-                    return (
-                      <button
-                        key={article.id}
-                        onClick={() => {
-                          setSelectedCategory(article.category);
-                          setExpandedItems(new Set([article.id]));
-                        }}
-                        className={cn(
-                          "flex items-start gap-4 p-5 rounded-2xl border border-border/50 text-left",
-                          "bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all",
-                          "hover:border-border hover:shadow-lg group"
-                        )}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <Badge variant="secondary" className="text-[10px] mb-2">
-                            {category?.name}
-                          </Badge>
-                          <h3 className="font-medium text-sm line-clamp-2">{article.question}</h3>
-                        </div>
-                        <ChevronRightIcon className="text-muted-foreground shrink-0 mt-1 group-hover:translate-x-1 transition-transform" sx={{ fontSize: 16 }} />
-                      </button>
-                    );
-                  })}
-                </div>
+          {/* Popular Articles - Only when no category and no search */}
+          {!selectedCategory && !searchQuery && (
+            <div className="mb-12">
+              <h2 className="text-lg font-semibold mb-4">Popular Questions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {POPULAR_ARTICLES.map((article) => (
+                  <button
+                    key={article.id}
+                    onClick={() => {
+                      setSelectedCategory(article.category);
+                      setExpandedItems(new Set([article.id]));
+                    }}
+                    className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors text-left group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm line-clamp-2">{article.question}</p>
+                    </div>
+                    <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-0.5 transition-transform flex-shrink-0" sx={{ fontSize: 18 }} />
+                  </button>
+                ))}
               </div>
-            </>
+            </div>
           )}
 
           {/* FAQ List */}
           {(selectedCategory || searchQuery) && (
-            <div ref={resultsRef} className="space-y-3 scroll-mt-6">
+            <div className="space-y-2 mb-12">
               {filteredFAQs.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <SearchIcon className="text-muted-foreground" sx={{ fontSize: 32 }} />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">No results found</h3>
-                  <p className="text-muted-foreground mb-6">
-                    We couldn't find any articles matching "{searchQuery}"
-                  </p>
-                  <Button variant="outline" onClick={() => setSearchQuery("")}>
-                    Clear search
-                  </Button>
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">No results found for "{searchQuery}"</p>
+                  <Button variant="outline" onClick={() => setSearchQuery("")}>Clear search</Button>
                 </div>
               ) : (
                 filteredFAQs.map((item) => (
                   <div
                     key={item.id}
-                    ref={(el) => {
-                      if (el) faqRefs.current.set(item.id, el);
-                    }}
+                    ref={(el) => { if (el) faqRefs.current.set(item.id, el); }}
                     className={cn(
-                      "border border-border/50 rounded-xl overflow-hidden transition-all group/faq",
-                      "bg-card/50 backdrop-blur-sm hover:bg-card/80",
-                      expandedItems.has(item.id) && "border-border bg-card/80"
+                      "border border-border rounded-xl overflow-hidden transition-colors",
+                      expandedItems.has(item.id) ? "bg-muted/30" : "bg-card hover:bg-muted/20"
                     )}
                   >
                     <button
                       onClick={() => toggleExpanded(item.id)}
-                      className="w-full flex items-center justify-between p-5 text-left"
+                      className="w-full flex items-center justify-between p-4 text-left"
                     >
-                      <span className="font-medium pr-4">{item.question}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          onClick={(e) => copyFaqLink(item.id, e)}
-                          className={cn(
-                            "p-1.5 rounded-lg transition-all",
-                            "opacity-0 group-hover/faq:opacity-100",
-                            "hover:bg-muted text-muted-foreground hover:text-foreground",
-                            expandedItems.has(item.id) && "opacity-100"
-                          )}
-                          title="Copy link to this question"
-                        >
-                          {copiedId === item.id ? (
-                            <CheckIcon className="text-foreground" sx={{ fontSize: 16 }} />
-                          ) : (
-                            <LinkIcon sx={{ fontSize: 16 }} />
-                          )}
-                        </button>
-                        <ExpandMoreIcon
-                          className={cn(
-                            "w-5 h-5 text-muted-foreground transition-transform",
-                            expandedItems.has(item.id) && "rotate-180"
-                          )}
-                        />
-                      </div>
+                      <span className="font-medium text-sm pr-4">{item.question}</span>
+                      <ExpandMoreIcon className={cn(
+                        "text-muted-foreground transition-transform flex-shrink-0",
+                        expandedItems.has(item.id) && "rotate-180"
+                      )} sx={{ fontSize: 20 }} />
                     </button>
                     {expandedItems.has(item.id) && (
-                      <div className="px-5 pb-5 pt-0">
-                        <div className="border-t pt-4">
-                          <p className="text-muted-foreground leading-relaxed">
-                            {item.answer}
-                          </p>
-                          <div className="mt-4 flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 text-xs gap-1.5"
-                              onClick={(e) => copyFaqLink(item.id, e)}
-                            >
-                              {copiedId === item.id ? (
-                                <>
-                                  <CheckIcon className="text-foreground" sx={{ fontSize: 14 }} />
-                                  <span>Copied!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <LinkIcon sx={{ fontSize: 14 }} />
-                                  Share this answer
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
+                      <div className="px-4 pb-4">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {item.answer}
+                        </p>
+                        <button
+                          onClick={(e) => copyFaqLink(item.id, e)}
+                          className="mt-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                        >
+                          {copiedId === item.id ? <CheckIcon sx={{ fontSize: 14 }} /> : <LinkIcon sx={{ fontSize: 14 }} />}
+                          {copiedId === item.id ? "Copied!" : "Copy link"}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1077,160 +865,205 @@ const Support = () => {
             </div>
           )}
 
-          {/* Contact Support Section */}
-          <div className="mt-16 relative rounded-3xl overflow-hidden">
-            {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-purple-500/10" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
-
-            <div className="relative p-8 md:p-12 text-center border border-border/50 rounded-3xl backdrop-blur-sm">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6 border border-primary/20">
-                <ChatIcon className="text-primary" sx={{ fontSize: 32 }} />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Still need help?</h2>
-              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-                Can't find what you're looking for? Our support team is here to help you.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button
-                  size="lg"
-                  className="gap-2 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
-                  onClick={() => setCreateDialogOpen(true)}
-                >
-                  <AddIcon sx={{ fontSize: 16 }} />
-                  Submit a Ticket
-                </Button>
-                <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl hover:bg-background/80">
-                  <a href="mailto:support@virality.gg">
-                    <EmailIcon sx={{ fontSize: 16 }} />
-                    Email Support
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl hover:bg-background/80">
-                  <a href="https://discord.gg/virality" target="_blank" rel="noopener noreferrer">
-                    <OpenInNewIcon sx={{ fontSize: 16 }} />
-                    Join Discord
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Links Footer */}
-          <div className="mt-12 pt-8 border-t">
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
-              <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                Terms of Service
-              </a>
-              <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                Privacy Policy
-              </a>
-              <a href="/creator-terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                Creator Terms
-              </a>
+          {/* Contact Section */}
+          <div className="border border-border rounded-2xl p-8 text-center bg-muted/20">
+            <h2 className="text-xl font-semibold mb-2">Still need help?</h2>
+            <p className="text-muted-foreground mb-6 text-sm">Our team is here for you</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button onClick={() => setChatOpen(true)} className="gap-2">
+                <ChatIcon sx={{ fontSize: 18 }} />
+                Chat with AI
+              </Button>
+              <Button variant="outline" asChild className="gap-2">
+                <a href="mailto:support@virality.gg">
+                  <EmailIcon sx={{ fontSize: 18 }} />
+                  Email Us
+                </a>
+              </Button>
+              <Button variant="outline" asChild className="gap-2">
+                <a href="https://discord.gg/virality" target="_blank" rel="noopener noreferrer">
+                  <OpenInNewIcon sx={{ fontSize: 18 }} />
+                  Discord
+                </a>
+              </Button>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Unified Messages Widget */}
-      {user && <UnifiedMessagesWidget />}
+      {/* AI Chat Slide-out */}
+      <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+        <SheetContent className="w-full sm:max-w-md flex flex-col p-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle className="flex items-center gap-2">
+              <img src={supportAvatar} alt="AI" className="w-6 h-6 rounded-full" />
+              AI Assistant
+            </SheetTitle>
+          </SheetHeader>
 
-      {/* Ticket Detail Sheet */}
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+            {chatMessages.map((message, index) => (
+              <div key={index} className={cn("flex gap-3", message.role === "user" && "justify-end")}>
+                {message.role === "assistant" && (
+                  <img src={supportAvatar} alt="AI" className="w-7 h-7 rounded-full flex-shrink-0" />
+                )}
+                <div className={cn(
+                  "rounded-xl px-3 py-2 max-w-[85%]",
+                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                )}>
+                  <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                  {message.ticketCreated && (
+                    <Button variant="secondary" size="sm" className="mt-2 gap-1 text-xs">
+                      <ConfirmationNumberIcon sx={{ fontSize: 14 }} />
+                      {message.ticketCreated.ticketNumber}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {chatLoading && chatMessages[chatMessages.length - 1]?.role === "user" && (
+              <div className="flex gap-3">
+                <img src={supportAvatar} alt="AI" className="w-7 h-7 rounded-full flex-shrink-0" />
+                <div className="text-sm text-muted-foreground">Thinking...</div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="p-4 border-t">
+            <form onSubmit={handleChatSubmit}>
+              <div className="relative">
+                <Textarea
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={handleChatKeyDown}
+                  placeholder="Ask a question..."
+                  className="min-h-[60px] max-h-[100px] resize-none pr-12 rounded-xl"
+                  disabled={chatLoading}
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="absolute right-2 bottom-2 h-8 w-8 rounded-lg"
+                >
+                  <ArrowUpwardIcon sx={{ fontSize: 18 }} />
+                </Button>
+              </div>
+            </form>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Tickets Sheet */}
       <Sheet open={ticketSheetOpen} onOpenChange={setTicketSheetOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          {selectedTicket && (
+          {selectedTicket ? (
             <>
-              <SheetHeader className="pb-6">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono mb-2">
-                  {selectedTicket.ticket_number}
+              <SheetHeader className="pb-4">
+                <Button variant="ghost" size="sm" className="w-fit gap-1 -ml-2 mb-2" onClick={() => setSelectedTicket(null)}>
+                  <ArrowBackIcon sx={{ fontSize: 18 }} />
+                  Back
+                </Button>
+                <div className="text-xs text-muted-foreground font-mono mb-1">{selectedTicket.ticket_number}</div>
+                <SheetTitle>{selectedTicket.subject}</SheetTitle>
+                <div className="flex gap-2 mt-2">
+                  {(() => {
+                    const styles = getStatusStyles(selectedTicket.status);
+                    return (
+                      <Badge variant="outline" className={cn("capitalize", styles.text, styles.bg)}>
+                        {selectedTicket.status.replace("_", " ")}
+                      </Badge>
+                    );
+                  })()}
                 </div>
-                <SheetTitle className="text-xl">{selectedTicket.subject}</SheetTitle>
-                <SheetDescription>
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                    {(() => {
-                      const statusStyles = getStatusStyles(selectedTicket.status);
-                      const priorityStyles = getPriorityStyles(selectedTicket.priority);
-                      return (
-                        <>
-                          <Badge variant="outline" className={cn("capitalize", statusStyles.text, statusStyles.bg)}>
-                            {selectedTicket.status.replace("_", " ")}
-                          </Badge>
-                          <Badge variant="outline" className={cn("capitalize", priorityStyles.text, priorityStyles.bg)}>
-                            {selectedTicket.priority} priority
-                          </Badge>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </SheetDescription>
               </SheetHeader>
 
-              {/* Messages */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 mb-6">
                 {(selectedTicket.messages || []).map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "p-4 rounded-xl",
-                      message.sender_type === "user"
-                        ? "bg-muted ml-8"
-                        : "bg-muted/50 mr-8"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-medium">
-                        {message.sender_type === "user" ? "You" : "Support Team"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(message.created_at), "MMM d, h:mm a")}
-                      </span>
+                  <div key={message.id} className={cn("p-3 rounded-xl text-sm", message.sender_type === "user" ? "bg-muted ml-6" : "bg-primary/10 mr-6")}>
+                    <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
+                      <span className="font-medium">{message.sender_type === "user" ? "You" : "Support"}</span>
+                      <span>{format(new Date(message.created_at), "MMM d, h:mm a")}</span>
                     </div>
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p>{message.content}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Reply Section */}
               {selectedTicket.status !== "resolved" && selectedTicket.status !== "closed" && (
-                <div className="border-t pt-6">
-                  <Label className="mb-2 block">Reply</Label>
+                <div className="border-t pt-4">
                   <Textarea
                     placeholder="Type your reply..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    rows={4}
+                    rows={3}
                     className="mb-3"
                   />
-                  <div className="flex items-center justify-between">
-                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                      <AttachFileIcon sx={{ fontSize: 16 }} />
-                      Attach file
-                    </Button>
-                    <Button onClick={handleSendReply} disabled={!replyText.trim()} className="gap-2">
-                      <SendIcon sx={{ fontSize: 16 }} />
-                      Send Reply
-                    </Button>
-                  </div>
+                  <Button onClick={handleSendReply} disabled={!replyText.trim()} className="w-full">
+                    Send Reply
+                  </Button>
                 </div>
               )}
+            </>
+          ) : (
+            <>
+              <SheetHeader className="pb-6">
+                <SheetTitle>My Tickets</SheetTitle>
+                <SheetDescription>{tickets.length} total</SheetDescription>
+              </SheetHeader>
 
-              {/* Closed/Resolved Message */}
-              {(selectedTicket.status === "resolved" || selectedTicket.status === "closed") && (
-                <div className="border-t pt-6">
-                  <div className="bg-muted/50 rounded-xl p-4 text-center">
-                    <CheckCircleIcon className="text-foreground mx-auto mb-2" sx={{ fontSize: 32 }} />
-                    <p className="text-sm font-medium">This ticket has been {selectedTicket.status}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Need more help? Create a new ticket.
-                    </p>
-                  </div>
+              {tickets.length === 0 ? (
+                <div className="text-center py-12">
+                  <ConfirmationNumberIcon className="text-muted-foreground mx-auto mb-3" sx={{ fontSize: 40 }} />
+                  <p className="text-sm text-muted-foreground mb-4">No tickets yet</p>
+                  <Button onClick={() => { setTicketSheetOpen(false); setCreateDialogOpen(true); }}>
+                    Create Ticket
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {tickets.map((ticket) => {
+                    const styles = getStatusStyles(ticket.status);
+                    return (
+                      <button
+                        key={ticket.id}
+                        onClick={() => setSelectedTicket(ticket)}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", styles.bg)}>
+                          <styles.icon className={styles.text} sx={{ fontSize: 18 }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{ticket.subject}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(ticket.updated_at), "MMM d")} · {ticket.status.replace("_", " ")}
+                          </p>
+                        </div>
+                        <ChevronRightIcon className="text-muted-foreground flex-shrink-0" sx={{ fontSize: 18 }} />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Floating Chat Button */}
+      {!chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center z-50"
+        >
+          <ChatIcon sx={{ fontSize: 24 }} />
+        </button>
+      )}
+
+      {user && <UnifiedMessagesWidget />}
     </div>
   );
 };

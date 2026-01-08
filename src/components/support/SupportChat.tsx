@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2, TicketCheck } from "lucide-react";
+import { ArrowUp, Loader2, TicketCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -191,7 +191,7 @@ export const SupportChat = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-xl shadow-sm flex flex-col h-[500px]">
+    <div className="w-full max-w-3xl mx-auto bg-card border border-border rounded-2xl shadow-sm flex flex-col h-[520px]">
       {/* Messages */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-[200px]">
         {messages.map((message, index) => (
@@ -252,28 +252,28 @@ export const SupportChat = () => {
 
       {/* Input */}
       <div className="border-t border-border p-4">
-        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-          <div className="flex-1">
+        <form onSubmit={handleSubmit}>
+          <div className="relative">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="How can I set up my bank account for payouts?"
-              className="min-h-[60px] max-h-[120px] resize-none"
+              className="min-h-[80px] max-h-[120px] resize-none pr-14 rounded-xl"
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              AI can make mistakes. Please verify important information.
-            </p>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!input.trim() || isLoading}
+              className="absolute right-2 bottom-2 h-9 w-9 rounded-lg"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!input.trim() || isLoading}
-            className="h-10 w-10 flex-shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            AI can make mistakes. Please verify important information.
+          </p>
         </form>
       </div>
     </div>

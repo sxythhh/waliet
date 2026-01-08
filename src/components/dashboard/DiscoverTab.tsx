@@ -600,20 +600,22 @@ export function DiscoverTab({
                 </div>
               </button>}
 
-            {/* Launch Opportunity Button */}
-            <Button
-              onClick={() => {
-                if (userBrand) {
-                  setCreateCampaignDialogOpen(true);
-                } else {
-                  setCreateBrandDialogOpen(true);
-                }
-              }}
-              className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium tracking-[-0.3px]"
-            >
-              <span className="hidden sm:inline">Launch Opportunity</span>
-              <span className="sm:hidden">Launch</span>
-            </Button>
+            {/* Launch Opportunity Button - Hidden on /discover page */}
+            {!navigateOnClick && (
+              <Button
+                onClick={() => {
+                  if (userBrand) {
+                    setCreateCampaignDialogOpen(true);
+                  } else {
+                    setCreateBrandDialogOpen(true);
+                  }
+                }}
+                className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-medium tracking-[-0.3px]"
+              >
+                <span className="hidden sm:inline">Launch Opportunity</span>
+                <span className="sm:hidden">Launch</span>
+              </Button>
+            )}
           </div>
         </div>
         </div>
