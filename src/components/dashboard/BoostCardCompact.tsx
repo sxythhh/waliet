@@ -64,9 +64,9 @@ export const BoostCardCompact = memo(function BoostCardCompact({
   const totalSubmitted = submissionStats.approved + submissionStats.pending;
 
   return (
-    <div className="group">
+    <div className="group h-full">
       <Card
-        className="relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out border border-border/50 bg-card"
+        className="relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out border border-border/50 bg-card h-full flex flex-col"
         onClick={onClick}
       >
         {/* Full-width Banner - Top */}
@@ -96,10 +96,10 @@ export const BoostCardCompact = memo(function BoostCardCompact({
         </div>
 
         {/* Content - Below Banner */}
-        <div className="p-3 space-y-2.5 font-inter" style={{ letterSpacing: '-0.5px' }}>
+        <div className="p-3 space-y-2.5 font-inter flex-1 flex flex-col" style={{ letterSpacing: '-0.5px' }}>
           {/* Title Row */}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-sm text-foreground leading-tight line-clamp-2 flex-1">
+            <h3 className="font-semibold text-sm text-foreground leading-tight line-clamp-2 flex-1 group-hover:underline">
               {title}
             </h3>
           </div>
@@ -128,7 +128,7 @@ export const BoostCardCompact = memo(function BoostCardCompact({
           </div>
 
           {/* Progress Section */}
-          <div className="pt-1">
+          <div className="pt-1 mt-auto">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] text-muted-foreground font-medium">
                 <span className="text-foreground font-semibold">{totalSubmitted}</span>

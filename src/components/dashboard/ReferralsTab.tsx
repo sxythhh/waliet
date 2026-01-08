@@ -361,13 +361,13 @@ export function ReferralsTab(): JSX.Element {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Earnings Chart */}
         <Card className="bg-card border border-border rounded-2xl">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-4">
               <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
                 Earnings Over Time
               </CardTitle>
               <div className="text-right">
-                <p className="text-lg font-bold text-blue-500 tracking-[-0.5px]">
+                <p className="text-xl font-bold text-foreground tracking-[-0.5px]">
                   ${totalEarned.toFixed(2)}
                 </p>
                 <p className="text-xs text-muted-foreground tracking-[-0.3px]">Total Earned</p>
@@ -435,17 +435,7 @@ export function ReferralsTab(): JSX.Element {
 
         return (
           <Card className="bg-card border border-border rounded-2xl overflow-hidden">
-            <CardHeader className="pb-0 pt-5 px-5">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
-                  Transactions
-                </CardTitle>
-                <span className="text-sm text-muted-foreground tabular-nums">
-                  {transactions.length} total
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 mt-4">
+            <CardContent className="p-0">
               {transactions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-5">
                   <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">

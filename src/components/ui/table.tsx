@@ -12,7 +12,17 @@ const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableE
 Table.displayName = "Table";
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => <thead ref={ref} className={cn("[&_tr]:border-b [&_tr]:border-border dark:[&_tr]:border-[#0e0e0e] bg-[#f9f9f9] dark:bg-transparent [&_th]:text-[#8d8d8d] dark:[&_th]:text-muted-foreground", className)} {...props} />,
+  ({ className, ...props }, ref) => (
+    <thead
+      ref={ref}
+      className={cn(
+        "[&_tr]:border-b [&_tr]:border-border bg-muted/30 dark:bg-muted/10",
+        "[&_th]:text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  ),
 );
 TableHeader.displayName = "TableHeader";
 
@@ -30,11 +40,24 @@ const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
 );
 TableFooter.displayName = "TableFooter";
 
-const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
-  ({ className, ...props }, ref) => (
+interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  /** Make row clickable with hover state */
+  clickable?: boolean;
+  /** Show selected state */
+  selected?: boolean;
+}
+
+const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
+  ({ className, clickable, selected, ...props }, ref) => (
     <tr
       ref={ref}
-      className={cn("border-b border-border dark:border-[#0e0e0e] data-[state=selected]:bg-muted", className)}
+      className={cn(
+        "border-b border-border/50 transition-colors",
+        clickable && "cursor-pointer hover:bg-muted/50",
+        selected && "bg-primary/5",
+        "data-[state=selected]:bg-muted",
+        className
+      )}
       {...props}
     />
   ),

@@ -16,7 +16,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy, ChevronRight, Calendar, Briefcase, Film, Tag, Sparkles, DollarSign, TrendingUp, Users, Clock, Video, Wallet, Target, Zap, Globe } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy, ChevronRight, Calendar, Briefcase, Film, Tag, Sparkles } from "lucide-react";
 import { ExampleVideosCarousel } from "@/components/ExampleVideosCarousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -591,12 +591,14 @@ export default function CampaignApply() {
                 </div>
               </div>
               
-              {/* Stats cards skeleton */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-                {[...Array(4)].map((_, i) => <div key={i} className="bg-[#f0f0f0] dark:bg-[#0c0c0c] rounded-xl p-4">
-                    <Skeleton className="h-3 w-16 mb-2 bg-[#e0e0e0] dark:bg-[#151515]" />
-                    <Skeleton className="h-6 w-12 bg-[#e0e0e0] dark:bg-[#151515]" />
-                  </div>)}
+              {/* Stats inline skeleton */}
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <Skeleton className="h-4 w-16 bg-[#e0e0e0] dark:bg-[#151515]" />
+                    <Skeleton className="h-4 w-10 bg-[#e0e0e0] dark:bg-[#151515]" />
+                  </div>
+                ))}
               </div>
               
               {/* About section skeleton */}
@@ -721,43 +723,33 @@ export default function CampaignApply() {
       </div>;
   }
 
-  // Build stats array with icons
+  // Build stats array
   const stats: {
     label: string;
     value: string;
-    icon: React.ReactNode;
-    color: string;
     description?: string;
   }[] = [];
   if (isBoost && boostCampaign) {
     stats.push({
       label: "Monthly Pay",
       value: `$${boostCampaign.monthly_retainer.toLocaleString()}`,
-      icon: <DollarSign className="h-4 w-4" />,
-      color: "text-emerald-500",
       description: "Guaranteed monthly"
     });
     stats.push({
       label: "Videos",
       value: `${boostCampaign.videos_per_month}/mo`,
-      icon: <Video className="h-4 w-4" />,
-      color: "text-purple-500",
       description: "Content required"
     });
     const spotsLeft = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
     stats.push({
       label: "Spots Left",
       value: `${spotsLeft}`,
-      icon: <Users className="h-4 w-4" />,
-      color: spotsLeft <= 3 ? "text-amber-500" : "text-blue-500",
       description: spotsLeft <= 3 ? "Almost full!" : `of ${boostCampaign.max_accepted_creators} spots`
     });
     if (boostCampaign.end_date) {
       stats.push({
         label: "Deadline",
         value: format(new Date(boostCampaign.end_date), 'MMM d'),
-        icon: <Clock className="h-4 w-4" />,
-        color: "text-orange-500",
         description: "Apply before"
       });
     }
@@ -768,32 +760,24 @@ export default function CampaignApply() {
       stats.push({
         label: "Budget Left",
         value: `$${remaining.toLocaleString()}`,
-        icon: <Wallet className="h-4 w-4" />,
-        color: remaining < 1000 ? "text-amber-500" : "text-emerald-500",
         description: `${percentUsed}% claimed`
       });
     }
     stats.push({
       label: "RPM Rate",
       value: `$${campaign.rpm_rate}`,
-      icon: <TrendingUp className="h-4 w-4" />,
-      color: "text-blue-500",
       description: "Per 1K views"
     });
     if (campaign.category) {
       stats.push({
         label: "Category",
-        value: campaign.category,
-        icon: <Target className="h-4 w-4" />,
-        color: "text-purple-500"
+        value: campaign.category.charAt(0).toUpperCase() + campaign.category.slice(1)
       });
     }
     if (campaign.campaign_type) {
       stats.push({
         label: "Type",
-        value: campaign.campaign_type === 'ugc' ? 'UGC' : campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1),
-        icon: <Zap className="h-4 w-4" />,
-        color: "text-cyan-500"
+        value: campaign.campaign_type === 'ugc' ? 'UGC' : campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)
       });
     }
   }
@@ -946,57 +930,34 @@ export default function CampaignApply() {
             </div>
 
             {/* Stats Row */}
-            {stats.length > 0 && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                {stats.map((stat, i) => <div key={i} className="bg-card border border-border rounded-xl p-4 hover:border-border/80 transition-colors">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={`w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center ${stat.color}`}>
-                        {stat.icon}
-                      </div>
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{stat.label}</p>
-                    </div>
-                    <p className="text-xl font-bold font-inter tracking-[-0.5px]">{stat.value}</p>
-                    {stat.description && (
-                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">{stat.description}</p>
-                    )}
-                  </div>)}
+            {stats.length > 0 && <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6 text-sm font-inter tracking-[-0.5px]">
+                {stats.map((stat, i) => (
+                  <span key={i} className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">{stat.label}:</span>
+                    <span className="font-medium">{stat.value}</span>
+                  </span>
+                ))}
               </div>}
 
             {/* Platform & Requirements Section */}
             {!isBoost && campaign?.allowed_platforms && campaign.allowed_platforms.length > 0 && (
-              <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-muted/30 border border-border/50">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Platforms:</span>
-                </div>
+              <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-card border border-border">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Platforms:</span>
                 <div className="flex items-center gap-2">
                   {campaign.allowed_platforms.map((platform) => {
                     const icon = getPlatformIcon(platform);
                     return (
-                      <div key={platform} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background border border-border">
+                      <div key={platform} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border">
                         {icon && <img src={icon} alt={platform} className="w-4 h-4 object-contain" />}
                         <span className="text-xs font-medium font-inter tracking-[-0.5px] capitalize">{platform}</span>
                       </div>
                     );
                   })}
                 </div>
-                {campaign.requires_application !== false && (
-                  <>
-                    <div className="w-px h-4 bg-border hidden sm:block" />
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-amber-500" />
-                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Application required</span>
-                    </div>
-                  </>
-                )}
-                {campaign.requires_application === false && (
-                  <>
-                    <div className="w-px h-4 bg-border hidden sm:block" />
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Instant join</span>
-                    </div>
-                  </>
-                )}
+                <div className="w-px h-4 bg-border hidden sm:block" />
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  {campaign.requires_application === false ? 'Instant join' : 'Application required'}
+                </span>
               </div>
             )}
 

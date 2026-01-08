@@ -202,7 +202,7 @@ export function EditProfileDialog({
         </div>
 
         {/* Tabs */}
-        <div className="px-6 pt-4 border-b border-border/50">
+        <div className="px-6 pt-2 border-b border-border/50">
           <div className="flex gap-1">
             {tabs.map(tab => (
               <button

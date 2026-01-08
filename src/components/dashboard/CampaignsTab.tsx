@@ -26,6 +26,7 @@ import schoolIcon from "@/assets/school-icon.svg";
 import schoolIconBlack from "@/assets/school-icon-black.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { LinkAccountDialog } from "@/components/LinkAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { format } from "date-fns";
@@ -764,81 +765,83 @@ export function CampaignsTab({
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Quick Actions - Temporarily hidden */}
+      {false && (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {/* Discord Action - Connect or Discover Campaigns */}
         {!isDiscordConnected ? (
           <button
             onClick={() => navigate('/dashboard?tab=settings')}
-            className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+            className="group flex items-center gap-3 p-3 rounded-lg bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
-                <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+            <div className="w-8 h-8 rounded-md bg-muted dark:bg-muted/80 flex items-center justify-center flex-shrink-0">
+              <img src={discordWhiteIcon} alt="" className="w-4 h-4 invert dark:invert-0" />
             </div>
-            <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Connect Discord</span>
-            <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">Get notified about opportunities and payments</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-semibold text-foreground font-inter tracking-tight block">Connect Discord</span>
+              <span className="text-[10px] text-muted-foreground font-inter block truncate">Get notified about opportunities</span>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-hover:translate-x-0.5 transition-all" />
           </button>
         ) : (
           <button
             onClick={() => navigate('/dashboard?tab=discover')}
-            className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+            className="group flex items-center gap-3 p-3 rounded-lg bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
-                <Icon icon="material-symbols:search" className="w-5 h-5 text-foreground" />
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+            <div className="w-8 h-8 rounded-md bg-muted dark:bg-muted/80 flex items-center justify-center flex-shrink-0">
+              <Icon icon="material-symbols:search" className="w-4 h-4 text-foreground" />
             </div>
-            <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Discover Campaigns</span>
-            <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">Find new opportunities to earn</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-semibold text-foreground font-inter tracking-tight block">Discover Campaigns</span>
+              <span className="text-[10px] text-muted-foreground font-inter block truncate">Find new opportunities to earn</span>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-hover:translate-x-0.5 transition-all" />
           </button>
         )}
 
         {/* Learning Action */}
         <button
           onClick={() => navigate('/training')}
-          className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+          className="group flex items-center gap-3 p-3 rounded-lg bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
         >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
-              <Icon icon="material-symbols:school" className="w-5 h-5 text-foreground" />
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+          <div className="w-8 h-8 rounded-md bg-muted dark:bg-muted/80 flex items-center justify-center flex-shrink-0">
+            <Icon icon="material-symbols:school" className="w-4 h-4 text-foreground" />
           </div>
-          <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Creator Academy</span>
-          <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">Learn tips to grow your earnings</span>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-foreground font-inter tracking-tight block">Creator Academy</span>
+            <span className="text-[10px] text-muted-foreground font-inter block truncate">Learn tips to grow your earnings</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-hover:translate-x-0.5 transition-all" />
         </button>
 
         {/* Payouts Action */}
         <button
           onClick={() => navigate('/dashboard?tab=wallet')}
-          className="group relative flex flex-col p-4 rounded-xl bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
+          className="group flex items-center gap-3 p-3 rounded-lg bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70 transition-all duration-200 text-left"
         >
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-muted dark:bg-muted/80 flex items-center justify-center">
-              <Icon icon="material-symbols:account-balance-wallet" className="w-5 h-5 text-foreground" />
-            </div>
-            {!hasPaymentMethod ? (
-              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Setup Required</span>
-            ) : (
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-all" />
-            )}
+          <div className="w-8 h-8 rounded-md bg-muted dark:bg-muted/80 flex items-center justify-center flex-shrink-0">
+            <Icon icon="material-symbols:account-balance-wallet" className="w-4 h-4 text-foreground" />
           </div>
-          <span className="text-sm font-semibold text-foreground font-inter tracking-[-0.3px]">Manage Payouts</span>
-          <span className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.2px]">
-            {hasPaymentMethod ? 'View and update payment methods' : 'Add a payout method to get paid'}
-          </span>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-foreground font-inter tracking-tight block">Manage Payouts</span>
+            <span className="text-[10px] text-muted-foreground font-inter block truncate">
+              {hasPaymentMethod ? 'View payment methods' : 'Add a payout method'}
+            </span>
+          </div>
+          {!hasPaymentMethod ? (
+            <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded flex-shrink-0">Setup Required</span>
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-hover:translate-x-0.5 transition-all" />
+          )}
         </button>
       </div>
+      )}
 
       {/* Your Campaigns & Boosts Section - Combined */}
       {(campaigns.length > 0 || boostApplications.filter(app => app.status === 'accepted').length > 0) && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Your Campaigns</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <h3 className="text-lg font-semibold">Joined Campaigns</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* Boosts displayed as cards */}
             {boostApplications.filter(app => app.status === 'accepted').map(application => (
               <BoostCardCompact
@@ -959,65 +962,16 @@ export function CampaignsTab({
         </div>}
     </>
     
-    {/* Link Account Options Dialog */}
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-sm border-0 p-[10px] overflow-hidden bg-background">
-        <div className="p-6 pb-4 py-0 px-0">
-          <DialogHeader className="space-y-1.5 px-[10px] py-[10px]">
-            <DialogTitle className="text-base font-semibold" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.5px'
-              }}>
-              Link Your Account
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>
-              Connect a social account to this campaign
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-        
-        <div className="pb-6 space-y-2 px-0">
-          <button onClick={() => {
-              setDialogOpen(false);
-              navigate("/dashboard?tab=profile");
-            }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
-            <div>
-              <p className="text-sm font-medium" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}>Link Existing</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5" style={{
-                  fontFamily: 'Inter'
-                }}>From connected accounts</p>
-            </div>
-            <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
-          </button>
-          
-          <button onClick={() => {
-              setDialogOpen(false);
-              setAddAccountDialogOpen(true);
-            }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
-            <div>
-              <p className="text-sm font-medium" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}>Add New Account</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5" style={{
-                  fontFamily: 'Inter'
-                }}>Connect & verify new account</p>
-            </div>
-            <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    {/* Link Account Dialog */}
+    {selectedCampaignId && (
+      <LinkAccountDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        campaignId={selectedCampaignId}
+        onAddNewAccount={() => setAddAccountDialogOpen(true)}
+        onSuccess={fetchCampaigns}
+      />
+    )}
     
     {/* Withdraw Application Confirmation Dialog */}
     <AlertDialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>

@@ -4,14 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicNavbar from "@/components/PublicNavbar";
-import { Globe, Instagram, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Globe, Instagram } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SEOHead } from "@/components/SEOHead";
 import { getCanonicalUrl, truncateDescription } from "@/lib/seo";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { BoostDiscoverCard } from "@/components/dashboard/BoostDiscoverCard";
-import { PitchToBrandDialog } from "@/components/PitchToBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
 interface Brand {
   id: string;
@@ -96,7 +94,6 @@ export default function BrandPublicPage() {
   const [boostStats, setBoostStats] = useState<Record<string, CampaignStats>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"active" | "ended">("active");
-  const [pitchDialogOpen, setPitchDialogOpen] = useState(false);
   useEffect(() => {
     const fetchBrandData = async () => {
       if (!slug) return;
@@ -342,16 +339,6 @@ export default function BrandPublicPage() {
                 </a>}
             </div>
 
-            {/* Pitch Button */}
-            {user && activeItems.length > 0 && (
-              <Button
-                onClick={() => setPitchDialogOpen(true)}
-                className="mt-6 gap-2 bg-white text-black hover:bg-gray-100 dark:bg-black dark:text-white dark:hover:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm font-medium px-5"
-              >
-                <Send className="h-4 w-4" />
-                Pitch to Work
-              </Button>
-            )}
           </div>
 
           {/* Tabs */}
@@ -436,14 +423,5 @@ export default function BrandPublicPage() {
         </div>
       </div>
 
-      {/* Pitch Dialog */}
-      {brand && (
-        <PitchToBrandDialog
-          open={pitchDialogOpen}
-          onOpenChange={setPitchDialogOpen}
-          brandId={brand.id}
-          brandName={brand.name}
-        />
-      )}
     </>;
 }

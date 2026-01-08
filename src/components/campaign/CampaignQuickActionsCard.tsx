@@ -51,8 +51,8 @@ export function CampaignQuickActionsCard({
     },
     {
       id: 'view-blueprint',
-      label: 'View Guidelines',
-      description: 'Full content brief and guidelines',
+      label: 'Content Guidelines',
+      description: campaign.blueprint_id ? 'Full content brief and guidelines' : 'No guidelines available',
       icon: 'material-symbols:description',
       onClick: () => {
         if (campaign.blueprint_id) {
@@ -60,7 +60,7 @@ export function CampaignQuickActionsCard({
         }
       },
       disabled: !campaign.blueprint_id,
-      show: !!campaign.blueprint_id
+      show: true
     },
     {
       id: 'campaign-page',

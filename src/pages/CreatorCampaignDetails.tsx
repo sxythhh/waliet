@@ -8,6 +8,7 @@ import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { LinkAccountDialog } from "@/components/LinkAccountDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -492,33 +493,19 @@ export default function CreatorCampaignDetails() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h1
-                  className="text-xl sm:text-2xl font-semibold cursor-pointer hover:underline"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-                  onClick={() => window.location.href = `/c/${campaign.slug}`}
-                >
-                  {campaign.title}
-                </h1>
-                {campaign.status === 'ended' && (
-                  <button
-                    onClick={() => setLeaveCampaignDialogOpen(true)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md transition-colors"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  >
-                    <LogOut className="w-3 h-3" />
-                    Leave
-                  </button>
-                )}
-              </div>
-              <div
-                className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-muted-foreground"
+              <h1
+                className="text-xl sm:text-2xl font-semibold cursor-pointer hover:underline mb-1"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+                onClick={() => window.location.href = `/c/${campaign.slug}`}
+              >
+                {campaign.title}
+              </h1>
+              <p
+                className="text-sm text-muted-foreground"
                 style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
               >
-                <span>Started {formatDate(startDate)}</span>
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/40 hidden sm:block" />
-                <span className="hidden sm:inline">{timeAgo}</span>
-              </div>
+                Started {formatDate(startDate)}
+              </p>
             </div>
 
             {/* Action Buttons */}
@@ -698,7 +685,7 @@ export default function CreatorCampaignDetails() {
           )}
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 p-4 rounded-2xl mb-6 bg-sidebar border border-border">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 p-4 rounded-2xl mb-6 border border-border">
             <div className="text-center">
               <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wide" style={{ fontFamily: 'Inter' }}>Ends</p>
               <p className="font-semibold text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{daysUntilEnd !== null ? `${daysUntilEnd}d` : "—"}</p>
@@ -852,13 +839,15 @@ export default function CreatorCampaignDetails() {
             </div>
           )}
 
-          {/* Your Submissions Section */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-              Your Submissions
-            </h4>
-            <SubmissionsTab campaignId={campaign.id} compact />
-          </div>
+          {/* Your Submissions Section - only show for pay_per_post campaigns */}
+          {campaign.payment_model === 'pay_per_post' && (
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                Your Submissions
+              </h4>
+              <SubmissionsTab campaignId={campaign.id} compact />
+            </div>
+          )}
         </div>
 
         {/* Right Sidebar - hidden on mobile, shown on lg+ */}
@@ -907,55 +896,14 @@ export default function CreatorCampaignDetails() {
         }}
       />
 
-      {/* Link Account Options Dialog */}
-      <Dialog open={linkAccountDialogOpen} onOpenChange={setLinkAccountDialogOpen}>
-        <DialogContent className="sm:max-w-sm border-0 p-[10px] overflow-hidden bg-background">
-          <div className="p-6 pb-4 py-0 px-0">
-            <DialogHeader className="space-y-1.5 px-[10px] py-[10px]">
-              <DialogTitle className="text-base font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                Link Your Account
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                Connect a social account to this campaign
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          <div className="pb-6 space-y-2 px-0">
-            <button
-              onClick={() => {
-                setLinkAccountDialogOpen(false);
-                navigate("/dashboard?tab=profile");
-              }}
-              className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left"
-            >
-              <div>
-                <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Link Existing</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'Inter' }}>From connected accounts</p>
-              </div>
-              <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setLinkAccountDialogOpen(false);
-                setAddAccountDialogOpen(true);
-              }}
-              className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left"
-            >
-              <div>
-                <p className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Add New Account</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'Inter' }}>Connect & verify new account</p>
-              </div>
-              <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Link Account Dialog */}
+      <LinkAccountDialog
+        open={linkAccountDialogOpen}
+        onOpenChange={setLinkAccountDialogOpen}
+        campaignId={campaign.id}
+        onAddNewAccount={() => setAddAccountDialogOpen(true)}
+        onSuccess={refreshCampaignData}
+      />
 
       {/* Add Account Dialog */}
       <AddSocialAccountDialog open={addAccountDialogOpen} onOpenChange={setAddAccountDialogOpen} onSuccess={refreshCampaignData} />

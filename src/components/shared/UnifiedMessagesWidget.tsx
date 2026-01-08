@@ -496,15 +496,17 @@ export function UnifiedMessagesWidget() {
       {/* Floating Button - Desktop (Card) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex fixed bottom-6 right-6 z-50 items-center gap-2 px-5 py-3 rounded-2xl bg-background hover:bg-gray-50 dark:hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="hidden md:flex fixed bottom-0 right-6 z-50 items-center justify-between gap-3 w-[320px] px-5 py-3 rounded-t-2xl rounded-b-none bg-background hover:bg-gray-50 dark:hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl border border-b-0 border-border"
       >
         <span className="font-medium text-sm text-foreground font-inter tracking-[-0.5px]">Messages</span>
-        {totalUnread > 0 && (
-          <span className="w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
-            {totalUnread > 9 ? "9+" : totalUnread}
-          </span>
-        )}
-        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          {totalUnread > 0 && (
+            <span className="w-5 h-5 bg-red-500 rounded-full text-white text-xs font-medium flex items-center justify-center">
+              {totalUnread > 9 ? "9+" : totalUnread}
+            </span>
+          )}
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        </div>
       </button>
 
       {/* Chat Panel */}

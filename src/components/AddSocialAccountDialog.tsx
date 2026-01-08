@@ -608,16 +608,16 @@ export function AddSocialAccountDialog({
                       <button
                         key={platform}
                         onClick={() => setSelectedPlatform(platform)}
-                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 ${
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 border-2 ${
                           isSelected
-                            ? 'bg-primary/10 dark:bg-primary/15'
-                            : 'bg-muted/50 dark:bg-muted/30 hover:bg-muted/80 dark:hover:bg-muted/50'
+                            ? 'border-primary bg-primary/10 dark:bg-primary/15'
+                            : 'border-transparent bg-muted/50 dark:bg-muted/30 hover:bg-muted/80 dark:hover:bg-muted/50'
                         }`}
                       >
                         {/* Icon */}
                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           isSelected
-                            ? 'bg-primary/15 dark:bg-primary/20'
+                            ? 'bg-primary'
                             : 'bg-white dark:bg-background'
                         }`}>
                           {getPlatformIcon(platform, "h-4 w-4")}
@@ -653,7 +653,7 @@ export function AddSocialAccountDialog({
                 </Label>
                 <div className="relative flex items-center">
                   {showAtSymbol && (
-                    <div className="absolute left-0 h-11 w-11 rounded-l-xl bg-muted/80 dark:bg-muted/50 flex items-center justify-center">
+                    <div className="absolute left-4 z-10 flex items-center justify-center pointer-events-none">
                       <span className="text-muted-foreground text-base font-medium">@</span>
                     </div>
                   )}
@@ -666,7 +666,7 @@ export function AddSocialAccountDialog({
                       const sanitized = value.replace(/@/g, "").trim();
                       setUsername(sanitized);
                     }}
-                    className={`h-11 bg-muted/50 dark:bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-2 focus-visible:ring-primary/30 ${showAtSymbol ? 'pl-12' : 'pl-4'}`}
+                    className={`h-11 bg-muted/50 dark:bg-muted/30 border-2 border-transparent rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-0 focus-visible:border-primary ${showAtSymbol ? 'pl-10' : 'pl-4'}`}
                   />
                 </div>
                 {username.includes('@') && (
