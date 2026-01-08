@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
@@ -15,6 +15,12 @@ import { UsersPanel } from "@/components/manage/UsersPanel";
 import { PayoutsPanel } from "@/components/manage/PayoutsPanel";
 import { VideosPanel } from "@/components/manage/VideosPanel";
 
+interface ApplicationQuestion {
+  id: string;
+  question: string;
+  required?: boolean;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -28,7 +34,7 @@ interface Campaign {
   analytics_url: string | null;
   guidelines: string | null;
   allowed_platforms: string[];
-  application_questions: any[];
+  application_questions: ApplicationQuestion[];
   slug?: string;
   embed_url?: string | null;
   is_private?: boolean;
@@ -36,6 +42,11 @@ interface Campaign {
   requires_application?: boolean;
   is_infinite_budget?: boolean;
   is_featured?: boolean;
+}
+
+interface ApplicationAnswer {
+  question_id: string;
+  answer: string;
 }
 
 interface Submission {
@@ -48,7 +59,7 @@ interface Submission {
   creator_id: string;
   platform: string;
   content_url: string;
-  application_answers?: any;
+  application_answers?: ApplicationAnswer[];
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -58,9 +69,89 @@ interface Submission {
   };
 }
 
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link?: string;
+  follower_count?: number;
+}
+
+interface UserProfile {
+  username: string;
+  email?: string;
+  full_name?: string;
+  phone_number?: string;
+  avatar_url?: string | null;
+}
+
+interface CampaignUser {
+  user_id: string;
+  status: string;
+  joined_at?: string;
+  campaign_earnings?: number;
+  profile?: UserProfile;
+  social_accounts?: SocialAccount[];
+}
+
+interface ShortimizeAccount {
+  account_username: string;
+  platform: string;
+}
+
+interface TransactionMetadata {
+  campaign_id?: string;
+  campaign_budget_before?: number;
+  campaign_budget_after?: number;
+  adjustment_type?: string;
+  adjustment_amount?: number;
+}
+
+interface TransactionProfile {
+  id: string;
+  username: string;
+  avatar_url?: string | null;
+}
+
+interface CampaignTransaction {
+  id: string;
+  user_id: string;
+  type: string;
+  amount: number;
+  status: string;
+  description?: string;
+  created_at: string;
+  metadata?: TransactionMetadata;
+  profiles?: TransactionProfile | null;
+  shortimize_account?: ShortimizeAccount | null;
+}
+
+interface ShortimizeVideo {
+  ad_id: string;
+  username: string;
+  platform: string;
+  title?: string;
+  uploaded_at?: string;
+  latest_views?: number;
+  latest_likes?: number;
+  latest_comments?: number;
+  latest_shares?: number;
+  latest_engagements?: number;
+  ad_link?: string;
+}
+
+interface VideoHistoryData {
+  date: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  bookmarks: number;
+  engagements: number;
+}
+
 export default function BrandManagement() {
   const { campaignSlug } = useParams();
-  const navigate = useNavigate();
   const { isAdmin } = useAdminCheck();
   
   // Campaign state
@@ -87,85 +178,39 @@ export default function BrandManagement() {
   const [loadingBudget, setLoadingBudget] = useState(false);
   
   // Users state
-  const [campaignUsers, setCampaignUsers] = useState<any[]>([]);
+  const [campaignUsers, setCampaignUsers] = useState<CampaignUser[]>([]);
   const [loadingCampaignUsers, setLoadingCampaignUsers] = useState(false);
-  
+
   // Transactions state
-  const [campaignTransactions, setCampaignTransactions] = useState<any[]>([]);
+  const [campaignTransactions, setCampaignTransactions] = useState<CampaignTransaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
-  
+
   // Videos state
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [collectionName, setCollectionName] = useState("");
   const [lastVideosFetch, setLastVideosFetch] = useState<Date | null>(null);
-  
+
   // Video history state
-  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [selectedVideo, setSelectedVideo] = useState<ShortimizeVideo | null>(null);
   const [videoHistoryOpen, setVideoHistoryOpen] = useState(false);
-  const [videoHistory, setVideoHistory] = useState<any[] | null>(null);
+  const [videoHistory, setVideoHistory] = useState<VideoHistoryData[] | null>(null);
   const [loadingVideoHistory, setLoadingVideoHistory] = useState(false);
   
   // Cache
   const CACHE_DURATION_MS = 2 * 60 * 60 * 1000;
   const VIDEOS_CACHE_KEY = `shortimize_videos_${brandId}`;
 
-  const isCacheValid = (timestamp: string | null) => {
+  const isCacheValid = useCallback((timestamp: string | null) => {
     if (!timestamp) return false;
     const cacheTime = new Date(timestamp).getTime();
     return (Date.now() - cacheTime) < CACHE_DURATION_MS;
-  };
+  }, [CACHE_DURATION_MS]);
 
   const selectedCampaign = campaigns.find(c => c.id === selectedCampaignId);
   const approvedSubmissions = submissions.filter(s => s.status === 'approved');
 
-  // Listen for tab changes from sidebar
-  useEffect(() => {
-    const handleTabChange = (e: CustomEvent) => {
-      setActiveTab(e.detail);
-      if (e.detail === 'users' && campaignUsers.length === 0 && !loadingCampaignUsers) {
-        fetchCampaignUsers();
-      }
-    };
-    window.addEventListener('manage-tab-change', handleTabChange as EventListener);
-    return () => window.removeEventListener('manage-tab-change', handleTabChange as EventListener);
-  }, [campaignUsers.length, loadingCampaignUsers]);
-
-  // Load cached videos
-  useEffect(() => {
-    if (brandId) {
-      const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
-      if (cachedVideos) {
-        try {
-          const { data, timestamp, collection } = JSON.parse(cachedVideos);
-          if (isCacheValid(timestamp)) {
-            setVideos(data);
-            setCollectionName(collection);
-            setLastVideosFetch(new Date(timestamp));
-          }
-        } catch (e) {
-          console.error('Error loading cached videos:', e);
-        }
-      }
-    }
-  }, [brandId]);
-
-  useEffect(() => {
-    fetchAllCampaigns();
-  }, []);
-
-  useEffect(() => {
-    fetchCampaign();
-  }, [campaignSlug]);
-
-  useEffect(() => {
-    if (selectedCampaignId) {
-      fetchCampaignTransactions();
-      fetchSubmissions(selectedCampaignId);
-    }
-  }, [selectedCampaignId]);
-
-  const fetchAllCampaigns = async () => {
+  const fetchAllCampaigns = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("campaigns")
@@ -178,17 +223,17 @@ export default function BrandManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchCampaign = async () => {
+  const fetchCampaign = useCallback(async () => {
     if (!campaignSlug) return;
     try {
       const { data: campaignData, error } = await supabase
         .from("campaigns")
         .select(`
-          id, title, description, budget, budget_used, rpm_rate, status, 
-          banner_url, preview_url, analytics_url, guidelines, allowed_platforms, 
-          application_questions, slug, embed_url, is_private, access_code, 
+          id, title, description, budget, budget_used, rpm_rate, status,
+          banner_url, preview_url, analytics_url, guidelines, allowed_platforms,
+          application_questions, slug, embed_url, is_private, access_code,
           requires_application, is_infinite_budget, is_featured, brand_id,
           brands!campaigns_brand_id_fkey (id, name, logo_url, shortimize_api_key, collection_name)
         `)
@@ -205,7 +250,9 @@ export default function BrandManagement() {
 
       setCampaigns([{
         ...campaignData,
-        application_questions: Array.isArray(campaignData.application_questions) ? campaignData.application_questions : []
+        application_questions: Array.isArray(campaignData.application_questions)
+          ? (campaignData.application_questions as unknown as ApplicationQuestion[])
+          : []
       }]);
       setSelectedCampaignId(campaignData.id);
     } catch (error) {
@@ -214,9 +261,9 @@ export default function BrandManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [campaignSlug]);
 
-  const fetchSubmissions = async (campaignId: string) => {
+  const fetchSubmissions = useCallback(async (campaignId: string) => {
     try {
       const { data, error } = await supabase
         .from("campaign_submissions")
@@ -226,13 +273,13 @@ export default function BrandManagement() {
         `)
         .eq("campaign_id", campaignId);
       if (error) throw error;
-      setSubmissions(data || []);
+      setSubmissions((data as unknown as Submission[]) || []);
     } catch (error) {
       console.error("Error fetching submissions:", error);
     }
-  };
+  }, []);
 
-  const fetchCampaignTransactions = async () => {
+  const fetchCampaignTransactions = useCallback(async () => {
     if (!selectedCampaignId) return;
     setLoadingTransactions(true);
     try {
@@ -262,21 +309,21 @@ export default function BrandManagement() {
 
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       const analyticsMap = new Map(analyticsData?.map(a => [a.user_id, a]) || []);
-      
+
       setCampaignTransactions(transactions.map(tx => ({
         ...tx,
         profiles: profileMap.get(tx.user_id) || null,
         shortimize_account: analyticsMap.get(tx.user_id) || null
-      })));
+      })) as CampaignTransaction[]);
     } catch (error) {
       console.error("Error fetching transactions:", error);
       toast.error("Failed to load transactions");
     } finally {
       setLoadingTransactions(false);
     }
-  };
+  }, [selectedCampaignId]);
 
-  const fetchCampaignUsers = async () => {
+  const fetchCampaignUsers = useCallback(async () => {
     if (!selectedCampaignId) return;
     setLoadingCampaignUsers(true);
     try {
@@ -291,13 +338,14 @@ export default function BrandManagement() {
       const result = await response.json();
       setCampaignUsers(result.users || []);
       toast.success(`Loaded ${result.users?.length || 0} users`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching users:', error);
-      toast.error(error.message || 'Failed to load users');
+      const message = error instanceof Error ? error.message : 'Failed to load users';
+      toast.error(message);
     } finally {
       setLoadingCampaignUsers(false);
     }
-  };
+  }, [selectedCampaignId]);
 
   const exportCampaignUsers = () => {
     if (campaignUsers.length === 0) {
@@ -313,16 +361,16 @@ export default function BrandManagement() {
           user.profile?.username || '', user.profile?.email || '', user.profile?.full_name || '',
           user.profile?.phone_number || '', user.status || '',
           user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '',
-          '', '', '', '', user.campaign_earnings || '0'
+          '', '', '', '', String(user.campaign_earnings ?? '0')
         ]);
       } else {
-        accounts.forEach((account: any) => {
+        accounts.forEach((account: SocialAccount) => {
           rows.push([
             user.profile?.username || '', user.profile?.email || '', user.profile?.full_name || '',
             user.profile?.phone_number || '', user.status || '',
             user.joined_at ? new Date(user.joined_at).toLocaleDateString() : '',
             account.platform || '', account.username || '', account.account_link || '',
-            account.follower_count || '', user.campaign_earnings || '0'
+            String(account.follower_count || ''), String(user.campaign_earnings || '0')
           ]);
         });
       }
@@ -336,7 +384,7 @@ export default function BrandManagement() {
     toast.success('Exported users to CSV');
   };
 
-  const fetchVideos = async (collection: string, forceRefresh = false) => {
+  const fetchVideos = useCallback(async (collection: string, forceRefresh = false) => {
     if (!brandId || !collection.trim()) {
       toast.error('Please enter a collection name');
       return;
@@ -352,7 +400,9 @@ export default function BrandManagement() {
             toast.info('Loaded from cache');
             return;
           }
-        } catch (e) {}
+        } catch {
+          // Ignore cache parse errors
+        }
       }
     }
     setLoadingVideos(true);
@@ -362,22 +412,23 @@ export default function BrandManagement() {
       });
       if (error) throw new Error(error.message);
       if (!data || data.error) throw new Error(data?.error || 'Failed to fetch');
-      
-      const videosData = Array.isArray(data) ? data : [];
+
+      const videosData: ShortimizeVideo[] = Array.isArray(data) ? data : [];
       setVideos(videosData);
       const timestamp = new Date().toISOString();
       setLastVideosFetch(new Date(timestamp));
       localStorage.setItem(VIDEOS_CACHE_KEY, JSON.stringify({ data: videosData, timestamp, collection }));
       toast.success(`Loaded ${videosData.length} videos`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error:', error);
-      toast.error(error.message || 'Failed to load videos');
+      const message = error instanceof Error ? error.message : 'Failed to load videos';
+      toast.error(message);
     } finally {
       setLoadingVideos(false);
     }
-  };
+  }, [brandId, VIDEOS_CACHE_KEY, isCacheValid]);
 
-  const fetchVideoHistory = async (video: any) => {
+  const fetchVideoHistory = useCallback(async (video: ShortimizeVideo) => {
     setSelectedVideo(video);
     setVideoHistoryOpen(true);
     setLoadingVideoHistory(true);
@@ -394,7 +445,53 @@ export default function BrandManagement() {
     } finally {
       setLoadingVideoHistory(false);
     }
-  };
+  }, [brandId]);
+
+  // Listen for tab changes from sidebar
+  useEffect(() => {
+    const handleTabChange = (e: CustomEvent) => {
+      setActiveTab(e.detail);
+      if (e.detail === 'users' && campaignUsers.length === 0 && !loadingCampaignUsers) {
+        fetchCampaignUsers();
+      }
+    };
+    window.addEventListener('manage-tab-change', handleTabChange as EventListener);
+    return () => window.removeEventListener('manage-tab-change', handleTabChange as EventListener);
+  }, [campaignUsers.length, loadingCampaignUsers, fetchCampaignUsers]);
+
+  // Load cached videos
+  useEffect(() => {
+    if (brandId) {
+      const cachedVideos = localStorage.getItem(VIDEOS_CACHE_KEY);
+      if (cachedVideos) {
+        try {
+          const { data, timestamp, collection } = JSON.parse(cachedVideos);
+          if (isCacheValid(timestamp)) {
+            setVideos(data);
+            setCollectionName(collection);
+            setLastVideosFetch(new Date(timestamp));
+          }
+        } catch (e) {
+          console.error('Error loading cached videos:', e);
+        }
+      }
+    }
+  }, [brandId, VIDEOS_CACHE_KEY, isCacheValid]);
+
+  useEffect(() => {
+    fetchAllCampaigns();
+  }, [fetchAllCampaigns]);
+
+  useEffect(() => {
+    fetchCampaign();
+  }, [fetchCampaign]);
+
+  useEffect(() => {
+    if (selectedCampaignId) {
+      fetchCampaignTransactions();
+      fetchSubmissions(selectedCampaignId);
+    }
+  }, [selectedCampaignId, fetchCampaignTransactions, fetchSubmissions]);
 
   const handleEditBudgetUsed = async () => {
     setLoadingBudget(true);

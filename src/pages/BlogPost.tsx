@@ -143,78 +143,122 @@ export default function BlogPostPage() {
 
       {/* Article Content */}
       <main className="flex-1 overflow-y-auto pt-14">
-        <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12" itemScope itemType="https://schema.org/Article">
-        <header className="mb-8">
-          {post.category && <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full mb-4 font-inter tracking-[-0.5px]">
-              {post.category}
-            </span>}
-          
-          <h1 className="text-3xl md:text-4xl font-inter tracking-[-0.5px] font-bold text-foreground mb-4" itemProp="headline">
-            {post.title}
-          </h1>
-          
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-            
-            {post.published_at && <div className="flex items-center gap-1.5">
-                
-                <time dateTime={formatISODate(post.published_at)} itemProp="datePublished">
-                  {formatDate(post.published_at)}
-                </time>
-              </div>}
-            {post.read_time && <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                <span>{post.read_time}</span>
-              </div>}
+        <article itemScope itemType="https://schema.org/Article">
+        {/* Hero Cover Section */}
+        {post.image_url ? (
+          <div className="relative w-full h-[50vh] md:h-[60vh] min-h-[400px] max-h-[600px] overflow-hidden">
+            {/* Cover Image */}
+            <img
+              src={post.image_url}
+              alt={`Featured image for ${post.title}`}
+              className="absolute inset-0 w-full h-full object-cover"
+              itemProp="image"
+              loading="eager"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+            {/* Content positioned over image */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-12 max-w-4xl mx-auto">
+              {post.category && (
+                <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-medium rounded-full mb-4 font-inter tracking-[-0.5px]">
+                  {post.category}
+                </span>
+              )}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-inter tracking-[-0.5px] font-bold text-white mb-4 leading-tight" itemProp="headline">
+                {post.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-white/80 font-inter tracking-[-0.5px]">
+                {post.published_at && (
+                  <div className="flex items-center gap-1.5">
+                    <time dateTime={formatISODate(post.published_at)} itemProp="datePublished">
+                      {formatDate(post.published_at)}
+                    </time>
+                  </div>
+                )}
+                {post.read_time && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
+                    <span>{post.read_time}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </header>
+        ) : (
+          /* Fallback header when no image */
+          <header className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+            {post.category && (
+              <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full mb-4 font-inter tracking-[-0.5px]">
+                {post.category}
+              </span>
+            )}
+            <h1 className="text-3xl md:text-4xl font-inter tracking-[-0.5px] font-bold text-foreground mb-4" itemProp="headline">
+              {post.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+              {post.published_at && (
+                <div className="flex items-center gap-1.5">
+                  <time dateTime={formatISODate(post.published_at)} itemProp="datePublished">
+                    {formatDate(post.published_at)}
+                  </time>
+                </div>
+              )}
+              {post.read_time && (
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  <span>{post.read_time}</span>
+                </div>
+              )}
+            </div>
+          </header>
+        )}
         
-        {post.image_url && <figure className="mb-8">
-            <img src={post.image_url} alt={`Featured image for ${post.title}`} className="w-full h-64 md:h-96 object-cover rounded-2xl" itemProp="image" loading="lazy" />
-          </figure>}
-        
-        {/* Rich HTML Content */}
-        <div className="prose prose-neutral dark:prose-invert prose-lg max-w-none 
-            [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-8
-            [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-6
-            [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4
-            [&_p]:text-base [&_p]:leading-relaxed [&_p]:mb-4
-            [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4
-            [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4
-            [&_li]:mb-1
-            [&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary/80
-            [&_img]:rounded-lg [&_img]:my-4 [&_img]:max-w-full
-            [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic
-            [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm
-            [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto" itemProp="articleBody" dangerouslySetInnerHTML={{
-          __html: sanitizedContent
-        }} />
+        {/* Article Body Container */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          {/* Rich HTML Content */}
+          <div className="prose prose-neutral dark:prose-invert prose-lg max-w-none
+              [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-8
+              [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-6
+              [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4
+              [&_p]:text-base [&_p]:leading-relaxed [&_p]:mb-4
+              [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4
+              [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4
+              [&_li]:mb-1
+              [&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary/80
+              [&_img]:rounded-lg [&_img]:my-4 [&_img]:max-w-full
+              [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic
+              [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm
+              [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto" itemProp="articleBody" dangerouslySetInnerHTML={{
+            __html: sanitizedContent
+          }} />
 
-        {/* Tags and Back Link */}
-        <div className="mt-8 pt-8 border-t border-border flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
-            {post.tags && post.tags.length > 0 && post.tags.map((tag, index) => <span key={index} className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full font-inter tracking-[-0.5px]">
-                {tag}
-              </span>)}
+          {/* Tags and Back Link */}
+          <div className="mt-8 pt-8 border-t border-border flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-2">
+              {post.tags && post.tags.length > 0 && post.tags.map((tag, index) => <span key={index} className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full font-inter tracking-[-0.5px]">
+                  {tag}
+                </span>)}
+            </div>
+            <Link to="/resources" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-inter tracking-[-0.5px]">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Resources
+            </Link>
           </div>
-          <Link to="/resources" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-inter tracking-[-0.5px]">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Resources
-          </Link>
+
+          {/* CTA at bottom of article */}
+          {!isAuthenticated && <section className="mt-12 p-8 border border-primary/20 rounded-2xl">
+              <h2 className="text-xl font-inter tracking-[-0.5px] font-semibold text-foreground mb-2">
+                Ready to start earning?
+              </h2>
+              <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px] mb-4">
+                Join thousands of creators getting paid for their content. Sign up for free and start monetizing today.
+              </p>
+              <Button onClick={() => setShowAuthDialog(true)} className="font-inter tracking-[-0.5px]">
+                Create Free Account
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </section>}
         </div>
-
-        {/* CTA at bottom of article */}
-        {!isAuthenticated && <section className="mt-12 p-8 border border-primary/20 rounded-2xl">
-            <h2 className="text-xl font-inter tracking-[-0.5px] font-semibold text-foreground mb-2">
-              Ready to start earning?
-            </h2>
-            <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px] mb-4">
-              Join thousands of creators getting paid for their content. Sign up for free and start monetizing today.
-            </p>
-            <Button onClick={() => setShowAuthDialog(true)} className="font-inter tracking-[-0.5px]">
-              Create Free Account
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </section>}
         </article>
       </main>
 

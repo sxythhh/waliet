@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle } from "lucide-react";
+import { ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle, Shield } from "lucide-react";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { isVerificationExpiringSoon, isVerificationExpired } from "@/lib/zktls/types";
+import { isPlatformSupported } from "@/lib/zktls/providers";
 import demographicsIcon from "@/assets/demographics-icon.svg";
 
 interface DemographicSubmission {
@@ -20,6 +23,15 @@ interface DemographicSubmission {
   admin_notes?: string | null;
 }
 
+interface ZkTLSVerificationData {
+  zktls_verified: boolean;
+  zktls_verified_at?: string | null;
+  zktls_expires_at?: string | null;
+  zktls_engagement_rate?: number | null;
+  zktls_avg_views?: number | null;
+  zktls_demographics?: Record<string, any> | null;
+}
+
 interface AudienceInsightsStatusCardProps {
   accountId: string;
   platform: string;
@@ -28,6 +40,8 @@ interface AudienceInsightsStatusCardProps {
   onSubmitNew: () => void;
   onRefresh: () => void;
   campaignIds?: string[];
+  zkTLSData?: ZkTLSVerificationData;
+  onVerifyZkTLS?: () => void;
 }
 
 export function AudienceInsightsStatusCard({
@@ -38,12 +52,29 @@ export function AudienceInsightsStatusCard({
   onSubmitNew,
   onRefresh,
   campaignIds = [],
+  zkTLSData,
+  onVerifyZkTLS,
 }: AudienceInsightsStatusCardProps) {
   const [viewingSubmission, setViewingSubmission] = useState<DemographicSubmission | null>(null);
   const [deletingSubmission, setDeletingSubmission] = useState<DemographicSubmission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const { toast } = useToast();
+
+  // zkTLS verification is disabled - TikTok/Instagram block attestor datacenter IPs
+  // Keep the old video submission system for now
+  const ZKTLS_ENABLED = false;
+
+  // zkTLS verification status (disabled but keeping logic for when it's re-enabled)
+  const hasZkTLSVerification = ZKTLS_ENABLED && zkTLSData?.zktls_verified && zkTLSData?.zktls_expires_at;
+  const isZkTLSExpired = hasZkTLSVerification && zkTLSData?.zktls_expires_at
+    ? isVerificationExpired(zkTLSData.zktls_expires_at)
+    : false;
+  const isZkTLSExpiringSoon = hasZkTLSVerification && zkTLSData?.zktls_expires_at && !isZkTLSExpired
+    ? isVerificationExpiringSoon(zkTLSData.zktls_expires_at)
+    : false;
+  const isZkTLSValid = hasZkTLSVerification && !isZkTLSExpired;
+  const supportsZkTLS = ZKTLS_ENABLED && isPlatformSupported(platform);
 
   // Sort submissions by submitted_at descending to ensure latest is always first
   const sortedSubmissions = [...submissions].sort((a, b) => 
@@ -143,6 +174,15 @@ export function AudienceInsightsStatusCard({
   return (
     <>
       <div className="space-y-2">
+        {/* zkTLS Verification Badge */}
+        {isZkTLSValid && zkTLSData?.zktls_verified_at && zkTLSData?.zktls_expires_at && (
+          <VerificationBadge
+            verifiedAt={zkTLSData.zktls_verified_at}
+            expiresAt={zkTLSData.zktls_expires_at}
+            size="sm"
+          />
+        )}
+
         {/* Rejection reason display */}
         {status === 'rejected' && latestSubmission?.admin_notes && (
           <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg max-w-xs">
@@ -153,23 +193,66 @@ export function AudienceInsightsStatusCard({
           </div>
         )}
 
-        {/* Action Button */}
-        <Button
-          size="sm"
-          className={`h-7 px-2.5 text-xs bg-blue-500 hover:bg-blue-600 text-white border-0 rounded-full ${!availability.canSubmit ? 'opacity-50 cursor-default' : ''}`}
-          style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-          disabled={!availability.canSubmit}
-          onClick={onSubmitNew}
-        >
-          {availability.canSubmit ? (
-            <>
-              <img src={demographicsIcon} alt="" className="h-3.5 w-3.5 mr-0.5 brightness-0 invert" />
-              {submissions.length > 0 ? 'Update' : 'Submit'}
-            </>
-          ) : (
-            <span>{availability.reason}</span>
+        {/* zkTLS Expiring Soon Warning */}
+        {isZkTLSExpiringSoon && !isZkTLSExpired && onVerifyZkTLS && (
+          <button
+            onClick={onVerifyZkTLS}
+            className="inline-flex items-center gap-1 text-[11px] text-amber-500 hover:text-amber-400 font-inter tracking-[-0.3px]"
+          >
+            <Shield className="h-3 w-3" />
+            Re-verify expiring soon
+          </button>
+        )}
+
+        {/* zkTLS Expired Warning */}
+        {isZkTLSExpired && onVerifyZkTLS && (
+          <button
+            onClick={onVerifyZkTLS}
+            className="inline-flex items-center gap-1 text-[11px] text-destructive hover:text-destructive/80 font-inter tracking-[-0.3px]"
+          >
+            <Shield className="h-3 w-3" />
+            Verification expired - Re-verify
+          </button>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1.5">
+          {/* zkTLS Verify Button - Primary action for TikTok */}
+          {supportsZkTLS && onVerifyZkTLS && !isZkTLSValid && (
+            <Button
+              size="sm"
+              className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-full"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              onClick={onVerifyZkTLS}
+            >
+              <Shield className="h-3.5 w-3.5 mr-0.5" />
+              Verify
+            </Button>
           )}
-        </Button>
+
+          {/* Video Submit Button - Secondary option or primary for non-zkTLS platforms */}
+          <Button
+            size="sm"
+            variant={supportsZkTLS && !isZkTLSValid ? "outline" : "default"}
+            className={`h-7 px-2.5 text-xs rounded-full ${
+              supportsZkTLS && !isZkTLSValid
+                ? 'border-muted-foreground/30 text-muted-foreground hover:text-foreground'
+                : 'bg-blue-500 hover:bg-blue-600 text-white border-0'
+            } ${!availability.canSubmit ? 'opacity-50 cursor-default' : ''}`}
+            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+            disabled={!availability.canSubmit}
+            onClick={onSubmitNew}
+          >
+            {availability.canSubmit ? (
+              <>
+                <img src={demographicsIcon} alt="" className={`h-3.5 w-3.5 mr-0.5 ${supportsZkTLS && !isZkTLSValid ? 'opacity-60' : 'brightness-0 invert'}`} />
+                {submissions.length > 0 ? 'Update' : 'Submit'}
+              </>
+            ) : (
+              <span>{availability.reason}</span>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Video Preview Dialog */}

@@ -52,6 +52,19 @@ interface SubmitVideoDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
+// Extract TikTok video ID from URL
+function extractTikTokVideoId(url: string): string | null {
+  // Patterns: /video/123456, /v/123456
+  const match = url.match(/\/(?:video|v)\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+// Extract TikTok username from URL
+function extractTikTokUsername(url: string): string | null {
+  const match = url.match(/tiktok\.com\/@([^/\?]+)/);
+  return match ? match[1] : null;
+}
+
 const PLATFORM_CONFIG: Record<string, {
   logo: string;
   logoDark: string;
@@ -310,6 +323,7 @@ export function SubmitVideoDialog({
 
       // Insert into video_submissions table (unified table)
       const {
+        data: insertedSubmission,
         error
       } = await supabase.from("video_submissions").insert({
         source_type: submissionSource.sourceType,
@@ -323,6 +337,8 @@ export function SubmitVideoDialog({
         submitted_at: new Date().toISOString(),
         // Link to the social account used for submission
         social_account_id: selectedAccountId || null,
+        // Bot analysis fields for TikTok
+        bot_analysis_status: platform === 'tiktok' ? 'pending' : null,
         // Add video metadata if fetched
         ...(videoDetails && {
           views: videoDetails.views || 0,
@@ -336,8 +352,44 @@ export function SubmitVideoDialog({
           video_title: videoDetails.title || null,
           video_upload_date: videoDetails.uploadDate || null
         })
-      });
+      }).select('id').single();
       if (error) throw error;
+
+      // Trigger bot analysis for TikTok videos (async, don't wait)
+      if (platform === 'tiktok' && insertedSubmission?.id) {
+        const videoId = extractTikTokVideoId(videoUrl.trim());
+        const username = extractTikTokUsername(videoUrl.trim()) || videoDetails?.authorUsername;
+
+        if (videoId && username) {
+          // Fire and forget - analysis runs in background
+          supabase.functions.invoke('analyze-tiktok-engagement', {
+            body: {
+              videoId,
+              username,
+              targetTable: 'video_submissions',
+              targetId: insertedSubmission.id,
+              checkAutoReject: true,
+              boostId: isBoost ? submissionSource.id : undefined,
+              // Pass video stats for engagement ratio analysis
+              videoStats: videoDetails ? {
+                views: videoDetails.views || 0,
+                likes: videoDetails.likes || 0,
+                comments: videoDetails.comments || 0,
+                shares: videoDetails.shares || 0
+              } : undefined
+            }
+          }).then(result => {
+            if (result.error) {
+              console.error('Bot analysis error:', result.error);
+            } else {
+              console.log('Bot analysis triggered:', result.data);
+            }
+          }).catch(err => {
+            console.error('Failed to trigger bot analysis:', err);
+          });
+        }
+      }
+
       toast.success("Video submitted successfully!");
       setVideoUrl("");
       setPlatform("");

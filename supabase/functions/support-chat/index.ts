@@ -10,6 +10,324 @@ const corsHeaders = {
 const MAX_MESSAGES = 50;
 const MAX_MESSAGE_LENGTH = 4000;
 
+// RAG configuration
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const RAG_ENABLED = !!OPENAI_API_KEY;
+const RAG_TIMEOUT_MS = 2000; // Timeout for RAG retrieval
+const RAG_SIMILARITY_THRESHOLD = 0.65;
+const RAG_MAX_EXAMPLES = 3;
+
+// Training data import configuration
+const EMBEDDING_MODEL = "text-embedding-3-small";
+const IMPORT_BATCH_SIZE = 100;
+
+interface SimilarConversation {
+  id: string;
+  question: string;
+  answer: string;
+  category: string | null;
+  similarity: number;
+}
+
+interface QAPair {
+  question: string;
+  answer: string;
+  category?: string;
+}
+
+interface EmbeddingResult {
+  id: string;
+  question: string;
+  success: boolean;
+  error?: string;
+}
+
+interface ImportResponse {
+  success: boolean;
+  imported: number;
+  errors: number;
+  results: EmbeddingResult[];
+}
+
+/**
+ * Generate embedding for a query using OpenAI API
+ */
+async function generateQueryEmbedding(query: string): Promise<number[]> {
+  if (!OPENAI_API_KEY) {
+    console.warn("RAG: OPENAI_API_KEY not configured");
+    return [];
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: EMBEDDING_MODEL,
+        input: query,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("RAG: Embedding API error:", response.status);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (err) {
+    console.error("RAG: Failed to generate embedding:", err);
+    return [];
+  }
+}
+
+/**
+ * Generate embeddings for an array of texts using OpenAI API (batch)
+ */
+async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+  if (!OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY not configured");
+  }
+
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: EMBEDDING_MODEL,
+      input: texts,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  return data.data.map((item: { embedding: number[] }) => item.embedding);
+}
+
+/**
+ * Verify user is an admin
+ */
+async function verifyAdmin(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  userId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error checking admin role:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
+/**
+ * Handle training data import action
+ */
+async function handleTrainingImport(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  userId: string,
+  qaPairs: QAPair[]
+): Promise<ImportResponse> {
+  const results: EmbeddingResult[] = [];
+
+  console.log(`Processing ${qaPairs.length} Q&A pairs for user ${userId}`);
+
+  // Process in batches
+  for (let i = 0; i < qaPairs.length; i += IMPORT_BATCH_SIZE) {
+    const batch = qaPairs.slice(i, i + IMPORT_BATCH_SIZE);
+    const questions = batch.map((p) => p.question);
+
+    console.log(`Processing batch ${Math.floor(i / IMPORT_BATCH_SIZE) + 1}/${Math.ceil(qaPairs.length / IMPORT_BATCH_SIZE)}`);
+
+    try {
+      // Generate embeddings for the batch
+      const embeddings = await generateEmbeddings(questions);
+
+      // Prepare insert data
+      const insertData = batch.map((pair, idx) => ({
+        question: pair.question,
+        answer: pair.answer,
+        category: pair.category || null,
+        question_embedding: `[${embeddings[idx].join(",")}]`,
+        source: "import",
+        imported_by: userId,
+      }));
+
+      // Insert batch into database
+      const { data, error } = await supabase
+        .from("training_conversations")
+        .insert(insertData)
+        .select("id, question");
+
+      if (error) {
+        console.error("Database insert error:", error);
+        batch.forEach((pair) => {
+          results.push({
+            id: "",
+            question: pair.question.slice(0, 50),
+            success: false,
+            error: error.message,
+          });
+        });
+      } else {
+        data?.forEach((row: { id: string; question: string }) => {
+          results.push({
+            id: row.id,
+            question: row.question.slice(0, 50),
+            success: true,
+          });
+        });
+      }
+    } catch (err) {
+      console.error("Batch processing error:", err);
+      batch.forEach((pair) => {
+        results.push({
+          id: "",
+          question: pair.question.slice(0, 50),
+          success: false,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
+      });
+    }
+  }
+
+  const successCount = results.filter((r) => r.success).length;
+  const errorCount = results.filter((r) => !r.success).length;
+
+  console.log(`Import complete: ${successCount} success, ${errorCount} errors`);
+
+  return {
+    success: errorCount === 0,
+    imported: successCount,
+    errors: errorCount,
+    results,
+  };
+}
+
+/**
+ * Retrieve similar conversations from the training data using vector similarity
+ */
+async function retrieveSimilarConversations(
+  // deno-lint-ignore no-explicit-any
+  supabaseClient: any,
+  query: string,
+  limit: number = RAG_MAX_EXAMPLES
+): Promise<SimilarConversation[]> {
+  try {
+    const embedding = await generateQueryEmbedding(query);
+    if (embedding.length === 0) return [];
+
+    const { data, error } = await supabaseClient.rpc("match_training_conversations", {
+      query_embedding: `[${embedding.join(",")}]`,
+      match_count: limit,
+      similarity_threshold: RAG_SIMILARITY_THRESHOLD,
+    });
+
+    if (error) {
+      console.error("RAG: Retrieval error:", error);
+      return [];
+    }
+
+    // Update retrieval stats (fire and forget)
+    if (data?.length > 0) {
+      const ids = data.map((d: SimilarConversation) => d.id);
+      supabaseClient
+        .from("training_conversations")
+        .update({
+          retrieval_count: supabaseClient.sql`retrieval_count + 1`,
+          last_retrieved_at: new Date().toISOString(),
+        })
+        .in("id", ids)
+        .then(() => {
+          console.log(`RAG: Updated retrieval stats for ${ids.length} conversations`);
+        })
+        .catch((err: Error) => {
+          console.warn("RAG: Failed to update retrieval stats:", err);
+        });
+    }
+
+    console.log(`RAG: Retrieved ${data?.length || 0} similar conversations`);
+    return data || [];
+  } catch (err) {
+    console.error("RAG: Retrieval failed:", err);
+    return [];
+  }
+}
+
+/**
+ * Build the system prompt with RAG examples if available
+ */
+function buildSystemPrompt(similarConversations: SimilarConversation[], includeTools: boolean): string {
+  const basePrompt = `You are a friendly and helpful AI support assistant for Virality, a platform that connects creators with brands for UGC campaigns.
+
+Your role is to help users with:
+- Account setup and profile questions
+- Campaign applications and participation
+- Payout and earnings inquiries
+- Platform features and how to use them
+- Technical issues and troubleshooting
+- General questions about how Virality works`;
+
+  const toolInstructions = includeTools
+    ? `
+
+When to create a support ticket:
+- You cannot resolve the technical issue
+- The user explicitly asks for human support
+- The issue involves billing disputes or refunds
+- Account verification or identity issues
+- The user seems frustrated and needs personal attention
+- Complex payout or payment issues
+- Any issue requiring account-level changes`
+    : `
+
+If you cannot solve an issue, let the user know they can ask you to create a support ticket to reach the human support team.`;
+
+  // Build RAG context section if we have similar conversations
+  let ragContext = "";
+  if (similarConversations.length > 0) {
+    const examples = similarConversations
+      .map(
+        (conv, i) =>
+          `Example ${i + 1}:
+User: ${conv.question}
+Assistant: ${conv.answer}`
+      )
+      .join("\n\n");
+
+    ragContext = `
+
+Here are some relevant examples of how to respond to similar questions:
+
+${examples}
+
+Use these examples as guidance for tone, detail level, and response structure. Adapt your response to the specific question asked.`;
+  }
+
+  return `${basePrompt}${ragContext}
+
+Be concise, friendly, and helpful.${toolInstructions}
+
+Keep responses brief and to the point. Use bullet points when listing multiple items. Don't use excessive emojis.`;
+}
+
 // Tool definitions for the AI
 const tools = [
   {
@@ -159,7 +477,92 @@ serve(async (req) => {
       );
     }
 
-    const { messages } = body;
+    const { action, messages, qa_pairs } = body;
+
+    // Handle training data import action (admin only)
+    if (action === "import") {
+      // Verify admin role
+      const isAdmin = await verifyAdmin(supabaseService, user.id);
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Admin access required" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Validate input
+      if (!qa_pairs || !Array.isArray(qa_pairs) || qa_pairs.length === 0) {
+        return new Response(JSON.stringify({ error: "qa_pairs array required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check OPENAI_API_KEY is configured
+      if (!OPENAI_API_KEY) {
+        return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured. Please add it to Supabase secrets." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      try {
+        const result = await handleTrainingImport(supabaseService, user.id, qa_pairs);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        console.error("Import error:", err);
+        return new Response(JSON.stringify({
+          error: err instanceof Error ? err.message : "Import failed",
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Handle test embedding action (admin only)
+    if (action === "test") {
+      const isAdmin = await verifyAdmin(supabaseService, user.id);
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Admin access required" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!OPENAI_API_KEY) {
+        return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const testText = body.text || "How do I reset my password?";
+      try {
+        const embeddings = await generateEmbeddings([testText]);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            text: testText,
+            dimensions: embeddings[0].length,
+            sample: embeddings[0].slice(0, 5),
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (err) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: err instanceof Error ? err.message : "Unknown error",
+          }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Default: chat action
 
     // Validate messages array
     if (!messages || !Array.isArray(messages)) {
@@ -217,11 +620,40 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!LOVABLE_API_KEY) {
       console.error("Support chat: LOVABLE_API_KEY is not configured");
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    // Extract the latest user message for RAG retrieval
+    const latestUserMessage = messages
+      .filter((m: { role: string }) => m.role === "user")
+      .pop()?.content || "";
+
+    // Retrieve similar conversations using RAG (with timeout protection)
+    let similarConversations: SimilarConversation[] = [];
+    if (RAG_ENABLED && latestUserMessage) {
+      try {
+        const ragPromise = retrieveSimilarConversations(
+          supabaseService,
+          latestUserMessage,
+          RAG_MAX_EXAMPLES
+        );
+        const timeoutPromise = new Promise<SimilarConversation[]>((_, reject) =>
+          setTimeout(() => reject(new Error("RAG timeout")), RAG_TIMEOUT_MS)
+        );
+
+        similarConversations = await Promise.race([ragPromise, timeoutPromise]);
+        console.log(`Support chat: RAG retrieved ${similarConversations.length} examples`);
+      } catch (err) {
+        console.warn("Support chat: RAG retrieval skipped:", err instanceof Error ? err.message : err);
+        // Continue without RAG context
+      }
+    }
+
+    // Build system prompt with RAG context
+    const systemPromptWithTools = buildSystemPrompt(similarConversations, true);
 
     // First, make a non-streaming request to check for tool calls
     const initialResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -235,28 +667,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a friendly and helpful AI support assistant for Virality, a platform that connects creators with brands for UGC campaigns. 
-
-Your role is to help users with:
-- Account setup and profile questions
-- Campaign applications and participation
-- Payout and earnings inquiries
-- Platform features and how to use them
-- Technical issues and troubleshooting
-- General questions about how Virality works
-
-Be concise, friendly, and helpful. If you cannot solve an issue or the user asks to speak with a human, use the create_support_ticket function to escalate the case to the human support team.
-
-When to create a support ticket:
-- You cannot resolve the technical issue
-- The user explicitly asks for human support
-- The issue involves billing disputes or refunds
-- Account verification or identity issues
-- The user seems frustrated and needs personal attention
-- Complex payout or payment issues
-- Any issue requiring account-level changes
-
-Keep responses brief and to the point. Use bullet points when listing multiple items. Don't use excessive emojis.`
+            content: systemPromptWithTools,
           },
           ...messages,
         ],
@@ -337,6 +748,9 @@ Keep responses brief and to the point. Use bullet points when listing multiple i
     }
 
     // No tool call - return the regular response as streaming
+    // Build system prompt without tool instructions for streaming
+    const systemPromptForStreaming = buildSystemPrompt(similarConversations, false);
+
     // Make a new streaming request
     const streamResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -349,19 +763,7 @@ Keep responses brief and to the point. Use bullet points when listing multiple i
         messages: [
           {
             role: "system",
-            content: `You are a friendly and helpful AI support assistant for Virality, a platform that connects creators with brands for UGC campaigns. 
-
-Your role is to help users with:
-- Account setup and profile questions
-- Campaign applications and participation
-- Payout and earnings inquiries
-- Platform features and how to use them
-- Technical issues and troubleshooting
-- General questions about how Virality works
-
-Be concise, friendly, and helpful. If you cannot solve an issue, let the user know they can ask you to create a support ticket to reach the human support team.
-
-Keep responses brief and to the point. Use bullet points when listing multiple items. Don't use excessive emojis.`
+            content: systemPromptForStreaming,
           },
           ...messages,
         ],

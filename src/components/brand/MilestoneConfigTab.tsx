@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,20 +56,16 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
   const [selectedCampaign, setSelectedCampaign] = useState("");
   const [selectedBoost, setSelectedBoost] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, [brandId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [milestonesResult, campaignsResult, boostsResult] = await Promise.all([
-        (supabase
-          .from("milestone_configs" as any)
+        supabase
+          .from("milestone_configs")
           .select("*")
           .eq("brand_id", brandId)
           .order("milestone_type")
-          .order("threshold") as any),
+          .order("threshold"),
         supabase
           .from("campaigns")
           .select("id, title")
@@ -92,7 +88,11 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const resetForm = () => {
     setMilestoneType("views");
@@ -149,17 +149,17 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
       };
 
       if (editingMilestone) {
-        const { error } = await (supabase
-          .from("milestone_configs" as any)
+        const { error } = await supabase
+          .from("milestone_configs")
           .update(data)
-          .eq("id", editingMilestone.id) as any);
+          .eq("id", editingMilestone.id);
 
         if (error) throw error;
         toast.success("Milestone updated");
       } else {
-        const { error } = await (supabase
-          .from("milestone_configs" as any)
-          .insert(data) as any);
+        const { error } = await supabase
+          .from("milestone_configs")
+          .insert(data);
 
         if (error) throw error;
         toast.success("Milestone created");
@@ -178,10 +178,10 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
 
   const handleToggleActive = async (milestone: MilestoneConfig) => {
     try {
-      const { error } = await (supabase
-        .from("milestone_configs" as any)
+      const { error } = await supabase
+        .from("milestone_configs")
         .update({ is_active: !milestone.is_active })
-        .eq("id", milestone.id) as any);
+        .eq("id", milestone.id);
 
       if (error) throw error;
 
@@ -198,10 +198,10 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
 
   const handleDelete = async (milestoneId: string) => {
     try {
-      const { error } = await (supabase
-        .from("milestone_configs" as any)
+      const { error } = await supabase
+        .from("milestone_configs")
         .delete()
-        .eq("id", milestoneId) as any);
+        .eq("id", milestoneId);
 
       if (error) throw error;
       toast.success("Milestone deleted");
@@ -307,7 +307,7 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label>Milestone Type</Label>
-                <Select value={milestoneType} onValueChange={(v) => setMilestoneType(v as any)}>
+                <Select value={milestoneType} onValueChange={(v: "views" | "earnings" | "submissions") => setMilestoneType(v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -348,7 +348,7 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
 
               <div className="space-y-2">
                 <Label>Applies To</Label>
-                <Select value={targetType} onValueChange={(v) => setTargetType(v as any)}>
+                <Select value={targetType} onValueChange={(v: "all" | "campaign" | "boost") => setTargetType(v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,19 @@ interface Strike {
   };
 }
 
+// Type for participant query results
+interface ParticipantQueryResult {
+  user_id: string;
+  profiles: {
+    id: string;
+    username: string;
+    full_name: string | null;
+  } | null;
+}
+
+// Milestone type union
+type MilestoneType = "views" | "earnings" | "submissions";
+
 const STRIKE_TYPES = [
   { value: "missed_deadline", label: "Missed Deadline" },
   { value: "late_submission", label: "Late Submission" },
@@ -122,19 +135,15 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
   const [strikeSeverity, setStrikeSeverity] = useState(1);
   const [strikeReason, setStrikeReason] = useState("");
 
-  useEffect(() => {
-    fetchAllData();
-  }, [brandId]);
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [brandResult, milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
         supabase.from("brands").select("settings").eq("id", brandId).single(),
-        (supabase.from("milestone_configs" as any).select("*").eq("brand_id", brandId).order("threshold") as any),
-        (supabase.from("creator_tiers" as any).select("*").eq("brand_id", brandId).order("tier_order") as any),
-        (supabase.from("creator_strikes" as any).select("*, creator:creator_id(username, full_name, avatar_url)").eq("brand_id", brandId).order("created_at", { ascending: false }).limit(10) as any),
-        (supabase.from("campaign_participants" as any).select("user_id, profiles:user_id(id, username, full_name)").eq("brand_id", brandId).eq("status", "accepted") as any)
+        (supabase.from("milestone_configs" as "brands").select("*").eq("brand_id", brandId).order("threshold")),
+        (supabase.from("creator_tiers" as "brands").select("*").eq("brand_id", brandId).order("tier_order")),
+        (supabase.from("creator_strikes" as "brands").select("*, creator:creator_id(username, full_name, avatar_url)").eq("brand_id", brandId).order("created_at", { ascending: false }).limit(10)),
+        (supabase.from("campaign_participants").select("user_id, profiles:user_id(id, username, full_name)").eq("status", "accepted"))
       ]);
 
       // Parse brand settings from JSONB column
@@ -146,30 +155,34 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       setTiers((tiersResult.data || []) as CreatorTier[]);
       setStrikes((strikesResult.data || []) as Strike[]);
 
-      const uniqueCreators = new Map();
-      creatorsResult.data?.forEach((p: any) => {
+      const uniqueCreators = new Map<string, { id: string; username: string; full_name: string | null }>();
+      (creatorsResult.data as ParticipantQueryResult[] | null)?.forEach((p: ParticipantQueryResult) => {
         if (p.profiles && !uniqueCreators.has(p.profiles.id)) {
           uniqueCreators.set(p.profiles.id, p.profiles);
         }
       });
       setCreators(Array.from(uniqueCreators.values()));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching settings:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleSaveSettings = async () => {
     setSavingSettings(true);
     try {
       const { error } = await supabase
         .from("brands")
-        .update({ settings: settings as any })
+        .update({ settings: settings as unknown as Record<string, unknown> })
         .eq("id", brandId);
       if (error) throw error;
       toast.success("Settings saved");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving settings:", error);
       toast.error("Failed to save settings");
     } finally {
@@ -188,12 +201,12 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       return;
     }
     try {
-      const { error } = await (supabase.from("milestone_configs" as any).insert({
+      const { error } = await supabase.from("milestone_configs" as "brands").insert({
         brand_id: brandId,
         milestone_type: milestoneType,
         threshold: parseFloat(milestoneThreshold),
         message_template: milestoneMessage
-      }) as any);
+      } as Record<string, unknown>);
       if (error) throw error;
       toast.success("Milestone created");
       setMilestoneDialogOpen(false);
@@ -207,7 +220,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
 
   const handleDeleteMilestone = async (id: string) => {
     try {
-      await (supabase.from("milestone_configs" as any).delete().eq("id", id) as any);
+      await supabase.from("milestone_configs" as "brands").delete().eq("id", id);
       setMilestones(milestones.filter(m => m.id !== id));
       toast.success("Milestone deleted");
     } catch {
@@ -218,7 +231,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
   // Tier handlers
   const handleCreateDefaultTiers = async () => {
     try {
-      await (supabase.rpc as any)("create_default_creator_tiers", { p_brand_id: brandId });
+      await supabase.rpc("create_default_creator_tiers" as "get_user_permissions", { p_brand_id: brandId } as Record<string, unknown>);
       toast.success("Default tiers created");
       fetchAllData();
     } catch {
@@ -232,14 +245,14 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       return;
     }
     try {
-      const { error } = await (supabase.from("creator_tiers" as any).insert({
+      const { error } = await supabase.from("creator_tiers" as "brands").insert({
         brand_id: brandId,
         name: tierName,
         tier_order: tiers.length + 1,
         rpm_multiplier: parseFloat(tierRpm) || 1.0,
         color: tierColor,
         description: tierDescription || null
-      }) as any);
+      } as Record<string, unknown>);
       if (error) throw error;
       toast.success("Tier created");
       resetTierForm();
@@ -255,12 +268,12 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       return;
     }
     try {
-      const { error } = await (supabase.from("creator_tiers" as any).update({
+      const { error } = await supabase.from("creator_tiers" as "brands").update({
         name: tierName,
         rpm_multiplier: parseFloat(tierRpm) || 1.0,
         color: tierColor,
         description: tierDescription || null
-      }).eq("id", editingTier.id) as any);
+      } as Record<string, unknown>).eq("id", editingTier.id);
       if (error) throw error;
       toast.success("Tier updated");
       resetTierForm();
@@ -290,7 +303,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
 
   const handleDeleteTier = async (id: string) => {
     try {
-      await (supabase.from("creator_tiers" as any).delete().eq("id", id) as any);
+      await supabase.from("creator_tiers" as "brands").delete().eq("id", id);
       setTiers(tiers.filter(t => t.id !== id));
       toast.success("Tier deleted");
     } catch {
@@ -305,13 +318,13 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       return;
     }
     try {
-      const { error } = await (supabase.from("creator_strikes" as any).insert({
+      const { error } = await supabase.from("creator_strikes" as "brands").insert({
         brand_id: brandId,
         creator_id: selectedCreatorId,
         strike_type: strikeType,
         severity: strikeSeverity,
         reason: strikeReason || null
-      }) as any);
+      } as Record<string, unknown>);
       if (error) throw error;
       toast.success("Strike recorded");
       setStrikeDialogOpen(false);
@@ -325,7 +338,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
 
   const handleRemoveStrike = async (id: string) => {
     try {
-      await (supabase.from("creator_strikes" as any).delete().eq("id", id) as any);
+      await supabase.from("creator_strikes" as "brands").delete().eq("id", id);
       setStrikes(strikes.filter(s => s.id !== id));
       toast.success("Strike removed");
     } catch {
@@ -517,7 +530,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>Type</Label>
-                  <Select value={milestoneType} onValueChange={(v) => setMilestoneType(v as any)}>
+                  <Select value={milestoneType} onValueChange={(v) => setMilestoneType(v as MilestoneType)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="views">Views</SelectItem>
@@ -551,7 +564,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
               <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                 <div className="flex items-center gap-3">
                   <Switch checked={m.is_active} onCheckedChange={async (checked) => {
-                    await (supabase.from("milestone_configs" as any).update({ is_active: checked }).eq("id", m.id) as any);
+                    await supabase.from("milestone_configs" as "brands").update({ is_active: checked } as Record<string, unknown>).eq("id", m.id);
                     setMilestones(milestones.map(x => x.id === m.id ? { ...x, is_active: checked } : x));
                   }} />
                   <div>

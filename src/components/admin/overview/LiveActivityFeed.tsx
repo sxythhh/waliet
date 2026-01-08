@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
@@ -12,6 +12,118 @@ import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black-new.png";
 import xLogo from "@/assets/x-logo.png";
+
+// Database query result interfaces
+interface ProfileRow {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  email?: string;
+  total_earnings?: number;
+  display_name?: string;
+}
+
+interface PayoutRequestRow {
+  id: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  user_id: string;
+  profiles: { username: string | null; avatar_url: string | null } | null;
+}
+
+interface FraudFlagRow {
+  id: string;
+  flag_type: string;
+  flag_reason: string | null;
+  created_at: string;
+  user_id: string;
+}
+
+interface CampaignSubmissionRow {
+  id: string;
+  submitted_at: string;
+  platform: string | null;
+  status: string | null;
+  profiles: { id: string; username: string | null; avatar_url: string | null } | null;
+}
+
+interface WalletTransactionRow {
+  id: string;
+  created_at: string;
+  description: string | null;
+  amount: number;
+  status: string | null;
+  user_id: string;
+  type?: string;
+  profiles: { username: string | null; avatar_url: string | null } | null;
+}
+
+interface BountyApplicationRow {
+  id: string;
+  applied_at: string;
+  status: string | null;
+  user_id: string;
+}
+
+interface SocialAccountCampaignRow {
+  id: string;
+  connected_at: string;
+  status: string | null;
+  user_id: string;
+  social_accounts: { username: string | null; platform: string | null; avatar_url: string | null } | null;
+}
+
+// Realtime payload interfaces
+interface RealtimeProfilePayload {
+  id: string;
+  display_name?: string | null;
+  username?: string | null;
+  avatar_url?: string | null;
+}
+
+interface RealtimePayoutPayload {
+  id: string;
+  amount: number;
+  status: string;
+  user_id: string;
+}
+
+interface RealtimeFraudPayload {
+  id: string;
+  flag_type: string;
+  flag_reason?: string | null;
+  user_id: string;
+}
+
+interface RealtimeSubmissionPayload {
+  id: string;
+  platform?: string | null;
+  user_id: string;
+}
+
+interface RealtimeTransactionPayload {
+  id: string;
+  type: string;
+  description?: string | null;
+  amount: number;
+  status?: string | null;
+  user_id: string;
+}
+
+interface RealtimeBountyPayload {
+  id: string;
+  status?: string | null;
+  user_id: string;
+}
+
+interface RealtimeSocialLinkPayload {
+  id: string;
+  status?: string | null;
+  user_id: string;
+}
 
 interface ActivityEvent {
   id: string;
@@ -116,202 +228,21 @@ export function LiveActivityFeed() {
   const [userProfiles, setUserProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [loadingUsers, setLoadingUsers] = useState<Set<string>>(new Set());
   const eventsRef = useRef<ActivityEvent[]>([]);
+  const userProfilesRef = useRef<Map<string, UserProfile>>(userProfiles);
+  const loadingUsersRef = useRef<Set<string>>(loadingUsers);
 
-  // Load initial recent events
+  // Keep refs in sync with state
   useEffect(() => {
-    loadRecentEvents();
-  }, []);
+    userProfilesRef.current = userProfiles;
+  }, [userProfiles]);
 
-  // Set up real-time subscriptions
   useEffect(() => {
-    if (!isLive) return;
+    loadingUsersRef.current = loadingUsers;
+  }, [loadingUsers]);
 
-    // Subscribe to new profiles (signups)
-    const profilesChannel = supabase
-      .channel("admin-profiles")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "profiles" },
-        (payload) => {
-          const profile = payload.new as any;
-          addEvent({
-            id: `signup-${profile.id}`,
-            type: "signup",
-            title: profile.display_name || profile.username || "New user",
-            detail: `@${profile.username || "user"}`,
-            timestamp: new Date(),
-            userId: profile.id,
-            username: profile.username,
-            userAvatar: profile.avatar_url,
-          });
-        }
-      )
-      .subscribe();
-
-    // Subscribe to payout requests
-    const payoutsChannel = supabase
-      .channel("admin-payouts")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "payout_requests" },
-        (payload) => {
-          const payout = payload.new as any;
-          addEvent({
-            id: `payout-${payout.id}`,
-            type: "withdrawal",
-            title: `Withdrawal requested`,
-            detail: `$${Number(payout.amount).toFixed(2)}`,
-            timestamp: new Date(),
-            userId: payout.user_id,
-            amount: Number(payout.amount),
-            status: "pending",
-          });
-        }
-      )
-      .subscribe();
-
-    // Subscribe to completed payouts
-    const completedPayoutsChannel = supabase
-      .channel("admin-completed-payouts")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "payout_requests" },
-        (payload) => {
-          const payout = payload.new as any;
-          if (payout.status === "completed") {
-            addEvent({
-              id: `payout-completed-${payout.id}-${Date.now()}`,
-              type: "payout",
-              title: `Payout completed`,
-              detail: `$${Number(payout.amount).toFixed(2)}`,
-              timestamp: new Date(),
-              userId: payout.user_id,
-              amount: Number(payout.amount),
-              status: "completed",
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to fraud flags
-    const fraudChannel = supabase
-      .channel("admin-fraud")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "fraud_flags" },
-        (payload) => {
-          const flag = payload.new as any;
-          addEvent({
-            id: `fraud-${flag.id}`,
-            type: "fraud",
-            title: `Fraud flag: ${flag.flag_type}`,
-            detail: flag.flag_reason?.slice(0, 50),
-            timestamp: new Date(),
-            userId: flag.user_id,
-          });
-        }
-      )
-      .subscribe();
-
-    // Subscribe to campaign submissions
-    const submissionsChannel = supabase
-      .channel("admin-submissions")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "campaign_submissions" },
-        (payload) => {
-          const submission = payload.new as any;
-          addEvent({
-            id: `submission-${submission.id}`,
-            type: "submission",
-            title: "New submission",
-            timestamp: new Date(),
-            userId: submission.user_id,
-            platform: submission.platform,
-            status: "pending",
-          });
-        }
-      )
-      .subscribe();
-
-    // Subscribe to wallet transactions
-    const transactionsChannel = supabase
-      .channel("admin-transactions")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "wallet_transactions" },
-        (payload) => {
-          const tx = payload.new as any;
-          if (tx.type === 'earning') {
-            addEvent({
-              id: `tx-${tx.id}`,
-              type: "transaction",
-              title: tx.description || "Earning",
-              timestamp: new Date(),
-              userId: tx.user_id,
-              amount: Number(tx.amount),
-              status: tx.status,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to bounty applications
-    const bountyChannel = supabase
-      .channel("admin-bounty")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "bounty_applications" },
-        (payload) => {
-          const app = payload.new as any;
-          addEvent({
-            id: `bounty-${app.id}`,
-            type: "bounty",
-            title: "Bounty application",
-            timestamp: new Date(),
-            userId: app.user_id,
-            status: app.status,
-          });
-        }
-      )
-      .subscribe();
-
-    // Subscribe to social account connections
-    const socialChannel = supabase
-      .channel("admin-social")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "social_account_campaigns" },
-        (payload) => {
-          const link = payload.new as any;
-          addEvent({
-            id: `link-${link.id}`,
-            type: "link",
-            title: "Account connected",
-            timestamp: new Date(),
-            userId: link.user_id,
-            status: link.status,
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(profilesChannel);
-      supabase.removeChannel(payoutsChannel);
-      supabase.removeChannel(completedPayoutsChannel);
-      supabase.removeChannel(fraudChannel);
-      supabase.removeChannel(submissionsChannel);
-      supabase.removeChannel(transactionsChannel);
-      supabase.removeChannel(bountyChannel);
-      supabase.removeChannel(socialChannel);
-    };
-  }, [isLive]);
-
-  const fetchUserProfile = async (userId: string) => {
-    if (userProfiles.has(userId) || loadingUsers.has(userId)) return;
+  // Define fetchUserProfile using refs to avoid dependency issues
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    if (userProfilesRef.current.has(userId) || loadingUsersRef.current.has(userId)) return;
 
     setLoadingUsers(prev => new Set(prev).add(userId));
 
@@ -329,9 +260,21 @@ export function LiveActivityFeed() {
       next.delete(userId);
       return next;
     });
-  };
+  }, []);
 
-  const loadRecentEvents = async () => {
+  // Define addEvent using ref for userProfiles to avoid excessive dependency updates
+  const addEvent = useCallback((event: ActivityEvent) => {
+    eventsRef.current = [event, ...eventsRef.current].slice(0, 25);
+    setEvents([...eventsRef.current]);
+
+    // Auto-fetch user profile if we have userId but no avatar
+    if (event.userId && !event.userAvatar && !userProfilesRef.current.has(event.userId)) {
+      fetchUserProfile(event.userId);
+    }
+  }, [fetchUserProfile]);
+
+  // Define loadRecentEvents
+  const loadRecentEvents = useCallback(async () => {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
@@ -394,7 +337,7 @@ export function LiveActivityFeed() {
 
     const initialEvents: ActivityEvent[] = [];
 
-    profiles?.forEach((p: any) => {
+    (profiles as ProfileRow[] | null)?.forEach((p) => {
       initialEvents.push({
         id: `signup-${p.id}`,
         type: "signup",
@@ -402,13 +345,13 @@ export function LiveActivityFeed() {
         detail: `@${p.username || "user"}`,
         timestamp: new Date(p.created_at),
         userId: p.id,
-        username: p.username,
-        userAvatar: p.avatar_url,
+        username: p.username ?? undefined,
+        userAvatar: p.avatar_url ?? undefined,
       });
     });
 
-    payouts?.forEach((p: any) => {
-      const profile = p.profiles as any;
+    (payouts as PayoutRequestRow[] | null)?.forEach((p) => {
+      const profile = p.profiles;
       initialEvents.push({
         id: `payout-${p.id}`,
         type: p.status === "completed" ? "payout" : "withdrawal",
@@ -416,76 +359,76 @@ export function LiveActivityFeed() {
         detail: `$${Number(p.amount).toFixed(2)}`,
         timestamp: new Date(p.created_at),
         userId: p.user_id,
-        username: profile?.username,
-        userAvatar: profile?.avatar_url,
+        username: profile?.username ?? undefined,
+        userAvatar: profile?.avatar_url ?? undefined,
         amount: Number(p.amount),
         status: p.status,
       });
     });
 
-    fraudFlags?.forEach((f) => {
+    (fraudFlags as FraudFlagRow[] | null)?.forEach((f) => {
       initialEvents.push({
         id: `fraud-${f.id}`,
         type: "fraud",
         title: `Fraud flag: ${f.flag_type}`,
-        detail: f.flag_reason?.slice(0, 50),
+        detail: f.flag_reason?.slice(0, 50) ?? undefined,
         timestamp: new Date(f.created_at),
         userId: f.user_id,
       });
     });
 
-    submissions?.forEach((s: any) => {
-      const profile = s.profiles as any;
+    (submissions as CampaignSubmissionRow[] | null)?.forEach((s) => {
+      const profile = s.profiles;
       initialEvents.push({
         id: `submission-${s.id}`,
         type: "submission",
         title: `${s.platform || 'Content'} submission`,
         timestamp: new Date(s.submitted_at),
         userId: profile?.id,
-        username: profile?.username,
-        userAvatar: profile?.avatar_url,
-        platform: s.platform,
-        status: s.status,
+        username: profile?.username ?? undefined,
+        userAvatar: profile?.avatar_url ?? undefined,
+        platform: s.platform ?? undefined,
+        status: s.status ?? undefined,
       });
     });
 
-    transactions?.forEach((t: any) => {
-      const profile = t.profiles as any;
+    (transactions as WalletTransactionRow[] | null)?.forEach((t) => {
+      const profile = t.profiles;
       initialEvents.push({
         id: `tx-${t.id}`,
         type: "transaction",
         title: t.description || "Earning",
         timestamp: new Date(t.created_at),
         userId: t.user_id,
-        username: profile?.username,
-        userAvatar: profile?.avatar_url,
+        username: profile?.username ?? undefined,
+        userAvatar: profile?.avatar_url ?? undefined,
         amount: Number(t.amount),
-        status: t.status,
+        status: t.status ?? undefined,
       });
     });
 
-    bountyApps?.forEach((b) => {
+    (bountyApps as BountyApplicationRow[] | null)?.forEach((b) => {
       initialEvents.push({
         id: `bounty-${b.id}`,
         type: "bounty",
         title: "Bounty application",
         timestamp: new Date(b.applied_at),
         userId: b.user_id,
-        status: b.status,
+        status: b.status ?? undefined,
       });
     });
 
-    socialLinks?.forEach((s: any) => {
-      const account = s.social_accounts as any;
+    (socialLinks as SocialAccountCampaignRow[] | null)?.forEach((s) => {
+      const account = s.social_accounts;
       initialEvents.push({
         id: `link-${s.id}`,
         type: "link",
         title: `Connected @${account?.username || 'account'}`,
         timestamp: new Date(s.connected_at),
         userId: s.user_id,
-        platform: account?.platform,
-        accountLink: generateAccountLink(account?.platform, account?.username),
-        status: s.status,
+        platform: account?.platform ?? undefined,
+        accountLink: generateAccountLink(account?.platform ?? undefined, account?.username ?? undefined),
+        status: s.status ?? undefined,
       });
     });
 
@@ -505,28 +448,213 @@ export function LiveActivityFeed() {
 
     // Batch fetch user profiles
     if (userIdsToFetch.size > 0) {
-      const { data: profiles } = await supabase
+      const { data: profilesData } = await supabase
         .from("profiles")
         .select("id, username, full_name, avatar_url, email, total_earnings, created_at")
         .in("id", Array.from(userIdsToFetch));
 
-      if (profiles) {
-        const newProfiles = new Map(userProfiles);
-        profiles.forEach(p => newProfiles.set(p.id, p));
-        setUserProfiles(newProfiles);
+      if (profilesData) {
+        setUserProfiles(prev => {
+          const newProfiles = new Map(prev);
+          profilesData.forEach(p => newProfiles.set(p.id, p));
+          return newProfiles;
+        });
       }
     }
-  };
+  }, []);
 
-  const addEvent = (event: ActivityEvent) => {
-    eventsRef.current = [event, ...eventsRef.current].slice(0, 25);
-    setEvents([...eventsRef.current]);
+  // Load initial recent events
+  useEffect(() => {
+    loadRecentEvents();
+  }, [loadRecentEvents]);
 
-    // Auto-fetch user profile if we have userId but no avatar
-    if (event.userId && !event.userAvatar && !userProfiles.has(event.userId)) {
-      fetchUserProfile(event.userId);
-    }
-  };
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!isLive) return;
+
+    // Subscribe to new profiles (signups)
+    const profilesChannel = supabase
+      .channel("admin-profiles")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "profiles" },
+        (payload) => {
+          const profile = payload.new as RealtimeProfilePayload;
+          addEvent({
+            id: `signup-${profile.id}`,
+            type: "signup",
+            title: profile.display_name || profile.username || "New user",
+            detail: `@${profile.username || "user"}`,
+            timestamp: new Date(),
+            userId: profile.id,
+            username: profile.username ?? undefined,
+            userAvatar: profile.avatar_url ?? undefined,
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to payout requests
+    const payoutsChannel = supabase
+      .channel("admin-payouts")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "payout_requests" },
+        (payload) => {
+          const payout = payload.new as RealtimePayoutPayload;
+          addEvent({
+            id: `payout-${payout.id}`,
+            type: "withdrawal",
+            title: `Withdrawal requested`,
+            detail: `$${Number(payout.amount).toFixed(2)}`,
+            timestamp: new Date(),
+            userId: payout.user_id,
+            amount: Number(payout.amount),
+            status: "pending",
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to completed payouts
+    const completedPayoutsChannel = supabase
+      .channel("admin-completed-payouts")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "payout_requests" },
+        (payload) => {
+          const payout = payload.new as RealtimePayoutPayload;
+          if (payout.status === "completed") {
+            addEvent({
+              id: `payout-completed-${payout.id}-${Date.now()}`,
+              type: "payout",
+              title: `Payout completed`,
+              detail: `$${Number(payout.amount).toFixed(2)}`,
+              timestamp: new Date(),
+              userId: payout.user_id,
+              amount: Number(payout.amount),
+              status: "completed",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to fraud flags
+    const fraudChannel = supabase
+      .channel("admin-fraud")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "fraud_flags" },
+        (payload) => {
+          const flag = payload.new as RealtimeFraudPayload;
+          addEvent({
+            id: `fraud-${flag.id}`,
+            type: "fraud",
+            title: `Fraud flag: ${flag.flag_type}`,
+            detail: flag.flag_reason?.slice(0, 50),
+            timestamp: new Date(),
+            userId: flag.user_id,
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to campaign submissions
+    const submissionsChannel = supabase
+      .channel("admin-submissions")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "campaign_submissions" },
+        (payload) => {
+          const submission = payload.new as RealtimeSubmissionPayload;
+          addEvent({
+            id: `submission-${submission.id}`,
+            type: "submission",
+            title: "New submission",
+            timestamp: new Date(),
+            userId: submission.user_id,
+            platform: submission.platform ?? undefined,
+            status: "pending",
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to wallet transactions
+    const transactionsChannel = supabase
+      .channel("admin-transactions")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "wallet_transactions" },
+        (payload) => {
+          const tx = payload.new as RealtimeTransactionPayload;
+          if (tx.type === 'earning') {
+            addEvent({
+              id: `tx-${tx.id}`,
+              type: "transaction",
+              title: tx.description || "Earning",
+              timestamp: new Date(),
+              userId: tx.user_id,
+              amount: Number(tx.amount),
+              status: tx.status ?? undefined,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to bounty applications
+    const bountyChannel = supabase
+      .channel("admin-bounty")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "bounty_applications" },
+        (payload) => {
+          const app = payload.new as RealtimeBountyPayload;
+          addEvent({
+            id: `bounty-${app.id}`,
+            type: "bounty",
+            title: "Bounty application",
+            timestamp: new Date(),
+            userId: app.user_id,
+            status: app.status ?? undefined,
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to social account connections
+    const socialChannel = supabase
+      .channel("admin-social")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "social_account_campaigns" },
+        (payload) => {
+          const link = payload.new as RealtimeSocialLinkPayload;
+          addEvent({
+            id: `link-${link.id}`,
+            type: "link",
+            title: "Account connected",
+            timestamp: new Date(),
+            userId: link.user_id,
+            status: link.status ?? undefined,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(payoutsChannel);
+      supabase.removeChannel(completedPayoutsChannel);
+      supabase.removeChannel(fraudChannel);
+      supabase.removeChannel(submissionsChannel);
+      supabase.removeChannel(transactionsChannel);
+      supabase.removeChannel(bountyChannel);
+      supabase.removeChannel(socialChannel);
+    };
+  }, [isLive, addEvent]);
 
   // Calculate stats
   const stats = {

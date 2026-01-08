@@ -44,6 +44,13 @@ export interface SocialAccount {
     campaign: Campaign;
   }>;
   demographic_submissions?: DemographicSubmission[];
+  // zkTLS verification fields
+  zktls_verified?: boolean;
+  zktls_verified_at?: string | null;
+  zktls_expires_at?: string | null;
+  zktls_engagement_rate?: number | null;
+  zktls_avg_views?: number | null;
+  zktls_demographics?: Record<string, any> | null;
 }
 
 interface SocialAccountsTableProps {
@@ -61,6 +68,11 @@ interface SocialAccountsTableProps {
     platform: string;
     username: string;
   }) => void;
+  onVerifyZkTLS?: (account: {
+    id: string;
+    platform: string;
+    username: string;
+  }) => void;
 }
 
 export function SocialAccountsTable({
@@ -69,7 +81,8 @@ export function SocialAccountsTable({
   onManageAccount,
   onUnlinkCampaign,
   onVerifyAccount,
-  onSubmitDemographics
+  onSubmitDemographics,
+  onVerifyZkTLS,
 }: SocialAccountsTableProps) {
   const { resolvedTheme } = useTheme();
 
@@ -157,32 +170,32 @@ export function SocialAccountsTable({
                     {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? "s" : ""}
                   </span>
                 )}
-                {demographicSubmissions.length === 0 ? (
-                  <button
-                    onClick={() => onSubmitDemographics({
-                      id: account.id,
-                      platform: account.platform,
-                      username: account.username
-                    })}
-                    className="inline-flex items-center gap-1 text-destructive font-medium font-inter tracking-[-0.3px]"
-                  >
-                    Submit insights
-                  </button>
-                ) : (
-                  <AudienceInsightsStatusCard
-                    accountId={account.id}
-                    platform={account.platform}
-                    username={account.username}
-                    submissions={demographicSubmissions}
-                    campaignIds={connectedCampaigns.map(c => c.campaign.id)}
-                    onSubmitNew={() => onSubmitDemographics({
-                      id: account.id,
-                      platform: account.platform,
-                      username: account.username
-                    })}
-                    onRefresh={onRefresh}
-                  />
-                )}
+                <AudienceInsightsStatusCard
+                  accountId={account.id}
+                  platform={account.platform}
+                  username={account.username}
+                  submissions={demographicSubmissions}
+                  campaignIds={connectedCampaigns.map(c => c.campaign.id)}
+                  onSubmitNew={() => onSubmitDemographics({
+                    id: account.id,
+                    platform: account.platform,
+                    username: account.username
+                  })}
+                  onRefresh={onRefresh}
+                  zkTLSData={account.zktls_verified !== undefined ? {
+                    zktls_verified: account.zktls_verified || false,
+                    zktls_verified_at: account.zktls_verified_at,
+                    zktls_expires_at: account.zktls_expires_at,
+                    zktls_engagement_rate: account.zktls_engagement_rate,
+                    zktls_avg_views: account.zktls_avg_views,
+                    zktls_demographics: account.zktls_demographics,
+                  } : undefined}
+                  onVerifyZkTLS={onVerifyZkTLS ? () => onVerifyZkTLS({
+                    id: account.id,
+                    platform: account.platform,
+                    username: account.username
+                  }) : undefined}
+                />
               </div>
             </div>
           );
@@ -299,33 +312,32 @@ export function SocialAccountsTable({
 
                   {/* Demographics */}
                   <TableCell className="py-3">
-                    {demographicSubmissions.length === 0 ? (
-                      <button
-                        onClick={() => onSubmitDemographics({
-                          id: account.id,
-                          platform: account.platform,
-                          username: account.username
-                        })}
-                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors tracking-tight"
-                      >
-                        <img alt="" className="h-3 w-3" src="/lovable-uploads/277a54e4-4b44-4fe9-a480-ecc968a0f7b6.png" />
-                        Submit
-                      </button>
-                    ) : (
-                      <AudienceInsightsStatusCard
-                        accountId={account.id}
-                        platform={account.platform}
-                        username={account.username}
-                        submissions={demographicSubmissions}
-                        campaignIds={connectedCampaigns.map(c => c.campaign.id)}
-                        onSubmitNew={() => onSubmitDemographics({
-                          id: account.id,
-                          platform: account.platform,
-                          username: account.username
-                        })}
-                        onRefresh={onRefresh}
-                      />
-                    )}
+                    <AudienceInsightsStatusCard
+                      accountId={account.id}
+                      platform={account.platform}
+                      username={account.username}
+                      submissions={demographicSubmissions}
+                      campaignIds={connectedCampaigns.map(c => c.campaign.id)}
+                      onSubmitNew={() => onSubmitDemographics({
+                        id: account.id,
+                        platform: account.platform,
+                        username: account.username
+                      })}
+                      onRefresh={onRefresh}
+                      zkTLSData={account.zktls_verified !== undefined ? {
+                        zktls_verified: account.zktls_verified || false,
+                        zktls_verified_at: account.zktls_verified_at,
+                        zktls_expires_at: account.zktls_expires_at,
+                        zktls_engagement_rate: account.zktls_engagement_rate,
+                        zktls_avg_views: account.zktls_avg_views,
+                        zktls_demographics: account.zktls_demographics,
+                      } : undefined}
+                      onVerifyZkTLS={onVerifyZkTLS ? () => onVerifyZkTLS({
+                        id: account.id,
+                        platform: account.platform,
+                        username: account.username
+                      }) : undefined}
+                    />
                   </TableCell>
 
                   {/* Status */}

@@ -9,7 +9,7 @@ import { Check, Clock, Hourglass, X, ChevronLeft, ChevronRight } from "lucide-re
 
 export interface Transaction {
   id: string;
-  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning' | 'transfer_out';
+  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning' | 'transfer_out' | 'transfer_in';
   amount: number;
   date: Date;
   destination?: string;
@@ -78,109 +78,143 @@ export function TransactionsTable({
     );
   }
 
-  // Compact variant - simplified list view for dashboard home
+  // Compact variant - redesigned list view for dashboard home
   if (variant === 'compact') {
     return (
       <div className={className}>
         <div
-          className={`space-y-1 ${maxHeight ? 'overflow-auto' : ''}`}
+          className={`divide-y divide-border/50 ${maxHeight ? 'overflow-auto' : ''}`}
           style={maxHeight ? { maxHeight } : undefined}
         >
           {paginatedTransactions.map(transaction => {
             const brandName = transaction.boost?.brand_name || transaction.campaign?.brand_name;
             const brandLogo = transaction.boost?.brand_logo_url || transaction.campaign?.brand_logo_url;
             const isOutgoing = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0);
-            const isTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_received';
+            const isTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_received' || transaction.type === 'transfer_in' || transaction.type === 'transfer_out';
+            const isIncomingTransfer = transaction.type === 'transfer_received' || transaction.type === 'transfer_in';
+            const isOutgoingTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_out';
+
+            // Get display name based on transaction type
+            const displayName = brandName ||
+              (isIncomingTransfer ? `@${transaction.sender?.username || transaction.metadata?.sender_username || 'user'}` :
+              isOutgoingTransfer ? `@${transaction.recipient?.username || transaction.metadata?.recipient_username || 'user'}` :
+              transaction.type === 'withdrawal' ? 'Withdrawal' :
+              transaction.type === 'referral' ? 'Referral Bonus' :
+              transaction.type === 'balance_correction' ? 'Balance Adjustment' :
+              'Transaction');
+
+            // Get subtitle based on transaction type
+            const subtitle = transaction.type === 'earning' || transaction.type === 'boost_earning'
+              ? 'Campaign payout'
+              : transaction.type === 'withdrawal'
+              ? 'To bank account'
+              : isOutgoingTransfer
+              ? 'Sent'
+              : isIncomingTransfer
+              ? 'Received'
+              : transaction.type === 'referral'
+              ? 'Bonus'
+              : format(transaction.date, 'MMM d');
 
             return (
               <div
                 key={transaction.id}
                 onClick={() => onTransactionClick?.(transaction)}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                className="group flex items-center gap-4 py-3.5 px-1 cursor-pointer transition-all duration-200 hover:bg-muted/30 -mx-1 first:pt-1 last:pb-1"
               >
-                {/* Source Icon */}
-                <div className="flex-shrink-0">
+                {/* Source Icon with subtle shadow */}
+                <div className="flex-shrink-0 relative">
                   {brandLogo ? (
-                    <img src={brandLogo} alt={brandName || ''} className="w-9 h-9 rounded-lg object-cover" />
-                  ) : isTransfer && transaction.type === 'transfer_received' ? (
-                    <Avatar className="h-9 w-9">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden ring-1 ring-border/50 shadow-sm transition-shadow duration-200 group-hover:shadow-md">
+                      <img src={brandLogo} alt={brandName || ''} className="w-full h-full object-cover" />
+                    </div>
+                  ) : isTransfer && isIncomingTransfer ? (
+                    <Avatar className="h-10 w-10 ring-1 ring-border/50 shadow-sm transition-shadow duration-200 group-hover:shadow-md">
                       <AvatarImage src={transaction.sender?.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs bg-muted">
+                      <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-muted to-muted/50 text-muted-foreground">
                         {(transaction.sender?.username || transaction.metadata?.sender_username || 'U').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                  ) : isTransfer && transaction.type === 'transfer_sent' ? (
-                    <Avatar className="h-9 w-9">
+                  ) : isTransfer && isOutgoingTransfer ? (
+                    <Avatar className="h-10 w-10 ring-1 ring-border/50 shadow-sm transition-shadow duration-200 group-hover:shadow-md">
                       <AvatarImage src={transaction.recipient?.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs bg-muted">
+                      <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-muted to-muted/50 text-muted-foreground">
                         {(transaction.recipient?.username || transaction.metadata?.recipient_username || 'U').charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   ) : (
-                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                      <span className="text-sm font-medium text-muted-foreground">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-muted to-muted/60 ring-1 ring-border/50 shadow-sm flex items-center justify-center transition-shadow duration-200 group-hover:shadow-md">
+                      <span className="text-sm font-semibold text-muted-foreground">
                         {brandName ? brandName.charAt(0).toUpperCase() : '$'}
                       </span>
                     </div>
                   )}
+                  {/* Status dot indicator */}
+                  {transaction.status && transaction.status !== 'completed' && (
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${
+                      transaction.status === 'pending' ? 'bg-amber-500' :
+                      transaction.status === 'in_transit' ? 'bg-blue-500' :
+                      transaction.status === 'rejected' ? 'bg-red-500' : 'bg-muted'
+                    }`} />
+                  )}
                 </div>
 
-                {/* Source Name & Date */}
+                {/* Source Name & Subtitle */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {brandName ||
-                      (transaction.type === 'transfer_received' ? `@${transaction.sender?.username || transaction.metadata?.sender_username}` :
-                      transaction.type === 'transfer_sent' ? `@${transaction.recipient?.username || transaction.metadata?.recipient_username}` :
-                      transaction.type === 'withdrawal' ? 'Withdrawal' :
-                      transaction.type === 'referral' ? 'Referral Bonus' :
-                      transaction.type === 'balance_correction' ? 'Balance Adjustment' :
-                      'Transaction')}
+                  <p className="text-sm font-medium text-foreground truncate leading-tight tracking-tight">
+                    {displayName}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(transaction.date, 'MMM d, yyyy')}
+                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                    <span>{subtitle}</span>
+                    <span className="text-muted-foreground/40">·</span>
+                    <span>{format(transaction.date, 'MMM d')}</span>
                   </p>
                 </div>
 
-                {/* Status Icon */}
-                <div className="flex-shrink-0">
+                {/* Amount with better typography */}
+                <div className="flex-shrink-0 text-right">
+                  <span className={`text-sm font-semibold tabular-nums tracking-tight ${
+                    isOutgoing
+                      ? 'text-foreground'
+                      : 'text-emerald-600 dark:text-emerald-500'
+                  }`}>
+                    {isOutgoing ? '−' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                  </span>
                   {transaction.status === 'completed' && (
-                    <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <Check className="h-3.5 w-3.5 text-green-500" />
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <Check className="h-3 w-3 text-emerald-500" />
+                      <span className="text-[10px] text-muted-foreground">Paid</span>
                     </div>
                   )}
                   {transaction.status === 'pending' && (
-                    <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <Clock className="h-3.5 w-3.5 text-orange-500" />
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <Clock className="h-3 w-3 text-amber-500" />
+                      <span className="text-[10px] text-muted-foreground">Pending</span>
                     </div>
                   )}
                   {transaction.status === 'in_transit' && (
-                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <Hourglass className="h-3.5 w-3.5 text-blue-500" />
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <Hourglass className="h-3 w-3 text-blue-500" />
+                      <span className="text-[10px] text-muted-foreground">In Transit</span>
                     </div>
                   )}
                   {transaction.status === 'rejected' && (
-                    <div className="w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center">
-                      <X className="h-3.5 w-3.5 text-red-500" />
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <X className="h-3 w-3 text-red-500" />
+                      <span className="text-[10px] text-muted-foreground">Rejected</span>
                     </div>
                   )}
-                </div>
-
-                {/* Amount */}
-                <div className="flex-shrink-0 text-right">
-                  <span className={`text-sm font-semibold ${isOutgoing ? 'text-foreground' : 'text-emerald-500'}`}>
-                    {isOutgoing ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
-                  </span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Pagination for compact */}
+        {/* Pagination for compact - refined styling */}
         {showPagination && displayTransactions.length > itemsPerPage && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground">
-              {Math.min((currentPage - 1) * itemsPerPage + 1, displayTransactions.length)}-{Math.min(currentPage * itemsPerPage, displayTransactions.length)} of {displayTransactions.length}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {Math.min((currentPage - 1) * itemsPerPage + 1, displayTransactions.length)}–{Math.min(currentPage * itemsPerPage, displayTransactions.length)} of {displayTransactions.length}
             </p>
             <div className="flex gap-1">
               <Button
@@ -188,7 +222,7 @@ export function TransactionsTable({
                 size="icon"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="h-7 w-7 rounded-md"
+                className="h-8 w-8 rounded-lg transition-all duration-200 hover:bg-muted disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -197,7 +231,7 @@ export function TransactionsTable({
                 size="icon"
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={currentPage * itemsPerPage >= displayTransactions.length}
-                className="h-7 w-7 rounded-md"
+                className="h-8 w-8 rounded-lg transition-all duration-200 hover:bg-muted disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -280,7 +314,7 @@ export function TransactionsTable({
                       )}
                       <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
                     </div>
-                  ) : transaction.type === 'transfer_received' && (transaction.sender || transaction.metadata?.sender_username) ? (
+                  ) : (transaction.type === 'transfer_received' || transaction.type === 'transfer_in') && (transaction.sender || transaction.metadata?.sender_username) ? (
                     <div
                       className="flex items-center gap-2 hover:underline cursor-pointer"
                       onClick={e => {
@@ -298,6 +332,8 @@ export function TransactionsTable({
                     </div>
                   ) : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? (
                     <span className="text-sm text-foreground">Wallet</span>
+                  ) : transaction.type === 'transfer_in' && !transaction.sender && !transaction.metadata?.sender_username ? (
+                    <span className="text-sm text-foreground">Transfer</span>
                   ) : (
                     <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>
                   )}
@@ -410,7 +446,7 @@ export function TransactionsTable({
                 {/* Amount */}
                 <TableCell className="py-4 text-right">
                   {(() => {
-                    const isDeduction = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0);
+                    const isDeduction = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0) || (transaction.type !== 'transfer_in' && transaction.type !== 'transfer_received' && transaction.amount < 0);
                     return (
                       <span className={isDeduction ? '' : 'text-emerald-500'}>
                         {isDeduction ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,31 @@ interface TierAssignment {
   };
 }
 
+// Database query result types (tables not yet in generated types)
+interface CreatorTiersTable {
+  Row: CreatorTier;
+  Insert: Omit<CreatorTier, 'id'>;
+  Update: Partial<Omit<CreatorTier, 'id'>>;
+}
+
+interface TierPromotionRulesTable {
+  Row: TierPromotionRule;
+  Insert: Omit<TierPromotionRule, 'id'>;
+  Update: Partial<Omit<TierPromotionRule, 'id'>>;
+}
+
+interface CreatorTierAssignmentsTable {
+  Row: TierAssignment;
+  Insert: Omit<TierAssignment, 'id'>;
+  Update: Partial<Omit<TierAssignment, 'id'>>;
+}
+
+// Type for Supabase query response
+interface SupabaseQueryResult<T> {
+  data: T[] | null;
+  error: { message: string } | null;
+}
+
 interface TierPromotionTabProps {
   brandId: string;
 }
@@ -87,55 +112,56 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
   const [thresholdValue, setThresholdValue] = useState("");
   const [evaluationPeriod, setEvaluationPeriod] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, [brandId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [tiersResult, rulesResult, assignmentsResult] = await Promise.all([
-        (supabase
-          .from("creator_tiers" as any)
+        supabase
+          .from("creator_tiers" as keyof typeof supabase extends never ? string : "creator_tiers")
           .select("*")
           .eq("brand_id", brandId)
-          .order("tier_order") as any),
-        (supabase
-          .from("tier_promotion_rules" as any)
+          .order("tier_order") as Promise<SupabaseQueryResult<CreatorTier>>,
+        supabase
+          .from("tier_promotion_rules" as keyof typeof supabase extends never ? string : "tier_promotion_rules")
           .select("*")
           .eq("brand_id", brandId)
-          .order("created_at") as any),
-        (supabase
-          .from("creator_tier_assignments" as any)
+          .order("created_at") as Promise<SupabaseQueryResult<TierPromotionRule>>,
+        supabase
+          .from("creator_tier_assignments" as keyof typeof supabase extends never ? string : "creator_tier_assignments")
           .select(`
             *,
             profiles:user_id(username, avatar_url)
           `)
           .eq("brand_id", brandId)
           .order("assigned_at", { ascending: false })
-          .limit(20) as any)
+          .limit(20) as Promise<SupabaseQueryResult<TierAssignment>>
       ]);
 
-      if (!tiersResult.error) setTiers((tiersResult.data || []) as CreatorTier[]);
-      if (!rulesResult.error) setRules((rulesResult.data || []) as TierPromotionRule[]);
-      if (!assignmentsResult.error) setAssignments((assignmentsResult.data || []) as TierAssignment[]);
+      if (!tiersResult.error) setTiers(tiersResult.data || []);
+      if (!rulesResult.error) setRules(rulesResult.data || []);
+      if (!assignmentsResult.error) setAssignments(assignmentsResult.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const createDefaultTiers = async () => {
     try {
-      const { error } = await (supabase.rpc as any)("create_default_creator_tiers", {
-        p_brand_id: brandId
-      });
+      const { error } = await supabase.rpc(
+        "create_default_creator_tiers" as "get_user_balance",
+        { p_brand_id: brandId } as { user_uuid: string }
+      );
 
       if (error) throw error;
       toast.success("Default tiers created");
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error creating default tiers:", error);
       toast.error("Failed to create default tiers");
     }
@@ -210,16 +236,16 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
 
       if (editingTier) {
         const { error } = await (supabase
-          .from("creator_tiers" as any)
+          .from("creator_tiers" as keyof typeof supabase extends never ? string : "creator_tiers")
           .update(data)
-          .eq("id", editingTier.id) as any);
+          .eq("id", editingTier.id) as Promise<{ error: { message: string } | null }>);
 
         if (error) throw error;
         toast.success("Tier updated");
       } else {
         const { error } = await (supabase
-          .from("creator_tiers" as any)
-          .insert(data) as any);
+          .from("creator_tiers" as keyof typeof supabase extends never ? string : "creator_tiers")
+          .insert(data) as Promise<{ error: { message: string } | null }>);
 
         if (error) throw error;
         toast.success("Tier created");
@@ -228,9 +254,11 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
       setIsTierDialogOpen(false);
       resetTierForm();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving tier:", error);
-      toast.error(error.message || "Failed to save tier");
+      const errorMessage = error instanceof Error ? error.message :
+        (error && typeof error === 'object' && 'message' in error) ? String(error.message) : "Failed to save tier";
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -255,16 +283,16 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
 
       if (editingRule) {
         const { error } = await (supabase
-          .from("tier_promotion_rules" as any)
+          .from("tier_promotion_rules" as keyof typeof supabase extends never ? string : "tier_promotion_rules")
           .update(data)
-          .eq("id", editingRule.id) as any);
+          .eq("id", editingRule.id) as Promise<{ error: { message: string } | null }>);
 
         if (error) throw error;
         toast.success("Rule updated");
       } else {
         const { error } = await (supabase
-          .from("tier_promotion_rules" as any)
-          .insert(data) as any);
+          .from("tier_promotion_rules" as keyof typeof supabase extends never ? string : "tier_promotion_rules")
+          .insert(data) as Promise<{ error: { message: string } | null }>);
 
         if (error) throw error;
         toast.success("Rule created");
@@ -273,7 +301,7 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
       setIsRuleDialogOpen(false);
       resetRuleForm();
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving rule:", error);
       toast.error("Failed to save rule");
     } finally {
@@ -284,14 +312,14 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
   const handleDeleteTier = async (tierId: string) => {
     try {
       const { error } = await (supabase
-        .from("creator_tiers" as any)
+        .from("creator_tiers" as keyof typeof supabase extends never ? string : "creator_tiers")
         .delete()
-        .eq("id", tierId) as any);
+        .eq("id", tierId) as Promise<{ error: { message: string } | null }>);
 
       if (error) throw error;
       toast.success("Tier deleted");
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error deleting tier:", error);
       toast.error("Failed to delete tier");
     }
@@ -300,14 +328,14 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
   const handleDeleteRule = async (ruleId: string) => {
     try {
       const { error } = await (supabase
-        .from("tier_promotion_rules" as any)
+        .from("tier_promotion_rules" as keyof typeof supabase extends never ? string : "tier_promotion_rules")
         .delete()
-        .eq("id", ruleId) as any);
+        .eq("id", ruleId) as Promise<{ error: { message: string } | null }>);
 
       if (error) throw error;
       toast.success("Rule deleted");
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error deleting rule:", error);
       toast.error("Failed to delete rule");
     }
@@ -316,9 +344,9 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
   const handleToggleRule = async (rule: TierPromotionRule) => {
     try {
       const { error } = await (supabase
-        .from("tier_promotion_rules" as any)
+        .from("tier_promotion_rules" as keyof typeof supabase extends never ? string : "tier_promotion_rules")
         .update({ is_active: !rule.is_active })
-        .eq("id", rule.id) as any);
+        .eq("id", rule.id) as Promise<{ error: { message: string } | null }>);
 
       if (error) throw error;
       setRules(prev =>
@@ -326,7 +354,7 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
           r.id === rule.id ? { ...r, is_active: !r.is_active } : r
         )
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error toggling rule:", error);
       toast.error("Failed to update rule");
     }

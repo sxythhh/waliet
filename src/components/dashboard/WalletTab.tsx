@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,18 +57,25 @@ interface UserProfile {
   avatar_url?: string;
   banner_url?: string;
 }
+
+// Type for payout details stored in wallet
+interface PayoutDetails {
+  method: string;
+  details: Record<string, unknown>;
+}
+
 interface WalletData {
   id: string;
   balance: number;
   total_earned: number;
   total_withdrawn: number;
   payout_method: string | null;
-  payout_details: any;
+  payout_details: PayoutDetails[] | PayoutDetails | null;
 }
 interface PayoutMethod {
   id: string;
   method: string;
-  details: any;
+  details: Record<string, unknown>;
 }
 interface EarningsDataPoint {
   date: string;
@@ -87,6 +94,103 @@ interface WithdrawalDataPoint {
   earnings: number;
   withdrawals: number;
 }
+// Type for wallet transaction metadata
+interface TransactionMetadata {
+  campaign_id?: string;
+  boost_id?: string;
+  recipient_id?: string;
+  recipient_username?: string;
+  sender_id?: string;
+  sender_username?: string;
+  payout_method?: string;
+  wallet_address?: string;
+  address?: string;
+  network?: string;
+  brand_name?: string;
+  rejection_reason?: string;
+  balance_before?: number;
+  balance_after?: number;
+  payoutDetails?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+// Type for campaign/boost query results
+interface CampaignQueryResult {
+  id: string;
+  title: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+  brands?: { logo_url?: string; slug?: string } | null;
+}
+
+interface BoostQueryResult {
+  id: string;
+  title: string;
+  brands?: { name?: string; logo_url?: string; slug?: string } | null;
+}
+
+// Type for campaign submission query results
+interface CampaignSubmissionQueryResult {
+  id: string;
+  campaign_id: string;
+  status: string;
+  submitted_at: string;
+  views?: number;
+  earnings?: number;
+  campaigns: {
+    id: string;
+    title: string;
+    slug: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+    banner_url: string | null;
+    rpm_rate: number;
+    brands?: { logo_url?: string; is_verified?: boolean } | null;
+  };
+}
+
+// Type for bounty application query results
+interface BountyApplicationQueryResult {
+  id: string;
+  bounty_campaign_id: string;
+  status: string;
+  applied_at: string;
+  bounty_campaigns: {
+    id: string;
+    title: string;
+    slug: string;
+    monthly_retainer: number;
+    videos_per_month: number;
+    brands?: { name?: string; logo_url?: string; is_verified?: boolean } | null;
+  };
+}
+
+// Type for testimonial query results
+interface TestimonialQueryResult {
+  id: string;
+  content: string;
+  rating: number | null;
+  created_at: string;
+  brands: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    is_verified: boolean;
+  } | null;
+}
+
+// Type for wallet transaction from database
+interface WalletTransactionRow {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  status: string;
+  description: string | null;
+  created_at: string;
+  metadata: TransactionMetadata | null;
+}
+
 interface Transaction {
   id: string;
   type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning' | 'transfer_out';
@@ -96,7 +200,7 @@ interface Transaction {
   source?: string;
   status?: string;
   rejection_reason?: string;
-  metadata?: any;
+  metadata?: TransactionMetadata;
   campaign?: {
     id: string;
     title: string;
@@ -321,7 +425,7 @@ export function WalletTab() {
     }
   };
   // Fetch onboarding data for the Get Discovered checklist
-  const fetchOnboardingData = async () => {
+  const fetchOnboardingData = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -368,8 +472,9 @@ export function WalletTab() {
       .order("submitted_at", { ascending: false });
 
     // Deduplicate by campaign_id
-    const uniqueCampaigns = campaigns ? [...new Map(campaigns.map((c: any) => [c.campaign_id, c])).values()] : [];
-    setCampaignParticipations(uniqueCampaigns.map((c: any) => ({
+    const typedCampaigns = campaigns as CampaignSubmissionQueryResult[] | null;
+    const uniqueCampaigns = typedCampaigns ? [...new Map(typedCampaigns.map((c) => [c.campaign_id, c])).values()] : [];
+    setCampaignParticipations(uniqueCampaigns.map((c) => ({
       id: c.id,
       campaign_id: c.campaign_id,
       status: c.status,
@@ -395,7 +500,8 @@ export function WalletTab() {
 
     if (boosts) {
       // Fetch video counts and earnings for each boost
-      const boostsWithStats = await Promise.all(boosts.map(async (app: any) => {
+      const typedBoosts = boosts as BountyApplicationQueryResult[];
+      const boostsWithStats = await Promise.all(typedBoosts.map(async (app) => {
         const { data: videoSubmissions } = await supabase
           .from("video_submissions")
           .select("id, payout_amount, status")
@@ -430,7 +536,8 @@ export function WalletTab() {
       .order("created_at", { ascending: false });
 
     if (testimonialData) {
-      setTestimonials(testimonialData.map((t: any) => ({
+      const typedTestimonials = testimonialData as TestimonialQueryResult[];
+      setTestimonials(typedTestimonials.map((t) => ({
         id: t.id,
         content: t.content,
         rating: t.rating,
@@ -456,7 +563,7 @@ export function WalletTab() {
       campaignsJoined: approvedCount,
       approvalRate: approvalRate
     });
-  };
+  }, []);
 
   const handleSaveEditingTools = async (tools: string[]) => {
     if (!onboardingProfile) return;
@@ -483,29 +590,7 @@ export function WalletTab() {
     });
   };
 
-  useEffect(() => {
-    fetchWallet();
-    fetchPendingBoostEarnings();
-    fetchClearingPayouts();
-    fetchOnboardingData();
-
-    // Set up real-time listener for payout requests
-    const channel = supabase.channel('payout-updates').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'payout_requests'
-    }, payload => {
-      console.log('Payout request updated:', payload);
-      // Refetch wallet and transactions when payout request changes
-      fetchWallet();
-      fetchTransactions();
-      fetchClearingPayouts();
-    }).subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-  const fetchClearingPayouts = async () => {
+  const fetchClearingPayouts = useCallback(async () => {
     const {
       data: {
         session
@@ -521,8 +606,8 @@ export function WalletTab() {
     } else {
       setClearingPayouts(0);
     }
-  };
-  const fetchPendingBoostEarnings = async () => {
+  }, []);
+  const fetchPendingBoostEarnings = useCallback(async () => {
     const {
       data: {
         session
@@ -547,16 +632,8 @@ export function WalletTab() {
     } else {
       setPendingBoostEarnings(0);
     }
-  };
-  useEffect(() => {
-    if (wallet) {
-      fetchEarningsData();
-      fetchTeamEarningsData();
-      fetchAffiliateEarningsData();
-      fetchWithdrawalData();
-      fetchTransactions();
-    }
-  }, [timePeriod, wallet, earningsChartOffset, earningsChartPeriod]);
+  }, []);
+
   const getDateRange = () => {
     const now = new Date();
     switch (timePeriod) {
@@ -597,7 +674,7 @@ export function WalletTab() {
         };
     }
   };
-  const fetchEarningsData = async () => {
+  const fetchEarningsData = useCallback(async () => {
     const {
       data: {
         session
@@ -623,7 +700,7 @@ export function WalletTab() {
         days = 30;
         break;
       case 'ALL':
-      default:
+      default: {
         // Get all transactions to determine the earliest date
         const {
           data: allTxns
@@ -638,6 +715,7 @@ export function WalletTab() {
           days = 30;
         }
         break;
+      }
     }
 
     // Get all earning transactions from the beginning
@@ -684,8 +762,8 @@ export function WalletTab() {
       dataPoints[dataPoints.length - 1].amount = Number(wallet.total_earned.toFixed(2));
     }
     setEarningsData(dataPoints);
-  };
-  const fetchTeamEarningsData = async () => {
+  }, [earningsChartPeriod, wallet]);
+  const fetchTeamEarningsData = useCallback(async () => {
     const {
       data: {
         session
@@ -741,8 +819,8 @@ export function WalletTab() {
       });
     }
     setTeamEarningsData(dataPoints);
-  };
-  const fetchAffiliateEarningsData = async () => {
+  }, [earningsChartPeriod]);
+  const fetchAffiliateEarningsData = useCallback(async () => {
     const {
       data: {
         session
@@ -798,8 +876,8 @@ export function WalletTab() {
       });
     }
     setAffiliateEarningsData(dataPoints);
-  };
-  const fetchWithdrawalData = async () => {
+  }, [earningsChartPeriod]);
+  const fetchWithdrawalData = useCallback(async () => {
     const {
       data: {
         session
@@ -843,8 +921,8 @@ export function WalletTab() {
       });
     }
     setWithdrawalData(dataPoints);
-  };
-  const fetchTransactions = async () => {
+  }, [earningsChartOffset]);
+  const fetchTransactions = useCallback(async () => {
     const {
       data: {
         session
@@ -866,45 +944,49 @@ export function WalletTab() {
 
     // Extract unique campaign IDs from earnings transactions
     const campaignIds = walletTransactions?.filter(txn => {
-      const metadata = txn.metadata as any;
+      const metadata = txn.metadata as TransactionMetadata | null;
       return txn.type === 'earning' && metadata?.campaign_id;
-    }).map(txn => (txn.metadata as any).campaign_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    }).map(txn => (txn.metadata as TransactionMetadata | null)?.campaign_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Extract unique boost IDs from earnings transactions
     const boostIds = walletTransactions?.filter(txn => {
-      const metadata = txn.metadata as any;
+      const metadata = txn.metadata as TransactionMetadata | null;
       return txn.type === 'earning' && metadata?.boost_id;
-    }).map(txn => (txn.metadata as any).boost_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    }).map(txn => (txn.metadata as TransactionMetadata | null)?.boost_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Fetch campaign details if we have campaign IDs
-    let campaignsMap = new Map();
+    const campaignsMap = new Map<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; brand_slug?: string }>();
     if (campaignIds.length > 0) {
       const {
         data: campaigns
       } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, brands(logo_url, slug)").in("id", campaignIds);
-      campaigns?.forEach(campaign => {
+      const typedCampaigns = campaigns as CampaignQueryResult[] | null;
+      typedCampaigns?.forEach(campaign => {
         campaignsMap.set(campaign.id, {
-          ...campaign,
+          id: campaign.id,
+          title: campaign.title,
+          brand_name: campaign.brand_name,
           // Use brands.logo_url as fallback if brand_logo_url is null
-          brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
-          brand_slug: (campaign.brands as any)?.slug
+          brand_logo_url: campaign.brand_logo_url || campaign.brands?.logo_url || null,
+          brand_slug: campaign.brands?.slug
         });
       });
     }
 
     // Fetch boost details if we have boost IDs
-    let boostsMap = new Map();
+    const boostsMap = new Map<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; brand_slug?: string }>();
     if (boostIds.length > 0) {
       const {
         data: boosts
       } = await supabase.from("bounty_campaigns").select("id, title, brands(name, logo_url, slug)").in("id", boostIds);
-      boosts?.forEach(boost => {
+      const typedBoosts = boosts as BoostQueryResult[] | null;
+      typedBoosts?.forEach(boost => {
         boostsMap.set(boost.id, {
           id: boost.id,
           title: boost.title,
-          brand_name: (boost.brands as any)?.name || '',
-          brand_logo_url: (boost.brands as any)?.logo_url || null,
-          brand_slug: (boost.brands as any)?.slug
+          brand_name: boost.brands?.name || '',
+          brand_logo_url: boost.brands?.logo_url || null,
+          brand_slug: boost.brands?.slug
         });
       });
     }
@@ -914,13 +996,13 @@ export function WalletTab() {
     setPendingWithdrawals(pendingAmount);
 
     // Extract recipient IDs for transfer_sent transactions
-    const recipientIds = walletTransactions?.filter(txn => txn.type === 'transfer_sent' && (txn.metadata as any)?.recipient_id).map(txn => (txn.metadata as any).recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    const recipientIds = walletTransactions?.filter(txn => txn.type === 'transfer_sent' && (txn.metadata as TransactionMetadata | null)?.recipient_id).map(txn => (txn.metadata as TransactionMetadata | null)?.recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Extract sender IDs for transfer_received transactions
-    const senderIds = walletTransactions?.filter(txn => txn.type === 'transfer_received' && (txn.metadata as any)?.sender_id).map(txn => (txn.metadata as any).sender_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    const senderIds = walletTransactions?.filter(txn => txn.type === 'transfer_received' && (txn.metadata as TransactionMetadata | null)?.sender_id).map(txn => (txn.metadata as TransactionMetadata | null)?.sender_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Fetch recipient profiles
-    let recipientsMap = new Map<string, {
+    const recipientsMap = new Map<string, {
       username: string;
       avatar_url: string | null;
     }>();
@@ -937,7 +1019,7 @@ export function WalletTab() {
     }
 
     // Fetch sender profiles
-    let sendersMap = new Map<string, {
+    const sendersMap = new Map<string, {
       username: string;
       avatar_url: string | null;
     }>();
@@ -972,7 +1054,7 @@ export function WalletTab() {
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
       walletTransactions.forEach(txn => {
-        const metadata = txn.metadata as any;
+        const metadata = txn.metadata as TransactionMetadata | null;
         let source = '';
         let destination = '';
         let payoutDetails = null;
@@ -1002,7 +1084,7 @@ export function WalletTab() {
             source = isBoostEarning ? 'Boost Video' : 'Campaign Submission';
             destination = 'Wallet';
             break;
-          case 'withdrawal':
+          case 'withdrawal': {
             source = 'Wallet';
             const payoutMethod = metadata?.payout_method;
             if (payoutMethod === 'paypal') {
@@ -1026,6 +1108,7 @@ export function WalletTab() {
               destination = payoutMethod || 'Unknown';
             }
             break;
+          }
           case 'bonus':
             source = 'Bonus Payment';
             destination = 'Wallet';
@@ -1077,10 +1160,11 @@ export function WalletTab() {
           destination,
           source: source || txn.description || '',
           status: txn.status,
-          rejection_reason: (txn.metadata as any)?.rejection_reason,
-          metadata: Object.assign({}, txn.metadata as any, {
+          rejection_reason: metadata?.rejection_reason,
+          metadata: {
+            ...metadata,
             payoutDetails
-          }),
+          },
           campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null,
           boost: metadata?.boost_id ? boostsMap.get(metadata.boost_id) || null : null,
           recipient: metadata?.recipient_id ? recipientsMap.get(metadata.recipient_id) || null : null,
@@ -1089,8 +1173,8 @@ export function WalletTab() {
       });
     }
     setTransactions(allTransactions);
-  };
-  const fetchWallet = async () => {
+  }, []);
+  const fetchWallet = useCallback(async () => {
     setLoading(true);
     const {
       data: {
@@ -1112,16 +1196,52 @@ export function WalletTab() {
       setWallet(data);
       if (data?.payout_details) {
         const methods = Array.isArray(data.payout_details) ? data.payout_details : [data.payout_details];
-        setPayoutMethods(methods.map((m: any, i: number) => ({
+        setPayoutMethods(methods.map((m: PayoutDetails, i: number) => ({
           id: `method-${i}`,
-          method: m.method || data.payout_method,
-          details: m.details || m
+          method: m.method || data.payout_method || '',
+          details: m.details || (m as unknown as Record<string, unknown>)
         })));
       }
     }
     setLoading(false);
-  };
-  const handleAddPayoutMethod = async (method: string, details: any) => {
+  }, [toast]);
+
+  // Main initialization useEffect - runs once on mount
+  useEffect(() => {
+    fetchWallet();
+    fetchPendingBoostEarnings();
+    fetchClearingPayouts();
+    fetchOnboardingData();
+
+    // Set up real-time listener for payout requests
+    const channel = supabase.channel('payout-updates').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'payout_requests'
+    }, payload => {
+      console.log('Payout request updated:', payload);
+      // Refetch wallet and transactions when payout request changes
+      fetchWallet();
+      fetchTransactions();
+      fetchClearingPayouts();
+    }).subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchWallet, fetchPendingBoostEarnings, fetchClearingPayouts, fetchOnboardingData, fetchTransactions]);
+
+  // Fetch data when wallet is available or time period changes
+  useEffect(() => {
+    if (wallet) {
+      fetchEarningsData();
+      fetchTeamEarningsData();
+      fetchAffiliateEarningsData();
+      fetchWithdrawalData();
+      fetchTransactions();
+    }
+  }, [timePeriod, wallet, earningsChartOffset, earningsChartPeriod, fetchEarningsData, fetchTeamEarningsData, fetchAffiliateEarningsData, fetchWithdrawalData, fetchTransactions]);
+
+  const handleAddPayoutMethod = async (method: string, details: Record<string, unknown>) => {
     const {
       data: {
         session
@@ -1264,7 +1384,7 @@ export function WalletTab() {
   };
 
   // Fetch user profile for share dialog
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     const {
       data: {
         session
@@ -1277,10 +1397,10 @@ export function WalletTab() {
     if (profile) {
       setUserProfile(profile);
     }
-  };
+  }, []);
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [fetchUserProfile]);
   const handleConfirmPayout = async () => {
     if (isSubmittingPayout) return; // Prevent duplicate submissions
 
@@ -1427,7 +1547,7 @@ export function WalletTab() {
       setPayoutDialogOpen(false);
       fetchWallet();
       fetchTransactions();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Rollback wallet update if transaction failed
       const {
         error: rollbackError
@@ -1438,10 +1558,11 @@ export function WalletTab() {
       if (rollbackError) {
         console.error('Failed to rollback wallet update:', rollbackError);
       }
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit payout request";
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to submit payout request"
+        description: errorMessage
       });
     } finally {
       setIsSubmittingPayout(false);

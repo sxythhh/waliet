@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,35 +34,36 @@ export function DiscordBotConfigSection({ brandId }: DiscordBotConfigSectionProp
   const [statsChannelId, setStatsChannelId] = useState("");
   const [logChannelId, setLogChannelId] = useState("");
 
-  useEffect(() => {
-    fetchConfig();
-  }, [brandId]);
-
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await (supabase
-        .from("discord_bot_config" as any)
+      const { data, error } = await supabase
+        .from("discord_bot_config")
         .select("*")
         .eq("brand_id", brandId)
-        .maybeSingle() as any);
+        .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
 
       if (data) {
-        setConfig(data as BotConfig);
-        setGuildId((data as any).guild_id);
-        setIsActive((data as any).is_active);
-        setCommandPrefix((data as any).command_prefix || "/");
-        setStatsChannelId((data as any).stats_channel_id || "");
-        setLogChannelId((data as any).log_channel_id || "");
+        const botConfig = data as unknown as BotConfig;
+        setConfig(botConfig);
+        setGuildId(botConfig.guild_id);
+        setIsActive(botConfig.is_active);
+        setCommandPrefix(botConfig.command_prefix || "/");
+        setStatsChannelId(botConfig.stats_channel_id || "");
+        setLogChannelId(botConfig.log_channel_id || "");
       }
     } catch (error) {
       console.error("Error fetching bot config:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
 
   const handleSave = async () => {
     if (!guildId) {
@@ -82,23 +83,24 @@ export function DiscordBotConfigSection({ brandId }: DiscordBotConfigSectionProp
       };
 
       if (config?.id) {
-        const { error } = await (supabase
-          .from("discord_bot_config" as any)
+        const { error } = await supabase
+          .from("discord_bot_config")
           .update(configData)
-          .eq("id", config.id) as any);
+          .eq("id", config.id);
         if (error) throw error;
       } else {
-        const { error } = await (supabase
-          .from("discord_bot_config" as any)
-          .insert(configData) as any);
+        const { error } = await supabase
+          .from("discord_bot_config")
+          .insert(configData);
         if (error) throw error;
       }
 
       toast.success("Bot configuration saved");
       fetchConfig();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving config:", error);
-      toast.error(error.message || "Failed to save configuration");
+      const errorMessage = error instanceof Error ? error.message : "Failed to save configuration";
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

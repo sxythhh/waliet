@@ -103,11 +103,18 @@ Deno.serve(async (req) => {
     const fee = Math.round(transferAmount * TRANSFER_FEE_RATE * 100) / 100;
     const netAmount = Math.round((transferAmount - fee) * 100) / 100;
 
-    safeLog('Executing atomic P2P transfer', { 
-      senderId: truncateId(senderId), 
-      recipientId: truncateId(recipient.id), 
-      amount: transferAmount, 
-      fee 
+    // Get sender's username from profile
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', senderId)
+      .single();
+
+    safeLog('Executing atomic P2P transfer', {
+      senderId: truncateId(senderId),
+      recipientId: truncateId(recipient.id),
+      amount: transferAmount,
+      fee
     });
 
     // Execute atomic transfer using RPC
@@ -117,7 +124,9 @@ Deno.serve(async (req) => {
       p_gross_amount: transferAmount,
       p_net_amount: netAmount,
       p_fee: fee,
-      p_note: note || null
+      p_note: note || null,
+      p_sender_username: senderProfile?.username || null,
+      p_recipient_username: recipient.username
     });
 
     if (transferError) {

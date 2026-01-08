@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,24 @@ interface Tier {
   name: string;
 }
 
+interface DiscordBotConfig {
+  guild_id: string;
+}
+
+interface RoleMappingInsert {
+  brand_id: string;
+  guild_id: string;
+  role_id: string;
+  role_name: string;
+  mapping_type: string;
+  is_active: boolean;
+  campaign_id?: string;
+  boost_id?: string;
+  tier_id?: string;
+  min_earnings?: number;
+  active_days?: number;
+}
+
 const MAPPING_TYPES = [
   { value: "campaign_member", label: "Campaign Member", icon: Users, description: "User joined a campaign" },
   { value: "boost_member", label: "Boost Member", icon: Zap, description: "User in a boost program" },
@@ -72,30 +90,26 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
   const [minEarnings, setMinEarnings] = useState("");
   const [activeDays, setActiveDays] = useState("30");
 
-  useEffect(() => {
-    fetchData();
-  }, [brandId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Get guild ID from bot config
-      const { data: botConfig } = await (supabase
-        .from("discord_bot_config" as any)
+      const { data: botConfig } = await supabase
+        .from("discord_bot_config")
         .select("guild_id")
         .eq("brand_id", brandId)
-        .maybeSingle() as any);
+        .maybeSingle() as { data: DiscordBotConfig | null; error: unknown };
 
       if (botConfig?.guild_id) {
         setGuildId(botConfig.guild_id);
       }
 
       const [mappingsResult, campaignsResult, boostsResult, tiersResult] = await Promise.all([
-        (supabase
-          .from("discord_role_mappings" as any)
+        supabase
+          .from("discord_role_mappings")
           .select("*")
           .eq("brand_id", brandId)
-          .order("created_at", { ascending: false }) as any),
+          .order("created_at", { ascending: false }) as Promise<{ data: RoleMapping[] | null; error: unknown }>,
         supabase
           .from("campaigns")
           .select("id, title")
@@ -106,23 +120,27 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
           .select("id, title")
           .eq("brand_id", brandId)
           .order("title"),
-        (supabase
-          .from("creator_tiers" as any)
+        supabase
+          .from("creator_tiers")
           .select("id, name")
           .eq("brand_id", brandId)
-          .order("tier_order") as any),
+          .order("tier_order") as Promise<{ data: Tier[] | null; error: unknown }>,
       ]);
 
-      if (!mappingsResult.error) setMappings((mappingsResult.data || []) as RoleMapping[]);
+      if (!mappingsResult.error) setMappings(mappingsResult.data || []);
       if (!campaignsResult.error) setCampaigns(campaignsResult.data || []);
       if (!boostsResult.error) setBoosts(boostsResult.data || []);
-      if (!tiersResult.error) setTiers((tiersResult.data || []) as Tier[]);
+      if (!tiersResult.error) setTiers(tiersResult.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const resetForm = () => {
     setRoleId("");
@@ -147,7 +165,7 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
 
     setIsSaving(true);
     try {
-      const mappingData: any = {
+      const mappingData: RoleMappingInsert = {
         brand_id: brandId,
         guild_id: guildId,
         role_id: roleId,
@@ -195,9 +213,9 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
           break;
       }
 
-      const { error } = await (supabase
-        .from("discord_role_mappings" as any)
-        .insert(mappingData) as any);
+      const { error } = await supabase
+        .from("discord_role_mappings")
+        .insert(mappingData as Record<string, unknown>);
 
       if (error) throw error;
 
@@ -205,9 +223,10 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
       setIsDialogOpen(false);
       resetForm();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating mapping:", error);
-      toast.error(error.message || "Failed to create mapping");
+      const errorMessage = error instanceof Error ? error.message : "Failed to create mapping";
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -215,10 +234,10 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
 
   const handleToggleMapping = async (mapping: RoleMapping) => {
     try {
-      const { error } = await (supabase
-        .from("discord_role_mappings" as any)
+      const { error } = await supabase
+        .from("discord_role_mappings")
         .update({ is_active: !mapping.is_active })
-        .eq("id", mapping.id) as any);
+        .eq("id", mapping.id);
 
       if (error) throw error;
 
@@ -226,7 +245,7 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
         m.id === mapping.id ? { ...m, is_active: !m.is_active } : m
       ));
       toast.success(`Mapping ${mapping.is_active ? "disabled" : "enabled"}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error toggling mapping:", error);
       toast.error("Failed to update mapping");
     }
@@ -234,16 +253,16 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
 
   const handleDeleteMapping = async (id: string) => {
     try {
-      const { error } = await (supabase
-        .from("discord_role_mappings" as any)
+      const { error } = await supabase
+        .from("discord_role_mappings")
         .delete()
-        .eq("id", id) as any);
+        .eq("id", id);
 
       if (error) throw error;
 
       setMappings(mappings.filter(m => m.id !== id));
       toast.success("Mapping deleted");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error deleting mapping:", error);
       toast.error("Failed to delete mapping");
     }

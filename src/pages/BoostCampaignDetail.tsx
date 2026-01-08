@@ -9,7 +9,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { ArrowLeft, Users, DollarSign, Video, Calendar, Clock, Check, X, ExternalLink, TrendingUp, Target } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Video, Calendar, Clock, Check, X, ExternalLink, TrendingUp, Target, Crown, CalendarDays } from "lucide-react";
+import { CreatorTiersOverview } from "@/components/brand/CreatorTiersOverview";
+import { DeliverableCalendar } from "@/components/brand/DeliverableCalendar";
 import { formatDistanceToNow } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
@@ -309,6 +311,14 @@ export default function BoostCampaignDetail() {
             </TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="accepted">Accepted ({acceptedCount})</TabsTrigger>
+            <TabsTrigger value="tiers" className="gap-1.5">
+              <Crown className="h-3.5 w-3.5" />
+              Tiers
+            </TabsTrigger>
+            <TabsTrigger value="deliverables" className="gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Deliverables
+            </TabsTrigger>
           </TabsList>
 
           {/* Applications Tab */}
@@ -484,6 +494,16 @@ export default function BoostCampaignDetail() {
                 </Card>
               ))
             )}
+          </TabsContent>
+
+          {/* Tiers Tab */}
+          <TabsContent value="tiers">
+            <CreatorTiersOverview boostId={campaign.id} />
+          </TabsContent>
+
+          {/* Deliverables Tab */}
+          <TabsContent value="deliverables">
+            <DeliverableCalendar boostId={campaign.id} />
           </TabsContent>
         </Tabs>
       </div>

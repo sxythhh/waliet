@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter, FileText, Settings2, ChevronDown, Copy, Star, Variable } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -190,10 +190,7 @@ export function CreatorContractsTab({
     duration_months: '12',
     custom_terms: ''
   });
-  useEffect(() => {
-    fetchData();
-  }, [brandId]);
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch boosts/job posts
@@ -205,11 +202,11 @@ export function CreatorContractsTab({
       // Fetch templates
       const {
         data: templatesData
-      } = await (supabase.from('contract_templates' as any).select('*').eq('brand_id', brandId).order('is_default', {
+      } = await supabase.from('contract_templates').select('*').eq('brand_id', brandId).order('is_default', {
         ascending: false
       }).order('created_at', {
         ascending: false
-      }) as any);
+      });
       setTemplates((templatesData || []) as Template[]);
 
       // Fetch contracts from database
@@ -281,7 +278,12 @@ export function CreatorContractsTab({
     } finally {
       setLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   const filteredContracts = contracts.filter(contract => {
     const matchesSearch = contract.title.toLowerCase().includes(searchQuery.toLowerCase()) || contract.creator_name.toLowerCase().includes(searchQuery.toLowerCase()) || contract.boost_title?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || contract.status === statusFilter;
@@ -319,10 +321,10 @@ export function CreatorContractsTab({
       // Increment template usage count
       if (newContract.template_id) {
         try {
-          await (supabase.rpc as any)('increment_template_usage', {
+          await supabase.rpc('increment_template_usage', {
             template_id_param: newContract.template_id
           });
-        } catch (e) {
+        } catch {
           // Function may not exist yet
         }
       }
@@ -387,13 +389,13 @@ export function CreatorContractsTab({
       if (editingTemplate) {
         const {
           error
-        } = await (supabase.from("contract_templates" as any).update(templateData).eq("id", editingTemplate.id) as any);
+        } = await supabase.from("contract_templates").update(templateData).eq("id", editingTemplate.id);
         if (error) throw error;
         toast.success("Template updated");
       } else {
         const {
           error
-        } = await (supabase.from("contract_templates" as any).insert(templateData) as any);
+        } = await supabase.from("contract_templates").insert(templateData);
         if (error) throw error;
         toast.success("Template created");
       }
@@ -401,9 +403,9 @@ export function CreatorContractsTab({
       setTemplateDialogOpen(false);
       setEditingTemplate(null);
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving template:", error);
-      toast.error(error.message || "Failed to save template");
+      toast.error(error instanceof Error ? error.message : "Failed to save template");
     }
   };
   const handleEditTemplate = (template: Template) => {
@@ -423,7 +425,7 @@ export function CreatorContractsTab({
     try {
       const {
         error
-      } = await (supabase.from("contract_templates" as any).insert({
+      } = await supabase.from("contract_templates").insert({
         brand_id: brandId,
         name: `${template.name} (Copy)`,
         description: template.description,
@@ -433,7 +435,7 @@ export function CreatorContractsTab({
         default_duration_months: template.default_duration_months,
         is_default: false,
         is_active: true
-      }) as any);
+      });
       if (error) throw error;
       toast.success("Template duplicated");
       fetchData();
@@ -447,7 +449,7 @@ export function CreatorContractsTab({
     try {
       const {
         error
-      } = await (supabase.from("contract_templates" as any).delete().eq("id", template.id) as any);
+      } = await supabase.from("contract_templates").delete().eq("id", template.id);
       if (error) throw error;
       toast.success("Template deleted");
       fetchData();
@@ -460,9 +462,9 @@ export function CreatorContractsTab({
     try {
       const {
         error
-      } = await (supabase.from("contract_templates" as any).update({
+      } = await supabase.from("contract_templates").update({
         is_default: true
-      }).eq("id", template.id) as any);
+      }).eq("id", template.id);
       if (error) throw error;
       toast.success("Default template updated");
       fetchData();

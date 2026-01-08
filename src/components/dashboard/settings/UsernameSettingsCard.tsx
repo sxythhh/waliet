@@ -93,7 +93,7 @@ export function UsernameSettingsCard({
             }
             maxLength={32}
             placeholder="username"
-            className="h-11 pl-[100px] pr-10 bg-background border border-border focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-11 pl-[92px] pr-10 bg-background border border-border focus-visible:ring-1 focus-visible:ring-ring"
             style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}
           />
           <button

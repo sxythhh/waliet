@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,11 +75,7 @@ export default function AdminTaxForms() {
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchTaxForms();
-  }, []);
-
-  const fetchTaxForms = async () => {
+  const fetchTaxForms = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("tax_forms")
@@ -105,7 +101,11 @@ export default function AdminTaxForms() {
       setTaxForms((data || []) as unknown as TaxFormWithUser[]);
     }
     setLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchTaxForms();
+  }, [fetchTaxForms]);
 
   const stats: TaxFormStats = useMemo(() => {
     return {

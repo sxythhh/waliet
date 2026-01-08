@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Activity,
   CheckCircle2,
@@ -17,12 +17,17 @@ import {
   RefreshCw,
   ChevronRight,
   Bell,
-  Settings
+  Settings,
+  DollarSign,
+  Video,
+  Building2,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { format, subMinutes, subHours, subDays } from "date-fns";
+import { format, subMinutes, subHours, subDays, startOfDay, startOfMonth } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 // Demo data for system health
 const SERVICES = [
@@ -182,12 +187,96 @@ function getSeverityStyles(severity: string) {
   }
 }
 
+interface PlatformMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  totalTransactions: number;
+  transactionVolume: number;
+  totalSubmissions: number;
+  totalCampaigns: number;
+  activeCampaigns: number;
+  totalBrands: number;
+  totalPayouts: number;
+  payoutVolume: number;
+}
+
 export default function SystemHealth() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [platformMetrics, setPlatformMetrics] = useState<PlatformMetrics | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
+  const fetchPlatformMetrics = async () => {
+    try {
+      setMetricsLoading(true);
+
+      // Fetch all metrics in parallel
+      const [
+        usersResult,
+        activeUsersResult,
+        transactionsResult,
+        submissionsResult,
+        campaignsResult,
+        activeCampaignsResult,
+        brandsResult,
+        payoutsResult
+      ] = await Promise.all([
+        // Total users
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        // Active users (last 7 days)
+        supabase.from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .gte('updated_at', subDays(new Date(), 7).toISOString()),
+        // Transactions count and volume
+        supabase.from('wallet_transactions').select('amount'),
+        // Video submissions
+        supabase.from('campaign_submissions').select('id', { count: 'exact', head: true }),
+        // Total campaigns
+        supabase.from('campaigns').select('id', { count: 'exact', head: true }),
+        // Active campaigns
+        supabase.from('campaigns')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'active'),
+        // Total brands
+        supabase.from('brands').select('id', { count: 'exact', head: true }),
+        // Payouts
+        supabase.from('payout_requests').select('amount, status')
+      ]);
+
+      // Calculate transaction volume
+      const transactionVolume = transactionsResult.data?.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) || 0;
+
+      // Calculate payout volume (completed payouts)
+      const completedPayouts = payoutsResult.data?.filter(p => p.status === 'completed') || [];
+      const payoutVolume = completedPayouts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+      setPlatformMetrics({
+        totalUsers: usersResult.count || 0,
+        activeUsers: activeUsersResult.count || 0,
+        totalTransactions: transactionsResult.data?.length || 0,
+        transactionVolume,
+        totalSubmissions: submissionsResult.count || 0,
+        totalCampaigns: campaignsResult.count || 0,
+        activeCampaigns: activeCampaignsResult.count || 0,
+        totalBrands: brandsResult.count || 0,
+        totalPayouts: completedPayouts.length,
+        payoutVolume
+      });
+    } catch (error) {
+      console.error('Error fetching platform metrics:', error);
+    } finally {
+      setMetricsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlatformMetrics();
+  }, []);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    fetchPlatformMetrics().finally(() => {
+      setTimeout(() => setIsRefreshing(false), 500);
+    });
   };
 
   const operationalCount = SERVICES.filter(s => s.status === "operational").length;
@@ -287,6 +376,105 @@ export default function SystemHealth() {
               <p className="text-xs text-muted-foreground mt-1">{metric.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Platform Statistics */}
+        <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-semibold">Platform Statistics</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Real-time platform usage and activity metrics
+              </p>
+            </div>
+            {metricsLoading && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Loading...
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {/* Users */}
+            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-blue-500" />
+                <span className="text-xs text-muted-foreground">Total Users</span>
+              </div>
+              <p className="text-xl font-bold text-blue-500">
+                {platformMetrics ? platformMetrics.totalUsers.toLocaleString() : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {platformMetrics ? `${platformMetrics.activeUsers.toLocaleString()} active (7d)` : ''}
+              </p>
+            </div>
+
+            {/* Transactions */}
+            <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs text-muted-foreground">Transactions</span>
+              </div>
+              <p className="text-xl font-bold text-emerald-500">
+                {platformMetrics ? platformMetrics.totalTransactions.toLocaleString() : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {platformMetrics ? `$${platformMetrics.transactionVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} volume` : ''}
+              </p>
+            </div>
+
+            {/* Submissions */}
+            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Video className="w-4 h-4 text-purple-500" />
+                <span className="text-xs text-muted-foreground">Submissions</span>
+              </div>
+              <p className="text-xl font-bold text-purple-500">
+                {platformMetrics ? platformMetrics.totalSubmissions.toLocaleString() : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total videos submitted
+              </p>
+            </div>
+
+            {/* Campaigns */}
+            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="w-4 h-4 text-amber-500" />
+                <span className="text-xs text-muted-foreground">Campaigns</span>
+              </div>
+              <p className="text-xl font-bold text-amber-500">
+                {platformMetrics ? platformMetrics.totalCampaigns.toLocaleString() : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {platformMetrics ? `${platformMetrics.activeCampaigns} active` : ''}
+              </p>
+            </div>
+
+            {/* Payouts */}
+            <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <CreditCard className="w-4 h-4 text-rose-500" />
+                <span className="text-xs text-muted-foreground">Payouts</span>
+              </div>
+              <p className="text-xl font-bold text-rose-500">
+                {platformMetrics ? platformMetrics.totalPayouts.toLocaleString() : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {platformMetrics ? `$${platformMetrics.payoutVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} paid out` : ''}
+              </p>
+            </div>
+          </div>
+
+          {/* Brands count */}
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Registered Brands</span>
+              <span className="font-medium">
+                {platformMetrics ? platformMetrics.totalBrands.toLocaleString() : '—'}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -138,6 +138,11 @@ export function P2PTransferDialog({
       } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Get sender's profile for username
+      const {
+        data: senderProfile
+      } = await supabase.from("profiles").select("username").eq("id", session.user.id).single();
+
       // Get sender's wallet
       const {
         data: senderWallet,
@@ -182,6 +187,7 @@ export function P2PTransferDialog({
       if (senderTxnError) throw senderTxnError;
 
       // Create transaction for recipient (credit)
+      const senderUsername = senderProfile?.username || 'user';
       const {
         error: recipientTxnError
       } = await supabase.from("wallet_transactions").insert({
@@ -189,10 +195,10 @@ export function P2PTransferDialog({
         amount: transferAmount,
         type: "transfer_received",
         status: "completed",
-        description: `Transfer from ${session.user.user_metadata?.username || 'Unknown'}`,
+        description: `Transfer from @${senderUsername}`,
         metadata: {
           sender_id: session.user.id,
-          sender_username: session.user.user_metadata?.username || 'Unknown',
+          sender_username: senderUsername,
           note: note || null,
           transfer_type: "p2p"
         }

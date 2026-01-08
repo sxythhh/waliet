@@ -212,7 +212,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
     }
   };
 
-  const handleIpBan = async () => {
+  const handleQuickBan = async () => {
     if (!user?.id) return;
     setIsBanning(true);
     try {
@@ -1137,7 +1137,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                           className="h-9 text-sm font-inter tracking-[-0.5px] bg-background border-0"
                         />
                         <Button
-                          onClick={handleIpBan}
+                          onClick={handleQuickBan}
                           disabled={isBanning}
                           variant="destructive"
                           className="w-full h-9 text-sm font-inter tracking-[-0.5px]"

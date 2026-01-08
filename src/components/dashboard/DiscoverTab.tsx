@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,6 +94,23 @@ interface DiscoverTabProps {
   searchOverlayOpen?: boolean;
   setSearchOverlayOpen?: (open: boolean) => void;
 }
+
+// Type for brand data from Supabase join queries
+interface BrandJoinData {
+  id?: string;
+  name?: string;
+  logo_url: string | null;
+  is_verified?: boolean;
+  slug?: string;
+  subscription_plan?: string | null;
+}
+
+// Type for campaign/bounty status filter
+interface CampaignStatusItem {
+  id: string;
+  status: string;
+  is_private?: boolean;
+}
 export function DiscoverTab({
   navigateOnClick = false,
   searchQuery: externalSearchQuery,
@@ -168,10 +185,11 @@ export function DiscoverTab({
         error
       } = await supabase.from("brand_members").select("brand_id, brands(id, slug, subscription_plan)").eq("user_id", user.id).limit(1).maybeSingle();
       if (!error && data?.brands) {
+        const brandData = data.brands as BrandJoinData;
         setUserBrand({
-          id: (data.brands as any).id,
-          slug: (data.brands as any).slug,
-          subscriptionPlan: (data.brands as any).subscription_plan
+          id: brandData.id ?? '',
+          slug: brandData.slug ?? '',
+          subscriptionPlan: brandData.subscription_plan ?? null
         });
       }
     };
@@ -185,6 +203,30 @@ export function DiscoverTab({
       // Remove the param from URL
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("joinPrivate");
+      setSearchParams(newParams, {
+        replace: true
+      });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const fetchCampaignBySlug = useCallback(async (slug: string) => {
+    const {
+      data,
+      error
+    } = await supabase.from("campaigns").select(`*, brands (logo_url)`).eq("slug", slug).in("status", ["active", "ended"]).maybeSingle();
+    if (!error && data) {
+      const brandData = data.brands as BrandJoinData | null;
+      const campaignData: Campaign = {
+        ...data,
+        brand_logo_url: data.brand_logo_url || brandData?.logo_url || '',
+        platforms: data.allowed_platforms || [],
+        application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
+      };
+      setSelectedCampaign(campaignData);
+      setSheetOpen(true);
+      // Remove the param from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("campaignSlug");
       setSearchParams(newParams, {
         replace: true
       });
@@ -210,34 +252,8 @@ export function DiscoverTab({
         fetchCampaignBySlug(campaignSlug);
       }
     }
-  }, [searchParams, campaigns, loading]);
-  const fetchCampaignBySlug = async (slug: string) => {
-    const {
-      data,
-      error
-    } = await supabase.from("campaigns").select(`*, brands (logo_url)`).eq("slug", slug).in("status", ["active", "ended"]).maybeSingle();
-    if (!error && data) {
-      const campaignData: Campaign = {
-        ...data,
-        brand_logo_url: data.brand_logo_url || (data.brands as any)?.logo_url,
-        platforms: data.allowed_platforms || [],
-        application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
-      };
-      setSelectedCampaign(campaignData);
-      setSheetOpen(true);
-      // Remove the param from URL
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("campaignSlug");
-      setSearchParams(newParams, {
-        replace: true
-      });
-    }
-  };
-  useEffect(() => {
-    fetchCampaigns();
-    fetchBookmarks();
-  }, []);
-  const fetchBookmarks = async () => {
+  }, [searchParams, campaigns, loading, setSearchParams, fetchCampaignBySlug]);
+  const fetchBookmarks = useCallback(async () => {
     const {
       data: {
         user
@@ -262,7 +278,7 @@ export function DiscoverTab({
     if (!bountyError && bountyData) {
       setBookmarkedBountyIds(bountyData.map(b => b.bounty_campaign_id));
     }
-  };
+  }, []);
   const toggleBookmark = async (campaignId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const {
@@ -329,7 +345,7 @@ export function DiscoverTab({
       }
     }
   };
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     setLoading(true);
 
     // Get current user
@@ -370,14 +386,17 @@ export function DiscoverTab({
     });
     if (!error && data) {
       const availableCampaigns = data.filter(campaign => !joinedCampaignIds.includes(campaign.id));
-      const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
-        ...campaign,
-        brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
-        brand_is_verified: (campaign.brands as any)?.is_verified || false,
-        brand_slug: (campaign.brands as any)?.slug,
-        platforms: campaign.allowed_platforms || [],
-        application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
-      }));
+      const campaignsWithBrandLogo = availableCampaigns.map(campaign => {
+        const brandData = campaign.brands as BrandJoinData | null;
+        return {
+          ...campaign,
+          brand_logo_url: brandData?.logo_url || campaign.brand_logo_url,
+          brand_is_verified: brandData?.is_verified || false,
+          brand_slug: brandData?.slug,
+          platforms: campaign.allowed_platforms || [],
+          application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
+        };
+      });
       setCampaigns(campaignsWithBrandLogo);
     }
 
@@ -424,10 +443,10 @@ export function DiscoverTab({
     if (brandsData) {
       // Process brands - include any brand that has had campaigns or boosts
       const processedBrands = brandsData.map(brand => {
-        const activeCampaigns = (brand.campaigns || []).filter((c: any) => c.status === "active" && !c.is_private);
-        const activeBoosts = (brand.bounty_campaigns || []).filter((b: any) => b.status === "active" && !b.is_private);
-        const allCampaigns = (brand.campaigns || []).filter((c: any) => !c.is_private);
-        const allBoosts = (brand.bounty_campaigns || []).filter((b: any) => !b.is_private);
+        const activeCampaigns = (brand.campaigns || []).filter((c: CampaignStatusItem) => c.status === "active" && !c.is_private);
+        const activeBoosts = (brand.bounty_campaigns || []).filter((b: CampaignStatusItem) => b.status === "active" && !b.is_private);
+        const allCampaigns = (brand.campaigns || []).filter((c: CampaignStatusItem) => !c.is_private);
+        const allBoosts = (brand.bounty_campaigns || []).filter((b: CampaignStatusItem) => !b.is_private);
         return {
           id: brand.id,
           name: brand.name,
@@ -458,7 +477,13 @@ export function DiscoverTab({
     }
 
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCampaigns();
+    fetchBookmarks();
+  }, [fetchCampaigns, fetchBookmarks]);
+
   // Debounce search query for performance (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 

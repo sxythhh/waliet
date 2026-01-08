@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -23,19 +23,33 @@ import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { DiscordConnectPrompt } from "@/components/DiscordConnectPrompt";
 import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 import fullscreenIconDark from "@/assets/expand-icon-dark.svg";
+interface BlueprintHook {
+  text: string;
+}
+
+interface ExampleVideo {
+  url: string;
+  description: string;
+}
+
+interface Asset {
+  link: string;
+  notes: string;
+}
+
 interface Blueprint {
   id: string;
   title: string;
   content: string | null;
-  hooks: any[] | null;
-  talking_points: any[] | null;
-  dos_and_donts: any | null;
+  hooks: (string | BlueprintHook)[] | null;
+  talking_points: string[] | null;
+  dos_and_donts: { dos: string[]; donts: string[] } | null;
   call_to_action: string | null;
   hashtags: string[] | null;
   brand_voice: string | null;
   content_guidelines: string | null;
-  example_videos: any[] | null;
-  assets: any[] | null;
+  example_videos: ExampleVideo[] | null;
+  assets: Asset[] | null;
 }
 interface Campaign {
   id: string;
@@ -66,6 +80,20 @@ interface Campaign {
   require_audience_insights?: boolean;
   min_insights_score?: number;
 }
+interface DemographicSubmission {
+  id: string;
+  status: string;
+  score: number | null;
+}
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link: string | null;
+  demographic_submissions?: DemographicSubmission[];
+}
+
 interface JoinCampaignSheetProps {
   campaign: Campaign | null;
   open: boolean;
@@ -80,7 +108,7 @@ export function JoinCampaignSheet({
 }: JoinCampaignSheetProps) {
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [answers, setAnswers] = useState<{
     [key: string]: string;
   }>({});
@@ -113,18 +141,8 @@ export function JoinCampaignSheet({
     });
   };
 
-  // Check authentication when sheet opens
-  useEffect(() => {
-    if (open) {
-      checkAuthentication();
-      loadSocialAccounts();
-      loadBlueprint();
-      loadDiscordStatus();
-    }
-  }, [open, campaign?.blueprint_id, campaign?.id]);
-
   // Load Discord connection status and campaign Discord settings
-  const loadDiscordStatus = async () => {
+  const loadDiscordStatus = useCallback(async () => {
     if (!campaign?.id) return;
 
     try {
@@ -153,8 +171,9 @@ export function JoinCampaignSheet({
     } catch (error) {
       console.error('Error loading Discord status:', error);
     }
-  };
-  const loadBlueprint = async () => {
+  }, [campaign?.id]);
+
+  const loadBlueprint = useCallback(async () => {
     if (!campaign?.blueprint_id) {
       setBlueprint(null);
       return;
@@ -173,8 +192,9 @@ export function JoinCampaignSheet({
     } finally {
       setLoadingBlueprint(false);
     }
-  };
-  const checkAuthentication = async () => {
+  }, [campaign?.blueprint_id]);
+
+  const checkAuthentication = useCallback(async () => {
     try {
       const {
         data: {
@@ -186,7 +206,7 @@ export function JoinCampaignSheet({
       console.error("Error checking authentication:", error);
       setIsLoggedIn(false);
     }
-  };
+  }, []);
   const getPlatformIcon = (platform: string) => {
     const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
@@ -200,7 +220,7 @@ export function JoinCampaignSheet({
         return null;
     }
   };
-  const loadSocialAccounts = async () => {
+  const loadSocialAccounts = useCallback(async () => {
     if (!campaign) return;
     setLoadingAccounts(true);
     // Reset answers when loading accounts for a new campaign
@@ -232,11 +252,11 @@ export function JoinCampaignSheet({
     if (accounts) {
       const approvedScores = accounts
         .flatMap(acc => acc.demographic_submissions || [])
-        .filter((sub: any) => sub.status === 'approved' && sub.score != null)
-        .map((sub: any) => sub.score);
+        .filter((sub: DemographicSubmission) => sub.status === 'approved' && sub.score != null)
+        .map((sub: DemographicSubmission) => sub.score as number);
 
       if (approvedScores.length > 0) {
-        const avgScore = Math.round(approvedScores.reduce((a: number, b: number) => a + b, 0) / approvedScores.length);
+        const avgScore = Math.round(approvedScores.reduce((a, b) => a + b, 0) / approvedScores.length);
         setUserInsightsScore(avgScore);
       } else {
         setUserInsightsScore(null);
@@ -250,10 +270,20 @@ export function JoinCampaignSheet({
     const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
 
     // Filter out accounts with active submissions for this campaign
-    const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
+    const availableAccounts = (accounts?.filter(acc => !activePlatforms.has(acc.platform)) || []) as SocialAccount[];
     setSocialAccounts(availableAccounts);
     setLoadingAccounts(false);
-  };
+  }, [campaign]);
+
+  // Check authentication when sheet opens
+  useEffect(() => {
+    if (open) {
+      checkAuthentication();
+      loadSocialAccounts();
+      loadBlueprint();
+      loadDiscordStatus();
+    }
+  }, [open, checkAuthentication, loadSocialAccounts, loadBlueprint, loadDiscordStatus]);
   const toggleAccountSelection = (accountId: string) => {
     setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
   };
@@ -528,10 +558,10 @@ export function JoinCampaignSheet({
       onOpenChange(false);
       onSuccess?.();
       navigate("/dashboard?tab=campaigns");
-    } catch (error: any) {
+    } catch (error) {
       console.error('=== SUBMISSION FAILED ===');
       console.error('Error details:', error);
-      toast.error(error.message || "Failed to submit application");
+      toast.error(error instanceof Error ? error.message : "Failed to submit application");
     } finally {
       setSubmitting(false);
     }
@@ -615,7 +645,7 @@ export function JoinCampaignSheet({
                           <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Hooks</span>
                         </div>
                         <div className="space-y-2 pl-1">
-                          {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
+                          {blueprint.hooks.slice(0, 2).map((hook: string | BlueprintHook, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
                               <span className="text-amber-500 mt-0.5">•</span>
                               <span>{typeof hook === 'string' ? hook : hook.text}</span>
                             </div>)}

@@ -81,14 +81,39 @@ Deno.serve(async (req) => {
       ? new Date(parseInt(createdAtTimestamp) * 1000).toISOString()
       : null;
 
-    // Get engagement stats
-    const likesCount = data.edge_media_preview_like?.count || 0;
-    const commentsCount = data.edge_media_to_parent_comment?.count || 0;
+    // Get engagement stats - try multiple possible field names
+    const likesCount = data.edge_media_preview_like?.count
+      ?? data.like_count
+      ?? data.likes?.count
+      ?? 0;
+
+    const commentsCount = data.edge_media_to_parent_comment?.count
+      ?? data.edge_media_to_comment?.count
+      ?? data.comment_count
+      ?? 0;
+
+    // Get views for videos/reels - try multiple possible field names
+    // Note: Instagram often restricts view counts to post owners only
+    const viewsCount = data.video_view_count
+      ?? data.video_play_count
+      ?? data.play_count
+      ?? data.view_count
+      ?? null;
 
     // Extract video playback URL for reels/videos
     let videoPlaybackUrl: string | null = null;
     if (data.is_video) {
       videoPlaybackUrl = data.video_url || null;
+    }
+
+    // Log raw data keys for debugging
+    console.log('Instagram API raw response keys:', Object.keys(data));
+    if (data.is_video) {
+      console.log('Video stats from API:', {
+        video_view_count: data.video_view_count,
+        video_play_count: data.video_play_count,
+        play_count: data.play_count
+      });
     }
 
     // Extract the relevant data
@@ -104,6 +129,7 @@ Deno.serve(async (req) => {
       authorVerified: data.owner?.is_verified || false,
       uploadDate: uploadDate,
       isVideo: data.is_video || false,
+      views: viewsCount,
       likes: likesCount,
       comments: commentsCount,
       followersCount: data.owner?.edge_followed_by?.count || null,

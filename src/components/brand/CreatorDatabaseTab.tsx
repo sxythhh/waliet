@@ -233,6 +233,48 @@ function SortableColumnItem({
       </label>
     </div>;
 }
+
+// Column configuration - defined outside component to avoid recreation on each render
+const ALL_COLUMNS = [{
+  id: 'creator',
+  label: 'Creator',
+  required: true
+}, {
+  id: 'source',
+  label: 'Source',
+  required: false
+}, {
+  id: 'socials',
+  label: 'Socials',
+  required: false
+}, {
+  id: 'views',
+  label: 'Views',
+  required: false
+}, {
+  id: 'earnings',
+  label: 'Earnings',
+  required: false
+}, {
+  id: 'joined',
+  label: 'Joined',
+  required: false
+}, {
+  id: 'email',
+  label: 'Email',
+  required: false
+}, {
+  id: 'phone',
+  label: 'Phone',
+  required: false
+}, {
+  id: 'country',
+  label: 'Country',
+  required: false
+}] as const;
+
+type ColumnId = typeof ALL_COLUMNS[number]['id'];
+
 export function CreatorDatabaseTab({
   brandId,
   onStartConversation
@@ -328,44 +370,6 @@ export function CreatorDatabaseTab({
   const [creatorTagsMap, setCreatorTagsMap] = useState<Map<string, string[]>>(new Map());
 
   // Column configuration state
-  const ALL_COLUMNS = [{
-    id: 'creator',
-    label: 'Creator',
-    required: true
-  }, {
-    id: 'source',
-    label: 'Source',
-    required: false
-  }, {
-    id: 'socials',
-    label: 'Socials',
-    required: false
-  }, {
-    id: 'views',
-    label: 'Views',
-    required: false
-  }, {
-    id: 'earnings',
-    label: 'Earnings',
-    required: false
-  }, {
-    id: 'joined',
-    label: 'Joined',
-    required: false
-  }, {
-    id: 'email',
-    label: 'Email',
-    required: false
-  }, {
-    id: 'phone',
-    label: 'Phone',
-    required: false
-  }, {
-    id: 'country',
-    label: 'Country',
-    required: false
-  }] as const;
-  type ColumnId = typeof ALL_COLUMNS[number]['id'];
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(new Set(['creator', 'source', 'socials', 'views', 'earnings', 'joined']));
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(ALL_COLUMNS.map(c => c.id));
 
@@ -438,117 +442,31 @@ export function CreatorDatabaseTab({
     }, 300);
     return () => clearTimeout(timer);
   }, [discoverSearch]);
-  useEffect(() => {
-    fetchCreators();
-    fetchAvailableTags();
-    checkSubscription();
-  }, [brandId]);
-
-  // Auto-open creator panel from URL param
-  useEffect(() => {
-    const creatorId = searchParams.get('creator');
-    if (creatorId && creators.length > 0 && !selectedCreatorPanel) {
-      const creator = creators.find(c => c.id === creatorId);
-      if (creator) {
-        setSelectedCreatorPanel(creator);
-        // Remove the param after opening
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete('creator');
-        setSearchParams(newParams, {
-          replace: true
-        });
-      }
-    }
-  }, [searchParams, creators, selectedCreatorPanel]);
-
-  // Fetch discoverable creators when dialog opens with search tab or filters change
-  useEffect(() => {
-    if (addCreatorsDialogOpen && addCreatorsMode === 'search' && hasActivePlan) {
-      fetchDiscoverableCreators();
-    }
-  }, [addCreatorsDialogOpen, addCreatorsMode, hasActivePlan, debouncedDiscoverSearch, platformFilter, followerFilter, countryFilter]);
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     const {
       data
     } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
     setHasActivePlan(data?.subscription_status === 'active');
-  };
-  const fetchDiscoverableCreators = async () => {
-    setDiscoverLoading(true);
-    try {
-      let query = supabase.from("profiles").select("id, username, full_name, avatar_url, bio, city, country, content_niches").eq("onboarding_completed", true);
-      if (debouncedDiscoverSearch) {
-        query = query.or(`username.ilike.*${debouncedDiscoverSearch}*,full_name.ilike.*${debouncedDiscoverSearch}*,bio.ilike.*${debouncedDiscoverSearch}*`);
-      }
-      if (countryFilter !== 'all') {
-        query = query.eq('country', countryFilter);
-      }
-      const {
-        data: profiles,
-        error
-      } = await query.limit(100);
-      if (error) throw error;
-      if (!profiles || profiles.length === 0) {
-        setDiscoverableCreators([]);
-        setDiscoverLoading(false);
-        return;
-      }
-      let socialQuery = supabase.from("social_accounts").select("user_id, platform, username, account_link, follower_count").in("user_id", profiles.map(p => p.id)).eq("is_verified", true);
-      if (platformFilter !== 'all') {
-        socialQuery = socialQuery.eq('platform', platformFilter);
-      }
-      const {
-        data: socialAccounts
-      } = await socialQuery;
-      const creatorsWithSocial: DiscoverableCreator[] = profiles.map(profile => ({
-        ...profile,
-        social_accounts: (socialAccounts || []).filter(sa => sa.user_id === profile.id).map(sa => ({
-          platform: sa.platform,
-          username: sa.username,
-          account_link: sa.account_link,
-          follower_count: sa.follower_count
-        }))
-      }));
-      let filtered = debouncedDiscoverSearch ? creatorsWithSocial : creatorsWithSocial.filter(c => c.social_accounts.length > 0);
-      if (followerFilter !== 'any' && !debouncedDiscoverSearch) {
-        const minFollowers = getMinFollowers(followerFilter);
-        filtered = filtered.filter(c => {
-          const maxFollowers = Math.max(...c.social_accounts.map(a => a.follower_count || 0), 0);
-          return maxFollowers >= minFollowers;
-        });
-      }
-      setDiscoverableCreators(filtered);
-    } catch (error) {
-      console.error("Error fetching discoverable creators:", error);
-    } finally {
-      setDiscoverLoading(false);
-    }
-  };
-  const hasActiveFilters = platformFilter !== 'all' || followerFilter !== 'any' || countryFilter !== 'all';
-  const clearDiscoverFilters = () => {
-    setPlatformFilter('all');
-    setFollowerFilter('any');
-    setCountryFilter('all');
-  };
-  const fetchCampaigns = async () => {
-    const [campaignsResult, boostsResult] = await Promise.all([supabase.from('campaigns').select('id, title').eq('brand_id', brandId), supabase.from('bounty_campaigns').select('id, title').eq('brand_id', brandId)]);
-    const allCampaigns: Campaign[] = [...(campaignsResult.data || []), ...(boostsResult.data || [])];
-    setCampaigns(allCampaigns);
-  };
+  }, [brandId]);
 
   // Fetch all unique tags from brand_creator_notes for this brand
-  const fetchAvailableTags = async () => {
+  const fetchAvailableTags = useCallback(async () => {
     try {
-      const { data, error } = await (supabase
-        .from('brand_creator_notes' as any)
+      interface BrandCreatorNote {
+        creator_id: string;
+        tags: string[] | null;
+      }
+
+      const { data, error } = await supabase
+        .from('brand_creator_notes')
         .select('creator_id, tags')
-        .eq('brand_id', brandId) as any);
+        .eq('brand_id', brandId) as { data: BrandCreatorNote[] | null; error: Error | null };
 
       if (error) throw error;
 
       // Build creator-to-tags mapping
       const tagsMap = new Map<string, string[]>();
-      (data as any[])?.forEach((note: any) => {
+      data?.forEach((note: BrandCreatorNote) => {
         if (note.tags && note.tags.length > 0) {
           tagsMap.set(note.creator_id, note.tags);
         }
@@ -556,15 +474,15 @@ export function CreatorDatabaseTab({
       setCreatorTagsMap(tagsMap);
 
       // Flatten all tags and get unique values
-      const allTags = (data as any[])?.flatMap((note: any) => note.tags || []) || [];
+      const allTags = data?.flatMap((note: BrandCreatorNote) => note.tags || []) || [];
       const uniqueTags = [...new Set(allTags)].sort();
       setAvailableTags(uniqueTags);
     } catch (error) {
       console.error('Error fetching tags:', error);
     }
-  };
+  }, [brandId]);
 
-  const fetchCreators = async () => {
+  const fetchCreators = useCallback(async () => {
     setLoading(true);
     try {
       // First fetch campaigns to avoid race condition
@@ -623,16 +541,24 @@ export function CreatorDatabaseTab({
       });
 
       // Fetch demographic scores
-      const { data: demographicScores } = await (supabase
-        .from('demographic_scores' as any)
+      interface DemographicScore {
+        user_id: string;
+        score: number | null;
+      }
+      const { data: demographicScores } = await supabase
+        .from('demographic_scores')
         .select('user_id, score')
-        .in('user_id', platformCreatorIds) as any);
+        .in('user_id', platformCreatorIds) as { data: DemographicScore[] | null; error: Error | null };
 
       // Fetch reliability scores
-      const { data: reliabilityScores } = await (supabase
-        .from('creator_reliability_scores' as any)
+      interface ReliabilityScore {
+        creator_id: string;
+        reliability_score: number | null;
+      }
+      const { data: reliabilityScores } = await supabase
+        .from('creator_reliability_scores')
         .select('creator_id, reliability_score')
-        .eq('brand_id', brandId) as any);
+        .eq('brand_id', brandId) as { data: ReliabilityScore[] | null; error: Error | null };
 
       // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();
@@ -723,7 +649,97 @@ export function CreatorDatabaseTab({
     } finally {
       setLoading(false);
     }
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchCreators();
+    fetchAvailableTags();
+    checkSubscription();
+  }, [brandId, fetchCreators, fetchAvailableTags, checkSubscription]);
+
+  // Auto-open creator panel from URL param
+  useEffect(() => {
+    const creatorId = searchParams.get('creator');
+    if (creatorId && creators.length > 0 && !selectedCreatorPanel) {
+      const creator = creators.find(c => c.id === creatorId);
+      if (creator) {
+        setSelectedCreatorPanel(creator);
+        // Remove the param after opening
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('creator');
+        setSearchParams(newParams, {
+          replace: true
+        });
+      }
+    }
+  }, [searchParams, creators, selectedCreatorPanel, setSearchParams]);
+
+  const fetchDiscoverableCreators = useCallback(async () => {
+    setDiscoverLoading(true);
+    try {
+      let query = supabase.from("profiles").select("id, username, full_name, avatar_url, bio, city, country, content_niches").eq("onboarding_completed", true);
+      if (debouncedDiscoverSearch) {
+        query = query.or(`username.ilike.*${debouncedDiscoverSearch}*,full_name.ilike.*${debouncedDiscoverSearch}*,bio.ilike.*${debouncedDiscoverSearch}*`);
+      }
+      if (countryFilter !== 'all') {
+        query = query.eq('country', countryFilter);
+      }
+      const {
+        data: profiles,
+        error
+      } = await query.limit(100);
+      if (error) throw error;
+      if (!profiles || profiles.length === 0) {
+        setDiscoverableCreators([]);
+        setDiscoverLoading(false);
+        return;
+      }
+      let socialQuery = supabase.from("social_accounts").select("user_id, platform, username, account_link, follower_count").in("user_id", profiles.map(p => p.id)).eq("is_verified", true);
+      if (platformFilter !== 'all') {
+        socialQuery = socialQuery.eq('platform', platformFilter);
+      }
+      const {
+        data: socialAccounts
+      } = await socialQuery;
+      const creatorsWithSocial: DiscoverableCreator[] = profiles.map(profile => ({
+        ...profile,
+        social_accounts: (socialAccounts || []).filter(sa => sa.user_id === profile.id).map(sa => ({
+          platform: sa.platform,
+          username: sa.username,
+          account_link: sa.account_link,
+          follower_count: sa.follower_count
+        }))
+      }));
+      let filtered = debouncedDiscoverSearch ? creatorsWithSocial : creatorsWithSocial.filter(c => c.social_accounts.length > 0);
+      if (followerFilter !== 'any' && !debouncedDiscoverSearch) {
+        const minFollowers = getMinFollowers(followerFilter);
+        filtered = filtered.filter(c => {
+          const maxFollowers = Math.max(...c.social_accounts.map(a => a.follower_count || 0), 0);
+          return maxFollowers >= minFollowers;
+        });
+      }
+      setDiscoverableCreators(filtered);
+    } catch (error) {
+      console.error("Error fetching discoverable creators:", error);
+    } finally {
+      setDiscoverLoading(false);
+    }
+  }, [debouncedDiscoverSearch, countryFilter, platformFilter, followerFilter]);
+
+  // Fetch discoverable creators when dialog opens with search tab or filters change
+  useEffect(() => {
+    if (addCreatorsDialogOpen && addCreatorsMode === 'search' && hasActivePlan) {
+      fetchDiscoverableCreators();
+    }
+  }, [addCreatorsDialogOpen, addCreatorsMode, hasActivePlan, debouncedDiscoverSearch, platformFilter, followerFilter, countryFilter, fetchDiscoverableCreators]);
+
+  const hasActiveFilters = platformFilter !== 'all' || followerFilter !== 'any' || countryFilter !== 'all';
+  const clearDiscoverFilters = () => {
+    setPlatformFilter('all');
+    setFollowerFilter('any');
+    setCountryFilter('all');
   };
+
   const filteredAndSortedCreators = useMemo(() => {
     let filtered = creators;
     if (searchQuery) {
@@ -929,9 +945,9 @@ export function CreatorDatabaseTab({
           failCount++;
           errors.push(`${creator.username}: ${data?.error || 'Failed to send'}`);
         }
-      } catch (err: any) {
+      } catch (err) {
         failCount++;
-        errors.push(`${creator.username}: ${err.message}`);
+        errors.push(`${creator.username}: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
     }
     setSendingBulkMessage(false);

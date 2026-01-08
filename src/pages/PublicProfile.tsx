@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Calendar, ArrowRight, Briefcase, Star, Shield, Users, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ArrowRight, Briefcase, Star, Shield, Users, Quote, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
 import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviewsSection";
@@ -24,6 +24,15 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import xLogo from "@/assets/x-logo.png";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
+interface PortfolioItem {
+  id: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  thumbnail_url?: string;
+  type?: string;
+}
+
 interface Profile {
   id: string;
   username: string;
@@ -34,7 +43,9 @@ interface Profile {
   trust_score: number | null;
   audience_quality_score: number | null;
   resume_url: string | null;
-  portfolio_items: any[] | null;
+  portfolio_items: PortfolioItem[] | null;
+  country: string | null;
+  city: string | null;
 }
 interface Testimonial {
   id: string;
@@ -101,6 +112,50 @@ interface BoostParticipation {
   videos_submitted?: number;
   total_earned?: number;
 }
+
+interface CachedCampaignVideo {
+  views: number | null;
+}
+
+interface CampaignSubmissionData {
+  id: string;
+  campaign_id: string;
+  status: string;
+  submitted_at: string;
+  views: number | null;
+  earnings: number | null;
+  campaigns: CampaignParticipation["campaign"] | null;
+}
+
+interface SelectedCampaign {
+  id: string;
+  title: string;
+  description: string;
+  campaign_type?: string | null;
+  category?: string | null;
+  brand_name: string;
+  brand_logo_url: string | null;
+  budget: number;
+  budget_used?: number | null;
+  rpm_rate: number;
+  status: string;
+  start_date: string | null;
+  banner_url: string | null;
+  platforms: string[];
+  slug: string;
+  guidelines: string | null;
+  application_questions: string[];
+  requires_application?: boolean;
+  preview_url?: string | null;
+  is_infinite_budget?: boolean | null;
+  blueprint_id?: string | null;
+  brands?: {
+    logo_url: string;
+    is_verified?: boolean;
+  } | null;
+  require_audience_insights?: boolean;
+  min_insights_score?: number;
+}
 export default function PublicProfile() {
   const {
     username: rawUsername
@@ -117,7 +172,7 @@ export default function PublicProfile() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [creatorPortfolio, setCreatorPortfolio] = useState<CreatorPortfolio | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<SelectedCampaign | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("portfolio");
   const [stats, setStats] = useState({
@@ -126,10 +181,7 @@ export default function PublicProfile() {
     totalViews: 0,
     totalEarnings: 0
   });
-    useEffect(() => {
-    fetchProfile();
-  }, [username, user]);
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!username) {
       if (!user) {
         navigate("/");
@@ -137,7 +189,7 @@ export default function PublicProfile() {
       }
       const {
         data: currentUserProfile
-      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score").eq("id", user.id).maybeSingle();
+      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score, country, city").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
         navigate(`/@${currentUserProfile.username}`, {
           replace: true
@@ -147,7 +199,7 @@ export default function PublicProfile() {
     }
     const {
       data: profileData
-    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score").eq("username", username).maybeSingle();
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score, country, city").eq("username", username).maybeSingle();
     if (!profileData) {
       if (!user) {
         navigate("/");
@@ -155,7 +207,7 @@ export default function PublicProfile() {
       }
       const {
         data: currentUserProfile
-      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score").eq("id", user.id).maybeSingle();
+      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score, country, city").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
         navigate(`/@${currentUserProfile.username}`, {
           replace: true
@@ -190,7 +242,7 @@ export default function PublicProfile() {
         content: t.content,
         rating: t.rating,
         created_at: t.created_at,
-        brand: t.brands as any
+        brand: t.brands as Testimonial["brand"]
       })));
     }
 
@@ -255,12 +307,13 @@ export default function PublicProfile() {
       count: submissions?.length ?? 0,
       sample: submissions?.[0]
     });
-    let participationsWithStats: any[] = [];
+    let participationsWithStats: CampaignParticipation[] = [];
     if (submissions) {
       // Deduplicate by campaign_id - group submissions by campaign
-      const uniqueCampaignIds = [...new Set((submissions as any[]).map(s => s.campaign_id))];
+      const typedSubmissions = submissions as CampaignSubmissionData[];
+      const uniqueCampaignIds = [...new Set(typedSubmissions.map(s => s.campaign_id))];
       const submissionsByCampaign = uniqueCampaignIds.map(campaignId => {
-        const campaignSubmissions = (submissions as any[]).filter(s => s.campaign_id === campaignId);
+        const campaignSubmissions = typedSubmissions.filter(s => s.campaign_id === campaignId);
         // Use the most recent submission for metadata
         return campaignSubmissions[0];
       });
@@ -272,15 +325,15 @@ export default function PublicProfile() {
         }, {
           data: cachedVideos
         }] = await Promise.all([supabase.from("video_submissions").select("id").eq("source_type", "campaign").eq("source_id", sub.campaign_id).eq("creator_id", profileData.id), platformUsernames.length ? supabase.from("cached_campaign_videos").select("views").eq("campaign_id", sub.campaign_id).in("username", platformUsernames) : Promise.resolve({
-          data: [] as any[]
-        } as any)]);
-        const totalViews = (cachedVideos || []).reduce((acc: number, v: any) => acc + (v.views || 0), 0);
+          data: [] as CachedCampaignVideo[]
+        })]);
+        const totalViews = (cachedVideos || []).reduce((acc: number, v: CachedCampaignVideo) => acc + (v.views || 0), 0);
         return {
           id: sub.id,
           campaign_id: sub.campaign_id,
           status: sub.status,
           joined_at: sub.submitted_at,
-          campaign: sub.campaigns as any,
+          campaign: sub.campaigns as CampaignParticipation["campaign"],
           total_views: totalViews,
           total_earnings: sub.earnings || 0,
           videos_count: videos?.length || 0
@@ -312,7 +365,7 @@ export default function PublicProfile() {
       `).eq("user_id", profileData.id).eq("status", "accepted").order("applied_at", {
       ascending: false
     });
-    let boostsWithStats: any[] = [];
+    let boostsWithStats: BoostParticipation[] = [];
     if (boostApps) {
       boostsWithStats = await Promise.all(boostApps.map(async app => {
         const {
@@ -325,7 +378,7 @@ export default function PublicProfile() {
           bounty_campaign_id: app.bounty_campaign_id,
           status: app.status,
           applied_at: app.applied_at,
-          boost: app.bounty_campaigns as any,
+          boost: app.bounty_campaigns as BoostParticipation["boost"],
           videos_submitted: videoSubmissions?.length || 0,
           total_earned: totalEarned
         };
@@ -343,7 +396,12 @@ export default function PublicProfile() {
       totalEarnings: walletTotalEarned
     });
     setLoading(false);
-  };
+  }, [username, user, navigate]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform) {
@@ -364,12 +422,32 @@ export default function PublicProfile() {
       data
     } = await supabase.from("campaigns").select(`*, brands (logo_url, is_verified)`).eq("id", campaignId).single();
     if (data) {
-      const campaignData = {
-        ...data,
-        brand_logo_url: data.brand_logo_url || (data.brands as any)?.logo_url,
+      const brandData = data.brands as { logo_url: string; is_verified?: boolean } | null;
+      const campaignData: SelectedCampaign = {
+        id: data.id,
+        title: data.title,
+        description: data.description || "",
+        campaign_type: data.campaign_type,
+        category: data.category,
+        brand_name: data.brand_name,
+        brand_logo_url: data.brand_logo_url || brandData?.logo_url || null,
+        budget: data.budget,
+        budget_used: data.budget_used,
+        rpm_rate: data.rpm_rate,
+        status: data.status,
+        start_date: data.start_date,
+        banner_url: data.banner_url,
         platforms: data.allowed_platforms || [],
+        slug: data.slug,
+        guidelines: data.guidelines,
         application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : [],
-        brands: data.brands
+        requires_application: data.requires_application,
+        preview_url: data.preview_url,
+        is_infinite_budget: data.is_infinite_budget,
+        blueprint_id: data.blueprint_id,
+        brands: brandData,
+        require_audience_insights: data.require_audience_insights,
+        min_insights_score: data.min_insights_score
       };
       setSelectedCampaign(campaignData);
       setSheetOpen(true);
@@ -462,12 +540,22 @@ export default function PublicProfile() {
             {/* Trust Score & Audience Quality Badges - Hidden for now */}
             {/* {profile.trust_score !== null || profile.audience_quality_score !== null} */}
 
-            {/* Join Date */}
-            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span className="font-['Inter'] tracking-[-0.5px]">
-                Joined {format(new Date(profile.created_at), 'MMMM yyyy')}
-              </span>
+            {/* Location & Join Date */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-sm text-muted-foreground">
+              {(profile.city || profile.country) && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span className="font-['Inter'] tracking-[-0.5px]">
+                    {[profile.city, profile.country].filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span className="font-['Inter'] tracking-[-0.5px]">
+                  Joined {format(new Date(profile.created_at), 'MMMM yyyy')}
+                </span>
+              </div>
             </div>
           </div>
         </div>

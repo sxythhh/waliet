@@ -1,5 +1,125 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
+
+// Type definitions for Discord API
+interface DiscordEmbed {
+  title?: string;
+  description?: string;
+  fields?: Array<{ name: string; value: string; inline?: boolean }>;
+  color?: number;
+  thumbnail?: { url: string };
+  image?: { url: string };
+  author?: { name: string; icon_url?: string; url?: string };
+  footer?: { text: string; icon_url?: string };
+  timestamp?: string;
+}
+
+interface DiscordComponent {
+  type: number;
+  style?: number;
+  label?: string;
+  custom_id?: string;
+  url?: string;
+  emoji?: { name: string };
+  disabled?: boolean;
+  placeholder?: string;
+  min_values?: number;
+  max_values?: number;
+  options?: Array<{
+    label: string;
+    value: string;
+    description?: string;
+    emoji?: { name: string };
+  }>;
+  components?: DiscordComponent[];
+}
+
+interface DiscordInteractionData {
+  name?: string;
+  custom_id?: string;
+  component_type?: number;
+  options?: Array<{ name: string; value: string | number }>;
+  values?: string[];
+  components?: Array<{ components: Array<{ value: string }> }>;
+}
+
+interface DiscordUser {
+  id: string;
+  username: string;
+  avatar?: string;
+}
+
+interface DiscordMember {
+  user?: DiscordUser;
+  permissions?: string;
+}
+
+interface DiscordInteraction {
+  type: number;
+  data: DiscordInteractionData;
+  member?: DiscordMember;
+  user?: DiscordUser;
+  guild_id?: string;
+  channel_id?: string;
+  token: string;
+  application_id: string;
+}
+
+interface LinkedUser {
+  id: string;
+  username: string;
+  full_name: string;
+  discord_id: string;
+  discord_username: string;
+  wallet_balance: number;
+  total_earned: number;
+  wallets?: { balance: number; total_earned: number };
+}
+
+interface CampaignMembership {
+  campaign_id: string;
+  status: string;
+  joined_at: string;
+  campaigns: {
+    id: string;
+    title: string;
+    status: string;
+    payout_type: string;
+    payout_amount: number;
+    end_date: string;
+  } | null;
+}
+
+interface WalletEntry {
+  balance: number;
+  total_earned: number;
+  user_id: string;
+  profiles: { username: string; full_name: string; avatar_url: string } | null;
+}
+
+interface Submission {
+  id: string;
+  status: string;
+  created_at: string;
+}
+
+interface WalletTransaction {
+  amount: number;
+  created_at: string;
+}
+
+interface PermissionOverwrite {
+  id: string;
+  type: number;
+  allow?: string;
+  deny?: string;
+}
+
+interface DebugProfile {
+  id: string;
+  discord_id: string;
+  discord_username: string;
+}
 
 // Discord interaction types
 const InteractionType = {
@@ -105,14 +225,14 @@ async function verifyDiscordSignature(
 }
 
 // Response helpers
-function jsonResponse(data: any, status = 200) {
+function jsonResponse(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-function embedResponse(embed: any, ephemeral = false) {
+function embedResponse(embed: DiscordEmbed, ephemeral = false) {
   return jsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
@@ -132,7 +252,7 @@ function textResponse(content: string, ephemeral = false) {
   });
 }
 
-function modalResponse(customId: string, title: string, components: any[]) {
+function modalResponse(customId: string, title: string, components: DiscordComponent[]) {
   return jsonResponse({
     type: InteractionResponseType.MODAL,
     data: {
@@ -176,8 +296,8 @@ function createEmbed(options: {
 
 // Response with components (buttons, selects)
 function componentResponse(
-  embed: any,
-  components: any[],
+  embed: DiscordEmbed,
+  components: DiscordComponent[],
   ephemeral = false
 ) {
   return jsonResponse({
@@ -191,7 +311,7 @@ function componentResponse(
 }
 
 // Update existing message (for button/select interactions)
-function updateResponse(embed: any, components: any[]) {
+function updateResponse(embed: DiscordEmbed, components: DiscordComponent[]) {
   return jsonResponse({
     type: InteractionResponseType.UPDATE_MESSAGE,
     data: {
@@ -251,7 +371,7 @@ function createSelectMenu(options: {
 }
 
 // Discord API helpers
-async function discordApiRequest(endpoint: string, method: string, body?: any) {
+async function discordApiRequest(endpoint: string, method: string, body?: Record<string, unknown>) {
   const botToken = Deno.env.get("DISCORD_BOT_TOKEN");
   if (!botToken) throw new Error("DISCORD_BOT_TOKEN not set");
 
@@ -303,7 +423,7 @@ async function createTicketChannel(
   ticketNumber: string
 ) {
   // Create permission overwrites
-  const permissionOverwrites: any[] = [
+  const permissionOverwrites: PermissionOverwrite[] = [
     // Deny everyone
     {
       id: guildId,
@@ -358,7 +478,7 @@ async function deleteChannel(channelId: string) {
 }
 
 // Get linked user from Discord ID
-async function getLinkedUser(supabase: any, discordId: string) {
+async function getLinkedUser(supabase: SupabaseClient, discordId: string): Promise<LinkedUser | null> {
   console.log("Looking up user with discord_id:", discordId, "type:", typeof discordId);
 
   const { data, error } = await supabase
@@ -375,7 +495,7 @@ async function getLinkedUser(supabase: any, discordId: string) {
       .select("id, discord_id, discord_username")
       .not("discord_id", "is", null)
       .limit(5);
-    console.log("Sample discord_ids in DB:", debugData?.map((d: any) => ({ id: d.discord_id, username: d.discord_username })));
+    console.log("Sample discord_ids in DB:", debugData?.map((d: DebugProfile) => ({ id: d.discord_id, username: d.discord_username })));
   }
 
   if (error || !data) {
@@ -389,11 +509,11 @@ async function getLinkedUser(supabase: any, discordId: string) {
     ...data,
     wallet_balance: data.wallets?.balance || 0,
     total_earned: data.wallets?.total_earned || 0,
-  };
+  } as LinkedUser;
 }
 
 // Command Handlers
-async function handleBalanceCommand(supabase: any, discordId: string) {
+async function handleBalanceCommand(supabase: SupabaseClient, discordId: string) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -455,7 +575,7 @@ async function handleBalanceCommand(supabase: any, discordId: string) {
   return componentResponse(embed, [buttons], true);
 }
 
-async function handleCampaignsCommand(supabase: any, discordId: string, page = 0, status = "active", isUpdate = false) {
+async function handleCampaignsCommand(supabase: SupabaseClient, discordId: string, page = 0, status = "active", isUpdate = false) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -551,9 +671,9 @@ async function handleCampaignsCommand(supabase: any, discordId: string, page = 0
     draft: "📝",
   };
 
-  const campaignFields = memberships
-    .filter((m: any) => m.campaigns)
-    .map((m: any) => {
+  const campaignFields = (memberships as CampaignMembership[])
+    .filter((m) => m.campaigns)
+    .map((m) => {
       const c = m.campaigns;
       const payout = c.payout_amount ? `$${c.payout_amount}` : "Variable";
       const emoji = statusEmoji[c.status] || "📋";
@@ -622,7 +742,7 @@ async function handleCampaignsCommand(supabase: any, discordId: string, page = 0
   return componentResponse(embed, components, true);
 }
 
-async function handleStatsCommand(supabase: any, discordId: string, period = "all", isUpdate = false) {
+async function handleStatsCommand(supabase: SupabaseClient, discordId: string, period = "all", isUpdate = false) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -685,15 +805,15 @@ async function handleStatsCommand(supabase: any, discordId: string, period = "al
       .eq("status", "active"),
   ]);
 
-  const submissions = submissionsResult.data || [];
-  const earnings = earningsResult.data || [];
+  const submissions = (submissionsResult.data || []) as Submission[];
+  const earnings = (earningsResult.data || []) as WalletTransaction[];
   const campaigns = campaignsResult.data || [];
 
   const totalSubmissions = submissions.length;
-  const approvedSubmissions = submissions.filter((s: any) => s.status === "approved").length;
-  const pendingSubmissions = submissions.filter((s: any) => s.status === "pending").length;
-  const rejectedSubmissions = submissions.filter((s: any) => s.status === "rejected").length;
-  const periodEarnings = earnings.reduce((sum: number, e: any) => sum + (e.amount || 0), 0);
+  const approvedSubmissions = submissions.filter((s) => s.status === "approved").length;
+  const pendingSubmissions = submissions.filter((s) => s.status === "pending").length;
+  const rejectedSubmissions = submissions.filter((s) => s.status === "rejected").length;
+  const periodEarnings = earnings.reduce((sum: number, e) => sum + (e.amount || 0), 0);
   const activeCampaigns = campaigns.length;
   const approvalRate = totalSubmissions > 0 ? ((approvedSubmissions / totalSubmissions) * 100).toFixed(0) : "N/A";
 
@@ -793,7 +913,7 @@ async function handleLinkCommand(discordId: string) {
   return componentResponse(embed, [buttons], true);
 }
 
-async function handleLeaderboardCommand(supabase: any, discordId: string, page = 0, isUpdate = false) {
+async function handleLeaderboardCommand(supabase: SupabaseClient, discordId: string, page = 0, isUpdate = false) {
   const PAGE_SIZE = 10;
   const offset = page * PAGE_SIZE;
 
@@ -865,7 +985,7 @@ async function handleLeaderboardCommand(supabase: any, discordId: string, page =
     return `\`#${rank}\``;
   };
 
-  const leaderboardLines = topEarners.map((wallet: any, index: number) => {
+  const leaderboardLines = (topEarners as WalletEntry[]).map((wallet, index: number) => {
     const rank = offset + index + 1;
     const medal = getMedal(rank);
     const name = wallet.profiles?.full_name || wallet.profiles?.username || "Anonymous";
@@ -936,7 +1056,7 @@ async function handleLeaderboardCommand(supabase: any, discordId: string, page =
   return componentResponse(embed, components);
 }
 
-async function handleSubmitCommand(supabase: any, discordId: string) {
+async function handleSubmitCommand(supabase: SupabaseClient, discordId: string) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -968,9 +1088,9 @@ async function handleSubmitCommand(supabase: any, discordId: string) {
     .eq("user_id", user.id)
     .eq("status", "active");
 
-  const activeCampaigns = (memberships || [])
-    .filter((m: any) => m.campaigns?.status === "active")
-    .map((m: any) => m.campaigns);
+  const activeCampaigns = ((memberships || []) as CampaignMembership[])
+    .filter((m) => m.campaigns?.status === "active")
+    .map((m) => m.campaigns);
 
   if (activeCampaigns.length === 0) {
     const embed = createEmbed({
@@ -1032,10 +1152,10 @@ async function handleSubmitCommand(supabase: any, discordId: string) {
   const selectMenu = createSelectMenu({
     customId: "select_campaign_submit",
     placeholder: "Choose a campaign...",
-    options: activeCampaigns.slice(0, 25).map((c: any) => ({
-      label: c.title.substring(0, 100),
-      value: c.id,
-      description: c.payout_amount ? `$${c.payout_amount} per submission` : "Variable payout",
+    options: activeCampaigns.slice(0, 25).map((c) => ({
+      label: c!.title.substring(0, 100),
+      value: c!.id,
+      description: c!.payout_amount ? `$${c!.payout_amount} per submission` : "Variable payout",
       emoji: "📋",
     })),
   });
@@ -1043,7 +1163,12 @@ async function handleSubmitCommand(supabase: any, discordId: string) {
   return componentResponse(embed, [selectMenu], true);
 }
 
-async function handleTicketCommand(supabase: any, discordId: string, options: any[]) {
+interface CommandOption {
+  name: string;
+  value: string | number;
+}
+
+async function handleTicketCommand(supabase: SupabaseClient, discordId: string, options?: CommandOption[]) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -1065,8 +1190,8 @@ async function handleTicketCommand(supabase: any, discordId: string, options: an
     return componentResponse(embed, [buttons], true);
   }
 
-  const subject = options?.find((o: any) => o.name === "subject")?.value || "Support Request";
-  const description = options?.find((o: any) => o.name === "description")?.value || "";
+  const subject = options?.find((o) => o.name === "subject")?.value || "Support Request";
+  const description = options?.find((o) => o.name === "description")?.value || "";
 
   const message = `**Subject:** ${subject}\n\n${description}`;
 
@@ -1110,7 +1235,7 @@ async function handleTicketCommand(supabase: any, discordId: string, options: an
 }
 
 // New: Withdraw command
-async function handleWithdrawCommand(supabase: any, discordId: string) {
+async function handleWithdrawCommand(supabase: SupabaseClient, discordId: string) {
   const user = await getLinkedUser(supabase, discordId);
 
   if (!user) {
@@ -1194,9 +1319,9 @@ async function handleWithdrawCommand(supabase: any, discordId: string) {
 }
 
 // New: Profile command
-async function handleProfileCommand(supabase: any, discordId: string, targetUserId?: string) {
+async function handleProfileCommand(supabase: SupabaseClient, discordId: string, targetUserId?: string) {
   // If no target specified, show own profile
-  let targetDiscordId = targetUserId || discordId;
+  const targetDiscordId = targetUserId || discordId;
 
   const user = await getLinkedUser(supabase, targetDiscordId);
 
@@ -1244,11 +1369,11 @@ async function handleProfileCommand(supabase: any, discordId: string, targetUser
       .eq("status", "active"),
   ]);
 
-  const submissions = submissionsResult.data || [];
+  const submissions = (submissionsResult.data || []) as Submission[];
   const campaigns = campaignsResult.data || [];
 
   const totalSubmissions = submissions.length;
-  const approvedSubmissions = submissions.filter((s: any) => s.status === "approved").length;
+  const approvedSubmissions = submissions.filter((s) => s.status === "approved").length;
   const approvalRate = totalSubmissions > 0
     ? ((approvedSubmissions / totalSubmissions) * 100).toFixed(0) + "%"
     : "N/A";
@@ -1354,7 +1479,7 @@ async function handleHelpCommand(commandName?: string) {
 }
 
 // Handle setup-tickets command (admin only)
-async function handleSetupTicketsCommand(supabase: any, interaction: any) {
+async function handleSetupTicketsCommand(supabase: SupabaseClient, interaction: DiscordInteraction) {
   const guildId = interaction.guild_id;
   const options = interaction.data.options || [];
   const discordId = interaction.member?.user?.id;
@@ -1367,7 +1492,7 @@ async function handleSetupTicketsCommand(supabase: any, interaction: any) {
     return textResponse("You need **Manage Server** permission to configure tickets.", true);
   }
 
-  const getOption = (name: string) => options.find((o: any) => o.name === name)?.value;
+  const getOption = (name: string) => options.find((o) => o.name === name)?.value;
 
   const categoryId = getOption("category");
   const supportRoleId = getOption("support_role");
@@ -1458,14 +1583,15 @@ async function handleSetupTicketsCommand(supabase: any, interaction: any) {
     });
 
     return componentResponse(embed, [], true);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error setting up tickets:", error);
-    return textResponse(`Failed to setup tickets: ${error.message}`, true);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return textResponse(`Failed to setup tickets: ${errorMessage}`, true);
   }
 }
 
 // Handle create ticket button
-async function handleCreateTicketButton(supabase: any, interaction: any) {
+async function handleCreateTicketButton(supabase: SupabaseClient, interaction: DiscordInteraction) {
   const guildId = interaction.guild_id;
   const discordId = interaction.member?.user?.id;
   const username = interaction.member?.user?.username || "user";
@@ -1548,7 +1674,9 @@ async function handleCreateTicketButton(supabase: any, interaction: any) {
         console.error("Error linking channel:", linkError);
         try {
           await deleteChannel(channel.id);
-        } catch {}
+        } catch {
+          // Ignore cleanup errors - channel may already be deleted
+        }
         await sendFollowup(applicationId, interactionToken, "Failed to create ticket channel.", true);
         return;
       }
@@ -1609,7 +1737,7 @@ async function handleCreateTicketButton(supabase: any, interaction: any) {
 }
 
 // Handle close ticket button
-async function handleCloseTicketButton(supabase: any, interaction: any, ticketId: string) {
+async function handleCloseTicketButton(supabase: SupabaseClient, interaction: DiscordInteraction, ticketId: string) {
   const channelId = interaction.channel_id;
   const discordId = interaction.member?.user?.id;
 
@@ -1674,9 +1802,10 @@ async function handleCloseTicketButton(supabase: any, interaction: any, ticketId
         components: [], // Remove buttons
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error closing ticket:", error);
-    return textResponse(`Failed to close ticket: ${error.message}`, true);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return textResponse(`Failed to close ticket: ${errorMessage}`, true);
   }
 }
 
@@ -1691,7 +1820,7 @@ function detectPlatform(url: string): string {
 }
 
 // Handle modal submissions
-async function handleModalSubmit(supabase: any, interaction: any) {
+async function handleModalSubmit(supabase: SupabaseClient, interaction: DiscordInteraction) {
   const customId = interaction.data.custom_id;
   const discordId = interaction.member?.user?.id || interaction.user?.id;
 
@@ -1803,7 +1932,7 @@ async function handleModalSubmit(supabase: any, interaction: any) {
 }
 
 // Handle button/select component interactions
-async function handleComponentInteraction(supabase: any, interaction: any) {
+async function handleComponentInteraction(supabase: SupabaseClient, interaction: DiscordInteraction) {
   const customId = interaction.data.custom_id;
   const discordId = interaction.member?.user?.id || interaction.user?.id;
   const componentType = interaction.data.component_type;
@@ -2124,7 +2253,7 @@ Deno.serve(async (req: Request) => {
     console.log(`Handling command: /${name} from user: ${discordId}`);
 
     // Extract common options
-    const getOption = (optName: string) => options?.find((o: any) => o.name === optName)?.value;
+    const getOption = (optName: string) => options?.find((o) => o.name === optName)?.value;
 
     switch (name) {
       case "balance":

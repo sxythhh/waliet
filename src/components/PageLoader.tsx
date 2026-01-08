@@ -15,27 +15,10 @@ export function PageLoader() {
 
 export function DashboardLoader() {
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <div className="hidden md:block w-64 border-r border-border">
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-8 w-32" />
-          <div className="space-y-2">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
-        </div>
+    <div className="flex min-h-screen w-full items-center justify-center bg-background">
+      <div className="relative h-1 w-24 overflow-hidden rounded-full bg-muted/50">
+        <div className="absolute inset-y-0 rounded-full bg-primary animate-loading-bar" />
       </div>
-      <main className="flex-1 p-6">
-        <div className="space-y-6">
-          <Skeleton className="h-10 w-48" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </main>
     </div>
   );
 }

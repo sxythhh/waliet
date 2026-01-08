@@ -64,7 +64,13 @@ interface Submission {
     videos_per_month?: number;
   };
 }
-export function SubmissionsTab() {
+interface SubmissionsTabProps {
+  campaignId?: string;
+  boostId?: string;
+  compact?: boolean;
+}
+
+export function SubmissionsTab({ campaignId, boostId, compact = false }: SubmissionsTabProps = {}) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestingPayout, setRequestingPayout] = useState(false);
@@ -123,7 +129,7 @@ export function SubmissionsTab() {
   };
   useEffect(() => {
     fetchSubmissions();
-  }, []);
+  }, [campaignId, boostId]);
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
@@ -134,11 +140,23 @@ export function SubmissionsTab() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch all video submissions from unified table
+      // Fetch video submissions from unified table, optionally filtered by campaign or boost
+      let query = supabase.from('video_submissions').select('*').eq('creator_id', user.id);
+
+      // If campaignId is provided, filter to only that campaign
+      if (campaignId) {
+        query = query.eq('source_type', 'campaign').eq('source_id', campaignId);
+      }
+
+      // If boostId is provided, filter to only that boost
+      if (boostId) {
+        query = query.eq('source_type', 'boost').eq('source_id', boostId);
+      }
+
       const {
         data: videoSubmissions,
         error
-      } = await supabase.from('video_submissions').select('*').eq('creator_id', user.id).order('submitted_at', {
+      } = await query.order('submitted_at', {
         ascending: false
       });
       if (error) {
@@ -663,7 +681,7 @@ export function SubmissionsTab() {
                 <TableHeader>
                   <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
                     <TableHead className="text-foreground font-medium text-sm h-12">Video</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
+                    {!campaignId && !boostId && <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>}
                     <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12 text-right">Views</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12">Submitted</TableHead>
@@ -706,26 +724,27 @@ export function SubmissionsTab() {
                           </a>
                         </TableCell>
                         
-                        {/* Program */}
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-2">
-                            {submission.program.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                                <img src={submission.program.brand_logo_url} alt={submission.program.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                              </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                <span className="text-xs text-foreground font-medium">
-                                  {submission.program.title.charAt(0).toUpperCase()}
-                                </span>
-                              </div>}
-                            <span style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.3px'
-                      }} className="text-sm truncate max-w-[120px] font-normal">
-                              {submission.program.title}
-                            </span>
-                          </div>
-                        </TableCell>
-                        
-                        
+                        {/* Program - only show when not in campaign or boost specific view */}
+                        {!campaignId && !boostId && (
+                          <TableCell className="py-3">
+                            <div className="flex items-center gap-2">
+                              {submission.program.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                  <img src={submission.program.brand_logo_url} alt={submission.program.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs text-foreground font-medium">
+                                    {submission.program.title.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>}
+                              <span style={{
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }} className="text-sm truncate max-w-[120px] font-normal">
+                                {submission.program.title}
+                              </span>
+                            </div>
+                          </TableCell>
+                        )}
+
                         {/* Status */}
                         <TableCell className="py-3">
                           <div className="flex items-center gap-2">

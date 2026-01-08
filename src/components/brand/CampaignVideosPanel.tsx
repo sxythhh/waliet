@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Video, RefreshCw, Eye, Heart, MessageCircle, Share2, Filter, Users, Calendar, DollarSign, TrendingUp, User } from "lucide-react";
+import { Video, RefreshCw, Eye, Heart, MessageCircle, Share2, Filter, Users, Calendar, DollarSign, TrendingUp, User, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +10,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from "date-fns";
+import { BotRiskIndicator } from "./BotRiskIndicator";
+
+interface BotScoreBreakdown {
+  commentAnalysis: {
+    botPatternScore: number;
+    genericRatio: number;
+    duplicateRatio: number;
+    shortCommentRatio: number;
+    totalComments: number;
+    verdict: string;
+  };
+  userAnalysis: {
+    authenticityScore: number;
+    flags: string[];
+    followerCount: number;
+    verified: boolean;
+  };
+  finalScore: number;
+  verdict: string;
+  analyzedAt: string;
+}
 
 interface CachedVideo {
   id: string;
@@ -36,6 +57,11 @@ interface CachedVideo {
   matched_at: string | null;
   week_start_views: number | null;
   week_start_date: string | null;
+  // Bot scoring fields
+  bot_score: number | null;
+  bot_score_breakdown: BotScoreBreakdown | null;
+  bot_analyzed_at: string | null;
+  bot_analysis_status: string | null;
 }
 
 interface LinkedAccount {
@@ -76,10 +102,12 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
-  
+  const [analyzingVideoId, setAnalyzingVideoId] = useState<string | null>(null);
+
   // Filters
   const [filterAccount, setFilterAccount] = useState<string>("all");
   const [filterPlatform, setFilterPlatform] = useState<string>("all");
+  const [filterBotRisk, setFilterBotRisk] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "accounts">("accounts");
 
@@ -177,6 +205,48 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
     }
   };
 
+  // Extract TikTok video ID from URL
+  const extractTikTokVideoId = (url: string): string | null => {
+    const match = url?.match(/\/(video|photo)\/(\d+)/);
+    return match ? match[2] : null;
+  };
+
+  const handleAnalyzeVideo = async (video: CachedVideo) => {
+    if (video.platform.toLowerCase() !== "tiktok") {
+      toast.error("Bot analysis is only available for TikTok videos");
+      return;
+    }
+
+    const videoId = extractTikTokVideoId(video.video_url || "");
+    if (!videoId) {
+      toast.error("Could not extract video ID from URL");
+      return;
+    }
+
+    setAnalyzingVideoId(video.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-tiktok-engagement", {
+        body: {
+          videoId,
+          username: video.username,
+          targetTable: "cached_campaign_videos",
+          targetId: video.id,
+          checkAutoReject: false,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Analysis complete: ${data?.verdict || "done"}`);
+      await fetchVideos();
+    } catch (error) {
+      console.error("Error analyzing video:", error);
+      toast.error("Failed to analyze video");
+    } finally {
+      setAnalyzingVideoId(null);
+    }
+  };
+
   // Calculate account-based statistics
   const accountStats = useMemo((): AccountStats[] => {
     const statsMap = new Map<string, AccountStats>();
@@ -258,16 +328,25 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
         const key = `${video.platform.toLowerCase()}:${video.username.toLowerCase()}`;
         if (key !== filterAccount.toLowerCase()) return false;
       }
-      
+
       // Platform filter
       if (filterPlatform !== "all" && video.platform.toLowerCase() !== filterPlatform.toLowerCase()) {
         return false;
       }
 
+      // Bot risk filter
+      if (filterBotRisk !== "all") {
+        const score = video.bot_score;
+        if (filterBotRisk === "unanalyzed" && score !== null) return false;
+        if (filterBotRisk === "low" && (score === null || score >= 30)) return false;
+        if (filterBotRisk === "medium" && (score === null || score < 30 || score >= 60)) return false;
+        if (filterBotRisk === "high" && (score === null || score < 60)) return false;
+      }
+
       // Search query
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           video.username.toLowerCase().includes(query) ||
           video.title?.toLowerCase().includes(query) ||
           video.caption?.toLowerCase().includes(query);
@@ -276,7 +355,7 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
 
       return true;
     });
-  }, [videos, filterAccount, filterPlatform, searchQuery]);
+  }, [videos, filterAccount, filterPlatform, filterBotRisk, searchQuery]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -374,6 +453,20 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
                 {platform}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterBotRisk} onValueChange={setFilterBotRisk}>
+          <SelectTrigger className="w-[130px] h-8 text-xs border-border/50 bg-background">
+            <Shield className="h-3 w-3 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="Bot Risk" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">All Risk Levels</SelectItem>
+            <SelectItem value="low" className="text-xs">Low Risk</SelectItem>
+            <SelectItem value="medium" className="text-xs">Medium Risk</SelectItem>
+            <SelectItem value="high" className="text-xs">High Risk</SelectItem>
+            <SelectItem value="unanalyzed" className="text-xs">Not Analyzed</SelectItem>
           </SelectContent>
         </Select>
 
@@ -533,6 +626,7 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
                     <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Likes</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Payout</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Status</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Bot Risk</TableHead>
                     <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -579,11 +673,42 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
                         )}
                       </TableCell>
                       <TableCell className="py-2.5">
+                        <div className="flex items-center gap-2">
+                          {video.bot_analysis_status === "completed" && video.bot_score !== null ? (
+                            <BotRiskIndicator
+                              botScore={video.bot_score}
+                              trustScore={video.bot_score_breakdown?.userAnalysis?.authenticityScore}
+                              size="sm"
+                            />
+                          ) : video.bot_analysis_status === "analyzing" || analyzingVideoId === video.id ? (
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Analyzing
+                            </span>
+                          ) : video.platform.toLowerCase() === "tiktok" ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-[10px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAnalyzeVideo(video);
+                              }}
+                              disabled={analyzingVideoId !== null}
+                            >
+                              Analyze
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/50">N/A</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-2.5">
                         {video.video_url && (
-                          <a 
-                            href={video.video_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
+                          <a
+                            href={video.video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-[13px] text-primary hover:underline font-medium"
                           >
                             View →

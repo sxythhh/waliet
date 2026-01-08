@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,68 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 
+// Type definitions for database query results
+interface TransactionMetadata {
+  campaign_id?: string;
+  account_username?: string;
+  platform?: string;
+  payout_method?: string;
+  adjustment_type?: string;
+  reversed?: boolean;
+  [key: string]: unknown;
+}
+
+interface WalletTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  status: string;
+  description: string | null;
+  metadata: TransactionMetadata | null;
+  created_at: string;
+}
+
+interface Profile {
+  id: string;
+  username: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
+
+interface CampaignData {
+  id: string;
+  title: string;
+  brand_logo_url: string | null;
+  budget: number | null;
+  budget_used: number | null;
+}
+
+interface UserProfile extends Profile {
+  wallets: { balance: number; total_earned: number; total_withdrawn: number } | null;
+}
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  user_id: string;
+  social_account_campaigns: Array<{
+    campaigns: { id: string; title: string; brand_name: string; brand_logo_url: string | null } | null;
+  }>;
+  demographic_submissions: Array<{
+    status: string;
+    tier1_percentage: number | null;
+    submitted_at: string;
+  }>;
+}
+
+interface PayoutDetail {
+  method?: string;
+  details?: unknown;
+  [key: string]: unknown;
+}
+
 interface Transaction {
   id: string;
   user_id: string;
@@ -24,7 +86,7 @@ interface Transaction {
   type: string;
   status: string;
   description: string;
-  metadata: any;
+  metadata: TransactionMetadata | null;
   created_at: string;
   username?: string;
   email?: string;
@@ -48,12 +110,12 @@ export default function Transactions() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [campaigns, setCampaigns] = useState<{ id: string; name: string }[]>([]);
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
-  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [userTransactions, setUserTransactions] = useState<WalletTransaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
-  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
+  const [userPaymentMethods, setUserPaymentMethods] = useState<Array<{ method: string; details: unknown }>>([]);
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
@@ -104,11 +166,12 @@ export default function Transactions() {
         description: data.message || `Successfully reversed transaction.`,
       });
       fetchTransactions();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error undoing transaction:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to undo transaction";
       toast({
         title: "Error",
-        description: error.message || "Failed to undo transaction",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -116,12 +179,7 @@ export default function Transactions() {
     }
   };
 
-  useEffect(() => {
-    fetchTransactions();
-    fetchCampaigns();
-  }, []);
-
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     try {
       const { data, error } = await supabase.from("campaigns").select("id, title").order("title");
       if (error) throw error;
@@ -129,11 +187,11 @@ export default function Transactions() {
     } catch (error) {
       console.error("Error fetching campaigns:", error);
     }
-  };
+  }, []);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
-      let allTransactions: any[] = [];
+      let allTransactions: WalletTransaction[] = [];
       let from = 0;
       const batchSize = 1000;
       let hasMore = true;
@@ -146,7 +204,7 @@ export default function Transactions() {
           .range(from, from + batchSize - 1);
         if (txError) throw txError;
         if (txData && txData.length > 0) {
-          allTransactions = [...allTransactions, ...txData];
+          allTransactions = [...allTransactions, ...(txData as unknown as WalletTransaction[])];
           from += batchSize;
           hasMore = txData.length === batchSize;
         } else {
@@ -156,7 +214,7 @@ export default function Transactions() {
 
       const userIds = allTransactions?.map(tx => tx.user_id).filter((id): id is string => !!id) || [];
       const uniqueUserIds = [...new Set(userIds)];
-      let profilesMap: Record<string, any> = {};
+      let profilesMap: Record<string, Profile> = {};
       if (uniqueUserIds.length > 0) {
         const { data: profilesData } = await supabase
           .from("profiles")
@@ -165,17 +223,17 @@ export default function Transactions() {
         profilesMap = profilesData?.reduce((acc, profile) => ({
           ...acc,
           [profile.id]: profile
-        }), {} as Record<string, any>) || {};
+        }), {} as Record<string, Profile>) || {};
       }
 
-      const campaignIds = allTransactions?.filter(tx => tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata).map(tx => (tx.metadata as any).campaign_id) || [];
-      let campaignsMap: Record<string, { title: string; brand_logo_url?: string; budget?: number; budget_used?: number }> = {};
+      const campaignIds = allTransactions?.filter(tx => tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata).map(tx => (tx.metadata as TransactionMetadata).campaign_id).filter((id): id is string => !!id) || [];
+      let campaignsMap: Record<string, { title: string; brand_logo_url?: string | null; budget?: number | null; budget_used?: number | null }> = {};
       if (campaignIds.length > 0) {
         const { data: campaignData } = await supabase
           .from("campaigns")
           .select("id, title, brand_logo_url, budget, budget_used")
           .in("id", campaignIds);
-        campaignsMap = campaignData?.reduce((acc, camp) => ({
+        campaignsMap = (campaignData as CampaignData[] | null)?.reduce((acc, camp) => ({
           ...acc,
           [camp.id]: {
             title: camp.title,
@@ -183,11 +241,11 @@ export default function Transactions() {
             budget: camp.budget,
             budget_used: camp.budget_used
           }
-        }), {}) || {};
+        }), {} as Record<string, { title: string; brand_logo_url?: string | null; budget?: number | null; budget_used?: number | null }>) || {};
       }
 
-      const formattedTransactions = allTransactions?.map((tx: any) => {
-        const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as any).campaign_id : undefined;
+      const formattedTransactions = allTransactions?.map((tx: WalletTransaction) => {
+        const campaignId = tx.metadata && typeof tx.metadata === 'object' && 'campaign_id' in tx.metadata ? (tx.metadata as TransactionMetadata).campaign_id : undefined;
         const campaign = campaignId ? campaignsMap[campaignId] : undefined;
         return {
           id: tx.id,
@@ -195,21 +253,21 @@ export default function Transactions() {
           amount: tx.amount,
           type: tx.type,
           status: tx.status,
-          description: tx.description,
+          description: tx.description || '',
           metadata: tx.metadata,
           created_at: tx.created_at,
-          username: profilesMap[tx.user_id]?.username,
-          email: profilesMap[tx.user_id]?.email,
-          avatar_url: profilesMap[tx.user_id]?.avatar_url,
+          username: profilesMap[tx.user_id]?.username || undefined,
+          email: profilesMap[tx.user_id]?.email || undefined,
+          avatar_url: profilesMap[tx.user_id]?.avatar_url || undefined,
           campaign_name: campaign?.title,
-          campaign_logo_url: campaign?.brand_logo_url,
-          campaign_budget: campaign?.budget,
-          campaign_budget_used: campaign?.budget_used
+          campaign_logo_url: campaign?.brand_logo_url || undefined,
+          campaign_budget: campaign?.budget || undefined,
+          campaign_budget_used: campaign?.budget_used || undefined
         };
       }) || [];
 
       setTransactions(formattedTransactions);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching transactions:", error);
       toast({
         title: "Error",
@@ -219,9 +277,9 @@ export default function Transactions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const fetchUserSocialAccounts = async (userId: string) => {
+  const fetchUserSocialAccounts = useCallback(async (userId: string) => {
     setLoadingSocialAccounts(true);
     const { data, error } = await supabase
       .from("social_accounts")
@@ -231,12 +289,12 @@ export default function Transactions() {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch social accounts" });
       setUserSocialAccounts([]);
     } else {
-      setUserSocialAccounts(data || []);
+      setUserSocialAccounts((data as unknown as SocialAccount[]) || []);
     }
     setLoadingSocialAccounts(false);
-  };
+  }, [toast]);
 
-  const fetchUserTransactions = async (userId: string) => {
+  const fetchUserTransactions = useCallback(async (userId: string) => {
     setLoadingTransactions(true);
     const { data: txData, error } = await supabase
       .from("wallet_transactions")
@@ -248,12 +306,12 @@ export default function Transactions() {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch transactions" });
       setUserTransactions([]);
     } else {
-      setUserTransactions(txData || []);
+      setUserTransactions((txData as unknown as WalletTransaction[]) || []);
     }
     setLoadingTransactions(false);
-  };
+  }, [toast]);
 
-  const fetchUserPaymentMethods = async (userId: string) => {
+  const fetchUserPaymentMethods = useCallback(async (userId: string) => {
     setLoadingPaymentMethods(true);
     const { data, error } = await supabase
       .from("wallets")
@@ -264,10 +322,10 @@ export default function Transactions() {
       console.error("Error fetching payment methods:", error);
       setUserPaymentMethods([]);
     } else if (data && data.payout_details) {
-      const details = data.payout_details as any[];
+      const details = data.payout_details as PayoutDetail[];
       if (Array.isArray(details) && details.length > 0) {
-        setUserPaymentMethods(details.map((item: any) => ({
-          method: item.method || data.payout_method,
+        setUserPaymentMethods(details.map((item: PayoutDetail) => ({
+          method: item.method || data.payout_method || '',
           details: item.details || item
         })));
       } else {
@@ -277,9 +335,9 @@ export default function Transactions() {
       setUserPaymentMethods([]);
     }
     setLoadingPaymentMethods(false);
-  };
+  }, []);
 
-  const openUserDetailsDialog = async (userId: string) => {
+  const openUserDetailsDialog = useCallback(async (userId: string) => {
     const { data: userData, error } = await supabase
       .from("profiles")
       .select(`*, wallets (balance, total_earned, total_withdrawn)`)
@@ -289,12 +347,18 @@ export default function Transactions() {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch user details" });
       return;
     }
-    setSelectedUser(userData);
+    setSelectedUser(userData as unknown as UserProfile);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(userId);
     fetchUserTransactions(userId);
     fetchUserPaymentMethods(userId);
-  };
+  }, [toast, fetchUserSocialAccounts, fetchUserTransactions, fetchUserPaymentMethods]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchTransactions();
+    fetchCampaigns();
+  }, [fetchTransactions, fetchCampaigns]);
 
   const filteredTransactions = transactions.filter(tx => {
     const matchesSearch = !searchTerm ||
@@ -371,7 +435,7 @@ export default function Transactions() {
     a.click();
   };
 
-  const getTypeLabel = (type: string, metadata: any) => {
+  const getTypeLabel = (type: string, metadata: TransactionMetadata | null) => {
     if (type === 'balance_correction' && metadata?.adjustment_type === 'manual_budget_update') {
       return 'Budget Update';
     }

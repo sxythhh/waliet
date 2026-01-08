@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ interface Webhook {
 interface WebhookLog {
   id: string;
   event_type: string;
-  payload: any;
+  payload: Record<string, unknown>;
   response_status: number | null;
   response_body: string | null;
   success: boolean;
@@ -81,28 +81,29 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    fetchWebhooks();
-  }, [brandId]);
-
-  const fetchWebhooks = async () => {
+  const fetchWebhooks = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await (supabase
-        .from("brand_webhooks" as any)
+        // @ts-expect-error - brand_webhooks table exists but not in generated types
+        .from("brand_webhooks")
         .select("*")
         .eq("brand_id", brandId)
-        .order("created_at", { ascending: false }) as any);
+        .order("created_at", { ascending: false }) as unknown as { data: Webhook[] | null; error: Error | null });
 
       if (error) throw error;
-      setWebhooks((data as Webhook[]) || []);
+      setWebhooks(data || []);
     } catch (error) {
       console.error("Error fetching webhooks:", error);
       toast.error("Failed to load webhooks");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchWebhooks();
+  }, [fetchWebhooks]);
 
   const handleCreateWebhook = async () => {
     if (!newWebhook.name.trim()) {
@@ -129,7 +130,8 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
       const { data: { user } } = await supabase.auth.getUser();
 
       const { error } = await (supabase
-        .from("brand_webhooks" as any)
+        // @ts-expect-error - brand_webhooks table exists but not in generated types
+        .from("brand_webhooks")
         .insert({
           brand_id: brandId,
           name: newWebhook.name.trim(),
@@ -137,7 +139,7 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
           api_version: newWebhook.api_version,
           events: newWebhook.events,
           created_by: user?.id,
-        }) as any);
+        }) as unknown as { error: Error | null });
 
       if (error) throw error;
 
@@ -145,9 +147,10 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
       setShowCreateDialog(false);
       setNewWebhook({ name: "", endpoint_url: "", api_version: "v1", events: [] });
       fetchWebhooks();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating webhook:", error);
-      toast.error(error.message || "Failed to create webhook");
+      const errorMessage = error instanceof Error ? error.message : "Failed to create webhook";
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }
@@ -156,9 +159,10 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
   const handleToggleWebhook = async (webhook: Webhook) => {
     try {
       const { error } = await (supabase
-        .from("brand_webhooks" as any)
+        // @ts-expect-error - brand_webhooks table exists but not in generated types
+        .from("brand_webhooks")
         .update({ is_active: !webhook.is_active })
-        .eq("id", webhook.id) as any);
+        .eq("id", webhook.id) as unknown as { error: Error | null });
 
       if (error) throw error;
 
@@ -175,9 +179,10 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
   const handleDeleteWebhook = async (webhookId: string) => {
     try {
       const { error } = await (supabase
-        .from("brand_webhooks" as any)
+        // @ts-expect-error - brand_webhooks table exists but not in generated types
+        .from("brand_webhooks")
         .delete()
-        .eq("id", webhookId) as any);
+        .eq("id", webhookId) as unknown as { error: Error | null });
 
       if (error) throw error;
 
@@ -196,14 +201,15 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
 
     try {
       const { data, error } = await (supabase
-        .from("webhook_logs" as any)
+        // @ts-expect-error - webhook_logs table exists but not in generated types
+        .from("webhook_logs")
         .select("*")
         .eq("webhook_id", webhook.id)
         .order("created_at", { ascending: false })
-        .limit(50) as any);
+        .limit(50) as unknown as { data: WebhookLog[] | null; error: Error | null });
 
       if (error) throw error;
-      setWebhookLogs((data as WebhookLog[]) || []);
+      setWebhookLogs(data || []);
     } catch (error) {
       console.error("Error fetching logs:", error);
       toast.error("Failed to load logs");

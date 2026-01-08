@@ -10,6 +10,7 @@ interface LeaderboardEntry {
   avatar_url?: string;
   value: number;
   user_id: string;
+  is_private?: boolean;
 }
 
 interface LeaderboardProps {
@@ -79,12 +80,12 @@ export function Leaderboard({ className }: LeaderboardProps) {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
 
-      // Fetch user profiles for top earners
+      // Fetch user profiles for top earners (query profiles directly to get is_private)
       const userIds = topEarners.map(([userId]) => userId);
       const { data: profiles } = userIds.length > 0
         ? await supabase
-            .from("public_profiles")
-            .select("id, username, avatar_url")
+            .from("profiles")
+            .select("id, username, avatar_url, is_private")
             .in("id", userIds)
         : { data: [] };
 
@@ -95,22 +96,25 @@ export function Leaderboard({ className }: LeaderboardProps) {
       const formattedEarnings: LeaderboardEntry[] = topEarners.map(
         ([userId, amount], index) => {
           const profile = profileMap.get(userId);
+          const isPrivate = profile?.is_private || false;
           return {
             rank: index + 1,
             username: profile?.username || "Creator",
-            avatar_url: profile?.avatar_url || undefined,
+            avatar_url: isPrivate ? undefined : (profile?.avatar_url || undefined),
             value: amount,
             user_id: userId,
+            is_private: isPrivate,
           };
         }
       );
 
       setEarningsLeaderboard(formattedEarnings);
 
-      // Fetch rank leaderboard - top users by level
+      // Fetch rank leaderboard - top users by level (only non-private users)
       const { data: topLevelUsers } = await supabase
-        .from("public_profiles")
-        .select("id, username, avatar_url, current_level")
+        .from("profiles")
+        .select("id, username, avatar_url, current_level, is_private")
+        .or("is_private.eq.false,is_private.is.null")
         .not("current_level", "is", null)
         .order("current_level", { ascending: false })
         .limit(10);
@@ -122,6 +126,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
           avatar_url: profile.avatar_url || undefined,
           value: profile.current_level || 0,
           user_id: profile.id,
+          is_private: false,
         })
       );
 
@@ -146,6 +151,14 @@ export function Leaderboard({ className }: LeaderboardProps) {
     if (rank === 2) return "w-6 h-6 rounded-full bg-slate-400 text-white flex items-center justify-center";
     if (rank === 3) return "w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center";
     return "w-6 text-muted-foreground text-center";
+  };
+
+  const formatUsername = (username: string, isPrivate?: boolean) => {
+    if (!username || username === "Creator") return "Creator";
+    if (!isPrivate) return username;
+    // Mask private usernames: show first 2 chars + **** + last char
+    if (username.length <= 3) return username.charAt(0) + "***";
+    return username.slice(0, 2) + "****" + username.slice(-1);
   };
 
   const LeaderboardColumn = ({
@@ -174,31 +187,37 @@ export function Leaderboard({ className }: LeaderboardProps) {
             No data yet
           </p>
         ) : (
-          data.map((entry) => (
-            <div
-              key={entry.user_id}
-              onClick={() => navigate(`/@${entry.username}`)}
-              className="flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
-            >
-              <span
-                className={`text-xs font-semibold ${getRankStyle(entry.rank)}`}
+          data.map((entry) => {
+            const displayName = formatUsername(entry.username, entry.is_private);
+            const isClickable = !entry.is_private && entry.username !== "Creator";
+            return (
+              <div
+                key={entry.user_id}
+                onClick={() => isClickable && navigate(`/@${entry.username}`)}
+                className={`flex items-center gap-3 py-2 px-2 rounded-lg transition-colors ${
+                  isClickable ? "cursor-pointer hover:bg-muted/50" : ""
+                }`}
               >
-                {entry.rank}
-              </span>
-              <Avatar className="w-7 h-7">
-                <AvatarImage src={entry.avatar_url} alt={entry.username} />
-                <AvatarFallback className="text-[10px] bg-muted">
-                  {entry.username.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="flex-1 text-sm text-foreground truncate font-inter tracking-[-0.3px]">
-                {entry.username}
-              </span>
-              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
-                {formatValue(entry.value, valueType)}
-              </span>
-            </div>
-          ))
+                <span
+                  className={`text-xs font-semibold ${getRankStyle(entry.rank)}`}
+                >
+                  {entry.rank}
+                </span>
+                <Avatar className="w-7 h-7">
+                  {!entry.is_private && <AvatarImage src={entry.avatar_url} alt={displayName} />}
+                  <AvatarFallback className="text-[10px] bg-muted">
+                    {displayName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="flex-1 text-sm text-foreground truncate font-inter tracking-[-0.3px]">
+                  {displayName}
+                </span>
+                <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
+                  {formatValue(entry.value, valueType)}
+                </span>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

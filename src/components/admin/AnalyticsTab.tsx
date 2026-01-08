@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check, Loader2 } from "lucide-react";
@@ -41,6 +41,70 @@ interface AnalyticsData {
 }
 
 type TimePeriod = 'TODAY' | '3D' | '1W' | '1M' | '3M' | 'ALL' | 'CUSTOM';
+
+interface UserGrowthDataPoint {
+  month: string;
+  users: number;
+}
+
+interface CampaignDataPoint {
+  status: string;
+  count: number;
+}
+
+interface WithdrawalDataPoint {
+  period: string;
+  total: number;
+  count: number;
+  completed: number;
+}
+
+interface PayoutStatusDataPoint {
+  name: string;
+  value: number;
+  amount: number;
+}
+
+interface EarningsVsWithdrawalsDataPoint {
+  period: string;
+  earnings: number;
+  withdrawals: number;
+}
+
+interface CreatorFunnelDataPoint {
+  name: string;
+  value: number;
+  fill: string;
+}
+
+interface TooltipPayloadEntry {
+  name: string;
+  value: number;
+  dataKey: string;
+  color?: string;
+  fill?: string;
+  payload?: Record<string, unknown>;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+  type?: 'withdrawal' | 'earnings' | 'users' | 'campaigns';
+}
+
+interface PieTooltipPayloadEntry {
+  payload: {
+    name: string;
+    value: number;
+    amount?: number;
+  };
+}
+
+interface CustomPieTooltipProps {
+  active?: boolean;
+  payload?: PieTooltipPayloadEntry[];
+}
 
 const CHART_COLORS = {
   blue: '#3b82f6',
@@ -85,12 +149,12 @@ export function AnalyticsTab() {
     registrationToJoinRate: 0,
     registrationToPayoutRate: 0,
   });
-  const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
-  const [campaignData, setCampaignData] = useState<any[]>([]);
-  const [withdrawalData, setWithdrawalData] = useState<any[]>([]);
-  const [payoutStatusData, setPayoutStatusData] = useState<any[]>([]);
-  const [earningsVsWithdrawalsData, setEarningsVsWithdrawalsData] = useState<any[]>([]);
-  const [creatorFunnelData, setCreatorFunnelData] = useState<any[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<UserGrowthDataPoint[]>([]);
+  const [campaignData, setCampaignData] = useState<CampaignDataPoint[]>([]);
+  const [withdrawalData, setWithdrawalData] = useState<WithdrawalDataPoint[]>([]);
+  const [payoutStatusData, setPayoutStatusData] = useState<PayoutStatusDataPoint[]>([]);
+  const [earningsVsWithdrawalsData, setEarningsVsWithdrawalsData] = useState<EarningsVsWithdrawalsDataPoint[]>([]);
+  const [creatorFunnelData, setCreatorFunnelData] = useState<CreatorFunnelDataPoint[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1W');
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -103,7 +167,7 @@ export function AnalyticsTab() {
     return TIME_OPTIONS.find(o => o.value === timePeriod)?.label || '1 Week';
   };
 
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const now = new Date();
     if (timePeriod === 'CUSTOM' && customDateRange.from && customDateRange.to) {
       return { start: startOfDay(customDateRange.from), end: endOfDay(customDateRange.to) };
@@ -124,35 +188,18 @@ export function AnalyticsTab() {
       default:
         return { start: subDays(now, 7), end: now };
     }
-  };
+  }, [timePeriod, customDateRange.from, customDateRange.to]);
 
-  const getPreviousDateRange = () => {
+  const getPreviousDateRange = useCallback(() => {
     const { start, end } = getDateRange();
     const duration = end.getTime() - start.getTime();
     return {
       start: new Date(start.getTime() - duration),
       end: new Date(end.getTime() - duration),
     };
-  };
+  }, [getDateRange]);
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      await Promise.all([
-        fetchAnalytics(),
-        fetchUserGrowthData(),
-        fetchCampaignData(),
-        fetchWithdrawalData(),
-        fetchPayoutStatusData(),
-        fetchEarningsVsWithdrawalsData(),
-        fetchCreatorFunnelData(),
-      ]);
-      setIsLoading(false);
-    };
-    fetchAllData();
-  }, [timePeriod, customDateRange]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     const { start, end } = getDateRange();
     const { start: prevStart, end: prevEnd } = getPreviousDateRange();
 
@@ -336,9 +383,9 @@ export function AnalyticsTab() {
       registrationToJoinRate,
       registrationToPayoutRate,
     });
-  };
+  }, [getDateRange, getPreviousDateRange]);
 
-  const fetchCreatorFunnelData = async () => {
+  const fetchCreatorFunnelData = useCallback(async () => {
     // Fetch payout counts per user
     const { data: payoutCounts } = await supabase
       .from("payout_requests")
@@ -378,9 +425,9 @@ export function AnalyticsTab() {
       { name: '11-20 payouts', value: elevenToTwenty, fill: CHART_COLORS.orange },
       { name: '20+ payouts', value: twentyPlus, fill: CHART_COLORS.purple },
     ]);
-  };
+  }, []);
 
-  const fetchUserGrowthData = async () => {
+  const fetchUserGrowthData = useCallback(async () => {
     const { start, end } = getDateRange();
     
     const { data } = await supabase
@@ -429,9 +476,9 @@ export function AnalyticsTab() {
     }));
 
     setUserGrowthData(chartData);
-  };
+  }, [getDateRange, timePeriod]);
 
-  const fetchCampaignData = async () => {
+  const fetchCampaignData = useCallback(async () => {
     const { data } = await supabase
       .from("campaigns")
       .select("status")
@@ -450,9 +497,9 @@ export function AnalyticsTab() {
     }));
 
     setCampaignData(chartData);
-  };
+  }, []);
 
-  const fetchWithdrawalData = async () => {
+  const fetchWithdrawalData = useCallback(async () => {
     const { start, end } = getDateRange();
     
     const { data } = await supabase
@@ -512,9 +559,9 @@ export function AnalyticsTab() {
     }));
 
     setWithdrawalData(chartData);
-  };
+  }, [getDateRange, timePeriod]);
 
-  const fetchPayoutStatusData = async () => {
+  const fetchPayoutStatusData = useCallback(async () => {
     const { data } = await supabase
       .from("payout_requests")
       .select("status, amount");
@@ -537,9 +584,9 @@ export function AnalyticsTab() {
     }));
 
     setPayoutStatusData(chartData);
-  };
+  }, []);
 
-  const fetchEarningsVsWithdrawalsData = async () => {
+  const fetchEarningsVsWithdrawalsData = useCallback(async () => {
     const { start, end } = getDateRange();
     
     // Fetch earnings (wallet transactions of type 'earning')
@@ -600,20 +647,37 @@ export function AnalyticsTab() {
     }));
 
     setEarningsVsWithdrawalsData(chartData);
-  };
+  }, [getDateRange, timePeriod]);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
+      await Promise.all([
+        fetchAnalytics(),
+        fetchUserGrowthData(),
+        fetchCampaignData(),
+        fetchWithdrawalData(),
+        fetchPayoutStatusData(),
+        fetchEarningsVsWithdrawalsData(),
+        fetchCreatorFunnelData(),
+      ]);
+      setIsLoading(false);
+    };
+    fetchAllData();
+  }, [fetchAnalytics, fetchUserGrowthData, fetchCampaignData, fetchWithdrawalData, fetchPayoutStatusData, fetchEarningsVsWithdrawalsData, fetchCreatorFunnelData]);
 
   const PIE_COLORS = [CHART_COLORS.green, CHART_COLORS.orange, CHART_COLORS.red, CHART_COLORS.purple];
 
-  const CustomTooltip = ({ active, payload, label, type }: any) => {
+  const CustomTooltip = ({ active, payload, label, type }: CustomTooltipProps) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
       <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
         <p className="text-[11px] text-white/50 font-inter tracking-[-0.5px] mb-2 uppercase">{label}</p>
         <div className="space-y-1.5">
-          {payload.map((entry: any, index: number) => {
-            let displayName = entry.name;
-            let displayValue = entry.value;
+          {payload.map((entry: TooltipPayloadEntry, index: number) => {
+            let displayName: string = entry.name;
+            let displayValue: string | number = entry.value;
             
             if (type === 'withdrawal') {
               if (entry.dataKey === 'total') displayName = 'Total Amount';
@@ -649,7 +713,7 @@ export function AnalyticsTab() {
     );
   };
 
-  const CustomPieTooltip = ({ active, payload }: any) => {
+  const CustomPieTooltip = ({ active, payload }: CustomPieTooltipProps) => {
     if (!active || !payload || !payload.length) return null;
     const data = payload[0].payload;
 

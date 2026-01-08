@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PublicNavbar from "@/components/PublicNavbar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,19 +33,64 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { ApplicationQuestionsRenderer, validateApplicationAnswers } from "@/components/ApplicationQuestionsRenderer";
 import { ApplicationAnswer, parseApplicationQuestions } from "@/types/applicationQuestions";
+
+// Type definitions for database query results
+interface BrandData {
+  name: string;
+  logo_url: string;
+  is_verified?: boolean;
+  slug?: string;
+}
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link?: string;
+  follower_count?: number;
+  user_id: string;
+}
+
+interface HookItem {
+  text?: string;
+  content?: string;
+}
+
+interface TalkingPointItem {
+  text?: string;
+  content?: string;
+}
+
+interface DosAndDonts {
+  dos?: string[];
+  donts?: string[];
+}
+
+interface ExampleVideo {
+  url: string;
+  title?: string;
+  thumbnail?: string;
+}
+
+interface BlueprintAsset {
+  url: string;
+  name?: string;
+  type?: string;
+}
+
 interface Blueprint {
   id: string;
   title: string;
   content: string | null;
-  hooks: any[] | null;
-  talking_points: any[] | null;
-  dos_and_donts: any | null;
+  hooks: (string | HookItem)[] | null;
+  talking_points: (string | TalkingPointItem)[] | null;
+  dos_and_donts: DosAndDonts | null;
   call_to_action: string | null;
   hashtags: string[] | null;
   brand_voice: string | null;
   content_guidelines: string | null;
-  example_videos: any[] | null;
-  assets: any[] | null;
+  example_videos: ExampleVideo[] | null;
+  assets: BlueprintAsset[] | null;
 }
 interface Campaign {
   id: string;
@@ -65,7 +110,7 @@ interface Campaign {
   allowed_platforms: string[] | null;
   slug: string;
   guidelines: string | null;
-  application_questions: any;
+  application_questions: unknown;
   requires_application: boolean;
   preview_url: string | null;
   is_infinite_budget: boolean | null;
@@ -129,7 +174,7 @@ export default function CampaignApply() {
   } | null>(null);
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loading, setLoading] = useState(true);
-  const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [answers, setAnswers] = useState<Record<string, ApplicationAnswer>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -146,39 +191,37 @@ export default function CampaignApply() {
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isCampaignMember, setIsCampaignMember] = useState(false);
-  const [connectedAccounts, setConnectedAccounts] = useState<any[]>([]);
-  const [availableToConnect, setAvailableToConnect] = useState<any[]>([]);
+  const [connectedAccounts, setConnectedAccounts] = useState<SocialAccount[]>([]);
+  const [availableToConnect, setAvailableToConnect] = useState<SocialAccount[]>([]);
   
   const hasContactInfo = hasPhone || hasDiscord;
-  useEffect(() => {
-    fetchCampaignData();
-  }, [slug]);
 
   // Fetch bookmark status when campaign/boost loads
-  useEffect(() => {
-    const fetchBookmarkStatus = async () => {
-      if (!user) return;
-      
-      if (campaign) {
-        const { data } = await supabase
-          .from("campaign_bookmarks")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("campaign_id", campaign.id)
-          .maybeSingle();
-        setIsBookmarked(!!data);
-      } else if (boostCampaign) {
-        const { data } = await supabase
-          .from("bounty_bookmarks")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("bounty_campaign_id", boostCampaign.id)
-          .maybeSingle();
-        setIsBookmarked(!!data);
-      }
-    };
-    fetchBookmarkStatus();
+  const fetchBookmarkStatus = useCallback(async () => {
+    if (!user) return;
+
+    if (campaign) {
+      const { data } = await supabase
+        .from("campaign_bookmarks")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("campaign_id", campaign.id)
+        .maybeSingle();
+      setIsBookmarked(!!data);
+    } else if (boostCampaign) {
+      const { data } = await supabase
+        .from("bounty_bookmarks")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("bounty_campaign_id", boostCampaign.id)
+        .maybeSingle();
+      setIsBookmarked(!!data);
+    }
   }, [user, campaign, boostCampaign]);
+
+  useEffect(() => {
+    fetchBookmarkStatus();
+  }, [fetchBookmarkStatus]);
 
   const toggleBookmark = async () => {
     if (!user) {
@@ -228,78 +271,8 @@ export default function CampaignApply() {
       }
     }
   };
-  const fetchCampaignData = async () => {
-    if (!slug) return;
-    setLoading(true);
-    try {
-      const {
-        data: campaignData,
-        error
-      } = await supabase.from("campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
-      if (error) throw error;
-      if (campaignData) {
-        setIsBoost(false);
-        const transformedCampaign: Campaign = {
-          ...campaignData,
-          brand_name: (campaignData.brands as any)?.name || campaignData.brand_name,
-          brand_logo_url: (campaignData.brands as any)?.logo_url || campaignData.brand_logo_url,
-          brands: campaignData.brands as any
-        };
-        setCampaign(transformedCampaign);
-        if (campaignData.blueprint_id) {
-          const {
-            data: blueprintData
-          } = await supabase.from("blueprints").select("*").eq("id", campaignData.blueprint_id).single();
-          if (blueprintData) setBlueprint(blueprintData as Blueprint);
-        }
-        await checkAuthAndLoadAccounts(campaignData);
-      } else {
-        const {
-          data: boostData,
-          error: boostError
-        } = await supabase.from("bounty_campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
-        if (boostError) throw boostError;
-        if (!boostData) {
-          toast.error("Campaign not found");
-          navigate("/dashboard");
-          return;
-        }
-        setIsBoost(true);
-        setBoostCampaign(boostData as unknown as BountyCampaign);
-        if (boostData.brands) setBoostBrand(boostData.brands as any);
-        if (boostData.blueprint_id) {
-          const {
-            data: blueprintData
-          } = await supabase.from("blueprints").select("*").eq("id", boostData.blueprint_id).single();
-          if (blueprintData) setBlueprint(blueprintData as Blueprint);
-        }
-        const {
-          data: {
-            session
-          }
-        } = await supabase.auth.getSession();
-        setIsLoggedIn(!!session);
-        
-        // Check if user is already a boost member
-        if (session && boostData) {
-          const { data: boostApplication } = await supabase
-            .from("bounty_applications")
-            .select("id")
-            .eq("bounty_campaign_id", boostData.id)
-            .eq("user_id", session.user.id)
-            .neq("status", "rejected")
-            .maybeSingle();
-          setIsCampaignMember(!!boostApplication);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching campaign:", error);
-      toast.error("Failed to load campaign");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const checkAuthAndLoadAccounts = async (campaignData: any) => {
+
+  const checkAuthAndLoadAccounts = useCallback(async (campaignData: Campaign) => {
     const {
       data: {
         session
@@ -333,23 +306,102 @@ export default function CampaignApply() {
 
     const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
     const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
-    setSocialAccounts(availableAccounts);
+    setSocialAccounts(availableAccounts as SocialAccount[]);
 
     // For members, also track which accounts are connected and which can still be connected
     if (isMember) {
       const connected = accounts?.filter(acc => activePlatforms.has(acc.platform)) || [];
-      setConnectedAccounts(connected);
+      setConnectedAccounts(connected as SocialAccount[]);
       // Available to connect = accounts for allowed platforms that aren't already connected
       const allUserAccounts = await supabase.from("social_accounts").select("*").eq("user_id", session.user.id);
       const canConnect = (allUserAccounts.data || []).filter(acc =>
         platforms.map((p: string) => p.toLowerCase()).includes(acc.platform.toLowerCase()) &&
         !activePlatforms.has(acc.platform)
       );
-      setAvailableToConnect(canConnect);
+      setAvailableToConnect(canConnect as SocialAccount[]);
     }
 
     setLoadingAccounts(false);
-  };
+  }, []);
+
+  const fetchCampaignData = useCallback(async () => {
+    if (!slug) return;
+    setLoading(true);
+    try {
+      const {
+        data: campaignData,
+        error
+      } = await supabase.from("campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
+      if (error) throw error;
+      if (campaignData) {
+        setIsBoost(false);
+        const brands = campaignData.brands as BrandData | null;
+        const transformedCampaign: Campaign = {
+          ...campaignData,
+          brand_name: brands?.name || campaignData.brand_name,
+          brand_logo_url: brands?.logo_url || campaignData.brand_logo_url,
+          brands: brands ?? undefined
+        };
+        setCampaign(transformedCampaign);
+        if (campaignData.blueprint_id) {
+          const {
+            data: blueprintData
+          } = await supabase.from("blueprints").select("*").eq("id", campaignData.blueprint_id).single();
+          if (blueprintData) setBlueprint(blueprintData as Blueprint);
+        }
+        await checkAuthAndLoadAccounts(transformedCampaign);
+      } else {
+        const {
+          data: boostData,
+          error: boostError
+        } = await supabase.from("bounty_campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
+        if (boostError) throw boostError;
+        if (!boostData) {
+          toast.error("Campaign not found");
+          navigate("/dashboard");
+          return;
+        }
+        setIsBoost(true);
+        setBoostCampaign(boostData as unknown as BountyCampaign);
+        const boostBrands = boostData.brands as BrandData | null;
+        if (boostBrands) setBoostBrand(boostBrands);
+        if (boostData.blueprint_id) {
+          const {
+            data: blueprintData
+          } = await supabase.from("blueprints").select("*").eq("id", boostData.blueprint_id).single();
+          if (blueprintData) setBlueprint(blueprintData as Blueprint);
+        }
+        const {
+          data: {
+            session
+          }
+        } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session);
+
+        // Check if user is already a boost member
+        if (session && boostData) {
+          const { data: boostApplication } = await supabase
+            .from("bounty_applications")
+            .select("id")
+            .eq("bounty_campaign_id", boostData.id)
+            .eq("user_id", session.user.id)
+            .neq("status", "rejected")
+            .maybeSingle();
+          setIsCampaignMember(!!boostApplication);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching campaign:", error);
+      toast.error("Failed to load campaign");
+    } finally {
+      setLoading(false);
+    }
+  }, [slug, navigate, checkAuthAndLoadAccounts]);
+
+  useEffect(() => {
+    fetchCampaignData();
+  }, [fetchCampaignData]);
+
   const getPlatformIcon = (platform: string) => {
     const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
@@ -439,7 +491,7 @@ export default function CampaignApply() {
           platform: account.platform,
           content_url: contentUrl,
           status: submissionStatus,
-          application_answers: answersToStore as any
+          application_answers: answersToStore as Record<string, ApplicationAnswer> | null
         });
         if (submissionError) throw submissionError;
         const {
@@ -509,9 +561,10 @@ export default function CampaignApply() {
       const successMessage = campaign.requires_application === false ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.` : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
       toast.success(successMessage);
       navigate("/dashboard?tab=campaigns");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Submission failed:", error);
-      toast.error(error.message || "Failed to submit application");
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit application";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -753,10 +806,10 @@ export default function CampaignApply() {
         <div className="flex-1 overflow-y-auto lg:pr-[380px]">
           {/* Hero Banner */}
           <div className="relative">
-            {bannerUrl ? <div className="h-56 md:h-72 w-full overflow-hidden">
+            {bannerUrl && <div className="h-56 md:h-72 w-full overflow-hidden">
                 <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-              </div> : <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />}
+              </div>}
             
             {/* Breadcrumb Navigation */}
             <div className="absolute top-4 left-4 z-10">
@@ -885,7 +938,7 @@ export default function CampaignApply() {
             {blueprint?.hooks && blueprint.hooks.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Hook Ideas</h2>
                 <div className="space-y-2">
-                  {blueprint.hooks.map((hook: any, i: number) => <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-['Inter'] tracking-[-0.5px]">
+                  {blueprint.hooks.map((hook: string | HookItem, i: number) => <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-['Inter'] tracking-[-0.5px]">
                       {typeof hook === 'string' ? hook : hook.text || hook.content}
                     </div>)}
                 </div>
@@ -894,7 +947,7 @@ export default function CampaignApply() {
             {blueprint?.talking_points && blueprint.talking_points.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Talking Points</h2>
                 <ul className="space-y-2">
-                  {blueprint.talking_points.map((point: any, i: number) => <li key={i} className="flex items-start gap-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  {blueprint.talking_points.map((point: string | TalkingPointItem, i: number) => <li key={i} className="flex items-start gap-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                       <span className="text-primary mt-1">•</span>
                       <span>{typeof point === 'string' ? point : point.text || point.content}</span>
                     </li>)}

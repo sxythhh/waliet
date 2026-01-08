@@ -11,6 +11,7 @@ import forBrandsIcon from "@/assets/for-brands-icon.png";
 import forBrandsIconLight from "@/assets/for-brands-icon-light.svg";
 import exploreIconDark from "@/assets/explore-icon-dark.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Shield } from "lucide-react";
 interface PublicNavbarProps {
   searchQuery?: string;
   onSearchClick?: () => void;
@@ -24,6 +25,7 @@ export default function PublicNavbar({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const handleSearchClick = useCallback(() => {
@@ -58,6 +60,16 @@ export default function PublicNavbar({
       }
     };
 
+    const checkAdminStatus = async (userId: string) => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+
     supabase.auth.getSession().then(({
       data: {
         session
@@ -66,6 +78,7 @@ export default function PublicNavbar({
       setIsAuthenticated(!!session);
       if (session?.user?.id) {
         fetchProfile(session.user.id);
+        checkAdminStatus(session.user.id);
       }
     });
     const {
@@ -76,8 +89,10 @@ export default function PublicNavbar({
       setIsAuthenticated(!!session);
       if (session?.user?.id) {
         fetchProfile(session.user.id);
+        checkAdminStatus(session.user.id);
       } else {
         setUserProfile(null);
+        setIsAdmin(false);
       }
     });
     return () => subscription.unsubscribe();
@@ -162,6 +177,14 @@ export default function PublicNavbar({
               {/* Desktop Auth Buttons */}
               <div className="hidden md:flex items-center gap-2">
                 {isAuthenticated === null ? <div className="w-24 h-8" /> : isAuthenticated ? <>
+                    {isAdmin && (
+                      <Link to="/admin">
+                        <Button size="sm" variant="ghost" className="font-geist font-medium tracking-[-0.5px] px-3 gap-1.5 text-foreground/70 hover:text-foreground hover:bg-muted rounded-lg">
+                          <Shield className="h-3.5 w-3.5" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
                     <Link to="/dashboard">
                       <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
                         Dashboard
@@ -188,7 +211,14 @@ export default function PublicNavbar({
               </div>
 
               {/* Mobile Auth Buttons */}
-              <div className="md:hidden">
+              <div className="md:hidden flex items-center gap-2">
+                {isAuthenticated === true && isAdmin && (
+                  <Link to="/admin">
+                    <Button size="sm" variant="ghost" className="font-geist font-medium tracking-[-0.5px] px-2 text-foreground/70 hover:text-foreground hover:bg-muted rounded-lg">
+                      <Shield className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
                 {isAuthenticated === true && (
                   <Link to="/dashboard">
                     <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">

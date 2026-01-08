@@ -657,36 +657,49 @@ const Support = () => {
 
       <PublicNavbar />
 
-      <main className="pt-24 pb-16">
-        {/* Hero Section - Compact */}
-        <div className="mb-8">
-          <div className="max-w-4xl mx-auto px-6 py-8 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+      <main className="pt-14 pb-16">
+        {/* Hero Section - Modern Gradient */}
+        <div className="relative overflow-hidden mb-8">
+          {/* Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-purple-500/5" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+
+          <div className="relative max-w-4xl mx-auto px-6 py-16 md:py-20 text-center">
+            {/* Icon Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <AutoAwesomeIcon className="text-primary" sx={{ fontSize: 16 }} />
+              <span className="text-sm font-medium text-primary">AI-Powered Support</span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
               How can we help?
             </h1>
-            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-              Get instant help from our AI assistant or browse our knowledge base
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
+              Get instant answers from our AI assistant or browse our knowledge base
             </p>
 
-            {/* Search Bar - Minimal */}
-            <div className="relative max-w-md mx-auto">
-              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 18 }} />
-              <Input
-                type="text"
-                placeholder="Search help articles..."
-                value={searchQuery}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSearchQuery(value);
-                  setSelectedCategory(null);
-                  if (value.trim()) {
-                    setTimeout(() => {
-                      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
-                  }
-                }}
-                className="pl-11 pr-4 h-12 rounded-xl border-border/50 bg-background/80 backdrop-blur-sm"
-              />
+            {/* Search Bar - Enhanced */}
+            <div className="relative max-w-xl mx-auto">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-primary/20 rounded-2xl blur-xl opacity-50" />
+              <div className="relative">
+                <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 20 }} />
+                <Input
+                  type="text"
+                  placeholder="Search help articles..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchQuery(value);
+                    setSelectedCategory(null);
+                    if (value.trim()) {
+                      setTimeout(() => {
+                        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    }
+                  }}
+                  className="pl-14 pr-6 h-14 rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm shadow-lg shadow-primary/5 text-base placeholder:text-muted-foreground/70 focus-visible:ring-primary/30"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1065,31 +1078,35 @@ const Support = () => {
           )}
 
           {/* Contact Support Section */}
-          <div className="mt-16 rounded-3xl border border-border/50 bg-muted/30">
-            <div className="p-8 md:p-12 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
-                <ChatIcon className="text-foreground" sx={{ fontSize: 32 }} />
+          <div className="mt-16 relative rounded-3xl overflow-hidden">
+            {/* Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-purple-500/10" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+
+            <div className="relative p-8 md:p-12 text-center border border-border/50 rounded-3xl backdrop-blur-sm">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6 border border-primary/20">
+                <ChatIcon className="text-primary" sx={{ fontSize: 32 }} />
               </div>
-              <h2 className="text-2xl font-bold mb-3">Still need help?</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">Still need help?</h2>
               <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-                Can't find what you're looking for? Submit a ticket and our team will help you.
+                Can't find what you're looking for? Our support team is here to help you.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Button
                   size="lg"
-                  className="gap-2 rounded-xl"
+                  className="gap-2 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
                   onClick={() => setCreateDialogOpen(true)}
                 >
                   <AddIcon sx={{ fontSize: 16 }} />
                   Submit a Ticket
                 </Button>
-                <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl">
+                <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl hover:bg-background/80">
                   <a href="mailto:support@virality.gg">
                     <EmailIcon sx={{ fontSize: 16 }} />
                     Email Support
                   </a>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl">
+                <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl hover:bg-background/80">
                   <a href="https://discord.gg/virality" target="_blank" rel="noopener noreferrer">
                     <OpenInNewIcon sx={{ fontSize: 16 }} />
                     Join Discord

@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon } from "lucide-react";
 import { WalletDropdown } from "@/components/WalletDropdown";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
@@ -84,7 +84,7 @@ interface JoinedCampaign {
   hashtags?: string[] | null;
   guidelines?: string | null;
   embed_url?: string | null;
-  asset_links?: any[] | null;
+  asset_links?: { url: string; label?: string }[] | null;
   requirements?: string[] | null;
   campaign_update?: string | null;
   campaign_update_at?: string | null;
@@ -119,13 +119,13 @@ interface SubItem {
 interface MenuItem {
   title: string;
   tab: string;
-  icon: any;
+  icon: LucideIcon | null;
   subItems?: SubItem[];
 }
 const creatorMenuItems: MenuItem[] = [{
   title: "Home",
   tab: "campaigns",
-  icon: null as any
+  icon: null
 }, {
   title: "Profile",
   tab: "profile",
@@ -137,7 +137,7 @@ const creatorMenuItems: MenuItem[] = [{
 }, {
   title: "Referrals",
   tab: "referrals",
-  icon: null as any
+  icon: null
 }, {
   title: "Settings",
   tab: "settings",
@@ -146,19 +146,19 @@ const creatorMenuItems: MenuItem[] = [{
 const brandMenuItems: MenuItem[] = [{
   title: "Home",
   tab: "campaigns",
-  icon: null as any
+  icon: null
 }, {
   title: "Campaigns",
   tab: "analytics",
-  icon: null as any
+  icon: null
 }, {
   title: "Blueprints",
   tab: "blueprints",
-  icon: null as any
+  icon: null
 }, {
   title: "Creators",
   tab: "creators",
-  icon: null as any,
+  icon: null,
   subItems: [
     { title: "Messages", subtab: "messages", iconInactive: messagesInactive, iconActive: messagesActive },
     { title: "Database", subtab: "database", iconInactive: databaseInactive, iconActive: databaseActive },

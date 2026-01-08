@@ -5,6 +5,7 @@ import { Send, Loader2, TicketCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import supportAvatar from "@/assets/support-avatar.png";
 
 interface Message {
@@ -37,9 +38,12 @@ export const SupportChat = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -189,7 +193,7 @@ export const SupportChat = () => {
   return (
     <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-xl shadow-sm flex flex-col h-[500px]">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-[200px]">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-[200px]">
         {messages.map((message, index) => (
           <div key={index} className="flex gap-3">
             {message.role === "assistant" && (
@@ -211,7 +215,9 @@ export const SupportChat = () => {
                     : "bg-primary text-primary-foreground"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div className="text-sm prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-ol:my-1 max-w-none">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                </div>
                 
                 {message.ticketCreated && (
                   <Button

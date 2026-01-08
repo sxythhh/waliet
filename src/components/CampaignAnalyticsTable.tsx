@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,46 @@ interface SocialAccount {
   id: string;
   platform: string;
   username: string;
+  user_id?: string;
+}
+
+interface CampaignAccountWithSocialAccount {
+  social_accounts: SocialAccount;
+}
+
+interface TransactionMetadata {
+  campaign_id?: string;
+  analytics_id?: string;
+  account_username?: string;
+  platform?: string;
+  views?: number;
+  balance_before?: number;
+  balance_after?: number;
+  campaign_budget_before?: number;
+  campaign_budget_after?: number;
+  campaign_total_budget?: number;
+  adjustment_type?: string;
+  original_transaction_id?: string;
+  reverted_at?: string;
+}
+
+interface DemographicChangePayload {
+  social_account_id?: string;
+}
+
+interface UserSocialAccountWithDemographics {
+  id: string;
+  platform: string;
+  username: string;
+  account_link: string | null;
+  follower_count: number | null;
+  demographic_submission?: {
+    social_account_id: string;
+    status: string;
+    reviewed_at: string | null;
+    score: number | null;
+    tier1_percentage: number;
+  } | null;
 }
 interface AnalyticsData {
   id: string;
@@ -87,7 +127,7 @@ interface AnalyticsData {
   total_comments: number;
   average_engagement_rate: number;
   average_video_views: number;
-  posts_last_7_days: any;
+  posts_last_7_days: Record<string, unknown> | null;
   last_tracked: string | null;
   amount_of_videos_tracked: string | null;
   user_id: string | null;
@@ -112,7 +152,7 @@ interface Transaction {
   description: string;
   status: string;
   created_at: string;
-  metadata: any;
+  metadata: TransactionMetadata;
   profiles?: {
     username: string;
     avatar_url: string | null;
@@ -177,7 +217,7 @@ export function CampaignAnalyticsTable({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserForDetails, setSelectedUserForDetails] = useState<AnalyticsData | null>(null);
-  const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<UserSocialAccountWithDemographics[]>([]);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [transactionsCurrentPage, setTransactionsCurrentPage] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
@@ -213,42 +253,8 @@ export function CampaignAnalyticsTable({
   useEffect(() => {
     setActiveTab(view);
   }, [view]);
-  useEffect(() => {
-    if (!isPaused) {
-      fetchAnalytics();
-      fetchCampaignRPM();
-      fetchTransactions();
-    }
 
-    // Set up optimized real-time subscription - only for relevant demographic submissions
-    // We'll refetch analytics only when a submission changes for users in this campaign
-    const demographicChannel = isPaused ? null : supabase.channel(`demographic-submissions-${campaignId}`).on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'demographic_submissions'
-    }, async payload => {
-      // Check if this submission is relevant to our campaign
-      const newRecord = payload.new as any;
-      const oldRecord = payload.old as any;
-      const socialAccountId = newRecord?.social_account_id || oldRecord?.social_account_id;
-      if (!socialAccountId) return;
-
-      // Check if this social account is in our campaign
-      const {
-        data: isRelevant
-      } = await supabase.from('social_account_campaigns').select('id').eq('campaign_id', campaignId).eq('social_account_id', socialAccountId).eq('status', 'active').single();
-      if (isRelevant) {
-        console.log('Relevant demographic submission changed, refreshing analytics');
-        fetchAnalytics();
-      }
-    }).subscribe();
-    return () => {
-      if (demographicChannel) {
-        supabase.removeChannel(demographicChannel);
-      }
-    };
-  }, [campaignId, isPaused]);
-  const fetchCampaignRPM = async () => {
+  const fetchCampaignRPM = useCallback(async () => {
     try {
       const {
         data,
@@ -260,8 +266,8 @@ export function CampaignAnalyticsTable({
     } catch (error) {
       console.error("Error fetching campaign RPM:", error);
     }
-  };
-  const fetchAnalytics = async () => {
+  }, [campaignId]);
+  const fetchAnalytics = useCallback(async () => {
     try {
       const {
         data,
@@ -309,9 +315,9 @@ export function CampaignAnalyticsTable({
         `).eq("campaign_id", campaignId).eq("status", "active");
 
       // Create maps for matching by both user_id and username+platform
-      const socialAccountsMap = new Map();
-      const socialAccountsByUsernameMap = new Map();
-      (allCampaignAccounts || []).forEach((item: any) => {
+      const socialAccountsMap = new Map<string, SocialAccount>();
+      const socialAccountsByUsernameMap = new Map<string, SocialAccount>();
+      (allCampaignAccounts || []).forEach((item: CampaignAccountWithSocialAccount) => {
         const account = item.social_accounts;
         const normalizedUsername = normalizeUsername(account.username);
         const normalizedPlatform = normalizePlatform(account.platform);
@@ -373,10 +379,10 @@ export function CampaignAnalyticsTable({
       }
 
       // Get all social account IDs for demographic submissions (from both campaign and global matches)
-      const allSocialAccountIds = [...new Set([...(allCampaignAccounts || []).map((item: any) => item.social_accounts.id), ...Array.from(socialAccountsByUsernameMap.values()).map((acc: any) => acc.id)])];
+      const allSocialAccountIds = [...new Set([...(allCampaignAccounts || []).map((item: CampaignAccountWithSocialAccount) => item.social_accounts.id), ...Array.from(socialAccountsByUsernameMap.values()).map((acc: SocialAccount) => acc.id)])];
 
       // Collect all user IDs from analytics records AND matched social accounts
-      const allUserIds = [...new Set([...userIds, ...(allCampaignAccounts || []).filter((item: any) => item.social_accounts?.user_id).map((item: any) => item.social_accounts.user_id), ...Array.from(socialAccountsByUsernameMap.values()).filter((acc: any) => acc.user_id).map((acc: any) => acc.user_id)])];
+      const allUserIds = [...new Set([...userIds, ...(allCampaignAccounts || []).filter((item: CampaignAccountWithSocialAccount) => item.social_accounts?.user_id).map((item: CampaignAccountWithSocialAccount) => item.social_accounts.user_id), ...Array.from(socialAccountsByUsernameMap.values()).filter((acc: SocialAccount) => acc.user_id).map((acc: SocialAccount) => acc.user_id)])];
       console.log('All user IDs to fetch profiles for:', allUserIds.length, allUserIds.slice(0, 5));
 
       // Fetch profiles for all linked accounts (batch to avoid query limits)
@@ -494,7 +500,7 @@ export function CampaignAnalyticsTable({
     } finally {
       setLoading(false);
     }
-  };
+  }, [campaignId]);
   const fetchAvailableUsers = async (accountPlatform: string) => {
     try {
       // Get all users who have APPROVED submissions for this campaign
@@ -527,10 +533,10 @@ export function CampaignAnalyticsTable({
 
       // Filter to only include accounts from approved users
       const approvedUserIdsSet = new Set(approvedUserIds);
-      const filteredAccounts = (campaignAccounts || []).filter((ca: any) => approvedUserIdsSet.has(ca.social_accounts.user_id));
+      const filteredAccounts = (campaignAccounts || []).filter((ca: CampaignAccountWithSocialAccount) => approvedUserIdsSet.has(ca.social_accounts.user_id));
 
       // Fetch profile data for each unique user
-      const uniqueUserIds = [...new Set(filteredAccounts.map((ca: any) => ca.social_accounts.user_id))];
+      const uniqueUserIds = [...new Set(filteredAccounts.map((ca: CampaignAccountWithSocialAccount) => ca.social_accounts.user_id))];
 
       // Batch fetch profiles instead of individual requests
       const {
@@ -539,7 +545,7 @@ export function CampaignAnalyticsTable({
         data: []
       };
       const profilesMap = new Map((profiles || []).map(p => [p.id, p]));
-      const users = filteredAccounts.map((ca: any) => {
+      const users = filteredAccounts.map((ca: CampaignAccountWithSocialAccount) => {
         const account = ca.social_accounts;
         const profile = profilesMap.get(account.user_id);
         return {
@@ -625,9 +631,10 @@ export function CampaignAnalyticsTable({
       setSelectedAnalyticsAccount(null);
       setUserSearchTerm("");
       fetchAnalytics();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error linking account:", error);
-      toast.error(error.message || "Failed to link account");
+      const errorMessage = error instanceof Error ? error.message : "Failed to link account";
+      toast.error(errorMessage);
     }
   };
   const openLinkDialog = (account: AnalyticsData) => {
@@ -775,7 +782,7 @@ export function CampaignAnalyticsTable({
       demographicPercentage: demographicMultiplier * 100
     };
   };
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       const {
         data,
@@ -786,8 +793,8 @@ export function CampaignAnalyticsTable({
       if (error) throw error;
 
       // Filter by campaign_id in metadata (handle both formats)
-      const campaignTransactions = data?.filter((txn: any) => {
-        const metadata = txn.metadata || {};
+      const campaignTransactions = data?.filter((txn) => {
+        const metadata = (txn.metadata || {}) as TransactionMetadata;
         return metadata.campaign_id === campaignId;
       }) || [];
 
@@ -799,7 +806,7 @@ export function CampaignAnalyticsTable({
         } = await supabase.from("profiles").select("id, username, avatar_url").in("id", userIds);
 
         // Fetch analytics records to check if transactions have been reverted
-        const analyticsIds = campaignTransactions.map(t => (t.metadata as any)?.analytics_id).filter(Boolean);
+        const analyticsIds = campaignTransactions.map(t => (t.metadata as TransactionMetadata)?.analytics_id).filter(Boolean);
         const {
           data: analyticsData
         } = await supabase.from("campaign_account_analytics").select("id, last_payment_amount").in("id", analyticsIds);
@@ -811,7 +818,7 @@ export function CampaignAnalyticsTable({
           if (txn.type === 'balance_correction') return true;
 
           // For earning transactions, check if they've been reverted
-          const analytics = analyticsData?.find(a => a.id === (txn.metadata as any)?.analytics_id);
+          const analytics = analyticsData?.find(a => a.id === (txn.metadata as TransactionMetadata)?.analytics_id);
           return analytics && analytics.last_payment_amount > 0;
         });
         const transactionsWithProfiles = activeTransactions.map(txn => ({
@@ -825,7 +832,45 @@ export function CampaignAnalyticsTable({
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
-  };
+  }, [campaignId]);
+
+  // Fetch data and set up real-time subscriptions
+  useEffect(() => {
+    if (!isPaused) {
+      fetchAnalytics();
+      fetchCampaignRPM();
+      fetchTransactions();
+    }
+
+    // Set up optimized real-time subscription - only for relevant demographic submissions
+    // We'll refetch analytics only when a submission changes for users in this campaign
+    const demographicChannel = isPaused ? null : supabase.channel(`demographic-submissions-${campaignId}`).on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'demographic_submissions'
+    }, async payload => {
+      // Check if this submission is relevant to our campaign
+      const newRecord = payload.new as DemographicChangePayload;
+      const oldRecord = payload.old as DemographicChangePayload;
+      const socialAccountId = newRecord?.social_account_id || oldRecord?.social_account_id;
+      if (!socialAccountId) return;
+
+      // Check if this social account is in our campaign
+      const {
+        data: isRelevant
+      } = await supabase.from('social_account_campaigns').select('id').eq('campaign_id', campaignId).eq('social_account_id', socialAccountId).eq('status', 'active').single();
+      if (isRelevant) {
+        console.log('Relevant demographic submission changed, refreshing analytics');
+        fetchAnalytics();
+      }
+    }).subscribe();
+    return () => {
+      if (demographicChannel) {
+        supabase.removeChannel(demographicChannel);
+      }
+    };
+  }, [campaignId, isPaused, fetchAnalytics, fetchCampaignRPM, fetchTransactions]);
+
   const exportTransactionsToCSV = () => {
     let transactionsToExport = filteredTransactions;
 
@@ -1145,7 +1190,7 @@ export function CampaignAnalyticsTable({
   const filteredTransactions = transactions.filter(txn => {
     // Filter for manual budget adjustments
     if (showBudgetAdjustmentsOnly) {
-      if (txn.type !== 'balance_correction' || (txn.metadata as any)?.adjustment_type !== 'manual_budget_update') {
+      if (txn.type !== 'balance_correction' || txn.metadata?.adjustment_type !== 'manual_budget_update') {
         return false;
       }
     }
@@ -2114,7 +2159,7 @@ export function CampaignAnalyticsTable({
             {userSocialAccounts.length > 0 && <div>
                 <h4 className="text-sm font-semibold text-white mb-3">Connected Accounts</h4>
                 <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
-                  {userSocialAccounts.map((account: any) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group">
+                  {userSocialAccounts.map((account: UserSocialAccountWithDemographics) => <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] transition-colors group">
                       <div className="flex items-center gap-3">
                         {(() => {
                     switch (account.platform.toLowerCase()) {

@@ -12,10 +12,18 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
+# Environment files - NEVER commit
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Secrets
+*.pem
+*.key
+*.p12
+credentials.json
+secrets.json
+service-account*.json
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +35,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build outputs
+build/
+
+# Capacitor
+android/app/build/
+ios/App/Pods/
+
+# Supabase
+supabase/.temp/

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,14 +30,12 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { format } from "date-fns";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
-import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
-import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
+import { BoostCardCompact } from "@/components/dashboard/BoostCardCompact";
 import { CreatorPitchesWidget } from "@/components/dashboard/CreatorPitchesWidget";
 import { ReceivedPitchesWidget } from "@/components/dashboard/ReceivedPitchesWidget";
 import { EarningsChart } from "@/components/dashboard/EarningsChart";
@@ -71,6 +69,30 @@ interface Campaign {
     username: string;
   }>;
 }
+interface BlueprintHook {
+  text: string;
+  description?: string;
+}
+
+interface BlueprintTalkingPoint {
+  text: string;
+  notes?: string;
+}
+
+interface BlueprintDosAndDonts {
+  dos?: string[];
+  donts?: string[];
+}
+
+interface Blueprint {
+  content: string | null;
+  hooks: BlueprintHook[] | null;
+  talking_points: BlueprintTalkingPoint[] | null;
+  dos_and_donts: BlueprintDosAndDonts | null;
+  call_to_action: string | null;
+  content_guidelines: string | null;
+}
+
 interface BoostApplication {
   id: string;
   video_url: string;
@@ -90,14 +112,7 @@ interface BoostApplication {
       name: string;
       logo_url: string | null;
     };
-    blueprint?: {
-      content: string | null;
-      hooks: any[] | null;
-      talking_points: any[] | null;
-      dos_and_donts: any | null;
-      call_to_action: string | null;
-      content_guidelines: string | null;
-    } | null;
+    blueprint?: Blueprint | null;
   };
 }
 interface RecommendedCampaign {
@@ -131,6 +146,45 @@ interface RecentActivity {
   campaignLogo?: string | null;
   campaignName?: string | null;
 }
+
+interface TransactionMetadata {
+  campaign_id?: string;
+  boost_id?: string;
+  period_start?: string;
+  period_end?: string;
+  recipient_username?: string;
+  sender_username?: string;
+}
+
+interface CampaignMapEntry {
+  id: string;
+  title: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+}
+
+interface BoostMapEntry {
+  id: string;
+  title: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+}
+
+interface BrandRelation {
+  name: string;
+  logo_url: string | null;
+  is_verified?: boolean;
+  slug?: string;
+}
+
+interface SocialAccountConnection {
+  campaign_id: string;
+  social_accounts: {
+    id: string;
+    platform: string;
+    username: string;
+  } | null;
+}
 export interface CampaignsTabProps {
   onOpenPrivateDialog: () => void;
   className?: string;
@@ -150,10 +204,8 @@ export function CampaignsTab({
   const [leavingCampaign, setLeavingCampaign] = useState(false);
   const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false);
   const [submitDemographicsDialogOpen, setSubmitDemographicsDialogOpen] = useState(false);
-  const [campaignDetailsDialogOpen, setCampaignDetailsDialogOpen] = useState(false);
-  const [selectedCampaignForDetails, setSelectedCampaignForDetails] = useState<Campaign | null>(null);
-  const [joinCampaignSheetOpen, setJoinCampaignSheetOpen] = useState(false);
-  const [selectedCampaignForJoin, setSelectedCampaignForJoin] = useState<any>(null);
+    const [joinCampaignSheetOpen, setJoinCampaignSheetOpen] = useState(false);
+  const [selectedCampaignForJoin, setSelectedCampaignForJoin] = useState<RecommendedCampaign | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<{
     id: string;
     platform: string;
@@ -202,14 +254,8 @@ export function CampaignsTab({
         return null;
     }
   };
-  useEffect(() => {
-    fetchCampaigns();
-    fetchBoostApplications();
-    fetchDashboardData();
-    fetchWalletTransactions();
-  }, []);
 
-  const fetchWalletTransactions = async () => {
+  const fetchWalletTransactions = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -235,11 +281,11 @@ export function CampaignsTab({
     if (!txns) return;
 
     // Get campaign and boost IDs
-    const campaignIds = txns.map(t => (t.metadata as any)?.campaign_id).filter(Boolean);
-    const boostIds = txns.map(t => (t.metadata as any)?.boost_id).filter(Boolean);
+    const campaignIds = txns.map(t => (t.metadata as TransactionMetadata | null)?.campaign_id).filter(Boolean) as string[];
+    const boostIds = txns.map(t => (t.metadata as TransactionMetadata | null)?.boost_id).filter(Boolean) as string[];
 
     // Fetch campaign details
-    let campaignsMap: Record<string, any> = {};
+    let campaignsMap: Record<string, CampaignMapEntry> = {};
     if (campaignIds.length > 0) {
       const { data: campaigns } = await supabase
         .from("campaigns")
@@ -248,29 +294,30 @@ export function CampaignsTab({
       campaignsMap = (campaigns || []).reduce((acc, c) => {
         acc[c.id] = c;
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, CampaignMapEntry>);
     }
 
     // Fetch boost details
-    let boostsMap: Record<string, any> = {};
+    let boostsMap: Record<string, BoostMapEntry> = {};
     if (boostIds.length > 0) {
       const { data: boosts } = await supabase
         .from("bounty_campaigns")
         .select("id, title, brands(name, logo_url)")
         .in("id", boostIds);
       boostsMap = (boosts || []).reduce((acc, b) => {
+        const brandData = b.brands as BrandRelation | null;
         acc[b.id] = {
           id: b.id,
           title: b.title,
-          brand_name: (b.brands as any)?.name,
-          brand_logo_url: (b.brands as any)?.logo_url
+          brand_name: brandData?.name || '',
+          brand_logo_url: brandData?.logo_url || null
         };
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, BoostMapEntry>);
     }
 
     const transactions: Transaction[] = txns.map(txn => {
-      const metadata = txn.metadata as any;
+      const metadata = txn.metadata as TransactionMetadata | null;
       const isBoostEarning = txn.type === 'earning' && metadata?.boost_id;
 
       return {
@@ -287,8 +334,8 @@ export function CampaignsTab({
     });
 
     setWalletTransactions(transactions);
-  };
-  const fetchDashboardData = async () => {
+  }, []);
+  const fetchDashboardData = useCallback(async () => {
     const {
       data: {
         user
@@ -340,7 +387,7 @@ export function CampaignsTab({
     } = await recommendedQuery;
     setRecommendedCampaigns((recommendedData || []).map(c => ({
       ...c,
-      brand_is_verified: (c.brands as any)?.is_verified || false,
+      brand_is_verified: (c.brands as BrandRelation | null)?.is_verified || false,
       application_questions: Array.isArray(c.application_questions) ? c.application_questions as string[] : []
     })));
 
@@ -352,7 +399,7 @@ export function CampaignsTab({
     }).limit(5);
 
     // Extract campaign IDs from metadata and fetch campaign info
-    const campaignIds = (recentTransactions || []).map(tx => (tx.metadata as any)?.campaign_id).filter(Boolean);
+    const campaignIds = (recentTransactions || []).map(tx => (tx.metadata as TransactionMetadata | null)?.campaign_id).filter(Boolean) as string[];
     let campaignMap: Record<string, {
       brand_logo_url: string | null;
       brand_name: string;
@@ -373,7 +420,7 @@ export function CampaignsTab({
       }>);
     }
     const activities: RecentActivity[] = (recentTransactions || []).map(tx => {
-      const campaignId = (tx.metadata as any)?.campaign_id;
+      const campaignId = (tx.metadata as TransactionMetadata | null)?.campaign_id;
       const campaign = campaignId ? campaignMap[campaignId] : null;
       return {
         id: tx.id,
@@ -387,8 +434,8 @@ export function CampaignsTab({
       };
     });
     setRecentActivity(activities);
-  };
-  const fetchBoostApplications = async () => {
+  }, []);
+  const fetchBoostApplications = useCallback(async () => {
     try {
       const {
         data: {
@@ -444,12 +491,12 @@ export function CampaignsTab({
           } : null
         };
       }));
-      setBoostApplications(applicationsWithDetails.filter(app => app.boost_campaigns) as any);
-    } catch (error: any) {
+      setBoostApplications(applicationsWithDetails.filter(app => app.boost_campaigns) as BoostApplication[]);
+    } catch (error: unknown) {
       console.error("Error fetching boost applications:", error);
     }
-  };
-  const fetchCampaigns = async () => {
+  }, []);
+  const fetchCampaigns = useCallback(async () => {
     setLoading(true);
 
     // Get current user
@@ -522,7 +569,7 @@ export function CampaignsTab({
       platform: string;
       username: string;
     }>>();
-    accountCampaigns?.forEach((connection: any) => {
+    (accountCampaigns as SocialAccountConnection[] | null)?.forEach((connection) => {
       if (connection.campaign_id && connection.social_accounts) {
         if (!accountsByCampaign.has(connection.campaign_id)) {
           accountsByCampaign.set(connection.campaign_id, []);
@@ -540,17 +587,26 @@ export function CampaignsTab({
       // Add submission status and brand data to each campaign
       const campaignsWithStatus = (data || []).map(campaign => ({
         ...campaign,
-        brand_name: (campaign.brands as any)?.name || campaign.brand_name,
-        brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
-        brand_is_verified: (campaign.brands as any)?.is_verified || false,
-        brand_slug: (campaign.brands as any)?.slug,
+        brand_name: (campaign.brands as BrandRelation | null)?.name || campaign.brand_name,
+        brand_logo_url: (campaign.brands as BrandRelation | null)?.logo_url || campaign.brand_logo_url,
+        brand_is_verified: (campaign.brands as BrandRelation | null)?.is_verified || false,
+        brand_slug: (campaign.brands as BrandRelation | null)?.slug,
         submission_status: submissionStatusMap.get(campaign.id),
         connected_accounts: accountsByCampaign.get(campaign.id) || []
       }));
       setCampaigns(campaignsWithStatus);
     }
     setLoading(false);
-  };
+  }, [toast]);
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchCampaigns();
+    fetchBoostApplications();
+    fetchDashboardData();
+    fetchWalletTransactions();
+  }, [fetchCampaigns, fetchBoostApplications, fetchDashboardData, fetchWalletTransactions]);
+
   const handleWithdrawApplication = async () => {
     if (!selectedCampaignId) return;
     try {
@@ -659,13 +715,6 @@ export function CampaignsTab({
       }).eq("campaign_id", selectedCampaignId).in("social_account_id", linkedAccounts?.map(l => l.social_account_id) || []);
       if (unlinkError) throw unlinkError;
 
-      // 5. Clear campaign_id from social_accounts table (legacy field)
-      const {
-        error: accountError
-      } = await supabase.from("social_accounts").update({
-        campaign_id: null
-      }).eq("campaign_id", selectedCampaignId).eq("user_id", user.id);
-      if (accountError) throw accountError;
       toast({
         title: "Left Campaign",
         description: "You have successfully left this campaign"
@@ -793,29 +842,36 @@ export function CampaignsTab({
         </div>
       )}
 
-      {/* Your Boosts Section - Accepted Applications */}
-      {boostApplications.filter(app => app.status === 'accepted').length > 0 && <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Your Boosts</h3>
-          <div className="space-y-3">
-          {boostApplications.filter(app => app.status === 'accepted').map(application => <BoostCard key={application.id} boost={{
-            id: application.boost_campaigns.id,
-            title: application.boost_campaigns.title,
-            monthly_retainer: application.boost_campaigns.monthly_retainer,
-            videos_per_month: application.boost_campaigns.videos_per_month,
-            brands: application.boost_campaigns.brands,
-            blueprint_id: application.boost_campaigns.blueprint_id,
-            blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
-            content_style_requirements: application.boost_campaigns.content_style_requirements,
-            blueprint: application.boost_campaigns.blueprint
-          }} />)}
-          </div>
-        </div>}
-
-      {/* Your Campaigns Section */}
-      {campaigns.length > 0 && (
+      {/* Your Campaigns & Boosts Section - Combined */}
+      {(campaigns.length > 0 || boostApplications.filter(app => app.status === 'accepted').length > 0) && (
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">Your Campaigns</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {/* Boosts displayed as cards */}
+            {boostApplications.filter(app => app.status === 'accepted').map(application => (
+              <BoostCardCompact
+                key={`boost-${application.boost_campaigns.id}`}
+                id={application.boost_campaigns.id}
+                title={application.boost_campaigns.title}
+                brand_name={application.boost_campaigns.brands?.name || ''}
+                brand_logo_url={application.boost_campaigns.brands?.logo_url || null}
+                brand_is_verified={application.boost_campaigns.brands?.is_verified}
+                brand_slug={application.boost_campaigns.brands?.slug}
+                banner_url={application.boost_campaigns.banner_url || null}
+                monthly_retainer={application.boost_campaigns.monthly_retainer}
+                videos_per_month={application.boost_campaigns.videos_per_month}
+                onClick={() => navigate(`/dashboard/boost/${application.boost_campaigns.id}`, {
+                  state: {
+                    boost: {
+                      ...application.boost_campaigns,
+                      brand_name: application.boost_campaigns.brands?.name,
+                      brand_logo_url: application.boost_campaigns.brands?.logo_url
+                    }
+                  }
+                })}
+              />
+            ))}
+            {/* Regular campaigns */}
             {campaigns.map((campaign) => (
               <CampaignCard
                 key={campaign.id}
@@ -833,10 +889,7 @@ export function CampaignsTab({
                 isEnded={campaign.status === 'ended'}
                 showBookmark={false}
                 showFullscreen={false}
-                onClick={() => {
-                  setSelectedCampaignForDetails(campaign);
-                  setCampaignDetailsDialogOpen(true);
-                }}
+                onClick={() => navigate(`/dashboard/campaign/${campaign.id}`, { state: { campaign } })}
               />
             ))}
           </div>
@@ -849,9 +902,6 @@ export function CampaignsTab({
       {/* Sent Pitches Widget */}
       <CreatorPitchesWidget />
 
-      {/* Submissions Section */}
-      <SubmissionsTab />
-      
       {/* Campaigns Content */}
       <>
 
@@ -1037,32 +1087,12 @@ export function CampaignsTab({
         }} />
       </>}
     
-      <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} onConnectAccount={() => {
-        setCampaignDetailsDialogOpen(false);
-        setDialogOpen(true);
-      }} onManageAccount={account => {
-        setCampaignDetailsDialogOpen(false);
-        setSelectedAccount(account);
-        setManageAccountDialogOpen(true);
-      }} />
-      
       <JoinCampaignSheet campaign={selectedCampaignForJoin} open={joinCampaignSheetOpen} onOpenChange={setJoinCampaignSheetOpen} onSuccess={() => {
-        // After successful join, open the campaign details dialog
+        // After successful join, navigate to campaign details page
         if (selectedCampaignForJoin) {
-          // Find the full campaign data from campaigns to get connected accounts
-          const fullCampaign = campaigns.find(c => c.id === selectedCampaignForJoin.id);
-          if (fullCampaign) {
-            setSelectedCampaignForDetails(fullCampaign);
-          } else {
-            // If not found in campaigns yet, use the join data
-            setSelectedCampaignForDetails({
-              ...selectedCampaignForJoin,
-              connected_accounts: []
-            });
-          }
           // Small delay to let the sheet close animation complete
           setTimeout(() => {
-            setCampaignDetailsDialogOpen(true);
+            navigate(`/dashboard/campaign/${selectedCampaignForJoin.id}`);
           }, 300);
         }
       }} />

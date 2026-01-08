@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,50 @@ interface StrikeThreshold {
   is_active: boolean;
 }
 
+// Database query result types
+interface StrikeQueryResult {
+  id: string;
+  creator_id: string;
+  strike_type: string;
+  reason: string | null;
+  scheduled_date: string | null;
+  severity: number;
+  is_appealed: boolean;
+  appeal_status: string | null;
+  expires_at: string | null;
+  created_at: string;
+  creator: {
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+interface ReliabilityScoreQueryResult {
+  creator_id: string;
+  total_strikes: number;
+  active_strikes: number;
+  reliability_score: number;
+  on_time_rate: number;
+  creator: {
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+interface CreatorProfile {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+interface ParticipantQueryResult {
+  user_id: string;
+  profiles: CreatorProfile | null;
+}
+
 const STRIKE_TYPES = [
   { value: "missed_deadline", label: "Missed Deadline" },
   { value: "late_submission", label: "Late Submission" },
@@ -87,59 +131,55 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
   const [reason, setReason] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, [brandId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch strikes with creator info
       const { data: strikesData } = await (supabase
-        .from("creator_strikes" as any)
+        .from("creator_strikes" as string)
         .select(`
           *,
           creator:creator_id(username, full_name, avatar_url)
         `)
         .eq("brand_id", brandId)
         .order("created_at", { ascending: false })
-        .limit(50) as any);
+        .limit(50) as unknown as Promise<{ data: StrikeQueryResult[] | null }>);
 
       setStrikes((strikesData || []) as Strike[]);
 
       // Fetch reliability scores
       const { data: scoresData } = await (supabase
-        .from("creator_reliability_scores" as any)
+        .from("creator_reliability_scores" as string)
         .select(`
           *,
           creator:creator_id(username, full_name, avatar_url)
         `)
         .eq("brand_id", brandId)
-        .order("reliability_score", { ascending: true }) as any);
+        .order("reliability_score", { ascending: true }) as unknown as Promise<{ data: ReliabilityScoreQueryResult[] | null }>);
 
       setReliabilityScores((scoresData || []) as ReliabilityScore[]);
 
       // Fetch thresholds
       const { data: thresholdsData } = await (supabase
-        .from("strike_thresholds" as any)
+        .from("strike_thresholds" as string)
         .select("*")
         .eq("brand_id", brandId)
-        .order("strike_count") as any);
+        .order("strike_count") as unknown as Promise<{ data: StrikeThreshold[] | null }>);
 
       setThresholds((thresholdsData || []) as StrikeThreshold[]);
 
       // Fetch creators for the dropdown
       const { data: creatorsData } = await (supabase
-        .from("campaign_participants" as any)
+        .from("campaign_participants" as string)
         .select(`
           user_id,
           profiles:user_id(id, username, full_name, avatar_url)
         `)
         .eq("brand_id", brandId)
-        .eq("status", "accepted") as any);
+        .eq("status", "accepted") as unknown as Promise<{ data: ParticipantQueryResult[] | null }>);
 
-      const uniqueCreators = new Map();
-      creatorsData?.forEach((p: any) => {
+      const uniqueCreators = new Map<string, CreatorProfile>();
+      creatorsData?.forEach((p: ParticipantQueryResult) => {
         if (p.profiles && !uniqueCreators.has(p.profiles.id)) {
           uniqueCreators.set(p.profiles.id, p.profiles);
         }
@@ -151,7 +191,11 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [brandId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAddStrike = async () => {
     if (!selectedCreatorId) {
@@ -161,7 +205,7 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
 
     try {
       const { error } = await (supabase
-        .from("creator_strikes" as any)
+        .from("creator_strikes" as string)
         .insert({
           brand_id: brandId,
           creator_id: selectedCreatorId,
@@ -169,7 +213,7 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
           severity,
           reason: reason || null,
           scheduled_date: scheduledDate || null,
-        }) as any);
+        }) as unknown as Promise<{ error: Error | null }>);
 
       if (error) throw error;
 
@@ -177,24 +221,25 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
       setAddDialogOpen(false);
       resetForm();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error adding strike:", error);
-      toast.error(error.message || "Failed to add strike");
+      const errorMessage = error instanceof Error ? error.message : "Failed to add strike";
+      toast.error(errorMessage);
     }
   };
 
   const handleRemoveStrike = async (strikeId: string) => {
     try {
       const { error } = await (supabase
-        .from("creator_strikes" as any)
+        .from("creator_strikes" as string)
         .delete()
-        .eq("id", strikeId) as any);
+        .eq("id", strikeId) as unknown as Promise<{ error: Error | null }>);
 
       if (error) throw error;
 
       toast.success("Strike removed");
       setStrikes(strikes.filter(s => s.id !== strikeId));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error removing strike:", error);
       toast.error("Failed to remove strike");
     }
@@ -203,18 +248,18 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
   const handleAppealDecision = async (strikeId: string, decision: "approved" | "rejected") => {
     try {
       const { error } = await (supabase
-        .from("creator_strikes" as any)
+        .from("creator_strikes" as string)
         .update({
           appeal_status: decision,
           appeal_reviewed_at: new Date().toISOString(),
         })
-        .eq("id", strikeId) as any);
+        .eq("id", strikeId) as unknown as Promise<{ error: Error | null }>);
 
       if (error) throw error;
 
       toast.success(`Appeal ${decision}`);
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error updating appeal:", error);
       toast.error("Failed to update appeal");
     }

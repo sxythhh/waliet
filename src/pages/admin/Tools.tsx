@@ -53,9 +53,17 @@ import {
   Upload,
 } from "lucide-react";
 import { CSVImportDialog } from "@/components/admin/CSVImportDialog";
+import { TrainingDataManager } from "@/components/admin/TrainingDataManager";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+// Type for valid Supabase table names
+type TableName = keyof Database['public']['Tables'];
+
+// Type for RPC function names (including custom ones not in generated types)
+type RpcFunctionName = keyof Database['public']['Functions'] | 'execute_readonly_query';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -649,7 +657,7 @@ function RevenueTracking() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Type</Label>
-                    <Select value={newTxn.type} onValueChange={(v: any) => setNewTxn({ ...newTxn, type: v })}>
+                    <Select value={newTxn.type} onValueChange={(v: "income" | "expense") => setNewTxn({ ...newTxn, type: v })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -661,7 +669,7 @@ function RevenueTracking() {
                   </div>
                   <div>
                     <Label>Status</Label>
-                    <Select value={newTxn.status} onValueChange={(v: any) => setNewTxn({ ...newTxn, status: v })}>
+                    <Select value={newTxn.status} onValueChange={(v: "pending" | "completed") => setNewTxn({ ...newTxn, status: v })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -810,7 +818,7 @@ const QUERY_TEMPLATES = [
 function DataAnalytics() {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [customQuery, setCustomQuery] = useState("");
-  const [queryResult, setQueryResult] = useState<any[] | null>(null);
+  const [queryResult, setQueryResult] = useState<Record<string, unknown>[] | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -828,7 +836,7 @@ function DataAnalytics() {
       const stats: TableStats[] = [];
       for (const table of tables) {
         try {
-          const { count } = await supabase.from(table as any).select("*", { count: "exact", head: true });
+          const { count } = await supabase.from(table as TableName).select("*", { count: "exact", head: true });
           stats.push({ table_name: table, row_count: count || 0, size_bytes: 0 });
         } catch {
           stats.push({ table_name: table, row_count: 0, size_bytes: 0 });
@@ -844,7 +852,7 @@ function DataAnalytics() {
     queryKey: ["admin-table-data", selectedTable],
     queryFn: async () => {
       if (!selectedTable) return null;
-      const { data, error } = await supabase.from(selectedTable as any).select("*").limit(50);
+      const { data, error } = await supabase.from(selectedTable as TableName).select("*").limit(50);
       if (error) throw error;
       return data;
     },
@@ -858,7 +866,8 @@ function DataAnalytics() {
 
     try {
       // Use RPC function for safe read-only queries
-      const { data, error } = await supabase.rpc("execute_readonly_query" as any, { query_text: query });
+      // Note: execute_readonly_query is a custom function not in generated types
+      const { data, error } = await supabase.rpc("execute_readonly_query" as RpcFunctionName, { query_text: query });
 
       if (error) {
         // Fall back to parsing simple SELECT queries
@@ -866,7 +875,7 @@ function DataAnalytics() {
         if (match) {
           const tableName = match[1];
           const { data: fallbackData, error: fallbackError } = await supabase
-            .from(tableName as any)
+            .from(tableName as TableName)
             .select("*")
             .limit(100);
 
@@ -879,15 +888,16 @@ function DataAnalytics() {
         setQueryResult(data);
       }
       toast.success("Query executed successfully");
-    } catch (err: any) {
-      setQueryError(err.message || "Failed to execute query");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to execute query";
+      setQueryError(errorMessage);
       toast.error("Query failed");
     } finally {
       setIsExecuting(false);
     }
   };
 
-  const exportToCSV = (data: any[], filename: string) => {
+  const exportToCSV = (data: Record<string, unknown>[], filename: string) => {
     if (!data || data.length === 0) return;
 
     const headers = Object.keys(data[0]);
@@ -1055,9 +1065,9 @@ function DataAnalytics() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(queryResult || tableData)?.slice(0, 50).map((row: any, i: number) => (
+                      {(queryResult || tableData)?.slice(0, 50).map((row: Record<string, unknown>, i: number) => (
                         <tr key={i} className="border-b hover:bg-muted/50">
-                          {Object.values(row).slice(0, 8).map((val: any, j: number) => (
+                          {Object.values(row).slice(0, 8).map((val: unknown, j: number) => (
                             <td key={j} className="p-2 max-w-[200px] truncate">
                               {val === null ? (
                                 <span className="text-muted-foreground italic">null</span>
@@ -1413,7 +1423,7 @@ function ToolsContent() {
   const { currentWorkspace, isLoading } = useToolsWorkspace();
   const [activeTab, setActiveTab] = useState("tasks");
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1454,9 +1464,8 @@ function ToolsContent() {
               { value: "tasks", label: "Tasks" },
               { value: "calendar", label: "Calendar" },
               { value: "revenue", label: "Revenue" },
-              { value: "data", label: "Data" },
               { value: "import", label: "Import" },
-              { value: "settings", label: "Settings" },
+              { value: "training", label: "Training Data" },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -1485,10 +1494,6 @@ function ToolsContent() {
 
         <TabsContent value="revenue" className="mt-6">
           <RevenueTracking />
-        </TabsContent>
-
-        <TabsContent value="data" className="mt-6">
-          <DataAnalytics />
         </TabsContent>
 
         <TabsContent value="import" className="mt-6">
@@ -1530,8 +1535,8 @@ function ToolsContent() {
           <CSVImportDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-6">
-          <AdminSettings />
+        <TabsContent value="training" className="mt-6">
+          <TrainingDataManager />
         </TabsContent>
       </Tabs>
     </div>

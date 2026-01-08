@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Mail, Shield, CheckCircle2, XCircle, Link2 } from "lucide-react";
+
+type BrandInvitation = Database["public"]["Tables"]["brand_invitations"]["Row"];
+type Brand = Database["public"]["Tables"]["brands"]["Row"];
 
 export default function BrandInvite() {
   const { brandSlug, invitationId, token } = useParams();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,20 +8,52 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useAuth } from "@/contexts/AuthContext";
 import DOMPurify from "dompurify";
 
+// Types for blueprint fields that can be either strings or objects
+interface HookItem {
+  text: string;
+}
+
+interface TalkingPointItem {
+  text: string;
+}
+
+interface ExampleVideoItem {
+  url: string;
+  title?: string;
+}
+
+interface AssetItem {
+  url: string;
+  name?: string;
+}
+
+interface PersonaItem {
+  name?: string;
+  description?: string;
+}
+
+// Type for brand membership query result
+interface BrandMembership {
+  brand_id: string;
+  brands: {
+    subscription_status: string | null;
+  } | null;
+}
+
 interface Blueprint {
   id: string;
   title: string;
   content: string | null;
-  hooks: any[] | null;
-  talking_points: any[] | null;
+  hooks: (string | HookItem)[] | null;
+  talking_points: (string | TalkingPointItem)[] | null;
   dos_and_donts: { dos?: string[]; donts?: string[] } | null;
   call_to_action: string | null;
   hashtags: string[] | null;
   brand_voice: string | null;
   content_guidelines: string | null;
-  example_videos: any[] | null;
-  assets: any[] | null;
-  target_personas: any[] | null;
+  example_videos: (string | ExampleVideoItem)[] | null;
+  assets: (string | AssetItem)[] | null;
+  target_personas: (string | PersonaItem)[] | null;
   platforms: string[] | null;
 }
 
@@ -35,43 +67,45 @@ export default function BlueprintDetail() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
 
   // Fetch user's subscription status
-  useEffect(() => {
-    const fetchSubscriptionStatus = async () => {
-      if (!user) return;
-      
-      const { data: memberships } = await supabase
-        .from("brand_members")
-        .select("brand_id, brands(subscription_status)")
-        .eq("user_id", user.id);
-      
-      if (memberships && memberships.length > 0) {
-        const activeSub = memberships.find((m: any) => m.brands?.subscription_status === "active");
-        setSubscriptionStatus(activeSub ? "active" : memberships[0]?.brands?.subscription_status || null);
-      }
-    };
-    fetchSubscriptionStatus();
+  const fetchSubscriptionStatus = useCallback(async () => {
+    if (!user) return;
+
+    const { data: memberships } = await supabase
+      .from("brand_members")
+      .select("brand_id, brands(subscription_status)")
+      .eq("user_id", user.id);
+
+    if (memberships && memberships.length > 0) {
+      const typedMemberships = memberships as BrandMembership[];
+      const activeSub = typedMemberships.find((m) => m.brands?.subscription_status === "active");
+      setSubscriptionStatus(activeSub ? "active" : typedMemberships[0]?.brands?.subscription_status || null);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchSubscriptionStatus();
+  }, [fetchSubscriptionStatus]);
 
   const showBetaGate = !adminLoading && !isAdmin && subscriptionStatus !== "active";
 
-  useEffect(() => {
-    const fetchBlueprint = async () => {
-      if (!id) return;
-      
-      const { data, error } = await supabase
-        .from("blueprints")
-        .select("*")
-        .eq("id", id)
-        .single();
+  const fetchBlueprint = useCallback(async () => {
+    if (!id) return;
 
-      if (!error && data) {
-        setBlueprint(data as Blueprint);
-      }
-      setLoading(false);
-    };
+    const { data, error } = await supabase
+      .from("blueprints")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    fetchBlueprint();
+    if (!error && data) {
+      setBlueprint(data as Blueprint);
+    }
+    setLoading(false);
   }, [id]);
+
+  useEffect(() => {
+    fetchBlueprint();
+  }, [fetchBlueprint]);
 
   if (loading) {
     return (
@@ -175,7 +209,7 @@ export default function BlueprintDetail() {
               <span className="text-base font-semibold font-geist tracking-[-0.5px]">Hooks</span>
             </div>
             <div className="space-y-3 pl-2">
-              {blueprint.hooks.map((hook: any, idx: number) => (
+              {blueprint.hooks.map((hook: string | HookItem, idx: number) => (
                 <div key={idx} className="flex items-start gap-3 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
                   <span className="text-amber-500 mt-0.5 text-lg">•</span>
                   <span>{typeof hook === 'string' ? hook : hook.text}</span>
@@ -195,7 +229,7 @@ export default function BlueprintDetail() {
               <span className="text-base font-semibold font-geist tracking-[-0.5px]">Talking Points</span>
             </div>
             <div className="space-y-3 pl-2">
-              {blueprint.talking_points.map((point: any, idx: number) => (
+              {blueprint.talking_points.map((point: string | TalkingPointItem, idx: number) => (
                 <div key={idx} className="flex items-start gap-3 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
                   <span className="text-blue-500 mt-0.5 text-lg">•</span>
                   <span>{typeof point === 'string' ? point : point.text}</span>
@@ -326,8 +360,8 @@ export default function BlueprintDetail() {
               <span className="text-base font-semibold font-geist tracking-[-0.5px]">Example Videos</span>
             </div>
             <div className="space-y-3 pl-2">
-              {blueprint.example_videos.map((video: any, idx: number) => (
-                <a 
+              {blueprint.example_videos.map((video: string | ExampleVideoItem, idx: number) => (
+                <a
                   key={idx}
                   href={typeof video === 'string' ? video : video.url}
                   target="_blank"
@@ -352,8 +386,8 @@ export default function BlueprintDetail() {
               <span className="text-base font-semibold font-geist tracking-[-0.5px]">Assets</span>
             </div>
             <div className="space-y-3 pl-2">
-              {blueprint.assets.map((asset: any, idx: number) => (
-                <a 
+              {blueprint.assets.map((asset: string | AssetItem, idx: number) => (
+                <a
                   key={idx}
                   href={typeof asset === 'string' ? asset : asset.url}
                   target="_blank"
@@ -378,7 +412,7 @@ export default function BlueprintDetail() {
               <span className="text-base font-semibold font-geist tracking-[-0.5px]">Target Personas</span>
             </div>
             <div className="space-y-3 pl-2">
-              {blueprint.target_personas.map((persona: any, idx: number) => (
+              {blueprint.target_personas.map((persona: string | PersonaItem, idx: number) => (
                 <div key={idx} className="flex items-start gap-3 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
                   <span className="text-muted-foreground mt-0.5 text-lg">•</span>
                   <span>{typeof persona === 'string' ? persona : persona.name || persona.description}</span>

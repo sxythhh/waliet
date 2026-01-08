@@ -144,11 +144,7 @@ export function SubmitAudienceInsightsDialog({
         return;
       }
 
-      // Upload video with progress simulation
-      const fileExt = videoFile.name.split('.').pop();
-      const fileName = `${session.user.id}/demographics_${socialAccountId}_${Date.now()}.${fileExt}`;
-
-      // Simulate progress during upload
+      // Upload video to R2 via edge function
       setUploadProgress(0);
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
@@ -156,22 +152,38 @@ export function SubmitAudienceInsightsDialog({
           return prev + Math.random() * 15;
         });
       }, 300);
-      const {
-        error: uploadError
-      } = await supabase.storage.from('verification-screenshots').upload(fileName, videoFile);
-      clearInterval(progressInterval);
-      if (uploadError) {
-        setUploadProgress(0);
-        throw uploadError;
-      }
-      setUploadProgress(100);
 
-      // Get public URL
-      const {
-        data: {
-          publicUrl
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('file', videoFile);
+      formData.append('userId', session.user.id);
+      formData.append('socialAccountId', socialAccountId);
+
+      // Upload to R2 via edge function
+      const uploadResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-demographics-video`,
+        {
+          method: 'POST',
+          body: formData,
         }
-      } = supabase.storage.from('verification-screenshots').getPublicUrl(fileName);
+      );
+
+      clearInterval(progressInterval);
+
+      if (!uploadResponse.ok) {
+        setUploadProgress(0);
+        const errorData = await uploadResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to upload video');
+      }
+
+      const uploadResult = await uploadResponse.json();
+      if (!uploadResult.success) {
+        setUploadProgress(0);
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
+      setUploadProgress(100);
+      const publicUrl = uploadResult.url;
 
       // Insert demographic submission (with tier1_percentage set to 0 as placeholder)
       const {
@@ -260,12 +272,12 @@ export function SubmitAudienceInsightsDialog({
       return;
     }
 
-    // Validate file size (max 50MB)
-    if (file.size > 50 * 1024 * 1024) {
+    // Validate file size (max 15MB - compressed videos only)
+    if (file.size > 15 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Video must be less than 50MB"
+        description: "Video must be less than 15MB. Try compressing the video or reducing resolution."
       });
       return;
     }
@@ -374,7 +386,7 @@ export function SubmitAudienceInsightsDialog({
                       Click to upload video
                     </p>
                     <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                      MP4, MOV up to 50MB
+                      MP4, MOV up to 15MB
                     </p>
                   </div>
                 )}

@@ -177,9 +177,10 @@ export function UserOnboardingFlow({
 
       setAvatarUrl(publicUrl + `?t=${Date.now()}`);
       toast.success("Avatar uploaded!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading avatar:", error);
-      toast.error(error.message || "Failed to upload avatar");
+      const message = error instanceof Error ? error.message : "Failed to upload avatar";
+      toast.error(message);
     } finally {
       setUploadingAvatar(false);
     }
@@ -201,8 +202,9 @@ export function UserOnboardingFlow({
 
       if (error) throw error;
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save username");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to save username";
+      toast.error(message);
       return false;
     } finally {
       setLoading(false);
@@ -222,8 +224,9 @@ export function UserOnboardingFlow({
 
       if (error) throw error;
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save avatar");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to save avatar";
+      toast.error(message);
       return false;
     } finally {
       setLoading(false);
@@ -260,8 +263,9 @@ export function UserOnboardingFlow({
         .eq("id", userId);
 
       return true;
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save social account");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to save social account";
+      toast.error(message);
       return false;
     } finally {
       setLoading(false);

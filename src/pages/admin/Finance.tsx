@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,13 @@ import {
   TABLE,
 } from "@/components/admin/design-system";
 
+interface TransactionMetadata {
+  campaign_id?: string;
+  platform?: string;
+  reversed?: boolean;
+  [key: string]: unknown;
+}
+
 interface Transaction {
   id: string;
   user_id: string;
@@ -57,7 +64,7 @@ interface Transaction {
   type: string;
   status: string;
   description: string;
-  metadata: any;
+  metadata: TransactionMetadata | null;
   created_at: string;
   username?: string;
   email?: string;
@@ -68,13 +75,20 @@ interface Transaction {
   campaign_budget_used?: number | null;
 }
 
+interface PayoutDetails {
+  address?: string;
+  email?: string;
+  network?: string;
+  [key: string]: unknown;
+}
+
 interface PayoutRequest {
   id: string;
   user_id: string;
   amount: number;
   status: 'pending' | 'in_transit' | 'rejected' | 'completed';
   payout_method: string;
-  payout_details: any;
+  payout_details: PayoutDetails | null;
   requested_at: string;
   processed_at: string | null;
   rejection_reason: string | null;
@@ -90,6 +104,68 @@ interface PayoutRequest {
       total_withdrawn: number;
     };
   };
+}
+
+interface ProfileData {
+  id: string;
+  username: string;
+  email: string;
+  avatar_url: string | null;
+}
+
+interface CampaignData {
+  id: string;
+  title: string;
+  brand_logo_url: string | null;
+  budget: number;
+  budget_used: number;
+}
+
+interface WalletTransactionRow {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  status: string;
+  description: string;
+  metadata: TransactionMetadata | null;
+  created_at: string;
+}
+
+interface UserWithWallet {
+  id: string;
+  username: string;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+  wallets: {
+    balance: number;
+    total_earned: number;
+    total_withdrawn: number;
+  } | null;
+}
+
+interface SocialAccountRow {
+  id: string;
+  platform: string;
+  username: string;
+  followers_count: number;
+  social_account_campaigns: { campaigns: { id: string; title: string; brand_name: string; brand_logo_url: string | null } | null }[];
+  demographic_submissions: { status: string; tier1_percentage: number | null }[];
+}
+
+interface UserTransactionRow {
+  id: string;
+  amount: number;
+  type: string;
+  status: string;
+  description: string;
+  created_at: string;
+}
+
+interface PaymentMethodRow {
+  payout_method: string;
+  payout_details: PayoutDetails[] | null;
 }
 
 type ViewMode = "all" | "transactions" | "payouts";
@@ -177,12 +253,12 @@ export default function Finance() {
 
   // User details states
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [userSocialAccounts, setUserSocialAccounts] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserWithWallet | null>(null);
+  const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccountRow[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
-  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [userTransactions, setUserTransactions] = useState<UserTransactionRow[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
-  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
+  const [userPaymentMethods, setUserPaymentMethods] = useState<PayoutDetails[]>([]);
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
@@ -244,20 +320,9 @@ export default function Finance() {
     };
   }, [dateFilteredTransactions, dateFilteredPayouts]);
 
-  // Fetch data
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
-    setLoading(true);
-    await Promise.all([fetchTransactions(), fetchPayoutRequests()]);
-    setLoading(false);
-  };
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
-      let allTransactions: any[] = [];
+      let allTransactions: WalletTransactionRow[] = [];
       let from = 0;
       const batchSize = 1000;
       let hasMore = true;
@@ -270,7 +335,7 @@ export default function Finance() {
           .range(from, from + batchSize - 1);
         if (error) throw error;
         if (data && data.length > 0) {
-          allTransactions = [...allTransactions, ...data];
+          allTransactions = [...allTransactions, ...(data as WalletTransactionRow[])];
           from += batchSize;
           hasMore = data.length === batchSize;
         } else {
@@ -280,29 +345,29 @@ export default function Finance() {
 
       // Fetch profiles
       const userIds = [...new Set(allTransactions.map(tx => tx.user_id).filter(Boolean))];
-      let profilesMap: Record<string, any> = {};
+      let profilesMap: Record<string, ProfileData> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("id, username, email, avatar_url")
           .in("id", userIds);
-        profilesMap = profiles?.reduce((acc, p) => ({ ...acc, [p.id]: p }), {}) || {};
+        profilesMap = (profiles as ProfileData[] | null)?.reduce((acc, p) => ({ ...acc, [p.id]: p }), {} as Record<string, ProfileData>) || {};
       }
 
       // Fetch campaigns
       const campaignIds = allTransactions
         .filter(tx => tx.metadata?.campaign_id)
-        .map(tx => tx.metadata.campaign_id);
-      let campaignsMap: Record<string, any> = {};
+        .map(tx => tx.metadata!.campaign_id as string);
+      let campaignsMap: Record<string, CampaignData> = {};
       if (campaignIds.length > 0) {
         const { data: campaigns } = await supabase
           .from("campaigns")
           .select("id, title, brand_logo_url, budget, budget_used")
           .in("id", campaignIds);
-        campaignsMap = campaigns?.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}) || {};
+        campaignsMap = (campaigns as CampaignData[] | null)?.reduce((acc, c) => ({ ...acc, [c.id]: c }), {} as Record<string, CampaignData>) || {};
       }
 
-      const formatted = allTransactions.map(tx => ({
+      const formatted: Transaction[] = allTransactions.map(tx => ({
         ...tx,
         username: profilesMap[tx.user_id]?.username,
         email: profilesMap[tx.user_id]?.email,
@@ -317,21 +382,52 @@ export default function Finance() {
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
-  };
+  }, []);
 
-  const fetchPayoutRequests = async () => {
+  const fetchPayoutRequests = useCallback(async () => {
     const { data, error } = await supabase
       .from("payout_requests")
       .select(`*, profiles:user_id (id, username, full_name, avatar_url, wallets (balance, total_earned, total_withdrawn))`)
       .order("requested_at", { ascending: false });
 
     if (!error) {
-      setPayoutRequests(data as any || []);
+      setPayoutRequests((data as PayoutRequest[]) || []);
     }
-  };
+  }, []);
+
+  const fetchAllData = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([fetchTransactions(), fetchPayoutRequests()]);
+    setLoading(false);
+  }, [fetchTransactions, fetchPayoutRequests]);
+
+  // Fetch data
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   // User details
-  const openUserDetailsDialog = async (userId: string) => {
+  const fetchUserData = useCallback(async (userId: string) => {
+    setLoadingSocialAccounts(true);
+    setLoadingTransactions(true);
+    setLoadingPaymentMethods(true);
+
+    const [socialRes, txRes, walletRes] = await Promise.all([
+      supabase.from("social_accounts").select(`*, social_account_campaigns (campaigns (id, title, brand_name, brand_logo_url)), demographic_submissions (status, tier1_percentage)`).eq("user_id", userId),
+      supabase.from("wallet_transactions").select("id, amount, type, status, description, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
+      supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle()
+    ]);
+
+    setUserSocialAccounts((socialRes.data as SocialAccountRow[]) || []);
+    setUserTransactions((txRes.data as UserTransactionRow[]) || []);
+    const paymentData = walletRes.data as PaymentMethodRow | null;
+    setUserPaymentMethods(paymentData?.payout_details && Array.isArray(paymentData.payout_details) ? paymentData.payout_details : []);
+    setLoadingSocialAccounts(false);
+    setLoadingTransactions(false);
+    setLoadingPaymentMethods(false);
+  }, []);
+
+  const openUserDetailsDialog = useCallback(async (userId: string) => {
     const { data: userData } = await supabase
       .from("profiles")
       .select(`*, wallets (balance, total_earned, total_withdrawn)`)
@@ -339,30 +435,11 @@ export default function Finance() {
       .maybeSingle();
 
     if (userData) {
-      setSelectedUser(userData);
+      setSelectedUser(userData as UserWithWallet);
       setUserDetailsDialogOpen(true);
       fetchUserData(userId);
     }
-  };
-
-  const fetchUserData = async (userId: string) => {
-    setLoadingSocialAccounts(true);
-    setLoadingTransactions(true);
-    setLoadingPaymentMethods(true);
-
-    const [socialRes, txRes, walletRes] = await Promise.all([
-      supabase.from("social_accounts").select(`*, social_account_campaigns (campaigns (id, title, brand_name, brand_logo_url)), demographic_submissions (status, tier1_percentage)`).eq("user_id", userId),
-      supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
-      supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle()
-    ]);
-
-    setUserSocialAccounts(socialRes.data || []);
-    setUserTransactions(txRes.data || []);
-    setUserPaymentMethods(walletRes.data?.payout_details && Array.isArray(walletRes.data.payout_details) ? walletRes.data.payout_details : []);
-    setLoadingSocialAccounts(false);
-    setLoadingTransactions(false);
-    setLoadingPaymentMethods(false);
-  };
+  }, [fetchUserData]);
 
   // Transaction actions
   const handleUndoTransaction = async (transactionId: string) => {
@@ -376,8 +453,9 @@ export default function Finance() {
       toast({ title: "Transaction undone successfully" });
       fetchTransactions();
       setContextOpen(false);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      toast({ variant: "destructive", title: "Error", description: errorMessage });
     } finally {
       setUndoingTransaction(null);
     }
