@@ -456,7 +456,8 @@ function CalendarView() {
               <Button onClick={handleAddEvent}>Create Event</Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">

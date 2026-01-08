@@ -291,6 +291,7 @@ export function ImportCampaignStatsDialog({
       console.error("Error importing stats:", error);
       toast.error("Failed to import stats");
     } finally {
+      setImporting(false);
     }
   };
 

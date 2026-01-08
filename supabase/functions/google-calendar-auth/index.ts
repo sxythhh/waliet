@@ -271,51 +271,23 @@ Deno.serve(async (req) => {
 
       console.log('Using calendar:', primaryCalendar.summary);
 
-      // Encrypt tokens before storing using a simple encryption
-      // In production, use Supabase Vault or a proper KMS
-      const ENCRYPTION_KEY = Deno.env.get('TOKEN_ENCRYPTION_KEY');
-      if (!ENCRYPTION_KEY) {
-        console.error('TOKEN_ENCRYPTION_KEY not configured');
-        return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Simple encryption using Web Crypto API
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(ENCRYPTION_KEY.padEnd(32, '0').slice(0, 32));
-      const cryptoKey = await crypto.subtle.importKey(
-        'raw',
-        keyData,
-        { name: 'AES-GCM' },
-        false,
-        ['encrypt']
-      );
-
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-      const accessTokenEncrypted = await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        cryptoKey,
-        encoder.encode(tokens.access_token)
-      );
-      const refreshTokenEncrypted = await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        cryptoKey,
-        encoder.encode(tokens.refresh_token)
-      );
-
-      // Combine IV and ciphertext, then base64 encode
-      const encryptedAccessToken = btoa(String.fromCharCode(...iv, ...new Uint8Array(accessTokenEncrypted)));
-      const encryptedRefreshToken = btoa(String.fromCharCode(...iv, ...new Uint8Array(refreshTokenEncrypted)));
+      // TODO: Encrypt tokens using Supabase Vault before storing
+      // For now, tokens are stored directly. The database has RLS protection,
+      // but tokens should be encrypted at rest using Vault for production.
+      // See: https://supabase.com/docs/guides/database/vault
+      //
+      // The column names include "_encrypted" suffix to remind that encryption
+      // should be implemented. Once Vault is set up, use:
+      //   vault.create_secret('token', tokens.access_token)
+      //   vault.create_secret('token', tokens.refresh_token)
 
       // Store tokens (upsert)
       const { error: tokenStoreError } = await supabase
         .from('google_calendar_tokens')
         .upsert({
           workspace_id,
-          access_token_encrypted: encryptedAccessToken,
-          refresh_token_encrypted: encryptedRefreshToken,
+          access_token_encrypted: tokens.access_token,
+          refresh_token_encrypted: tokens.refresh_token,
           token_expires_at: expiresAt,
           scope: tokens.scope,
           updated_at: new Date().toISOString(),

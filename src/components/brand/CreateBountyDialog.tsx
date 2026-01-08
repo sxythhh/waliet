@@ -285,8 +285,8 @@ export function CreateBountyDialog({
       const boostStatus = subscriptionStatus === 'active' ? 'active' : 'draft';
 
       // Determine final position type
-      const finalPositionType = formData.position_type === 'Other' 
-        ? formData.custom_position 
+      const finalPositionType = formData.position_type === 'other'
+        ? formData.custom_position
         : formData.position_type;
 
       // Generate slug from title
