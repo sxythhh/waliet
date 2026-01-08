@@ -94,7 +94,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   // Balance adjustment state
   const [showBalanceAdjust, setShowBalanceAdjust] = useState(false);
   const [adjustAmount, setAdjustAmount] = useState("");
-  const [adjustDescription, setAdjustDescription] = useState("");
   const [adjustAction, setAdjustAction] = useState<"add" | "remove">("add");
   const [isAdjusting, setIsAdjusting] = useState(false);
 
@@ -151,7 +150,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(15)
       ]);
 
       setSocialAccounts(accountsRes.data || []);
@@ -222,7 +220,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
           type: adjustAction === "add" ? "admin_credit" : "admin_debit",
           amount: numAmount,
           status: "completed",
-          description: adjustDescription || `Admin ${adjustAction === "add" ? "credit" : "debit"}`
+          description: `Admin ${adjustAction === "add" ? "credit" : "debit"}`
         });
 
       if (error) throw error;
@@ -238,7 +236,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
 
       toast.success(`$${numAmount.toFixed(2)} ${adjustAction === "add" ? "added" : "removed"}`);
       setAdjustAmount("");
-      setAdjustDescription("");
       setShowBalanceAdjust(false);
       fetchUserData(user.id);
       onUserUpdated?.();
@@ -427,21 +424,21 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
       console.error("Error impersonating user:", error);
       // Fallback: try using the edge function if admin API is not available
       try {
-        const { data, error: fnError } = await supabase.functions.invoke("admin-impersonate", {
-          body: { user_id: user.id },
+        const { data, error: fnError } = await supabase.functions.invoke("impersonate-user", {
+          body: { userId: user.id },
         });
 
         if (fnError) throw fnError;
 
-        if (data?.url) {
-          window.open(data.url, "_blank");
+        if (data?.magicLink) {
+          window.open(data.magicLink, "_blank");
           toast.success(`Impersonating @${user.username} in new tab`);
         } else {
           throw new Error("No impersonation URL returned");
         }
-      } catch (fallbackError) {
+      } catch (fallbackError: any) {
         console.error("Fallback impersonation failed:", fallbackError);
-        toast.error("Impersonation not available. Contact developer to enable admin API.");
+        toast.error(fallbackError?.message || "Impersonation not available. Contact developer to enable admin API.");
       }
     } finally {
       setIsImpersonating(false);
@@ -584,12 +581,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                     className="pl-7 h-10 font-inter tracking-[-0.5px] bg-muted border-0"
                   />
                 </div>
-                <Input
-                  value={adjustDescription}
-                  onChange={(e) => setAdjustDescription(e.target.value)}
-                  placeholder="Note (optional)"
-                  className="h-10 font-inter tracking-[-0.5px] bg-muted border-0"
-                />
                 {adjustAmount && parseFloat(adjustAmount) > 0 && (
                   <div className="flex items-center justify-between text-sm font-inter tracking-[-0.5px]">
                     <span className="text-muted-foreground">New balance</span>
@@ -864,7 +855,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
             {activeTab === "activity" && (
               <section>
                 <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
-                  Recent Transactions
+                  Transaction History
                 </h3>
                 {loading ? (
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] py-8 text-center">

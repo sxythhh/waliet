@@ -19,6 +19,7 @@ import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
 import { AudienceInsightsStatusCard } from "@/components/AudienceInsightsStatusCard";
 import { PendingInsightsRequestsBanner } from "@/components/dashboard/PendingInsightsRequestsBanner";
+import { ZkTLSVerificationDialog } from "@/components/ZkTLSVerificationDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -33,6 +34,7 @@ import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettings
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { useTheme } from "@/components/ThemeProvider";
+import { TaxFormNotificationBanner } from "@/components/tax";
 import noAccountsIcon from "@/assets/no-accounts-icon.svg";
 import noAccountsIconBlack from "@/assets/no-accounts-icon-black.svg";
 interface Profile {
@@ -99,6 +101,13 @@ interface SocialAccount {
     reviewed_at: string | null;
     screenshot_url: string | null;
   }>;
+  // zkTLS verification fields
+  zktls_verified?: boolean;
+  zktls_verified_at?: string | null;
+  zktls_expires_at?: string | null;
+  zktls_engagement_rate?: number | null;
+  zktls_avg_views?: number | null;
+  zktls_demographics?: Record<string, any> | null;
 }
 interface Campaign {
   id: string;
@@ -141,6 +150,12 @@ export function ProfileTab() {
   } | null>(null);
   const [showManageAccountDialog, setShowManageAccountDialog] = useState(false);
   const [selectedAccountForManage, setSelectedAccountForManage] = useState<SocialAccount | null>(null);
+  const [showZkTLSDialog, setShowZkTLSDialog] = useState(false);
+  const [selectedAccountForZkTLS, setSelectedAccountForZkTLS] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [originalUsername, setOriginalUsername] = useState('');
@@ -726,6 +741,9 @@ export function ProfileTab() {
     return null;
   }
   return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8 bg-background">
+      {/* Tax Form Notification Banner - TEMPORARILY HIDDEN */}
+      {/* <TaxFormNotificationBanner className="pb-2" /> */}
+
       {/* Profile Header */}
       <Card className="bg-card border-0">
 
@@ -777,6 +795,11 @@ export function ProfileTab() {
                 setSelectedAccountForDemographics(account);
                 setShowDemographicsDialog(true);
               }}
+              // zkTLS verification disabled - TikTok blocks attestor IPs
+              // onVerifyZkTLS={account => {
+              //   setSelectedAccountForZkTLS(account);
+              //   setShowZkTLSDialog(true);
+              // }}
             />}
         </CardContent>
       </Card>
@@ -935,6 +958,21 @@ export function ProfileTab() {
       setShowVerifyAccountDialog(open);
       if (!open) setSelectedAccountForVerification(null);
     }} onSuccess={fetchSocialAccounts} accountId={selectedAccountForVerification.id} platform={selectedAccountForVerification.platform} username={selectedAccountForVerification.username} />}
+
+      {/* zkTLS Verification Dialog - Disabled (TikTok blocks attestor IPs) */}
+      {/* {selectedAccountForZkTLS && (
+        <ZkTLSVerificationDialog
+          open={showZkTLSDialog}
+          onOpenChange={open => {
+            setShowZkTLSDialog(open);
+            if (!open) setSelectedAccountForZkTLS(null);
+          }}
+          onSuccess={fetchSocialAccounts}
+          socialAccountId={selectedAccountForZkTLS.id}
+          platform={selectedAccountForZkTLS.platform}
+          username={selectedAccountForZkTLS.username}
+        />
+      )} */}
 
       {/* Manage Account Dialog */}
       {selectedAccountForManage && (

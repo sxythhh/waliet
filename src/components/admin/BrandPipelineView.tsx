@@ -1,18 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import {
   CheckCircle2,
   Building2,
-  Sparkles,
-  Clock,
-  AlertTriangle,
-  XCircle,
-  Users,
-  DollarSign,
-  Wallet,
   Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,35 +33,15 @@ interface Brand {
 interface PipelineStage {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  color: string;
 }
 
 const PIPELINE_STAGES: PipelineStage[] = [
-  {
-    id: "new",
-    label: "New",
-    icon: <Sparkles className="w-4 h-4" />,
-  },
-  {
-    id: "active",
-    label: "Active",
-    icon: <CheckCircle2 className="w-4 h-4" />,
-  },
-  {
-    id: "past_due",
-    label: "Past Due",
-    icon: <AlertTriangle className="w-4 h-4" />,
-  },
-  {
-    id: "cancelled",
-    label: "Cancelled",
-    icon: <XCircle className="w-4 h-4" />,
-  },
-  {
-    id: "inactive",
-    label: "Inactive",
-    icon: <Clock className="w-4 h-4" />,
-  },
+  { id: "new", label: "New", color: "bg-blue-500" },
+  { id: "active", label: "Active", color: "bg-emerald-500" },
+  { id: "past_due", label: "Past Due", color: "bg-amber-500" },
+  { id: "cancelled", label: "Cancelled", color: "bg-red-500" },
+  { id: "inactive", label: "Inactive", color: "bg-zinc-400" },
 ];
 
 function getStageForBrand(brand: Brand): string {
@@ -163,36 +135,33 @@ export function BrandPipelineView() {
   return (
     <>
       {/* Pipeline Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 min-h-[500px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 min-h-[500px]">
         {PIPELINE_STAGES.map((stage) => {
           const stageBrands = getBrandsByStage(stage.id);
           return (
             <div key={stage.id} className="flex flex-col">
               {/* Column Header */}
-              <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm mb-3">
-                <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">{stage.icon}</span>
-                    <span className="font-semibold text-sm tracking-tight">{stage.label}</span>
-                  </div>
-                  <Badge variant="secondary" className="h-5 px-2 text-xs font-medium">
-                    {stageBrands.length}
-                  </Badge>
+              <div className="flex items-center justify-between px-1 py-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-2 h-2 rounded-full", stage.color)} />
+                  <span className="text-sm font-medium">{stage.label}</span>
                 </div>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {stageBrands.length}
+                </span>
               </div>
 
               {/* Column Content */}
-              <div className="flex-1 bg-muted/20 rounded-xl border border-border/30 p-3 space-y-2.5 transition-colors">
+              <div className="flex-1 space-y-2">
                 {stageBrands.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border border-dashed border-border/50 rounded-lg">
                     No brands
                   </div>
                 ) : (
-                  stageBrands.map((brand, index) => (
+                  stageBrands.map((brand) => (
                     <BrandCard
                       key={brand.id}
                       brand={brand}
-                      index={index}
                       onClick={() => handleBrandClick(brand)}
                     />
                   ))
@@ -210,70 +179,45 @@ export function BrandPipelineView() {
         onOpenChange={setSheetOpen}
         onBrandUpdated={fetchBrands}
       />
-
-      <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </>
   );
 }
 
 interface BrandCardProps {
   brand: Brand;
-  index: number;
   onClick: () => void;
 }
 
-function BrandCard({ brand, index, onClick }: BrandCardProps) {
+function BrandCard({ brand, onClick }: BrandCardProps) {
   return (
     <div
       onClick={onClick}
-      className="group relative p-3 rounded-lg cursor-pointer transition-all duration-200 bg-card hover:bg-muted/50 border border-border/40 hover:border-border/60 shadow-sm hover:shadow"
-      style={{
-        animationDelay: `${index * 50}ms`,
-        animation: 'fadeInUp 0.3s ease-out forwards',
-      }}
+      className="group flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors bg-card hover:bg-muted/50 border border-border/50"
     >
-      <div className="flex items-start gap-3">
-        {/* Logo */}
-        <Avatar className="h-10 w-10 rounded-lg border border-border/40 transition-all duration-200 group-hover:scale-105">
-          <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
-          <AvatarFallback className="rounded-lg bg-muted/60 text-xs font-semibold">
-            {brand.name.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+      {/* Logo */}
+      <Avatar className="h-9 w-9 rounded-lg">
+        <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
+        <AvatarFallback className="rounded-lg bg-muted text-xs font-medium">
+          {brand.name.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <h4 className="font-semibold text-sm truncate tracking-tight">{brand.name}</h4>
-            {brand.is_verified && (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground truncate">
-            {brand.brand_type || format(new Date(brand.created_at), 'MMM dd, yyyy')}
-          </p>
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium truncate">{brand.name}</span>
+          {brand.is_verified && (
+            <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+          )}
         </div>
+        <p className="text-xs text-muted-foreground truncate">
+          {brand.subscription_plan ? (
+            <span className="capitalize">{brand.subscription_plan}</span>
+          ) : (
+            formatDistanceToNow(new Date(brand.created_at), { addSuffix: true })
+          )}
+        </p>
       </div>
-
-      {/* Quick Stats */}
-      {brand.subscription_plan && (
-        <div className="mt-2.5 pt-2.5 border-t border-border/30">
-          <Badge variant="outline" className="text-[10px] h-5 capitalize bg-primary/5 border-primary/20 text-primary">
-            {brand.subscription_plan}
-          </Badge>
-        </div>
-      )}
     </div>
   );
 }

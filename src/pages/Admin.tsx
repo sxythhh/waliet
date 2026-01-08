@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Search, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ import AdminPanelSettingsOutlined from "@mui/icons-material/AdminPanelSettingsOu
 import BuildOutlined from "@mui/icons-material/BuildOutlined";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
+import ReceiptLongOutlined from "@mui/icons-material/ReceiptLongOutlined";
 
 // Lazy load tab content
 const OverviewContent = lazy(() => import("./admin/Overview"));
@@ -39,6 +40,7 @@ const PermissionsContent = lazy(() => import("./admin/Permissions"));
 const CampaignsContent = lazy(() => import("./admin/Campaigns"));
 const EmailsContent = lazy(() => import("./admin/Emails"));
 const ToolsContent = lazy(() => import("./admin/Tools"));
+const TaxFormsContent = lazy(() => import("./admin/TaxForms"));
 
 function TabLoader() {
   return (
@@ -66,6 +68,7 @@ const navItems = [
   { id: "brands", label: "Brands", icon: BusinessOutlined },
   { id: "campaigns", label: "Campaigns", icon: CampaignOutlined },
   { id: "finance", label: "Finance", icon: AccountBalanceWalletOutlined },
+  // { id: "taxforms", label: "Tax Forms", icon: ReceiptLongOutlined }, // TEMPORARILY HIDDEN
   { id: "referrals", label: "Referrals", icon: ShareOutlined },
   { id: "content", label: "Content", icon: ArticleOutlined },
   { id: "emails", label: "Emails", icon: MailOutlined },
@@ -90,10 +93,10 @@ function AdminNav({
     <div className="flex flex-col h-full bg-[#0a0a0a]">
       {/* Logo */}
       <div className="h-14 flex items-center px-4 border-b border-white/5">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6" />
           <span className="font-geist font-bold tracking-tight text-[15px] text-white">VIRALITY</span>
-        </div>
+        </Link>
       </div>
 
       {/* Search */}
@@ -165,6 +168,7 @@ function AdminContent({ activeTab }: { activeTab: string }) {
     tickets: <TicketsContent />,
     permissions: <PermissionsContent />,
     tools: <ToolsContent />,
+    taxforms: <TaxFormsContent />,
   };
 
   return (

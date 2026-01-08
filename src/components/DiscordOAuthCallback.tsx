@@ -1,10 +1,34 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { restoreTrackingFromOAuth, clearStoredUtmParams } from "@/hooks/useUtmTracking";
+import { restoreTrackingFromOAuth, getStoredUtmParams, clearStoredUtmParams, UtmParams } from "@/hooks/useUtmTracking";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+
+// Save UTM params to profile for OAuth signups
+const saveUtmToProfile = async (userId: string, utmParams: UtmParams | null) => {
+  if (!utmParams) return;
+
+  const updateData: Record<string, string | null> = {};
+  if (utmParams.utm_source) updateData.utm_source = utmParams.utm_source;
+  if (utmParams.utm_medium) updateData.utm_medium = utmParams.utm_medium;
+  if (utmParams.utm_campaign) updateData.utm_campaign = utmParams.utm_campaign;
+  if (utmParams.utm_content) updateData.utm_content = utmParams.utm_content;
+  if (utmParams.utm_term) updateData.utm_term = utmParams.utm_term;
+  if (utmParams.signup_url) updateData.signup_url = utmParams.signup_url;
+
+  if (Object.keys(updateData).length === 0) return;
+
+  try {
+    await supabase
+      .from("profiles")
+      .update(updateData)
+      .eq("id", userId);
+  } catch (error) {
+    console.error("Failed to save UTM params:", error);
+  }
+};
 
 export function DiscordOAuthCallback() {
   const [searchParams] = useSearchParams();
@@ -159,6 +183,10 @@ export function DiscordOAuthCallback() {
         if (data.success && data.actionLink) {
           // Check if this is a new user signup
           if (data.isNewUser && data.userId) {
+            // Save UTM params to profile (OAuth doesn't pass them via metadata)
+            const utmParams = getStoredUtmParams();
+            await saveUtmToProfile(data.userId, utmParams);
+
             const referralResult = await trackReferral(data.userId);
             clearStoredUtmParams();
 
