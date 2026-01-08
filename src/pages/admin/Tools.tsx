@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { CSVImportDialog } from "@/components/admin/CSVImportDialog";
 import { TrainingDataManager } from "@/components/admin/TrainingDataManager";
+import { GoogleCalendarConnect } from "@/components/tools/GoogleCalendarConnect";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -331,11 +332,17 @@ function TaskBoard() {
 
 // Calendar View Component
 function CalendarView() {
-  const { events, isLoading, addEvent, getEventsForDate } = useToolsEvents();
+  const { events, isLoading, addEvent, getEventsForDate, refreshEvents } = useToolsEvents();
+  const { currentWorkspace, isGoogleCalendarConnected, refreshWorkspace } = useToolsWorkspace();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: "", description: "", start_time: "", end_time: "" });
+
+  const handleGoogleCalendarSuccess = () => {
+    refreshWorkspace();
+    refreshEvents();
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -386,13 +393,23 @@ function CalendarView() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Event
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          {currentWorkspace && (
+            <GoogleCalendarConnect
+              workspaceId={currentWorkspace.id}
+              isConnected={isGoogleCalendarConnected}
+              calendarName={currentWorkspace.google_calendar_name}
+              connectedAt={currentWorkspace.google_connected_at}
+              onSuccess={handleGoogleCalendarSuccess}
+            />
+          )}
+          <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Event
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Event</DialogTitle>

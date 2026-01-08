@@ -172,11 +172,7 @@ export function usePaymentLedger(userId?: string) {
 
       // If a specific userId is requested, verify it matches the authenticated user
       // RLS should also enforce this, but defense in depth
-      if (userId && userId !== authenticatedUserId) {
-        // For now, we allow this for admin contexts, but log it
-        // In production, you'd check if user has admin role
-        console.warn(`Payment ledger accessed for different user: requested=${userId}, authenticated=${authenticatedUserId}`);
-      }
+      // Note: Admin contexts may access other users' data - RLS handles authorization
 
       const { data, error: fetchError } = await supabase
         .from('payment_ledger')

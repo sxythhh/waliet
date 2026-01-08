@@ -2,6 +2,60 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/integrations/supabase/client';
 import { useToolsWorkspace } from './ToolsWorkspaceContext';
 
+// Helper to sync a single event to Google Calendar
+async function syncEventToGoogle(
+  workspaceId: string,
+  eventId: string,
+  eventData: {
+    title: string;
+    description?: string | null;
+    start_time: string;
+    end_time: string;
+    all_day?: boolean;
+    location?: string | null;
+  },
+  googleEventId?: string | null,
+  action: 'push' | 'delete' = 'push'
+): Promise<string | null> {
+  try {
+    if (action === 'delete' && googleEventId) {
+      await supabase.functions.invoke('google-calendar-sync', {
+        body: {
+          action: 'delete_event',
+          workspace_id: workspaceId,
+          google_event_id: googleEventId,
+        },
+      });
+      return null;
+    }
+
+    if (action === 'push') {
+      const { data } = await supabase.functions.invoke('google-calendar-sync', {
+        body: {
+          action: 'push_event',
+          workspace_id: workspaceId,
+          event_id: eventId,
+          event_data: {
+            title: eventData.title,
+            description: eventData.description || '',
+            start_time: eventData.start_time,
+            end_time: eventData.end_time,
+            all_day: eventData.all_day || false,
+            location: eventData.location || '',
+          },
+          google_event_id: googleEventId || undefined,
+        },
+      });
+      return data?.google_event_id || null;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Failed to sync event to Google:', error);
+    return null;
+  }
+}
+
 export interface CalendarEvent {
   id: string;
   workspace_id: string | null;
@@ -44,7 +98,7 @@ const ToolsEventContext = createContext<ToolsEventContextType | undefined>(undef
 export function ToolsEventProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { currentWorkspace } = useToolsWorkspace();
+  const { currentWorkspace, isGoogleCalendarConnected } = useToolsWorkspace();
 
   const fetchEvents = useCallback(async () => {
     if (!currentWorkspace) {
@@ -91,6 +145,26 @@ export function ToolsEventProvider({ children }: { children: React.ReactNode }) 
 
       if (error) throw error;
 
+      // Sync to Google Calendar if connected
+      if (isGoogleCalendarConnected && data && event.title && event.start_time && event.end_time) {
+        const googleEventId = await syncEventToGoogle(
+          currentWorkspace.id,
+          data.id,
+          {
+            title: event.title,
+            description: event.description,
+            start_time: event.start_time,
+            end_time: event.end_time,
+            all_day: event.all_day,
+            location: event.location,
+          }
+        );
+        // Update local state with google_event_id
+        if (googleEventId) {
+          data.google_event_id = googleEventId;
+        }
+      }
+
       setEvents(prev => [...prev, data].sort((a, b) =>
         new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
       ));
@@ -110,6 +184,27 @@ export function ToolsEventProvider({ children }: { children: React.ReactNode }) 
 
       if (error) throw error;
 
+      // Sync to Google Calendar if connected
+      if (isGoogleCalendarConnected && currentWorkspace) {
+        const existingEvent = events.find(e => e.id === id);
+        if (existingEvent) {
+          const updatedEvent = { ...existingEvent, ...updates };
+          await syncEventToGoogle(
+            currentWorkspace.id,
+            id,
+            {
+              title: updatedEvent.title,
+              description: updatedEvent.description,
+              start_time: updatedEvent.start_time,
+              end_time: updatedEvent.end_time,
+              all_day: updatedEvent.all_day,
+              location: updatedEvent.location,
+            },
+            existingEvent.google_event_id
+          );
+        }
+      }
+
       setEvents(prev =>
         prev.map(e => e.id === id ? { ...e, ...updates } : e)
           .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
@@ -121,12 +216,30 @@ export function ToolsEventProvider({ children }: { children: React.ReactNode }) 
 
   const deleteEvent = async (id: string) => {
     try {
+      // Get the event before deleting to sync with Google
+      const eventToDelete = events.find(e => e.id === id);
+
       const { error } = await supabase
         .from('tools_events')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+
+      // Sync deletion to Google Calendar if connected
+      if (isGoogleCalendarConnected && currentWorkspace && eventToDelete?.google_event_id) {
+        await syncEventToGoogle(
+          currentWorkspace.id,
+          id,
+          {
+            title: eventToDelete.title,
+            start_time: eventToDelete.start_time,
+            end_time: eventToDelete.end_time,
+          },
+          eventToDelete.google_event_id,
+          'delete'
+        );
+      }
 
       setEvents(prev => prev.filter(e => e.id !== id));
     } catch (error) {

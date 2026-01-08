@@ -40,6 +40,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
 const DiscordBotOAuthCallback = lazy(() => import("./components/DiscordBotOAuthCallback").then(m => ({ default: m.DiscordBotOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
+const GoogleCalendarOAuthCallback = lazy(() => import("./components/GoogleCalendarOAuthCallback").then(m => ({ default: m.GoogleCalendarOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -158,6 +159,7 @@ const App = () => (
                   <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
                   <Route path="/discord/bot-callback" element={<DiscordBotOAuthCallback />} />
                   <Route path="/x/callback" element={<XOAuthCallback />} />
+                  <Route path="/google/calendar-callback" element={<GoogleCalendarOAuthCallback />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/discover" element={<Discover />} />
                   <Route path="/creator-terms" element={<CreatorTerms />} />

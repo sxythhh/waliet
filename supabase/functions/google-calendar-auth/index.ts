@@ -163,29 +163,53 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Validate state parameter for CSRF protection
-      if (state) {
-        try {
-          const stateData = JSON.parse(atob(state));
-          if (stateData.workspace_id !== workspace_id) {
-            return new Response(JSON.stringify({ error: 'Invalid state parameter' }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-          // Check timestamp (5 minute expiry)
-          if (Date.now() - stateData.timestamp > 5 * 60 * 1000) {
-            return new Response(JSON.stringify({ error: 'State parameter expired' }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-        } catch {
-          return new Response(JSON.stringify({ error: 'Invalid state parameter format' }), {
+      // Validate state parameter for CSRF protection (MANDATORY)
+      if (!state) {
+        console.error('Missing state parameter - potential CSRF attack');
+        return new Response(JSON.stringify({ error: 'Missing state parameter' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        const stateData = JSON.parse(atob(state));
+
+        // Validate required fields
+        if (!stateData.workspace_id || !stateData.user_id || !stateData.nonce || !stateData.timestamp) {
+          throw new Error('Missing required state fields');
+        }
+
+        if (stateData.workspace_id !== workspace_id) {
+          console.error('Workspace ID mismatch in state parameter');
+          return new Response(JSON.stringify({ error: 'Invalid state parameter' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
+
+        // Verify user matches the authenticated user
+        if (stateData.user_id !== user.id) {
+          console.error('User ID mismatch in state parameter - potential CSRF attack');
+          return new Response(JSON.stringify({ error: 'Invalid state parameter' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Check timestamp (3 minute expiry for better security)
+        if (Date.now() - stateData.timestamp > 3 * 60 * 1000) {
+          return new Response(JSON.stringify({ error: 'State parameter expired' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } catch (parseError) {
+        console.error('Failed to parse state parameter:', parseError);
+        return new Response(JSON.stringify({ error: 'Invalid state parameter format' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // Exchange authorization code for tokens
@@ -247,13 +271,51 @@ Deno.serve(async (req) => {
 
       console.log('Using calendar:', primaryCalendar.summary);
 
+      // Encrypt tokens before storing using a simple encryption
+      // In production, use Supabase Vault or a proper KMS
+      const ENCRYPTION_KEY = Deno.env.get('TOKEN_ENCRYPTION_KEY');
+      if (!ENCRYPTION_KEY) {
+        console.error('TOKEN_ENCRYPTION_KEY not configured');
+        return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Simple encryption using Web Crypto API
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(ENCRYPTION_KEY.padEnd(32, '0').slice(0, 32));
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt']
+      );
+
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const accessTokenEncrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        encoder.encode(tokens.access_token)
+      );
+      const refreshTokenEncrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        encoder.encode(tokens.refresh_token)
+      );
+
+      // Combine IV and ciphertext, then base64 encode
+      const encryptedAccessToken = btoa(String.fromCharCode(...iv, ...new Uint8Array(accessTokenEncrypted)));
+      const encryptedRefreshToken = btoa(String.fromCharCode(...iv, ...new Uint8Array(refreshTokenEncrypted)));
+
       // Store tokens (upsert)
       const { error: tokenStoreError } = await supabase
         .from('google_calendar_tokens')
         .upsert({
           workspace_id,
-          access_token_encrypted: tokens.access_token, // TODO: Actually encrypt in production
-          refresh_token_encrypted: tokens.refresh_token,
+          access_token_encrypted: encryptedAccessToken,
+          refresh_token_encrypted: encryptedRefreshToken,
           token_expires_at: expiresAt,
           scope: tokens.scope,
           updated_at: new Date().toISOString(),

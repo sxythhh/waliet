@@ -4,8 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, Unlink } from "lucide-react";
+import { Unlink } from "lucide-react";
 import discordIcon from "@/assets/discord-icon.png";
+
+// Type for Supabase Functions error with context
+interface FunctionsError extends Error {
+  context?: {
+    response?: Response;
+  };
+}
+
 interface DiscordLinkDialogProps {
   userId: string;
   discordUsername?: string;
@@ -92,14 +100,15 @@ export function DiscordLinkDialog({
       });
       if (error) {
         let msg = error.message || 'Failed to unlink Discord account.';
-        const resp = (error as any)?.context?.response;
+        const functionsError = error as FunctionsError;
+        const resp = functionsError.context?.response;
         if (resp) {
           try {
-            const json = await resp.json();
+            const json = await resp.clone().json();
             if (json?.error) msg = json.error;
           } catch {
             try {
-              const text = await resp.text();
+              const text = await resp.clone().text();
               if (text) msg = text;
             } catch {
               // ignore
@@ -117,11 +126,12 @@ export function DiscordLinkDialog({
       });
       setOpen(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to unlink Discord account.";
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to unlink Discord account."
+        description: errorMessage
       });
     } finally {
       setLoading(false);

@@ -12,12 +12,19 @@ interface Workspace {
   image_url: string | null;
   created_at: string;
   updated_at: string;
+  // Google Calendar integration fields
+  google_calendar_id: string | null;
+  google_calendar_name: string | null;
+  google_connected_at: string | null;
+  google_connected_by: string | null;
 }
 
 interface ToolsWorkspaceContextType {
   workspace: Workspace | null;
   isLoading: boolean;
   isReady: boolean;
+  refreshWorkspace: () => Promise<void>;
+  isGoogleCalendarConnected: boolean;
 }
 
 const ToolsWorkspaceContext = createContext<ToolsWorkspaceContextType | undefined>(undefined);
@@ -86,12 +93,20 @@ export function ToolsWorkspaceProvider({ children }: { children: React.ReactNode
     initializeWorkspace();
   }, [initializeWorkspace]);
 
+  const refreshWorkspace = useCallback(async () => {
+    await initializeWorkspace();
+  }, [initializeWorkspace]);
+
+  const isGoogleCalendarConnected = !!workspace?.google_calendar_id;
+
   return (
     <ToolsWorkspaceContext.Provider
       value={{
         workspace,
         isLoading,
         isReady: !isLoading && !!workspace,
+        refreshWorkspace,
+        isGoogleCalendarConnected,
       }}
     >
       {children}
@@ -109,5 +124,7 @@ export function useToolsWorkspace() {
     currentWorkspace: context.workspace,
     isLoading: context.isLoading,
     isReady: context.isReady,
+    refreshWorkspace: context.refreshWorkspace,
+    isGoogleCalendarConnected: context.isGoogleCalendarConnected,
   };
 }

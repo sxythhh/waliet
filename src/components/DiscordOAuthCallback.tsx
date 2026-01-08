@@ -1,10 +1,18 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { restoreTrackingFromOAuth, getStoredUtmParams, clearStoredUtmParams, UtmParams } from "@/hooks/useUtmTracking";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+
+// Zod schema for validating OAuth state parameter
+const OAuthStateSchema = z.object({
+  userId: z.string().uuid().optional(),
+  action: z.string().optional(),
+  nonce: z.string().optional(),
+});
 
 // Save UTM params to profile for OAuth signups
 const saveUtmToProfile = async (userId: string, utmParams: UtmParams | null) => {
@@ -35,15 +43,19 @@ export function DiscordOAuthCallback() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
-  const hasProcessed = useRef(false);
+  const [requestId] = useState(() => crypto.randomUUID()); // Unique ID for this component instance
   const { trackReferral } = useReferralTracking();
   const { toast } = useToast();
 
   useEffect(() => {
+    // Use AbortController for proper cleanup with React 18 Strict Mode
+    const abortController = new AbortController();
+    let isProcessed = false;
+
     const handleCallback = async () => {
-      // Prevent double processing
-      if (hasProcessed.current) return;
-      hasProcessed.current = true;
+      // Check if already aborted or processed
+      if (abortController.signal.aborted || isProcessed) return;
+      isProcessed = true;
 
       const code = searchParams.get('code');
       const state = searchParams.get('state');
@@ -81,14 +93,23 @@ export function DiscordOAuthCallback() {
         return;
       }
 
-      // Parse state to determine if this is account linking or auth
-      let stateData: { userId?: string; action?: string; nonce?: string } = {};
+      // Parse and validate state to determine if this is account linking or auth
+      let stateData: z.infer<typeof OAuthStateSchema> = {};
       try {
         if (state) {
-          stateData = JSON.parse(atob(state));
+          const rawState = JSON.parse(atob(state));
+          // Validate with Zod schema
+          const parseResult = OAuthStateSchema.safeParse(rawState);
+          if (parseResult.success) {
+            stateData = parseResult.data;
+          } else {
+            console.error('Invalid OAuth state structure:', parseResult.error.issues);
+            // Continue with empty state - will fall through to auth flow
+          }
         }
       } catch (e) {
         console.error('Failed to parse state:', e);
+        // Continue with empty state - will fall through to auth flow
       }
 
       // If we have a userId in state, this is account linking (popup flow)
@@ -231,7 +252,12 @@ export function DiscordOAuthCallback() {
     };
 
     handleCallback();
-  }, [searchParams, navigate, trackReferral, toast]);
+
+    // Cleanup function to abort if component unmounts (React 18 Strict Mode)
+    return () => {
+      abortController.abort();
+    };
+  }, [searchParams, navigate, trackReferral, toast, requestId]);
 
   if (status === 'error') {
     return (
