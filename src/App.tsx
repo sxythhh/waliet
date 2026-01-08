@@ -63,6 +63,9 @@ const PublicCourseDetail = lazy(() => import("./pages/PublicCourseDetail"));
 const Store = lazy(() => import("./pages/Store"));
 const BrandOnboarding = lazy(() => import("./pages/BrandOnboarding"));
 const AffiliateHowItWorks = lazy(() => import("./pages/AffiliateHowItWorks"));
+const CreatorCampaignDetails = lazy(() => import("./pages/CreatorCampaignDetails"));
+const CreatorBoostDetails = lazy(() => import("./pages/CreatorBoostDetails"));
+const PublicBoostApplication = lazy(() => import("./pages/PublicBoostApplication"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -114,9 +117,9 @@ function SubdomainHandler({ children }: { children: React.ReactNode }) {
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <AppSidebar />
-      <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0">{children}</main>
+      <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0 overflow-y-auto">{children}</main>
     </div>
   );
 }
@@ -189,9 +192,24 @@ const App = () => (
                   <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
                   <Route path="/join/:slug" element={<JoinRedirect />} />
                   <Route path="/c/:slug" element={<CampaignApply />} />
+                  <Route path="/apply/:slug" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PublicBoostApplication />
+                    </Suspense>
+                  } />
                   <Route path="/dashboard" element={
                     <Suspense fallback={<DashboardLoader />}>
                       <WorkspaceProvider><Dashboard /></WorkspaceProvider>
+                    </Suspense>
+                  } />
+                  <Route path="/dashboard/campaign/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <WorkspaceProvider><DashboardLayout><CreatorCampaignDetails /></DashboardLayout></WorkspaceProvider>
+                    </Suspense>
+                  } />
+                  <Route path="/dashboard/boost/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <WorkspaceProvider><DashboardLayout><CreatorBoostDetails /></DashboardLayout></WorkspaceProvider>
                     </Suspense>
                   } />
                   <Route path="/campaign/:id" element={

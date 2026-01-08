@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, Check, Trash2, X, Plus, Pause, Play } from "lucide-react";
+import { CalendarIcon, Upload, Check, Trash2, X, Plus, Pause, Play, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,6 +15,10 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ApplicationQuestionsEditor } from "./ApplicationQuestionsEditor";
+import { ApplicationQuestion } from "@/types/applicationQuestions";
+import { PublicFormSettingsSection } from "./PublicFormSettingsSection";
+import { PublicFormSettings, DEFAULT_PUBLIC_FORM_SETTINGS } from "@/types/publicFormSettings";
 
 interface Blueprint {
   id: string;
@@ -45,6 +49,10 @@ interface BountyData {
   is_private: boolean;
   tags: string[] | null;
   shortimize_collection_name: string | null;
+  application_questions: ApplicationQuestion[] | null;
+  slug: string | null;
+  public_application_enabled: boolean;
+  public_form_settings: PublicFormSettings | null;
 }
 
 const labelStyle = { fontFamily: 'Inter', letterSpacing: '-0.5px' } as const;
@@ -76,8 +84,15 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
     brand_id: "",
     is_private: false,
     tags: null,
-    shortimize_collection_name: null
+    shortimize_collection_name: null,
+    application_questions: null,
+    slug: null,
+    public_application_enabled: false,
+    public_form_settings: null
   });
+  const [publicFormEnabled, setPublicFormEnabled] = useState(false);
+  const [publicFormSettings, setPublicFormSettings] = useState<PublicFormSettings>(DEFAULT_PUBLIC_FORM_SETTINGS);
+  const [applicationQuestions, setApplicationQuestions] = useState<ApplicationQuestion[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [tagInput, setTagInput] = useState("");
@@ -104,6 +119,9 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
       if (data.start_date) setStartDate(new Date(data.start_date));
       if (data.end_date) setEndDate(new Date(data.end_date));
       setTags(data.tags || []);
+      setApplicationQuestions(data.application_questions || []);
+      setPublicFormEnabled(data.public_application_enabled || false);
+      setPublicFormSettings(data.public_form_settings || DEFAULT_PUBLIC_FORM_SETTINGS);
       
       // Fetch blueprints and subscription status for the brand
       if (data.brand_id) {
@@ -202,7 +220,10 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
           is_private: formData.is_private,
           tags: tags.length > 0 ? tags : null,
-          shortimize_collection_name: formData.shortimize_collection_name || null
+          shortimize_collection_name: formData.shortimize_collection_name || null,
+          application_questions: applicationQuestions.length > 0 ? applicationQuestions as unknown as any : null,
+          public_application_enabled: publicFormEnabled,
+          public_form_settings: publicFormSettings as unknown as any
         })
         .eq('id', bountyId);
 
@@ -292,6 +313,25 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                   className="border-0 bg-muted/50 min-h-[80px] resize-none"
                   style={inputStyle}
                 />
+              </div>
+
+              {/* Application Questions */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  <Label style={labelStyle} className="text-xs text-muted-foreground">Application Questions</Label>
+                  <span className="text-xs text-muted-foreground" style={labelStyle}>(Optional)</span>
+                </div>
+
+                <ApplicationQuestionsEditor
+                  questions={applicationQuestions}
+                  onChange={setApplicationQuestions}
+                  maxQuestions={10}
+                />
+
+                <p className="text-xs text-muted-foreground" style={labelStyle}>
+                  Add text, dropdown, video, or image questions for applicants.
+                </p>
               </div>
 
               {/* Banner */}
@@ -544,7 +584,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
               </div>
 
               {/* Private Toggle */}
-              <div 
+              <div
                 onClick={() => setFormData({ ...formData, is_private: !formData.is_private })}
                 className="flex items-center gap-3 cursor-pointer"
               >
@@ -556,6 +596,15 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                   <p className="text-xs text-muted-foreground" style={labelStyle}>Only accessible via direct link</p>
                 </div>
               </div>
+
+              {/* Public Form Settings */}
+              <PublicFormSettingsSection
+                enabled={publicFormEnabled}
+                settings={publicFormSettings}
+                onEnabledChange={setPublicFormEnabled}
+                onSettingsChange={setPublicFormSettings}
+                boostSlug={formData.slug}
+              />
 
               {/* Actions */}
               <div className="flex gap-2 justify-between pt-2">

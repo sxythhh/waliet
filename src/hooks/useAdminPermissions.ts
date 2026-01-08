@@ -290,11 +290,25 @@ export const useManageAdminPermissions = () => {
   const grantFullAccess = async (userId: string): Promise<boolean> => {
     setSaving(true);
     try {
-      // Delete all permissions for this user (full access = no restrictions)
-      const { error } = await supabase
+      // Create full-access permissions for all resources
+      const permissions: AdminPermissionInsert[] = ADMIN_RESOURCES.map(resource => ({
+        user_id: userId,
+        resource: resource.id,
+        can_view: true,
+        can_edit: true,
+        can_delete: true,
+      }));
+
+      // Delete existing permissions first
+      await supabase
         .from("admin_permissions")
         .delete()
         .eq("user_id", userId);
+
+      // Insert full-access permissions
+      const { error } = await supabase
+        .from("admin_permissions")
+        .insert(permissions);
 
       if (error) throw error;
 
@@ -427,10 +441,13 @@ export const useManageAdminPermissions = () => {
     if (!query || query.length < 2) return [];
 
     try {
+      // Sanitize query to prevent SQL injection via special LIKE characters
+      const sanitizedQuery = query.replace(/[%_\\]/g, '\\$&');
+
       const { data, error } = await supabase
         .from("profiles")
         .select("id, email, full_name, avatar_url, username")
-        .or(`email.ilike.%${query}%,username.ilike.%${query}%,full_name.ilike.%${query}%`)
+        .or(`email.ilike.%${sanitizedQuery}%,username.ilike.%${sanitizedQuery}%,full_name.ilike.%${sanitizedQuery}%`)
         .limit(10);
 
       if (error) throw error;
