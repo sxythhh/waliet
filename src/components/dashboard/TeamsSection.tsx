@@ -636,15 +636,15 @@ export function TeamsSection(): JSX.Element {
                         </p>
                       </div>
                       <div className="flex items-center gap-0.5">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={() => {
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" aria-label="Edit member settings" onClick={() => {
                     setSelectedMember(member);
                     setCommissionRate(member.commission_rate * 100);
                     setEditMemberOpen(true);
                   }}>
-                          <img src={settingsIcon} alt="Settings" className="h-4 w-4 opacity-60" />
+                          <img src={settingsIcon} alt="" className="h-4 w-4 opacity-60" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" onClick={() => handleRemoveMember(member.id)}>
-                          <img src={deleteIcon} alt="Remove" className="h-4 w-4 opacity-60" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" aria-label="Remove team member" onClick={() => handleRemoveMember(member.id)}>
+                          <img src={deleteIcon} alt="" className="h-4 w-4 opacity-60" />
                         </Button>
                       </div>
                     </div>

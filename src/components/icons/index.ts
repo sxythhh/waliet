@@ -7,4 +7,5 @@ export { default as LayersIcon } from "./LayersIcon";
 export { default as MessageCircleIcon } from "./MessageCircleIcon";
 export { default as HeartIcon } from "./HeartIcon";
 export { default as ShieldCheckIcon } from "./ShieldCheckIcon";
+export { default as MailIcon } from "./MailIcon";
 export type { AnimatedIconProps } from "./types";

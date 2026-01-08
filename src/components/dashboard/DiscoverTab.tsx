@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
@@ -458,20 +459,26 @@ export function DiscoverTab({
 
     setLoading(false);
   };
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesPlatform = !selectedPlatform || campaign.platforms && campaign.platforms.some(p => p.toLowerCase() === selectedPlatform.toLowerCase());
-    const matchesSearch = !searchQuery || campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.brand_name.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || statusFilter === "active" && campaign.status !== "ended" || statusFilter === "ended" && campaign.status === "ended";
-    const matchesInfiniteBudget = !hideInfiniteBudget || !campaign.is_infinite_budget;
-    const matchesLowBudget = !hideLowBudget || campaign.budget >= 1000;
-    const matchesEnded = !hideEnded || campaign.status !== "ended";
-    const matchesBookmarked = !showBookmarkedOnly || bookmarkedCampaignIds.includes(campaign.id);
-    return matchesPlatform && matchesSearch && matchesStatus && matchesInfiniteBudget && matchesLowBudget && matchesEnded && matchesBookmarked;
-  });
+  // Debounce search query for performance (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Memoize filtered campaigns to prevent re-filtering on every render
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(campaign => {
+      const matchesPlatform = !selectedPlatform || campaign.platforms && campaign.platforms.some(p => p.toLowerCase() === selectedPlatform.toLowerCase());
+      const matchesSearch = !debouncedSearchQuery || campaign.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) || campaign.brand_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) || campaign.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || statusFilter === "active" && campaign.status !== "ended" || statusFilter === "ended" && campaign.status === "ended";
+      const matchesInfiniteBudget = !hideInfiniteBudget || !campaign.is_infinite_budget;
+      const matchesLowBudget = !hideLowBudget || campaign.budget >= 1000;
+      const matchesEnded = !hideEnded || campaign.status !== "ended";
+      const matchesBookmarked = !showBookmarkedOnly || bookmarkedCampaignIds.includes(campaign.id);
+      return matchesPlatform && matchesSearch && matchesStatus && matchesInfiniteBudget && matchesLowBudget && matchesEnded && matchesBookmarked;
+    });
+  }, [campaigns, selectedPlatform, debouncedSearchQuery, statusFilter, hideInfiniteBudget, hideLowBudget, hideEnded, showBookmarkedOnly, bookmarkedCampaignIds]);
 
   // Separate active and ended campaigns
-  const activeCampaigns = filteredCampaigns.filter(c => c.status !== "ended");
-  const endedCampaigns = filteredCampaigns.filter(c => c.status === "ended");
+  const activeCampaigns = useMemo(() => filteredCampaigns.filter(c => c.status !== "ended"), [filteredCampaigns]);
+  const endedCampaigns = useMemo(() => filteredCampaigns.filter(c => c.status === "ended"), [filteredCampaigns]);
 
   // Sort active campaigns - featured campaigns always appear first
   const sortedActiveCampaigns = [...activeCampaigns].sort((a, b) => {

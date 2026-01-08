@@ -8,18 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, Check, Pencil, MapPin, Languages, Mail, RefreshCw, AtSign, ChevronsUpDown } from "lucide-react";
+import { ExternalLink, DollarSign, TrendingUp, Eye, Upload, Plus, Instagram, Youtube, CheckCircle2, Copy, Link2, X, Calendar, LogOut, Settings, ArrowUpRight, Globe, Video, Type, ChevronDown, Unlink, Trash2, MapPin, Languages, Mail, RefreshCw, AtSign, ChevronsUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
 import { AudienceInsightsStatusCard } from "@/components/AudienceInsightsStatusCard";
 import { PendingInsightsRequestsBanner } from "@/components/dashboard/PendingInsightsRequestsBanner";
+import { ZkTLSVerificationDialog } from "@/components/ZkTLSVerificationDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -32,15 +32,9 @@ import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { PortfolioSection, PortfolioItem } from "@/components/dashboard/PortfolioSection";
 import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard, NotificationSettingsCard } from "@/components/dashboard/settings";
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { useTheme } from "@/components/ThemeProvider";
-import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-white.png";
-import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
-import instagramLogoBlack from "@/assets/instagram-logo-black.png";
-import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
-import emptyAccountsImage from "@/assets/empty-accounts.png";
-import demographicsIcon from "@/assets/demographics-icon.svg";
+import { TaxFormNotificationBanner } from "@/components/tax";
 import noAccountsIcon from "@/assets/no-accounts-icon.svg";
 import noAccountsIconBlack from "@/assets/no-accounts-icon-black.svg";
 interface Profile {
@@ -107,6 +101,13 @@ interface SocialAccount {
     reviewed_at: string | null;
     screenshot_url: string | null;
   }>;
+  // zkTLS verification fields
+  zktls_verified?: boolean;
+  zktls_verified_at?: string | null;
+  zktls_expires_at?: string | null;
+  zktls_engagement_rate?: number | null;
+  zktls_avg_views?: number | null;
+  zktls_demographics?: Record<string, any> | null;
 }
 interface Campaign {
   id: string;
@@ -143,6 +144,14 @@ export function ProfileTab() {
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [showVerifyAccountDialog, setShowVerifyAccountDialog] = useState(false);
   const [selectedAccountForVerification, setSelectedAccountForVerification] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
+  const [showManageAccountDialog, setShowManageAccountDialog] = useState(false);
+  const [selectedAccountForManage, setSelectedAccountForManage] = useState<SocialAccount | null>(null);
+  const [showZkTLSDialog, setShowZkTLSDialog] = useState(false);
+  const [selectedAccountForZkTLS, setSelectedAccountForZkTLS] = useState<{
     id: string;
     platform: string;
     username: string;
@@ -364,6 +373,7 @@ export function ProfileTab() {
       fetchSocialAccounts();
     }
   };
+
   const handleLinkCampaign = async (campaignId: string) => {
     if (!selectedAccountForLinking) return;
     setLinkingCampaign(true);
@@ -392,11 +402,14 @@ export function ProfileTab() {
       return;
     }
     if (existingRecord?.status === "active") {
+      // Account is already linked - this is the desired state, so show success and refresh UI
       toast({
-        variant: "destructive",
-        title: "Already linked",
-        description: "This account is already linked to this campaign"
+        title: "Account linked",
+        description: "This account is connected to the campaign"
       });
+      fetchSocialAccounts();
+      setShowLinkCampaignDialog(false);
+      setSelectedAccountForLinking(null);
       setLinkingCampaign(false);
       return;
     }
@@ -491,20 +504,6 @@ export function ProfileTab() {
   const getLinkedCampaign = (campaignId: string | null) => {
     if (!campaignId) return null;
     return joinedCampaigns.find(c => c.id === campaignId);
-  };
-  const getPlatformIcon = (platform: string) => {
-    const iconClass = "w-full h-full object-contain opacity-100";
-    const isLightMode = resolvedTheme === "light";
-    switch (platform.toLowerCase()) {
-      case "tiktok":
-        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={iconClass} />;
-      case "instagram":
-        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={iconClass} />;
-      case "youtube":
-        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={iconClass} />;
-      default:
-        return null;
-    }
   };
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -741,7 +740,10 @@ export function ProfileTab() {
   if (loading || !profile) {
     return null;
   }
-  return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8">
+  return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8 bg-background">
+      {/* Tax Form Notification Banner - TEMPORARILY HIDDEN */}
+      {/* <TaxFormNotificationBanner className="pb-2" /> */}
+
       {/* Profile Header */}
       <Card className="bg-card border-0">
 
@@ -760,7 +762,7 @@ export function ProfileTab() {
       )}
 
       {/* Connected Accounts */}
-      <Card ref={connectedAccountsRef} className="bg-transparent border-0">
+      <Card ref={connectedAccountsRef} className="bg-background border-0">
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
@@ -777,16 +779,28 @@ export function ProfileTab() {
               </div>
               <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
               <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
-            </div> : <SocialAccountsTable accounts={socialAccounts} onRefresh={fetchSocialAccounts} onDeleteAccount={handleDeleteAccount} onLinkCampaign={account => {
-          setSelectedAccountForLinking(account);
-          setShowLinkCampaignDialog(true);
-        }} onUnlinkCampaign={handleUnlinkCampaign} onVerifyAccount={account => {
-          setSelectedAccountForVerification(account);
-          setShowVerifyAccountDialog(true);
-        }} onSubmitDemographics={account => {
-          setSelectedAccountForDemographics(account);
-          setShowDemographicsDialog(true);
-        }} />}
+            </div> : <SocialAccountsTable
+              accounts={socialAccounts}
+              onRefresh={fetchSocialAccounts}
+              onManageAccount={account => {
+                setSelectedAccountForManage(account);
+                setShowManageAccountDialog(true);
+              }}
+              onUnlinkCampaign={handleUnlinkCampaign}
+              onVerifyAccount={account => {
+                setSelectedAccountForVerification(account);
+                setShowVerifyAccountDialog(true);
+              }}
+              onSubmitDemographics={account => {
+                setSelectedAccountForDemographics(account);
+                setShowDemographicsDialog(true);
+              }}
+              // zkTLS verification disabled - TikTok blocks attestor IPs
+              // onVerifyZkTLS={account => {
+              //   setSelectedAccountForZkTLS(account);
+              //   setShowZkTLSDialog(true);
+              // }}
+            />}
         </CardContent>
       </Card>
 
@@ -944,6 +958,74 @@ export function ProfileTab() {
       setShowVerifyAccountDialog(open);
       if (!open) setSelectedAccountForVerification(null);
     }} onSuccess={fetchSocialAccounts} accountId={selectedAccountForVerification.id} platform={selectedAccountForVerification.platform} username={selectedAccountForVerification.username} />}
+
+      {/* zkTLS Verification Dialog - Disabled (TikTok blocks attestor IPs) */}
+      {/* {selectedAccountForZkTLS && (
+        <ZkTLSVerificationDialog
+          open={showZkTLSDialog}
+          onOpenChange={open => {
+            setShowZkTLSDialog(open);
+            if (!open) setSelectedAccountForZkTLS(null);
+          }}
+          onSuccess={fetchSocialAccounts}
+          socialAccountId={selectedAccountForZkTLS.id}
+          platform={selectedAccountForZkTLS.platform}
+          username={selectedAccountForZkTLS.username}
+        />
+      )} */}
+
+      {/* Manage Account Dialog */}
+      {selectedAccountForManage && (
+        <ManageAccountDialog
+          open={showManageAccountDialog}
+          onOpenChange={open => {
+            setShowManageAccountDialog(open);
+            if (!open) setSelectedAccountForManage(null);
+          }}
+          account={{
+            id: selectedAccountForManage.id,
+            username: selectedAccountForManage.username,
+            platform: selectedAccountForManage.platform,
+            account_link: selectedAccountForManage.account_link,
+            follower_count: selectedAccountForManage.follower_count,
+            is_verified: selectedAccountForManage.is_verified,
+            hidden_from_public: selectedAccountForManage.hidden_from_public,
+          }}
+          demographicStatus={
+            selectedAccountForManage.demographic_submissions?.length
+              ? (selectedAccountForManage.demographic_submissions.sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                )[0]?.status as 'approved' | 'pending' | 'rejected')
+              : null
+          }
+          daysUntilNext={null}
+          lastSubmissionDate={
+            selectedAccountForManage.demographic_submissions?.length
+              ? selectedAccountForManage.demographic_submissions.sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                )[0]?.submitted_at
+              : null
+          }
+          nextSubmissionDate={null}
+          onUpdate={fetchSocialAccounts}
+          onSubmitDemographics={() => {
+            setSelectedAccountForDemographics({
+              id: selectedAccountForManage.id,
+              platform: selectedAccountForManage.platform,
+              username: selectedAccountForManage.username
+            });
+            setShowDemographicsDialog(true);
+          }}
+          onReconnect={() => {
+            setSelectedAccountForVerification({
+              id: selectedAccountForManage.id,
+              platform: selectedAccountForManage.platform,
+              username: selectedAccountForManage.username
+            });
+            setShowVerifyAccountDialog(true);
+          }}
+        />
+      )}
 
       {/* Link Campaign Dialog */}
       <Dialog open={showLinkCampaignDialog} onOpenChange={open => {

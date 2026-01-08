@@ -76,96 +76,100 @@ function VerificationStep({
     }
   };
   const steps = [`Open the ${getPlatformLabel(platform)} app on your phone`, "Go to your profile", 'Tap "Edit profile"', "Add the verification code to your Bio field", 'Tap "Save" to confirm'];
-  return <div className="flex flex-col">
-      {/* Header with account info */}
-      <div className="pb-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-          {getPlatformIcon(platform, "h-5 w-5")}
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">@{username}</h2>
-          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{getPlatformLabel(platform)}</p>
-        </div>
-      </div>
-
-      {/* Verification Code Box */}
-      <div className="pb-4">
-        <div className="bg-muted/20 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Your verification code</span>
-            <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
-              {copied ? <>
-                  <Check className="h-3.5 w-3.5" />
-                  Copied
-                </> : <>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </>}
-            </button>
+  return <div className="flex flex-col max-h-[85vh]">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4">
+        {/* Header with account info */}
+        <div className="pb-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
+            {getPlatformIcon(platform, "h-5 w-5")}
           </div>
-          <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors">
-            <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">{verificationCode}</span>
+          <div>
+            <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">@{username}</h2>
+            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{getPlatformLabel(platform)}</p>
           </div>
         </div>
-      </div>
 
-      {/* Time Remaining */}
-      <div className="pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Time remaining</span>
-          <span className="text-sm font-semibold font-inter tracking-[-0.5px]">{formatTime(timeRemaining)}</span>
+        {/* Verification Code Box */}
+        <div className="pb-4">
+          <div className="bg-muted/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Your verification code</span>
+              <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
+                {copied ? <>
+                    <Check className="h-3.5 w-3.5" />
+                    Copied
+                  </> : <>
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </>}
+              </button>
+            </div>
+            <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors">
+              <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">{verificationCode}</span>
+            </div>
+          </div>
         </div>
-        <Progress value={progressPercent} className="h-2 bg-muted/30" />
-      </div>
 
-      {/* How to add the code steps */}
-      <div className="pb-4">
-        <h3 className="text-sm font-semibold font-inter tracking-[-0.5px] mb-3">How to add the code:</h3>
-        <div className="space-y-2.5">
-          {steps.map((step, index) => <div key={index} className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-bold text-primary-foreground">{index + 1}</span>
-              </div>
-              <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] leading-5">{step}</p>
-            </div>)}
+        {/* Time Remaining */}
+        <div className="pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Time remaining</span>
+            <span className="text-sm font-semibold font-inter tracking-[-0.5px]">{formatTime(timeRemaining)}</span>
+          </div>
+          <Progress value={progressPercent} className="h-2 bg-muted/30" />
         </div>
+
+        {/* How to add the code steps */}
+        <div className="pb-4">
+          <h3 className="text-sm font-semibold font-inter tracking-[-0.5px] mb-3">How to add the code:</h3>
+          <div className="space-y-2.5">
+            {steps.map((step, index) => <div key={index} className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-[11px] font-bold text-primary-foreground">{index + 1}</span>
+                </div>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] leading-5">{step}</p>
+              </div>)}
+          </div>
+        </div>
+
+        {/* Open settings link */}
+        <a href={getSettingsLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px] mb-4">
+          Open {getPlatformLabel(platform)} settings
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+
+        {/* Warning box - more compact on mobile */}
+        <div className="bg-muted/30 rounded-xl p-3 mb-3 flex items-start gap-2.5">
+          <AlertCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+            Make sure your account is <strong className="text-foreground">public</strong>. You can remove the code after verification.
+          </p>
+        </div>
+
+        {/* Manual connection option */}
+        <button onClick={handleSwitchToManual} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5 w-full">
+          <Link2 className="h-3.5 w-3.5" />
+          Can't verify? Connect manually
+        </button>
       </div>
 
-      {/* Open settings link */}
-      <a href={getSettingsLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px] mb-4">
-        Open {getPlatformLabel(platform)} settings
-        <ExternalLink className="h-3.5 w-3.5" />
-      </a>
-
-      {/* Warning box */}
-      <div className="bg-muted/30 rounded-xl p-4 mb-4 flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-          Make sure your {getPlatformLabel(platform)} account is set to <strong className="text-foreground">public</strong> so we can
-          verify your bio. You can remove the code after verification is complete.
-        </p>
-      </div>
-
-      {/* Manual connection option */}
-      <button onClick={handleSwitchToManual} className="mb-4 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5">
-        <Link2 className="h-3.5 w-3.5" />
-        Can't verify? Connect manually with URL
-      </button>
-
-      {/* Footer buttons */}
-      <div className="flex gap-2">
-        <Button variant="ghost" onClick={handleBack} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
-          Cancel
-        </Button>
-        <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
-          {isChecking ? <>
-              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-              Verifying...
-            </> : cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : <>
-              <Check className="h-4 w-4 mr-1.5" />
-              I've Added the Code
-            </>}
-        </Button>
+      {/* Sticky footer buttons */}
+      <div className="flex-shrink-0 px-6 py-4 border-t border-border/50 bg-background">
+        <div className="flex flex-col-reverse sm:flex-row gap-2">
+          <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
+            Cancel
+          </Button>
+          <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0} className="w-full sm:w-auto sm:flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
+            {isChecking ? <>
+                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                Verifying...
+              </> : cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : <>
+                <Check className="h-4 w-4 mr-1.5" />
+                Verify
+              </>}
+          </Button>
+        </div>
       </div>
     </div>;
 }
@@ -584,52 +588,72 @@ export function AddSocialAccountDialog({
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
-        {step === "input" ? <div className="flex flex-col">
-            {/* Content */}
-            <div className="px-6 pt-6 pb-5 space-y-5">
-              {/* Platform Selection as Cards */}
-              <div className="space-y-3">
-                <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
-                  Select Platform
-                </Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
-                    <button
-                      key={platform}
-                      onClick={() => setSelectedPlatform(platform)}
-                      className={`flex items-center justify-center p-3 rounded-xl transition-all ${
-                        selectedPlatform === platform
-                          ? 'ring-2'
-                          : 'bg-muted/30 hover:bg-muted/50'
-                      }`}
-                      style={selectedPlatform === platform ? {
-                        backgroundColor: 'rgba(32, 97, 222, 0.1)',
-                        ringColor: '#2061de',
-                        '--tw-ring-color': '#2061de'
-                      } as React.CSSProperties : undefined}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        selectedPlatform === platform ? '' : 'bg-muted/50'
-                      }`}
-                      style={selectedPlatform === platform ? {
-                        backgroundColor: 'rgba(32, 97, 222, 0.15)'
-                      } : undefined}
+        {step === "input" ? <div className="flex flex-col max-h-[85vh]">
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4">
+                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Connect Account</h2>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
+                  Select a platform to connect
+                </p>
+              </div>
+
+              {/* Platform Selection - Vertical List */}
+              <div className="px-6 pb-4">
+                <div className="space-y-2">
+                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => {
+                    const isSelected = selectedPlatform === platform;
+                    return (
+                      <button
+                        key={platform}
+                        onClick={() => setSelectedPlatform(platform)}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 ${
+                          isSelected
+                            ? 'bg-primary/10 dark:bg-primary/15'
+                            : 'bg-muted/50 dark:bg-muted/30 hover:bg-muted/80 dark:hover:bg-muted/50'
+                        }`}
                       >
-                        {getPlatformIcon(platform, "h-5 w-5")}
-                      </div>
-                    </button>
-                  ))}
+                        {/* Icon */}
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          isSelected
+                            ? 'bg-primary/15 dark:bg-primary/20'
+                            : 'bg-white dark:bg-background'
+                        }`}>
+                          {getPlatformIcon(platform, "h-4 w-4")}
+                        </div>
+
+                        {/* Platform name */}
+                        <span className={`text-sm font-medium font-inter tracking-[-0.3px] flex-1 text-left ${
+                          isSelected ? 'text-foreground' : 'text-foreground/80'
+                        }`}>
+                          {getPlatformLabel(platform)}
+                        </span>
+
+                        {/* Radio indicator */}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected
+                            ? 'border-primary bg-primary'
+                            : 'border-muted-foreground/30 dark:border-muted-foreground/40'
+                        }`}>
+                          {isSelected && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Username Input */}
-              <div className="space-y-3">
-                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
-                  {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Your Username"}
+              <div className="px-6 pb-4 space-y-2">
+                <Label htmlFor="username" className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
+                  {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
                 </Label>
                 <div className="relative flex items-center">
                   {showAtSymbol && (
-                    <div className="absolute left-0 h-12 w-12 rounded-l-xl bg-muted/50 flex items-center justify-center border-r border-border/30">
+                    <div className="absolute left-0 h-11 w-11 rounded-l-xl bg-muted/80 dark:bg-muted/50 flex items-center justify-center">
                       <span className="text-muted-foreground text-base font-medium">@</span>
                     </div>
                   )}
@@ -642,90 +666,94 @@ export function AddSocialAccountDialog({
                       const sanitized = value.replace(/@/g, "").trim();
                       setUsername(sanitized);
                     }}
-                    className={`h-12 bg-muted/30 border-border/50 rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-1 focus-visible:ring-primary/50 ${showAtSymbol ? 'pl-14' : 'pl-4'}`}
+                    className={`h-11 bg-muted/50 dark:bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-2 focus-visible:ring-primary/30 ${showAtSymbol ? 'pl-12' : 'pl-4'}`}
                   />
                 </div>
                 {username.includes('@') && (
-                  <p className="text-[11px] text-amber-500 font-inter tracking-[-0.5px]">
+                  <p className="text-xs text-amber-500 font-inter tracking-[-0.3px]">
                     The @ symbol will be removed automatically
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-border bg-muted/20 flex gap-3">
+            {/* Sticky Footer */}
+            <div className="flex-shrink-0 px-6 py-4 border-t border-border/50 bg-background flex gap-3">
               <Button
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="h-10 px-5 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
+                className="flex-1 h-11 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleContinueClick}
                 disabled={isContinuing || !username.trim()}
-                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.3px] text-sm"
-                style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                className="flex-1 h-11 rounded-xl font-inter tracking-[-0.3px] text-sm bg-primary hover:bg-primary/90"
               >
                 {isContinuing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
               </Button>
             </div>
           </div> : step === "verification" ? <VerificationStep username={username} platform={selectedPlatform} verificationCode={verificationCode} copied={copied} isChecking={isChecking} cooldownRemaining={cooldownRemaining} getPlatformIcon={getPlatformIcon} getPlatformLabel={getPlatformLabel} handleCopyCode={handleCopyCode} handleBack={handleBack} handleCheckVerification={handleCheckVerification} handleSwitchToManual={handleSwitchToManual} /> :
       // Manual URL connection step
-      <div className="flex flex-col">
-            {/* Header */}
-            <div className="pb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-                  {getPlatformIcon(selectedPlatform, "h-5 w-5")}
+      <div className="flex flex-col max-h-[85vh]">
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4">
+              {/* Header */}
+              <div className="pb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
+                    {getPlatformIcon(selectedPlatform, "h-5 w-5")}
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">
+                      @{username}
+                    </h2>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                      Connect manually
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">
-                    @{username}
-                  </h2>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    Connect manually
+              </div>
+
+              {/* URL Input */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="profileUrl" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
+                    Profile URL
+                  </Label>
+                  <Input id="profileUrl" type="url" placeholder={getExpectedUrlFormat(selectedPlatform)} value={profileUrl} onChange={e => handleUrlChange(e.target.value)} className={`h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${urlError ? 'ring-2 ring-destructive' : ''}`} />
+                  {urlError && <p className="text-[11px] text-destructive font-inter tracking-[-0.5px]">
+                      {urlError}
+                    </p>}
+                  <p className="text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px]">
+                    Enter the full URL to your {getPlatformLabel(selectedPlatform)} profile
+                  </p>
+                </div>
+
+                {/* Warning notice */}
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 font-inter tracking-[-0.5px]">
+                    Unverified accounts may have limited features and lower priority in campaigns.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* URL Input */}
-            <div className="space-y-4 pb-4">
-              <div className="space-y-2">
-                <Label htmlFor="profileUrl" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
-                  Profile URL
-                </Label>
-                <Input id="profileUrl" type="url" placeholder={getExpectedUrlFormat(selectedPlatform)} value={profileUrl} onChange={e => handleUrlChange(e.target.value)} className={`h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${urlError ? 'ring-2 ring-destructive' : ''}`} />
-                {urlError && <p className="text-[11px] text-destructive font-inter tracking-[-0.5px]">
-                    {urlError}
-                  </p>}
-                <p className="text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px]">
-                  Enter the full URL to your {getPlatformLabel(selectedPlatform)} profile
-                </p>
+            {/* Sticky Footer */}
+            <div className="flex-shrink-0 px-6 py-4 border-t border-border/50 bg-background">
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
+                  <ArrowLeft className="h-4 w-4 mr-1.5" />
+                  Back
+                </Button>
+                <Button onClick={handleSaveManualAccount} disabled={isSavingManual || !profileUrl.trim()} className="w-full sm:w-auto sm:flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+                  {isSavingManual ? <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                      Connecting...
+                    </> : "Connect (Unverified)"}
+                </Button>
               </div>
-
-              {/* Warning notice */}
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
-                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-inter tracking-[-0.5px]">
-                  Unverified accounts may have limited features and lower priority in campaigns.
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleBack} className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
-                <ArrowLeft className="h-4 w-4 mr-1.5" />
-                Back
-              </Button>
-              <Button onClick={handleSaveManualAccount} disabled={isSavingManual || !profileUrl.trim()} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
-                {isSavingManual ? <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                    Connecting...
-                  </> : "Connect (Unverified)"}
-              </Button>
             </div>
           </div>}
       </DialogContent>

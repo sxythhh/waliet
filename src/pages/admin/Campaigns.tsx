@@ -22,6 +22,19 @@ import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
+import { CampaignBudgetAdjustmentDialog } from "@/components/admin/CampaignBudgetAdjustmentDialog";
+import {
+  AdminSearchInput,
+  AdminFilterTabs,
+  AdminEmptyState,
+  TYPOGRAPHY,
+  PADDING,
+  BORDERS,
+  BACKGROUNDS,
+  TRANSITIONS,
+  TABLE,
+} from "@/components/admin/design-system";
+import { Search, Megaphone } from "lucide-react";
 
 interface Campaign {
   id: string;
@@ -402,15 +415,38 @@ export default function Campaigns() {
 
   return (
     <AdminPermissionGuard resource="brands">
-      <div className="p-6 space-y-6">
+      <div className="h-full flex flex-col">
+        {/* Page Header */}
+        <div className={cn("border-b flex-shrink-0", BORDERS.default, PADDING.page)}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-muted/40">
+              <Megaphone className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <h1 className={TYPOGRAPHY.pageTitle}>Campaigns</h1>
+              <p className={cn(TYPOGRAPHY.caption, "mt-0.5")}>
+                {stats.total} campaigns • {stats.active} active • {stats.pendingReview > 0 && `${stats.pendingReview} pending review`}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6 space-y-5">
         {/* Filters */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search campaigns or brands..."
-            className="max-w-xs h-9 font-inter tracking-[-0.5px] bg-muted/30 border-0"
-          />
+        <div className="bg-card border border-border/40 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search campaigns..."
+                className="pl-10 h-9 bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
+              />
+            </div>
+
+            <div className="h-6 w-px bg-border/40" />
 
           {/* Type Filter */}
           <div className="flex items-center gap-1">
@@ -474,16 +510,17 @@ export default function Campaigns() {
 
           <button
             onClick={fetchCampaigns}
-            className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter']"
+            className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Refresh
           </button>
+          </div>
         </div>
 
         {/* Campaign List */}
-        <div className="rounded-xl border border-border/50 overflow-hidden">
+        <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-muted/30 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
+          <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-muted/30 border-b border-border/30 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <div className="col-span-4">Campaign</div>
             <div className="col-span-2">Status</div>
             <div className="col-span-2">Budget</div>
@@ -708,10 +745,7 @@ export default function Campaigns() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setNewBudget(selectedCampaign.budget?.toString() || "");
-                      setBudgetDialogOpen(true);
-                    }}
+                    onClick={() => setBudgetDialogOpen(true)}
                     className="h-8 text-xs font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                   >
                     Adjust
@@ -914,51 +948,26 @@ export default function Campaigns() {
       </Sheet>
 
       {/* Budget Adjustment Dialog */}
-      <Dialog open={budgetDialogOpen} onOpenChange={setBudgetDialogOpen}>
-        <DialogContent className="sm:max-w-[360px]">
-          <DialogHeader>
-            <DialogTitle className="font-inter tracking-[-0.5px]">Adjust Budget</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                New Budget
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-inter tracking-[-0.5px]">$</span>
-                <Input
-                  type="number"
-                  value={newBudget}
-                  onChange={(e) => setNewBudget(e.target.value)}
-                  placeholder="0.00"
-                  className="pl-7 h-10 font-inter tracking-[-0.5px]"
-                />
-              </div>
-            </div>
-            {selectedCampaign?.budget_used && (
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                ${selectedCampaign.budget_used.toLocaleString()} already used
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setBudgetDialogOpen(false)}
-              className="font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateBudget}
-              disabled={isUpdating}
-              className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90"
-            >
-              {isUpdating ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {selectedCampaign && (
+        <CampaignBudgetAdjustmentDialog
+          open={budgetDialogOpen}
+          onOpenChange={setBudgetDialogOpen}
+          preselectedCampaign={{
+            id: selectedCampaign.id,
+            title: selectedCampaign.title,
+            brand_name: selectedCampaign.brand_name,
+            brand_logo_url: selectedCampaign.brand_logo_url,
+            budget: selectedCampaign.budget || 0,
+            budget_used: selectedCampaign.budget_used,
+            status: selectedCampaign.status,
+            is_infinite_budget: 'is_infinite_budget' in selectedCampaign ? selectedCampaign.is_infinite_budget : false,
+          }}
+          onSuccess={() => {
+            fetchCampaigns();
+            fetchBoosts();
+          }}
+        />
+      )}
 
       {/* Review Dialog */}
       <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
@@ -1041,6 +1050,7 @@ export default function Campaigns() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </AdminPermissionGuard>
   );
 }

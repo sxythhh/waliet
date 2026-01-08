@@ -4,6 +4,16 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +22,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Ban, LogIn } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -84,7 +95,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   // Balance adjustment state
   const [showBalanceAdjust, setShowBalanceAdjust] = useState(false);
   const [adjustAmount, setAdjustAmount] = useState("");
-  const [adjustDescription, setAdjustDescription] = useState("");
   const [adjustAction, setAdjustAction] = useState<"add" | "remove">("add");
   const [isAdjusting, setIsAdjusting] = useState(false);
 
@@ -108,6 +118,9 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   const [isBanning, setIsBanning] = useState(false);
   const [existingBan, setExistingBan] = useState<any>(null);
   const [loadingBan, setLoadingBan] = useState(false);
+  const [showIpBanDialog, setShowIpBanDialog] = useState(false);
+  const [userIpAddresses, setUserIpAddresses] = useState<string[]>([]);
+  const [isBanningIp, setIsBanningIp] = useState(false);
 
   // Impersonation state
   const [isImpersonating, setIsImpersonating] = useState(false);
@@ -138,13 +151,12 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
             demographic_submissions(status, tier1_percentage)
           `)
           .eq("user_id", userId)
-          .order("created_at", { ascending: false }),
+          .order("connected_at", { ascending: false }),
         supabase
           .from("wallet_transactions")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(15)
       ]);
 
       setSocialAccounts(accountsRes.data || []);
@@ -304,7 +316,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
           type: adjustAction === "add" ? "admin_credit" : "admin_debit",
           amount: numAmount,
           status: "completed",
-          description: adjustDescription || `Admin ${adjustAction === "add" ? "credit" : "debit"}`
+          description: `Admin ${adjustAction === "add" ? "credit" : "debit"}`
         });
 
       if (error) throw error;
@@ -320,7 +332,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
 
       toast.success(`$${numAmount.toFixed(2)} ${adjustAction === "add" ? "added" : "removed"}`);
       setAdjustAmount("");
-      setAdjustDescription("");
       setShowBalanceAdjust(false);
       fetchUserData(user.id);
       onUserUpdated?.();
@@ -419,6 +430,117 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
     toast.success("Copied");
   };
 
+  const handleOpenIpBanDialog = async () => {
+    if (!user) return;
+
+    // Fetch user's IP addresses from sessions
+    const { data: sessions } = await supabase
+      .from("user_sessions")
+      .select("ip_address")
+      .eq("user_id", user.id)
+      .not("ip_address", "is", null);
+
+    const uniqueIps = [...new Set(sessions?.map(s => s.ip_address).filter(Boolean) || [])];
+    setUserIpAddresses(uniqueIps);
+    setIpBanReason("");
+    setShowIpBanDialog(true);
+  };
+
+  const handleIpBan = async () => {
+    if (!user || userIpAddresses.length === 0) return;
+
+    setIsBanningIp(true);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      // Insert IP bans for all user's IPs
+      const ipBans = userIpAddresses.map(ip => ({
+        ip_address: ip,
+        user_id: user.id,
+        banned_by: currentUser?.id,
+        reason: ipBanReason || `Banned via admin panel for user @${user.username}`,
+        is_active: true,
+      }));
+
+      const { error: ipError } = await supabase
+        .from("ip_bans")
+        .upsert(ipBans, { onConflict: "ip_address" });
+
+      if (ipError) throw ipError;
+
+      // Also ban the user account
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          banned_at: new Date().toISOString(),
+          ban_reason: ipBanReason || "IP banned by admin",
+        })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
+
+      toast.success(`Banned ${userIpAddresses.length} IP address(es) and user account`);
+      setShowIpBanDialog(false);
+      onUserUpdated?.();
+    } catch (error) {
+      console.error("Error banning IP:", error);
+      toast.error("Failed to ban IP addresses");
+    } finally {
+      setIsBanningIp(false);
+    }
+  };
+
+  const handleImpersonate = async () => {
+    if (!user?.email) {
+      toast.error("User has no email address");
+      return;
+    }
+
+    setIsImpersonating(true);
+    try {
+      // Generate a magic link for the user
+      const { data, error } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: user.email,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.properties?.action_link) {
+        // Open the magic link in a new tab
+        window.open(data.properties.action_link, "_blank");
+        toast.success(`Impersonating @${user.username} in new tab`);
+      } else {
+        throw new Error("No action link generated");
+      }
+    } catch (error: any) {
+      console.error("Error impersonating user:", error);
+      // Fallback: try using the edge function if admin API is not available
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke("impersonate-user", {
+          body: { userId: user.id },
+        });
+
+        if (fnError) throw fnError;
+
+        if (data?.magicLink) {
+          window.open(data.magicLink, "_blank");
+          toast.success(`Impersonating @${user.username} in new tab`);
+        } else {
+          throw new Error("No impersonation URL returned");
+        }
+      } catch (fallbackError: any) {
+        console.error("Fallback impersonation failed:", fallbackError);
+        toast.error(fallbackError?.message || "Impersonation not available. Contact developer to enable admin API.");
+      }
+    } finally {
+      setIsImpersonating(false);
+    }
+  };
+
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       earning: 'Earning',
@@ -468,7 +590,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   return (
     <>
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-[420px] p-0 border-l border-border/50 bg-background">
+      <SheetContent width="md" className="w-full p-0 border-l border-border/50 bg-background">
         <ScrollArea className="h-full">
           {/* Header */}
           <div className="px-6 pt-6 pb-5 border-b border-border/50">
@@ -555,12 +677,6 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                     className="pl-7 h-10 font-inter tracking-[-0.5px] bg-muted border-0"
                   />
                 </div>
-                <Input
-                  value={adjustDescription}
-                  onChange={(e) => setAdjustDescription(e.target.value)}
-                  placeholder="Note (optional)"
-                  className="h-10 font-inter tracking-[-0.5px] bg-muted border-0"
-                />
                 {adjustAmount && parseFloat(adjustAmount) > 0 && (
                   <div className="flex items-center justify-between text-sm font-inter tracking-[-0.5px]">
                     <span className="text-muted-foreground">New balance</span>
@@ -812,6 +928,21 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                     >
                       View Profile
                     </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleImpersonate}
+                      disabled={isImpersonating || !user.email}
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-500"
+                    >
+                      {isImpersonating ? "Loading..." : "Impersonate"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleOpenIpBanDialog}
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-red-500/10 hover:bg-red-500/20 text-red-500"
+                    >
+                      IP Ban
+                    </Button>
                   </div>
                 </section>
               </div>
@@ -820,7 +951,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
             {activeTab === "activity" && (
               <section>
                 <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
-                  Recent Transactions
+                  Transaction History
                 </h3>
                 {loading ? (
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] py-8 text-center">
@@ -1028,7 +1159,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
 
     {/* Transaction Context Sheet */}
     <Sheet open={transactionContextOpen} onOpenChange={setTransactionContextOpen}>
-      <SheetContent className="w-full sm:max-w-md p-0 border-l border-border/50">
+      <SheetContent width="md" className="w-full p-0 border-l border-border/50">
         <ScrollArea className="h-full">
           {selectedTransaction && (
             <div className="p-6 space-y-6">
@@ -1068,6 +1199,21 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 )}>
                   {selectedTransaction.amount >= 0 ? '+' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </p>
+                {/* Amount after fees for crypto withdrawals (1% + $1 fee) */}
+                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.payout_method === 'crypto' && (() => {
+                  const amount = Math.abs(selectedTransaction.amount);
+                  // Calculate fee: 1% + $1
+                  const percentageFee = amount * 0.01;
+                  const totalFee = percentageFee + 1;
+                  const netAmount = amount - totalFee;
+                  if (netAmount <= 0) return null;
+                  return (
+                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mt-1">
+                      After fees: <span className="text-foreground font-medium">${netAmount.toFixed(2)}</span>
+                      <span className="text-xs ml-1">(-${totalFee.toFixed(2)} fee)</span>
+                    </p>
+                  );
+                })()}
               </div>
 
               {/* Details */}
@@ -1125,6 +1271,72 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                       </div>
                     </div>
                   )}
+
+                  {/* Crypto network for withdrawals */}
+                  {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.network && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Network</span>
+                      <span className="text-sm font-inter tracking-[-0.5px] capitalize">
+                        {selectedTransaction.metadata.network}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Payout method for withdrawals */}
+                  {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.payout_method && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Method</span>
+                      <span className="text-sm font-inter tracking-[-0.5px] capitalize">
+                        {selectedTransaction.metadata.payout_method === 'paypal' ? 'PayPal' : selectedTransaction.metadata.payout_method}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Payout destination address/email for withdrawals */}
+                  {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata?.payout_details && (() => {
+                    const details = selectedTransaction.metadata.payout_details;
+                    const method = selectedTransaction.metadata.payout_method;
+
+                    let label = 'Destination';
+                    let value = '';
+
+                    if (method === 'crypto' && details.address) {
+                      label = 'Wallet Address';
+                      value = details.address;
+                    } else if (method === 'paypal' && details.email) {
+                      label = 'PayPal Email';
+                      value = details.email;
+                    } else if (method === 'bank' && details.accountNumber) {
+                      label = 'Account';
+                      value = `${details.bankName || 'Bank'} ****${details.accountNumber.slice(-4)}`;
+                    } else if (method === 'wise' && details.email) {
+                      label = 'Wise Email';
+                      value = details.email;
+                    } else if (method === 'revolut' && details.email) {
+                      label = 'Revolut Email';
+                      value = details.email;
+                    } else if (method === 'upi' && details.upi_id) {
+                      label = 'UPI ID';
+                      value = details.upi_id;
+                    } else if (method === 'tips' && details.username) {
+                      label = 'TIPS Username';
+                      value = details.username;
+                    }
+
+                    if (!value) return null;
+
+                    return (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{label}</span>
+                        <button
+                          onClick={() => copyToClipboard(value)}
+                          className="text-sm font-mono text-foreground bg-muted/50 px-2 py-1.5 rounded-md hover:bg-muted transition-colors text-left break-all"
+                        >
+                          {value}
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   {selectedTransaction.metadata?.views && (
                     <div className="flex justify-between items-center">
@@ -1224,6 +1436,80 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
         </ScrollArea>
       </SheetContent>
     </Sheet>
+
+    {/* IP Ban Dialog */}
+    <AlertDialog open={showIpBanDialog} onOpenChange={setShowIpBanDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="font-inter tracking-[-0.5px]">
+            Ban User & IP Addresses
+          </AlertDialogTitle>
+          <AlertDialogDescription className="font-inter tracking-[-0.5px]">
+            This will ban the user account and block all associated IP addresses from accessing the platform.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* User info */}
+          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user?.avatar_url || ''} alt={user?.username} />
+              <AvatarFallback className="text-sm">
+                {(user?.username || 'U')[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium font-inter tracking-[-0.5px]">@{user?.username}</p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{user?.email}</p>
+            </div>
+          </div>
+
+          {/* IP addresses */}
+          <div>
+            <p className="text-sm font-medium font-inter tracking-[-0.5px] mb-2">
+              IP Addresses to ban ({userIpAddresses.length})
+            </p>
+            {userIpAddresses.length > 0 ? (
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {userIpAddresses.map((ip) => (
+                  <div key={ip} className="text-xs font-mono bg-muted/30 px-2 py-1.5 rounded">
+                    {ip}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                No IP addresses found for this user
+              </p>
+            )}
+          </div>
+
+          {/* Ban reason */}
+          <div>
+            <p className="text-sm font-medium font-inter tracking-[-0.5px] mb-2">
+              Reason (optional)
+            </p>
+            <Textarea
+              value={ipBanReason}
+              onChange={(e) => setIpBanReason(e.target.value)}
+              placeholder="Enter reason for ban..."
+              className="h-20 resize-none font-inter tracking-[-0.5px] text-sm"
+            />
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleIpBan}
+            disabled={isBanningIp || userIpAddresses.length === 0}
+            className="bg-red-500 hover:bg-red-600 font-inter tracking-[-0.5px]"
+          >
+            {isBanningIp ? "Banning..." : "Ban User & IPs"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </>
   );
 }

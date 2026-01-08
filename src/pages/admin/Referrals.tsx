@@ -119,7 +119,7 @@ export default function Referrals() {
   };
 
   const fetchReferrals = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("referrals")
       .select(`
         *,
@@ -127,6 +127,10 @@ export default function Referrals() {
         referred:profiles!referrals_referred_id_fkey(username, avatar_url, full_name, total_earnings)
       `)
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching referrals:", error);
+    }
 
     if (data) {
       setReferrals(data as Referral[]);

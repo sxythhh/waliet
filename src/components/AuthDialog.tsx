@@ -76,7 +76,7 @@ export default function AuthDialog({
     // Preserve UTM and referral params before OAuth redirect
     preserveTrackingForOAuth();
 
-    const DISCORD_CLIENT_ID = '1358316231341375518';
+    const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID || '1358316231341375518';
     const redirectUri = `${window.location.origin}/discord/callback`;
     const state = btoa(JSON.stringify({
       action: 'auth'

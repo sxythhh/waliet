@@ -77,13 +77,14 @@ interface SocialAccount {
   follower_count: number;
   is_verified: boolean;
   account_link: string;
-  campaign_id: string | null;
-  campaigns?: {
-    id: string;
-    title: string;
-    brand_name: string;
-    brand_logo_url: string;
-  };
+  social_account_campaigns?: {
+    campaigns: {
+      id: string;
+      title: string;
+      brand_name: string;
+      brand_logo_url: string;
+    };
+  }[];
 }
 
 type StatusFilter = 'all' | 'pending' | 'in_transit' | 'completed' | 'rejected';
@@ -220,8 +221,10 @@ export default function AdminPayouts() {
       .from("social_accounts")
       .select(`
         *,
-        campaigns:campaign_id (
-          id, title, brand_name, brand_logo_url
+        social_account_campaigns (
+          campaigns (
+            id, title, brand_name, brand_logo_url
+          )
         ),
         demographic_submissions (
           status, tier1_percentage, submitted_at

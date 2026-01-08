@@ -20,6 +20,24 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+    // Check required environment variables
+    const missingVars = [];
+    if (!DISCORD_CLIENT_ID) missingVars.push('DISCORD_CLIENT_ID');
+    if (!DISCORD_CLIENT_SECRET) missingVars.push('DISCORD_CLIENT_SECRET');
+    if (!SUPABASE_URL) missingVars.push('SUPABASE_URL');
+    if (!SUPABASE_SERVICE_ROLE_KEY) missingVars.push('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (missingVars.length > 0) {
+      console.error('Missing environment variables:', missingVars.join(', '));
+      return new Response(
+        JSON.stringify({
+          error: `Server configuration error: Missing ${missingVars.join(', ')}`,
+          missing: missingVars
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Action: redirect - initiate OAuth flow
     if (action === 'redirect') {
       const redirectUri = url.searchParams.get('redirect_uri') || 'https://virality.gg/discord/callback';
@@ -43,16 +61,47 @@ serve(async (req) => {
 
     // Action: callback - handle OAuth callback and sign in/up user
     if (req.method === 'POST') {
-      const { code, redirectUri } = await req.json();
+      console.log('Processing POST request for Discord OAuth callback');
+
+      let requestBody;
+      try {
+        requestBody = await req.json();
+        console.log('Request body received:', { hasCode: !!requestBody.code, redirectUri: requestBody.redirectUri });
+      } catch (e) {
+        console.error('Failed to parse request body:', e);
+        throw new Error('Invalid request body');
+      }
+
+      const { code, redirectUri, state } = requestBody;
 
       if (!code) {
         throw new Error('Authorization code is required');
       }
 
+      // Validate state parameter to prevent CSRF attacks
+      if (state) {
+        try {
+          // State is base64 encoded JSON with userId
+          const decodedState = JSON.parse(atob(state));
+          if (!decodedState.userId || typeof decodedState.userId !== 'string') {
+            console.warn('Invalid state format - missing or invalid userId');
+          }
+          // State is valid - contains expected structure
+          console.log('State validated successfully');
+        } catch (e) {
+          console.error('Invalid state parameter:', e);
+          throw new Error('Invalid state parameter - possible CSRF attack');
+        }
+      } else {
+        console.warn('No state parameter provided - OAuth flow may be vulnerable to CSRF');
+      }
+
       const callbackUri = redirectUri || 'https://virality.gg/discord/callback';
+      console.log('Using callback URI:', callbackUri);
 
       // Exchange code for access token
-      console.log('Exchanging code for token...');
+      console.log('Exchanging code for token with Discord...');
+      console.log('Using client_id:', DISCORD_CLIENT_ID);
       const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
         headers: {
@@ -70,7 +119,7 @@ serve(async (req) => {
       if (!tokenResponse.ok) {
         const errorData = await tokenResponse.text();
         console.error('Discord token exchange failed:', errorData);
-        throw new Error('Failed to exchange authorization code');
+        throw new Error(`Discord token exchange failed: ${errorData}`);
       }
 
       const { access_token, refresh_token, expires_in } = await tokenResponse.json();

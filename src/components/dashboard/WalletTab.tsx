@@ -50,6 +50,7 @@ import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviews
 import { PortfolioBuilder } from "@/components/portfolio/builder";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface UserProfile {
   username?: string;
@@ -172,7 +173,9 @@ export function WalletTab() {
     content_languages: string[] | null;
     country: string | null;
     city: string | null;
-    show_location: boolean;
+    show_location: boolean | null;
+    show_total_earned: boolean | null;
+    show_joined_campaigns: boolean | null;
     bio: string | null;
     phone_number: string | null;
     total_earnings: number | null;
@@ -193,6 +196,7 @@ export function WalletTab() {
   const [profileActiveTab, setProfileActiveTab] = useState("portfolio");
   const [editProfileDialogOpen, setEditProfileDialogOpen] = useState(false);
   const [addSocialDialogOpen, setAddSocialDialogOpen] = useState(false);
+  const [showEditingToolsDialog, setShowEditingToolsDialog] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState<Array<{
     id: string;
     platform: string;
@@ -324,7 +328,7 @@ export function WalletTab() {
     // Fetch profile data with extended fields
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("id, full_name, username, content_styles, content_languages, country, city, show_location, bio, phone_number, total_earnings, trust_score, avatar_url, banner_url, created_at")
+      .select("id, full_name, username, content_styles, content_languages, country, city, show_location, show_total_earned, show_joined_campaigns, bio, phone_number, total_earnings, trust_score, avatar_url, banner_url, created_at, editing_tools")
       .eq("id", session.user.id)
       .single();
 
@@ -342,12 +346,12 @@ export function WalletTab() {
     setSocialAccounts(socialData || []);
     setSocialAccountsCount(socialData?.length || 0);
 
-    // Check for approved demographics
+    // Check for approved demographics (via social_accounts since demographic_submissions uses social_account_id)
     const { data: demographics } = await supabase
-      .from("demographic_submissions")
-      .select("id")
+      .from("social_accounts")
+      .select("demographic_submissions!inner(id, status)")
       .eq("user_id", session.user.id)
-      .eq("status", "approved")
+      .eq("demographic_submissions.status", "approved")
       .limit(1);
 
     setHasDemographicsApproved((demographics?.length || 0) > 0);
@@ -451,6 +455,31 @@ export function WalletTab() {
       trustScore: profileData?.trust_score || 100,
       campaignsJoined: approvedCount,
       approvalRate: approvalRate
+    });
+  };
+
+  const handleSaveEditingTools = async (tools: string[]) => {
+    if (!onboardingProfile) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabase.from("profiles").update({
+      editing_tools: tools.length > 0 ? tools : null
+    }).eq("id", session.user.id);
+
+    if (error) {
+      toast({
+        title: "Error saving tools",
+        description: error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setOnboardingProfile({ ...onboardingProfile, editing_tools: tools.length > 0 ? tools : null });
+    toast({
+      title: "Tools saved",
+      description: "Your editing tools have been updated."
     });
   };
 
@@ -1017,6 +1046,10 @@ export function WalletTab() {
             source = 'Wallet';
             destination = metadata?.brand_name ? `${metadata.brand_name} Wallet` : 'Brand Wallet';
             break;
+          case 'balance_correction':
+            source = 'Balance Adjustment';
+            destination = 'Wallet';
+            break;
         }
 
         // Determine transaction type
@@ -1490,6 +1523,62 @@ export function WalletTab() {
 
       {/* Stats Cards - Hidden for now */}
 
+      {/* Editing Tools Section */}
+      {onboardingProfile && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+          <Card className="bg-card border border-border rounded-xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold tracking-[-0.5px]">Editing Tools</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-0.5 tracking-[-0.3px]">
+                    Show brands what tools you use
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEditingToolsDialog(true)}
+                  className="font-medium tracking-[-0.3px]"
+                >
+                  {onboardingProfile.editing_tools?.length ? "Edit" : "Add Tools"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {onboardingProfile.editing_tools?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {onboardingProfile.editing_tools.map((toolId: string) => {
+                    const tool = EDITING_TOOLS.find((t) => t.id === toolId);
+                    if (!tool) return null;
+                    return (
+                      <div
+                        key={toolId}
+                        className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/50 border border-border rounded-lg"
+                      >
+                        <img
+                          src={tool.logo}
+                          alt={tool.name}
+                          className="w-5 h-5 object-contain rounded"
+                        />
+                        <span className="text-xs font-medium tracking-[-0.2px]">
+                          {tool.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 border border-dashed border-border rounded-lg">
+                  <p className="text-sm font-medium text-foreground mb-0.5 tracking-[-0.3px]">No tools added yet</p>
+                  <p className="text-xs text-muted-foreground tracking-[-0.2px]">Add the video editing and AI tools you use</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Get Discovered Onboarding Checklist - Dismissible Banner */}
       {onboardingProfile && !onboardingTasks.every(t => t.completed) && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
@@ -1503,7 +1592,19 @@ export function WalletTab() {
       <EditProfileDialog
         open={editProfileDialogOpen}
         onOpenChange={setEditProfileDialogOpen}
-        onSave={fetchOnboardingData}
+        profile={onboardingProfile ? {
+          id: onboardingProfile.id,
+          full_name: onboardingProfile.full_name,
+          bio: onboardingProfile.bio,
+          city: onboardingProfile.city,
+          country: onboardingProfile.country,
+          content_styles: onboardingProfile.content_styles,
+          content_languages: onboardingProfile.content_languages,
+          show_total_earned: onboardingProfile.show_total_earned,
+          show_location: onboardingProfile.show_location,
+          show_joined_campaigns: onboardingProfile.show_joined_campaigns
+        } : null}
+        onSuccess={fetchOnboardingData}
       />
 
       {/* Add Social Account Dialog */}
@@ -1511,6 +1612,14 @@ export function WalletTab() {
         open={addSocialDialogOpen}
         onOpenChange={setAddSocialDialogOpen}
         onSuccess={fetchOnboardingData}
+      />
+
+      {/* Editing Tools Dialog */}
+      <EditingToolsDialog
+        open={showEditingToolsDialog}
+        onOpenChange={setShowEditingToolsDialog}
+        selectedTools={onboardingProfile?.editing_tools || []}
+        onSave={handleSaveEditingTools}
       />
 
       {/* Hidden legacy content below - kept for potential future use */}
@@ -2011,7 +2120,7 @@ export function WalletTab() {
               }).length} payouts
                 </p>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50">
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50" aria-label="Previous page">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
@@ -2019,7 +2128,7 @@ export function WalletTab() {
                 if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
                 if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
                 return true;
-              }).length} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50">
+              }).length} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50" aria-label="Next page">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

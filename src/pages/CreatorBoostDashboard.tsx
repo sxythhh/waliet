@@ -15,6 +15,8 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import xLogo from "@/assets/x-logo.png";
+import { CreatorTierCard } from "@/components/CreatorTierCard";
+import { CreatorDeliverablesCard } from "@/components/CreatorDeliverablesCard";
 
 interface BoostCampaign {
   id: string;
@@ -69,6 +71,7 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
   const [videoUrl, setVideoUrl] = useState("");
   const [postsDialogOpen, setPostsDialogOpen] = useState(false);
   const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) fetchBoostData();
@@ -83,6 +86,7 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
         navigate("/");
         return;
       }
+      setCurrentUserId(user.id);
 
       // Check if user is accepted to this boost
       const { data: application } = await supabase
@@ -184,26 +188,28 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
       }
 
       // Check submission limit (based on monthly quota)
+      // Only count pending + approved submissions (rejected don't count toward quota)
       const now = new Date();
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
-      
-      const thisMonthSubmissions = submissions.filter(s => {
+
+      const activeThisMonth = submissions.filter(s => {
         const submitDate = new Date(s.submitted_at);
-        return submitDate >= monthStart && submitDate <= monthEnd;
+        return submitDate >= monthStart && submitDate <= monthEnd && s.status !== "rejected";
       });
 
-      if (thisMonthSubmissions.length >= boost.videos_per_month) {
+      if (activeThisMonth.length >= boost.videos_per_month) {
         toast.error(`You've reached your monthly limit of ${boost.videos_per_month} videos`);
         setSubmitting(false);
         return;
       }
 
       // Check daily limit (1 video per 24 hours based on quota)
+      // Only count non-rejected submissions
       const dailyLimit = Math.ceil(boost.videos_per_month / 30);
       const last24Hours = submissions.filter(s => {
         const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
-        return hoursDiff < 24;
+        return hoursDiff < 24 && s.status !== "rejected";
       });
 
       if (last24Hours.length >= dailyLimit) {
@@ -296,11 +302,14 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
   
   const approvedThisMonth = thisMonthSubmissions.filter(s => s.status === "approved").length;
   const pendingThisMonth = thisMonthSubmissions.filter(s => s.status === "pending").length;
+  // Only count pending + approved toward quota (rejected submissions don't count)
+  const activeSubmissionsThisMonth = approvedThisMonth + pendingThisMonth;
   const earnedThisMonth = approvedThisMonth * payoutPerVideo;
   const dailyLimit = Math.ceil(boost.videos_per_month / 30);
+  // Only count non-rejected submissions toward daily limit
   const last24Hours = submissions.filter(s => {
     const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
-    return hoursDiff < 24;
+    return hoursDiff < 24 && s.status !== "rejected";
   });
   const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
 
@@ -373,7 +382,7 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
               <Button 
                 onClick={() => setSubmitDialogOpen(true)}
                 className="bg-foreground hover:bg-foreground/90 text-background font-semibold px-6"
-                disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
+                disabled={activeSubmissionsThisMonth >= boost.videos_per_month || dailyRemaining === 0}
               >
                 Submit post
               </Button>
@@ -388,7 +397,7 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
       {/* Action Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Directions Card */}
-        <Card 
+        <Card
           className="bg-muted/30 border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
           onClick={() => setDirectionsDialogOpen(true)}
         >
@@ -409,7 +418,7 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
         </Card>
 
         {/* My Posts Card */}
-        <Card 
+        <Card
           className="bg-muted/30 border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
           onClick={() => setPostsDialogOpen(true)}
         >
@@ -439,7 +448,7 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
             </div>
             <div className="flex-1 flex items-center justify-center gap-4">
               <div className="bg-background rounded-lg px-4 py-2.5 border text-center">
-                <p className="text-lg font-semibold">{thisMonthSubmissions.length}/{boost.videos_per_month}</p>
+                <p className="text-lg font-semibold">{activeSubmissionsThisMonth}/{boost.videos_per_month}</p>
                 <p className="text-xs text-muted-foreground">Posts</p>
               </div>
               <div className="bg-background rounded-lg px-4 py-2.5 border text-center">
@@ -450,6 +459,24 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
           </CardContent>
         </Card>
       </div>
+
+      {/* Tier & Deliverables Section */}
+      {currentUserId && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Creator Tier Card */}
+          <CreatorTierCard
+            boostId={boost.id}
+            userId={currentUserId}
+            compact={false}
+          />
+
+          {/* Deliverables Card */}
+          <CreatorDeliverablesCard
+            boostId={boost.id}
+            userId={currentUserId}
+          />
+        </div>
+      )}
 
       {/* Submit Video Dialog */}
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>

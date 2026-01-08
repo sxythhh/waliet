@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -157,99 +157,222 @@ export type Database = {
           content: string
           created_at: string
           created_by: string | null
+          cta_link: string | null
+          cta_text: string | null
+          expires_at: string | null
           id: string
+          image_url: string | null
           is_active: boolean
+          show_as_popup: boolean | null
+          target_audience: string | null
           title: string
         }
         Insert: {
           content: string
           created_at?: string
           created_by?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          expires_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          show_as_popup?: boolean | null
+          target_audience?: string | null
           title: string
         }
         Update: {
           content?: string
           created_at?: string
           created_by?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          expires_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          show_as_popup?: boolean | null
+          target_audience?: string | null
           title?: string
         }
         Relationships: []
+      }
+      api_rate_limits: {
+        Row: {
+          api_key_hash: string
+          created_at: string
+          endpoint: string
+          id: string
+        }
+        Insert: {
+          api_key_hash: string
+          created_at?: string
+          endpoint: string
+          id?: string
+        }
+        Update: {
+          api_key_hash?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      audience_insights_requests: {
+        Row: {
+          brand_id: string
+          campaign_id: string | null
+          created_at: string | null
+          creator_id: string
+          expires_at: string | null
+          id: string
+          message: string | null
+          requested_at: string | null
+          responded_at: string | null
+          social_account_id: string | null
+          status: string
+          submission_id: string | null
+        }
+        Insert: {
+          brand_id: string
+          campaign_id?: string | null
+          created_at?: string | null
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          requested_at?: string | null
+          responded_at?: string | null
+          social_account_id?: string | null
+          status?: string
+          submission_id?: string | null
+        }
+        Update: {
+          brand_id?: string
+          campaign_id?: string | null
+          created_at?: string | null
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          requested_at?: string | null
+          responded_at?: string | null
+          social_account_id?: string | null
+          status?: string
+          submission_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audience_insights_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audience_insights_requests_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audience_insights_requests_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audience_insights_requests_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       auto_rejection_log: {
         Row: {
           created_at: string
           id: string
-          rejection_reason: string | null
-          rule_id: string | null
+          rejection_reason: string
+          rule_id: string
           submission_id: string | null
-          submission_type: string | null
+          submission_type: string
+          user_id: string
           video_url: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          rejection_reason?: string | null
-          rule_id?: string | null
+          rejection_reason: string
+          rule_id: string
           submission_id?: string | null
-          submission_type?: string | null
+          submission_type: string
+          user_id: string
           video_url?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          rejection_reason?: string | null
-          rule_id?: string | null
+          rejection_reason?: string
+          rule_id?: string
           submission_id?: string | null
-          submission_type?: string | null
+          submission_type?: string
+          user_id?: string
           video_url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "auto_rejection_log_rule_id_fkey"
-            columns: ["rule_id"]
+            foreignKeyName: "auto_rejection_log_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "auto_rejection_rules"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_rejection_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       auto_rejection_rules: {
         Row: {
+          boost_id: string | null
           brand_id: string
           campaign_id: string | null
           created_at: string
           id: string
-          is_active: boolean | null
-          rejection_message: string | null
-          rule_config: Json | null
+          is_active: boolean
+          rejection_message: string
           rule_type: string
           rule_value: string | null
           updated_at: string
         }
         Insert: {
+          boost_id?: string | null
           brand_id: string
           campaign_id?: string | null
           created_at?: string
           id?: string
-          is_active?: boolean | null
-          rejection_message?: string | null
-          rule_config?: Json | null
+          is_active?: boolean
+          rejection_message: string
           rule_type: string
           rule_value?: string | null
           updated_at?: string
         }
         Update: {
+          boost_id?: string | null
           brand_id?: string
           campaign_id?: string | null
           created_at?: string
           id?: string
-          is_active?: boolean | null
-          rejection_message?: string | null
-          rule_config?: Json | null
+          is_active?: boolean
+          rejection_message?: string
           rule_type?: string
           rule_value?: string | null
           updated_at?: string
@@ -455,8 +578,7 @@ export type Database = {
       blueprint_training_completions: {
         Row: {
           blueprint_id: string
-          completed_at: string
-          created_at: string
+          completed_at: string | null
           id: string
           module_id: string
           quiz_score: number | null
@@ -464,8 +586,7 @@ export type Database = {
         }
         Insert: {
           blueprint_id: string
-          completed_at?: string
-          created_at?: string
+          completed_at?: string | null
           id?: string
           module_id: string
           quiz_score?: number | null
@@ -473,8 +594,7 @@ export type Database = {
         }
         Update: {
           blueprint_id?: string
-          completed_at?: string
-          created_at?: string
+          completed_at?: string | null
           id?: string
           module_id?: string
           quiz_score?: number | null
@@ -482,10 +602,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "blueprint_training_completions_blueprint_id_fkey"
-            columns: ["blueprint_id"]
+            foreignKeyName: "blueprint_training_completions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "blueprints"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blueprint_training_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -570,6 +697,268 @@ export type Database = {
           },
         ]
       }
+      boost_creator_tiers: {
+        Row: {
+          bounty_campaign_id: string
+          color: string | null
+          created_at: string | null
+          demotion_criteria: Json | null
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          is_entry_tier: boolean | null
+          level: number
+          monthly_retainer: number
+          name: string
+          perks: Json | null
+          promotion_criteria: Json | null
+          updated_at: string | null
+          videos_per_month: number
+        }
+        Insert: {
+          bounty_campaign_id: string
+          color?: string | null
+          created_at?: string | null
+          demotion_criteria?: Json | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_entry_tier?: boolean | null
+          level?: number
+          monthly_retainer: number
+          name: string
+          perks?: Json | null
+          promotion_criteria?: Json | null
+          updated_at?: string | null
+          videos_per_month: number
+        }
+        Update: {
+          bounty_campaign_id?: string
+          color?: string | null
+          created_at?: string | null
+          demotion_criteria?: Json | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_entry_tier?: boolean | null
+          level?: number
+          monthly_retainer?: number
+          name?: string
+          perks?: Json | null
+          promotion_criteria?: Json | null
+          updated_at?: string | null
+          videos_per_month?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_creator_tiers_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boost_deliverables: {
+        Row: {
+          bounty_campaign_id: string
+          brand_notes: string | null
+          content_brief: string | null
+          content_type: string
+          created_at: string | null
+          creator_notes: string | null
+          description: string | null
+          due_date: string
+          due_time: string | null
+          id: string
+          max_duration_seconds: number | null
+          min_duration_seconds: number | null
+          overdue_reminder_sent_at: string | null
+          platform: string | null
+          priority: string | null
+          recurrence_instance: number | null
+          reminder_1d_sent_at: string | null
+          reminder_3d_sent_at: string | null
+          reminder_7d_sent_at: string | null
+          reminder_days: number[] | null
+          required_hashtags: string[] | null
+          required_mentions: string[] | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision_count: number | null
+          revision_notes: string | null
+          sort_order: number | null
+          status: string | null
+          submission_id: string | null
+          submitted_at: string | null
+          template_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bounty_campaign_id: string
+          brand_notes?: string | null
+          content_brief?: string | null
+          content_type?: string
+          created_at?: string | null
+          creator_notes?: string | null
+          description?: string | null
+          due_date: string
+          due_time?: string | null
+          id?: string
+          max_duration_seconds?: number | null
+          min_duration_seconds?: number | null
+          overdue_reminder_sent_at?: string | null
+          platform?: string | null
+          priority?: string | null
+          recurrence_instance?: number | null
+          reminder_1d_sent_at?: string | null
+          reminder_3d_sent_at?: string | null
+          reminder_7d_sent_at?: string | null
+          reminder_days?: number[] | null
+          required_hashtags?: string[] | null
+          required_mentions?: string[] | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_count?: number | null
+          revision_notes?: string | null
+          sort_order?: number | null
+          status?: string | null
+          submission_id?: string | null
+          submitted_at?: string | null
+          template_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bounty_campaign_id?: string
+          brand_notes?: string | null
+          content_brief?: string | null
+          content_type?: string
+          created_at?: string | null
+          creator_notes?: string | null
+          description?: string | null
+          due_date?: string
+          due_time?: string | null
+          id?: string
+          max_duration_seconds?: number | null
+          min_duration_seconds?: number | null
+          overdue_reminder_sent_at?: string | null
+          platform?: string | null
+          priority?: string | null
+          recurrence_instance?: number | null
+          reminder_1d_sent_at?: string | null
+          reminder_3d_sent_at?: string | null
+          reminder_7d_sent_at?: string | null
+          reminder_days?: number[] | null
+          required_hashtags?: string[] | null
+          required_mentions?: string[] | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_count?: number | null
+          revision_notes?: string | null
+          sort_order?: number | null
+          status?: string | null
+          submission_id?: string | null
+          submitted_at?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_deliverables_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boost_deliverables_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "video_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boost_deliverables_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "deliverable_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boost_tier_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          assignment_reason: string | null
+          bounty_campaign_id: string
+          created_at: string | null
+          id: string
+          months_in_tier: number | null
+          previous_tier_id: string | null
+          tier_id: string
+          tier_start_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assignment_reason?: string | null
+          bounty_campaign_id: string
+          created_at?: string | null
+          id?: string
+          months_in_tier?: number | null
+          previous_tier_id?: string | null
+          tier_id: string
+          tier_start_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assignment_reason?: string | null
+          bounty_campaign_id?: string
+          created_at?: string | null
+          id?: string
+          months_in_tier?: number | null
+          previous_tier_id?: string | null
+          tier_id?: string
+          tier_start_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_tier_assignments_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boost_tier_assignments_previous_tier_id_fkey"
+            columns: ["previous_tier_id"]
+            isOneToOne: false
+            referencedRelation: "boost_creator_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boost_tier_assignments_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "boost_creator_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boost_video_submissions: {
         Row: {
           bounty_campaign_id: string
@@ -627,10 +1016,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "boost_video_submissions_bounty_campaign_id_fkey"
-            columns: ["bounty_campaign_id"]
+            foreignKeyName: "boost_video_submissions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "bounty_campaigns"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boost_video_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -639,54 +1035,41 @@ export type Database = {
         Row: {
           bonus_amount: number
           bonus_type: string
-          bounty_campaign_id: string
+          boost_id: string
           cpm_rate: number | null
-          created_at: string
+          created_at: string | null
           id: string
-          is_active: boolean | null
           min_views: number | null
-          updated_at: string
-          view_threshold: number
+          views_threshold: number
         }
         Insert: {
           bonus_amount: number
           bonus_type?: string
-          bounty_campaign_id: string
+          boost_id: string
           cpm_rate?: number | null
-          created_at?: string
+          created_at?: string | null
           id?: string
-          is_active?: boolean | null
           min_views?: number | null
-          updated_at?: string
-          view_threshold: number
+          views_threshold: number
         }
         Update: {
           bonus_amount?: number
           bonus_type?: string
-          bounty_campaign_id?: string
+          boost_id?: string
           cpm_rate?: number | null
-          created_at?: string
+          created_at?: string | null
           id?: string
-          is_active?: boolean | null
           min_views?: number | null
-          updated_at?: string
-          view_threshold?: number
+          views_threshold?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "boost_view_bonuses_bounty_campaign_id_fkey"
-            columns: ["bounty_campaign_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       bounty_applications: {
         Row: {
           application_answers: Json | null
           application_text: string | null
           applied_at: string
+          auto_waitlisted_from_pause: boolean | null
           bounty_campaign_id: string
           created_at: string
           id: string
@@ -695,12 +1078,14 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
-          video_url: string
+          video_url: string | null
+          waitlist_position: number | null
         }
         Insert: {
           application_answers?: Json | null
           application_text?: string | null
           applied_at?: string
+          auto_waitlisted_from_pause?: boolean | null
           bounty_campaign_id: string
           created_at?: string
           id?: string
@@ -709,12 +1094,14 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
-          video_url: string
+          video_url?: string | null
+          waitlist_position?: number | null
         }
         Update: {
           application_answers?: Json | null
           application_text?: string | null
           applied_at?: string
+          auto_waitlisted_from_pause?: boolean | null
           bounty_campaign_id?: string
           created_at?: string
           id?: string
@@ -723,7 +1110,8 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
-          video_url?: string
+          video_url?: string | null
+          waitlist_position?: number | null
         }
         Relationships: [
           {
@@ -731,6 +1119,20 @@ export type Database = {
             columns: ["bounty_campaign_id"]
             isOneToOne: false
             referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -762,128 +1164,177 @@ export type Database = {
             referencedRelation: "bounty_campaigns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bounty_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bounty_campaigns: {
         Row: {
           accepted_creators_count: number
           application_questions: Json | null
+          auto_create_deliverables: boolean | null
+          auto_tier_progression: boolean | null
           availability_requirement: string | null
           banner_url: string | null
           blueprint_embed_url: string | null
           blueprint_id: string | null
+          bot_auto_reject_enabled: boolean | null
+          bot_score_threshold: number | null
           brand_id: string
           budget: number | null
           budget_used: number | null
           categories: string[] | null
           content_distribution: string | null
           content_style_requirements: string
+          content_type: string | null
           created_at: string
+          deliverables_enabled: boolean | null
           description: string | null
           discord_guild_id: string | null
           discord_role_id: string | null
           end_date: string | null
+          experience_level: string | null
           id: string
           is_private: boolean
           max_accepted_creators: number
+          max_waitlist_size: number | null
           monthly_retainer: number
+          paused_at: string | null
           position_type: string | null
           review_notes: string | null
           review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           reward_amount: number | null
           shortimize_collection_name: string | null
+          skills: string[] | null
           slug: string | null
           start_date: string | null
           status: string
           tags: string[] | null
+          tiers_enabled: boolean | null
           title: string
           updated_at: string
           videos_per_month: number
           view_bonuses_enabled: boolean | null
+          waitlist_enabled: boolean | null
           work_location: string | null
         }
         Insert: {
           accepted_creators_count?: number
           application_questions?: Json | null
+          auto_create_deliverables?: boolean | null
+          auto_tier_progression?: boolean | null
           availability_requirement?: string | null
           banner_url?: string | null
           blueprint_embed_url?: string | null
           blueprint_id?: string | null
+          bot_auto_reject_enabled?: boolean | null
+          bot_score_threshold?: number | null
           brand_id: string
           budget?: number | null
           budget_used?: number | null
           categories?: string[] | null
           content_distribution?: string | null
           content_style_requirements: string
+          content_type?: string | null
           created_at?: string
+          deliverables_enabled?: boolean | null
           description?: string | null
           discord_guild_id?: string | null
           discord_role_id?: string | null
           end_date?: string | null
+          experience_level?: string | null
           id?: string
           is_private?: boolean
           max_accepted_creators: number
+          max_waitlist_size?: number | null
           monthly_retainer: number
+          paused_at?: string | null
           position_type?: string | null
           review_notes?: string | null
           review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           reward_amount?: number | null
           shortimize_collection_name?: string | null
+          skills?: string[] | null
           slug?: string | null
           start_date?: string | null
           status?: string
           tags?: string[] | null
+          tiers_enabled?: boolean | null
           title: string
           updated_at?: string
           videos_per_month: number
           view_bonuses_enabled?: boolean | null
+          waitlist_enabled?: boolean | null
           work_location?: string | null
         }
         Update: {
           accepted_creators_count?: number
           application_questions?: Json | null
+          auto_create_deliverables?: boolean | null
+          auto_tier_progression?: boolean | null
           availability_requirement?: string | null
           banner_url?: string | null
           blueprint_embed_url?: string | null
           blueprint_id?: string | null
+          bot_auto_reject_enabled?: boolean | null
+          bot_score_threshold?: number | null
           brand_id?: string
           budget?: number | null
           budget_used?: number | null
           categories?: string[] | null
           content_distribution?: string | null
           content_style_requirements?: string
+          content_type?: string | null
           created_at?: string
+          deliverables_enabled?: boolean | null
           description?: string | null
           discord_guild_id?: string | null
           discord_role_id?: string | null
           end_date?: string | null
+          experience_level?: string | null
           id?: string
           is_private?: boolean
           max_accepted_creators?: number
+          max_waitlist_size?: number | null
           monthly_retainer?: number
+          paused_at?: string | null
           position_type?: string | null
           review_notes?: string | null
           review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           reward_amount?: number | null
           shortimize_collection_name?: string | null
+          skills?: string[] | null
           slug?: string | null
           start_date?: string | null
           status?: string
           tags?: string[] | null
+          tiers_enabled?: boolean | null
           title?: string
           updated_at?: string
           videos_per_month?: number
           view_bonuses_enabled?: boolean | null
+          waitlist_enabled?: boolean | null
           work_location?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "bounty_campaigns_blueprint_id_fkey"
-            columns: ["blueprint_id"]
-            isOneToOne: false
-            referencedRelation: "blueprints"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "bounty_campaigns_brand_id_fkey"
             columns: ["brand_id"]
@@ -974,10 +1425,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "brand_broadcast_reads_broadcast_id_fkey"
-            columns: ["broadcast_id"]
+            foreignKeyName: "brand_broadcast_reads_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "brand_broadcasts"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_broadcast_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -987,99 +1445,58 @@ export type Database = {
           boost_id: string | null
           broadcast_id: string
           campaign_id: string | null
-          created_at: string
           id: string
         }
         Insert: {
           boost_id?: string | null
           broadcast_id: string
           campaign_id?: string | null
-          created_at?: string
           id?: string
         }
         Update: {
           boost_id?: string | null
           broadcast_id?: string
           campaign_id?: string | null
-          created_at?: string
           id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "brand_broadcast_targets_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_broadcast_targets_broadcast_id_fkey"
-            columns: ["broadcast_id"]
-            isOneToOne: false
-            referencedRelation: "brand_broadcasts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_broadcast_targets_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_broadcast_targets_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       brand_broadcasts: {
         Row: {
           brand_id: string
-          broadcast_type: string | null
           content: string
           created_at: string
           created_by: string | null
           id: string
-          scheduled_at: string | null
           scheduled_for: string | null
           sent_at: string | null
-          status: string | null
-          target_type: string | null
+          status: string
+          target_type: string
           title: string
-          updated_at: string
         }
         Insert: {
           brand_id: string
-          broadcast_type?: string | null
           content: string
           created_at?: string
           created_by?: string | null
           id?: string
-          scheduled_at?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
-          status?: string | null
-          target_type?: string | null
+          status?: string
+          target_type?: string
           title: string
-          updated_at?: string
         }
         Update: {
           brand_id?: string
-          broadcast_type?: string | null
           content?: string
           created_at?: string
           created_by?: string | null
           id?: string
-          scheduled_at?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
-          status?: string | null
-          target_type?: string | null
+          status?: string
+          target_type?: string
           title?: string
-          updated_at?: string
         }
         Relationships: [
           {
@@ -1124,45 +1541,38 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "brand_course_access_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
         ]
       }
       brand_creator_notes: {
         Row: {
           brand_id: string
-          created_at: string
-          created_by: string
+          created_at: string | null
+          created_by: string | null
           creator_id: string
           id: string
           note_content: string | null
           tags: string[] | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           brand_id: string
-          created_at?: string
-          created_by: string
+          created_at?: string | null
+          created_by?: string | null
           creator_id: string
           id?: string
           note_content?: string | null
           tags?: string[] | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           brand_id?: string
-          created_at?: string
-          created_by?: string
+          created_at?: string | null
+          created_by?: string | null
           creator_id?: string
           id?: string
           note_content?: string | null
           tags?: string[] | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1274,28 +1684,13 @@ export type Database = {
           relationship_id?: string
           tag_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "brand_creator_tags_relationship_id_fkey"
-            columns: ["relationship_id"]
-            isOneToOne: false
-            referencedRelation: "brand_creator_relationships"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_creator_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "creator_tags"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       brand_invitations: {
         Row: {
           brand_id: string
           created_at: string
-          email: string
+          email: string | null
           expires_at: string
           id: string
           invite_token: string | null
@@ -1308,7 +1703,7 @@ export type Database = {
         Insert: {
           brand_id: string
           created_at?: string
-          email: string
+          email?: string | null
           expires_at?: string
           id?: string
           invite_token?: string | null
@@ -1321,7 +1716,7 @@ export type Database = {
         Update: {
           brand_id?: string
           created_at?: string
-          email?: string
+          email?: string | null
           expires_at?: string
           id?: string
           invite_token?: string | null
@@ -1374,59 +1769,110 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "brand_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       brand_referrals: {
         Row: {
-          brand_id: string
-          commission_rate: number | null
-          created_at: string
+          brand_id: string | null
+          completed_at: string | null
+          created_at: string | null
           id: string
           referral_code: string
-          referrer_brand_id: string | null
           referrer_id: string | null
           reward_earned: number | null
-          status: string
-          total_earned: number | null
-          updated_at: string
+          status: string | null
         }
         Insert: {
-          brand_id: string
-          commission_rate?: number | null
-          created_at?: string
+          brand_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
           id?: string
           referral_code: string
-          referrer_brand_id?: string | null
           referrer_id?: string | null
           reward_earned?: number | null
-          status?: string
-          total_earned?: number | null
-          updated_at?: string
+          status?: string | null
         }
         Update: {
-          brand_id?: string
-          commission_rate?: number | null
-          created_at?: string
+          brand_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
           id?: string
           referral_code?: string
-          referrer_brand_id?: string | null
           referrer_id?: string | null
           reward_earned?: number | null
-          status?: string
-          total_earned?: number | null
-          updated_at?: string
+          status?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "brand_referrals_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      brand_resources: {
+        Row: {
+          brand_id: string
+          content_text: string | null
+          content_url: string | null
+          created_at: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          is_active: boolean | null
+          resource_type: string
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id: string
+          content_text?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          resource_type: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string
+          content_text?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          resource_type?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "brand_referrals_referrer_brand_id_fkey"
-            columns: ["referrer_brand_id"]
+            foreignKeyName: "brand_resources_brand_id_fkey"
+            columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
@@ -1478,31 +1924,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "brand_wallet_transactions_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "brand_wallet_transactions_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_wallet_transactions_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_wallet_transactions_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -1612,6 +2037,13 @@ export type Database = {
           brand_color: string | null
           brand_type: string | null
           business_details: Json | null
+          close_contacts: Json | null
+          close_custom_fields: Json | null
+          close_lead_id: string | null
+          close_status_id: string | null
+          close_status_label: string | null
+          close_sync_enabled: boolean | null
+          close_synced_at: string | null
           collection_id: string | null
           collection_name: string | null
           created_at: string
@@ -1639,6 +2071,7 @@ export type Database = {
           notify_new_sale: boolean | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
+          portal_settings: Json | null
           renewal_date: string | null
           settings: Json | null
           shortimize_api_key: string | null
@@ -1651,10 +2084,6 @@ export type Database = {
           slash_virtual_account_id: string | null
           slash_webhook_id: string | null
           slug: string
-          stripe_account_id: string | null
-          stripe_charges_enabled: boolean | null
-          stripe_onboarding_complete: boolean | null
-          stripe_payouts_enabled: boolean | null
           subscription_expires_at: string | null
           subscription_plan: string | null
           subscription_started_at: string | null
@@ -1665,10 +2094,8 @@ export type Database = {
           website_url: string | null
           whop_company_id: string | null
           whop_manage_url: string | null
-          whop_member_id: string | null
           whop_membership_id: string | null
           whop_onboarding_complete: boolean | null
-          whop_payment_method_id: string | null
         }
         Insert: {
           account_url?: string | null
@@ -1677,6 +2104,13 @@ export type Database = {
           brand_color?: string | null
           brand_type?: string | null
           business_details?: Json | null
+          close_contacts?: Json | null
+          close_custom_fields?: Json | null
+          close_lead_id?: string | null
+          close_status_id?: string | null
+          close_status_label?: string | null
+          close_sync_enabled?: boolean | null
+          close_synced_at?: string | null
           collection_id?: string | null
           collection_name?: string | null
           created_at?: string
@@ -1704,6 +2138,7 @@ export type Database = {
           notify_new_sale?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          portal_settings?: Json | null
           renewal_date?: string | null
           settings?: Json | null
           shortimize_api_key?: string | null
@@ -1716,10 +2151,6 @@ export type Database = {
           slash_virtual_account_id?: string | null
           slash_webhook_id?: string | null
           slug: string
-          stripe_account_id?: string | null
-          stripe_charges_enabled?: boolean | null
-          stripe_onboarding_complete?: boolean | null
-          stripe_payouts_enabled?: boolean | null
           subscription_expires_at?: string | null
           subscription_plan?: string | null
           subscription_started_at?: string | null
@@ -1730,10 +2161,8 @@ export type Database = {
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
-          whop_member_id?: string | null
           whop_membership_id?: string | null
           whop_onboarding_complete?: boolean | null
-          whop_payment_method_id?: string | null
         }
         Update: {
           account_url?: string | null
@@ -1742,6 +2171,13 @@ export type Database = {
           brand_color?: string | null
           brand_type?: string | null
           business_details?: Json | null
+          close_contacts?: Json | null
+          close_custom_fields?: Json | null
+          close_lead_id?: string | null
+          close_status_id?: string | null
+          close_status_label?: string | null
+          close_sync_enabled?: boolean | null
+          close_synced_at?: string | null
           collection_id?: string | null
           collection_name?: string | null
           created_at?: string
@@ -1769,6 +2205,7 @@ export type Database = {
           notify_new_sale?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_step?: number | null
+          portal_settings?: Json | null
           renewal_date?: string | null
           settings?: Json | null
           shortimize_api_key?: string | null
@@ -1781,10 +2218,6 @@ export type Database = {
           slash_virtual_account_id?: string | null
           slash_webhook_id?: string | null
           slug?: string
-          stripe_account_id?: string | null
-          stripe_charges_enabled?: boolean | null
-          stripe_onboarding_complete?: boolean | null
-          stripe_payouts_enabled?: boolean | null
           subscription_expires_at?: string | null
           subscription_plan?: string | null
           subscription_started_at?: string | null
@@ -1795,16 +2228,18 @@ export type Database = {
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
-          whop_member_id?: string | null
           whop_membership_id?: string | null
           whop_onboarding_complete?: boolean | null
-          whop_payment_method_id?: string | null
         }
         Relationships: []
       }
       cached_campaign_videos: {
         Row: {
           bookmarks: number | null
+          bot_analysis_status: string | null
+          bot_analyzed_at: string | null
+          bot_score: number | null
+          bot_score_breakdown: Json | null
           brand_id: string
           cached_at: string
           campaign_id: string
@@ -1832,6 +2267,10 @@ export type Database = {
         }
         Insert: {
           bookmarks?: number | null
+          bot_analysis_status?: string | null
+          bot_analyzed_at?: string | null
+          bot_score?: number | null
+          bot_score_breakdown?: Json | null
           brand_id: string
           cached_at?: string
           campaign_id: string
@@ -1859,6 +2298,10 @@ export type Database = {
         }
         Update: {
           bookmarks?: number | null
+          bot_analysis_status?: string | null
+          bot_analyzed_at?: string | null
+          bot_score?: number | null
+          bot_score_breakdown?: Json | null
           brand_id?: string
           cached_at?: string
           campaign_id?: string
@@ -1904,13 +2347,6 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cached_campaign_videos_social_account_id_fkey"
-            columns: ["social_account_id"]
-            isOneToOne: false
-            referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -2038,7 +2474,36 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaign_account_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_account_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_account_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_account_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaign_bookmarks: {
         Row: {
@@ -2072,6 +2537,20 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2129,10 +2608,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "campaign_cpm_payouts_video_submission_id_fkey"
-            columns: ["video_submission_id"]
-            isOneToOne: true
-            referencedRelation: "video_submissions"
+            foreignKeyName: "campaign_cpm_payouts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_cpm_payouts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2215,27 +2701,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "campaign_links_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_links_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_links_bounty_campaign_id_fkey"
-            columns: ["bounty_campaign_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "campaign_links_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
@@ -2254,20 +2719,6 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_links_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_links_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2307,6 +2758,20 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2592,10 +3057,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "campaign_videos_social_account_id_fkey"
-            columns: ["social_account_id"]
+            foreignKeyName: "campaign_videos_creator_id_fkey"
+            columns: ["creator_id"]
             isOneToOne: false
-            referencedRelation: "social_accounts"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_videos_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2631,13 +3103,19 @@ export type Database = {
           is_featured: boolean
           is_infinite_budget: boolean | null
           is_private: boolean | null
+          min_insights_score: number | null
           payment_model: string | null
           payout_day_of_week: number | null
           platform_rates: Json | null
           post_rate: number | null
           preview_url: string | null
+          require_audience_insights: boolean | null
           requirements: string[] | null
           requires_application: boolean
+          review_notes: string | null
+          review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           rpm_rate: number
           shortimize_collection_name: string | null
           slug: string
@@ -2677,13 +3155,19 @@ export type Database = {
           is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
+          min_insights_score?: number | null
           payment_model?: string | null
           payout_day_of_week?: number | null
           platform_rates?: Json | null
           post_rate?: number | null
           preview_url?: string | null
+          require_audience_insights?: boolean | null
           requirements?: string[] | null
           requires_application?: boolean
+          review_notes?: string | null
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           rpm_rate: number
           shortimize_collection_name?: string | null
           slug: string
@@ -2723,13 +3207,19 @@ export type Database = {
           is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
+          min_insights_score?: number | null
           payment_model?: string | null
           payout_day_of_week?: number | null
           platform_rates?: Json | null
           post_rate?: number | null
           preview_url?: string | null
+          require_audience_insights?: boolean | null
           requirements?: string[] | null
           requires_application?: boolean
+          review_notes?: string | null
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           rpm_rate?: number
           shortimize_collection_name?: string | null
           slug?: string
@@ -2741,13 +3231,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "campaigns_blueprint_id_fkey"
-            columns: ["blueprint_id"]
-            isOneToOne: false
-            referencedRelation: "blueprints"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "campaigns_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
@@ -2755,6 +3238,229 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      chat_feedback: {
+        Row: {
+          assistant_response: string
+          created_at: string
+          feedback_text: string | null
+          feedback_type: string | null
+          id: string
+          rating: number | null
+          retrieved_conversation_ids: string[] | null
+          session_id: string | null
+          user_id: string | null
+          user_message: string
+        }
+        Insert: {
+          assistant_response: string
+          created_at?: string
+          feedback_text?: string | null
+          feedback_type?: string | null
+          id?: string
+          rating?: number | null
+          retrieved_conversation_ids?: string[] | null
+          session_id?: string | null
+          user_id?: string | null
+          user_message: string
+        }
+        Update: {
+          assistant_response?: string
+          created_at?: string
+          feedback_text?: string | null
+          feedback_type?: string | null
+          id?: string
+          rating?: number | null
+          retrieved_conversation_ids?: string[] | null
+          session_id?: string | null
+          user_id?: string | null
+          user_message?: string
+        }
+        Relationships: []
+      }
+      close_activities: {
+        Row: {
+          activity_at: string
+          activity_type: string
+          body: string | null
+          brand_id: string
+          close_activity_id: string
+          close_lead_id: string
+          created_at: string
+          custom_fields: Json | null
+          direction: string | null
+          duration_seconds: number | null
+          id: string
+          subject: string | null
+          synced_at: string | null
+          user_name: string | null
+        }
+        Insert: {
+          activity_at: string
+          activity_type: string
+          body?: string | null
+          brand_id: string
+          close_activity_id: string
+          close_lead_id: string
+          created_at?: string
+          custom_fields?: Json | null
+          direction?: string | null
+          duration_seconds?: number | null
+          id?: string
+          subject?: string | null
+          synced_at?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          activity_at?: string
+          activity_type?: string
+          body?: string | null
+          brand_id?: string
+          close_activity_id?: string
+          close_lead_id?: string
+          created_at?: string
+          custom_fields?: Json | null
+          direction?: string | null
+          duration_seconds?: number | null
+          id?: string
+          subject?: string | null
+          synced_at?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_activities_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      close_opportunities: {
+        Row: {
+          brand_id: string
+          close_created_at: string | null
+          close_lead_id: string
+          close_opportunity_id: string
+          close_updated_at: string | null
+          confidence: number | null
+          created_at: string
+          custom_fields: Json | null
+          date_won: string | null
+          id: string
+          note: string | null
+          status_id: string | null
+          status_label: string | null
+          status_type: string | null
+          synced_at: string | null
+          updated_at: string
+          value: number | null
+          value_period: string | null
+        }
+        Insert: {
+          brand_id: string
+          close_created_at?: string | null
+          close_lead_id: string
+          close_opportunity_id: string
+          close_updated_at?: string | null
+          confidence?: number | null
+          created_at?: string
+          custom_fields?: Json | null
+          date_won?: string | null
+          id?: string
+          note?: string | null
+          status_id?: string | null
+          status_label?: string | null
+          status_type?: string | null
+          synced_at?: string | null
+          updated_at?: string
+          value?: number | null
+          value_period?: string | null
+        }
+        Update: {
+          brand_id?: string
+          close_created_at?: string | null
+          close_lead_id?: string
+          close_opportunity_id?: string
+          close_updated_at?: string | null
+          confidence?: number | null
+          created_at?: string
+          custom_fields?: Json | null
+          date_won?: string | null
+          id?: string
+          note?: string | null
+          status_id?: string | null
+          status_label?: string | null
+          status_type?: string | null
+          synced_at?: string | null
+          updated_at?: string
+          value?: number | null
+          value_period?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_opportunities_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      close_sync_log: {
+        Row: {
+          changes: Json | null
+          created_at: string
+          direction: string
+          entity_id: string
+          entity_type: string
+          error_message: string | null
+          event_type: string
+          id: string
+          idempotency_key: string | null
+          local_id: string | null
+          payload: Json | null
+          processed_at: string | null
+          retry_count: number | null
+          source: string
+          status: string
+        }
+        Insert: {
+          changes?: Json | null
+          created_at?: string
+          direction: string
+          entity_id: string
+          entity_type: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          idempotency_key?: string | null
+          local_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          retry_count?: number | null
+          source: string
+          status?: string
+        }
+        Update: {
+          changes?: Json | null
+          created_at?: string
+          direction?: string
+          entity_id?: string
+          entity_type?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          idempotency_key?: string | null
+          local_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          retry_count?: number | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
       }
       content_slot_history: {
         Row: {
@@ -2793,29 +3499,7 @@ export type Database = {
           old_status?: string | null
           slot_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "content_slot_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "content_slot_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "content_slot_history_slot_id_fkey"
-            columns: ["slot_id"]
-            isOneToOne: false
-            referencedRelation: "content_slots"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       content_slots: {
         Row: {
@@ -2883,24 +3567,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "content_slots_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "content_slots_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "content_slots_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "creator_contracts"
             referencedColumns: ["id"]
           },
           {
@@ -2956,7 +3626,15 @@ export type Database = {
           updated_at?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "content_styles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_template_sections: {
         Row: {
@@ -2986,15 +3664,7 @@ export type Database = {
           template_id?: string
           title?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "contract_template_sections_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "contract_templates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       contract_template_variables: {
         Row: {
@@ -3033,15 +3703,7 @@ export type Database = {
           variable_label?: string
           variable_type?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "contract_template_variables_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "contract_templates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       contract_templates: {
         Row: {
@@ -3100,20 +3762,6 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "contract_templates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contract_templates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       conversations: {
@@ -3152,6 +3800,20 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conversations_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       course_modules: {
@@ -3188,15 +3850,7 @@ export type Database = {
           updated_at?: string
           video_url?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "course_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       courses: {
         Row: {
@@ -3308,13 +3962,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "creator_contracts_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "creator_contracts_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
@@ -3335,44 +3982,58 @@ export type Database = {
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "creator_contracts_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "contract_templates"
-            referencedColumns: ["id"]
-          },
         ]
       }
       creator_fraud_history: {
         Row: {
+          clawback_ledger_id: string | null
           created_at: string
-          fraud_amount: number | null
-          fraud_count: number | null
+          creator_id: string
+          details: Json | null
+          fraud_amount: number
+          fraud_flag_id: string | null
+          fraud_type: string
           id: string
-          last_fraud_at: string | null
-          updated_at: string
-          user_id: string
+          trust_penalty: number
         }
         Insert: {
+          clawback_ledger_id?: string | null
           created_at?: string
-          fraud_amount?: number | null
-          fraud_count?: number | null
+          creator_id: string
+          details?: Json | null
+          fraud_amount?: number
+          fraud_flag_id?: string | null
+          fraud_type: string
           id?: string
-          last_fraud_at?: string | null
-          updated_at?: string
-          user_id: string
+          trust_penalty?: number
         }
         Update: {
+          clawback_ledger_id?: string | null
           created_at?: string
-          fraud_amount?: number | null
-          fraud_count?: number | null
+          creator_id?: string
+          details?: Json | null
+          fraud_amount?: number
+          fraud_flag_id?: string | null
+          fraud_type?: string
           id?: string
-          last_fraud_at?: string | null
-          updated_at?: string
-          user_id?: string
+          trust_penalty?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "creator_fraud_history_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_fraud_history_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creator_notes: {
         Row: {
@@ -3396,29 +4057,7 @@ export type Database = {
           id?: string
           relationship_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "creator_notes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_notes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_notes_relationship_id_fkey"
-            columns: ["relationship_id"]
-            isOneToOne: false
-            referencedRelation: "brand_creator_relationships"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       creator_portfolios: {
         Row: {
@@ -3484,7 +4123,22 @@ export type Database = {
           user_id?: string
           work_experience?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "creator_portfolios_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_portfolios_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creator_reliability_scores: {
         Row: {
@@ -3613,66 +4267,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "creator_strikes_appeal_reviewed_by_fkey"
-            columns: ["appeal_reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_appeal_reviewed_by_fkey"
-            columns: ["appeal_reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "creator_strikes_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "creator_contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "creator_strikes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -3818,17 +4416,116 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "creator_tier_assignments_previous_tier_id_fkey"
-            columns: ["previous_tier_id"]
+            foreignKeyName: "creator_tier_assignments_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "creator_tiers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "creator_tier_assignments_tier_id_fkey"
+            foreignKeyName: "creator_tier_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_tier_metrics: {
+        Row: {
+          avg_views_per_video: number | null
+          base_earnings: number | null
+          bonus_earnings: number | null
+          bounty_campaign_id: string
+          completion_rate: number | null
+          created_at: string | null
+          demotion_warning: boolean | null
+          engagement_rate: number | null
+          id: string
+          period_month: number
+          period_year: number
+          promotion_eligible: boolean | null
+          quota_met: boolean | null
+          quota_required: number
+          tier_id: string
+          total_comments: number | null
+          total_earnings: number | null
+          total_likes: number | null
+          total_shares: number | null
+          total_views: number | null
+          updated_at: string | null
+          user_id: string
+          videos_approved: number | null
+          videos_rejected: number | null
+          videos_submitted: number | null
+        }
+        Insert: {
+          avg_views_per_video?: number | null
+          base_earnings?: number | null
+          bonus_earnings?: number | null
+          bounty_campaign_id: string
+          completion_rate?: number | null
+          created_at?: string | null
+          demotion_warning?: boolean | null
+          engagement_rate?: number | null
+          id?: string
+          period_month: number
+          period_year: number
+          promotion_eligible?: boolean | null
+          quota_met?: boolean | null
+          quota_required?: number
+          tier_id: string
+          total_comments?: number | null
+          total_earnings?: number | null
+          total_likes?: number | null
+          total_shares?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+          user_id: string
+          videos_approved?: number | null
+          videos_rejected?: number | null
+          videos_submitted?: number | null
+        }
+        Update: {
+          avg_views_per_video?: number | null
+          base_earnings?: number | null
+          bonus_earnings?: number | null
+          bounty_campaign_id?: string
+          completion_rate?: number | null
+          created_at?: string | null
+          demotion_warning?: boolean | null
+          engagement_rate?: number | null
+          id?: string
+          period_month?: number
+          period_year?: number
+          promotion_eligible?: boolean | null
+          quota_met?: boolean | null
+          quota_required?: number
+          tier_id?: string
+          total_comments?: number | null
+          total_earnings?: number | null
+          total_likes?: number | null
+          total_shares?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+          user_id?: string
+          videos_approved?: number | null
+          videos_rejected?: number | null
+          videos_submitted?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_tier_metrics_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_tier_metrics_tier_id_fkey"
             columns: ["tier_id"]
             isOneToOne: false
-            referencedRelation: "creator_tiers"
+            referencedRelation: "boost_creator_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -3880,6 +4577,198 @@ export type Database = {
           },
         ]
       }
+      custom_brand_plans: {
+        Row: {
+          boosts_limit: number | null
+          brand_id: string
+          campaigns_limit: number | null
+          created_at: string | null
+          created_by: string | null
+          hires_limit: number | null
+          id: string
+          is_active: boolean | null
+          monthly_price: number | null
+          name: string
+          notes: string | null
+          updated_at: string | null
+          whop_plan_id: string | null
+          whop_product_type: string | null
+        }
+        Insert: {
+          boosts_limit?: number | null
+          brand_id: string
+          campaigns_limit?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          hires_limit?: number | null
+          id?: string
+          is_active?: boolean | null
+          monthly_price?: number | null
+          name: string
+          notes?: string | null
+          updated_at?: string | null
+          whop_plan_id?: string | null
+          whop_product_type?: string | null
+        }
+        Update: {
+          boosts_limit?: number | null
+          brand_id?: string
+          campaigns_limit?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          hires_limit?: number | null
+          id?: string
+          is_active?: boolean | null
+          monthly_price?: number | null
+          name?: string
+          notes?: string | null
+          updated_at?: string | null
+          whop_plan_id?: string | null
+          whop_product_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_brand_plans_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_comments: {
+        Row: {
+          attachments: Json | null
+          content: string
+          created_at: string | null
+          deliverable_id: string
+          id: string
+          is_read: boolean | null
+          read_at: string | null
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          created_at?: string | null
+          deliverable_id: string
+          id?: string
+          is_read?: boolean | null
+          read_at?: string | null
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          created_at?: string | null
+          deliverable_id?: string
+          id?: string
+          is_read?: boolean | null
+          read_at?: string | null
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_comments_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "boost_deliverables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_templates: {
+        Row: {
+          advance_days: number | null
+          apply_to_all_creators: boolean | null
+          auto_create: boolean | null
+          bounty_campaign_id: string
+          content_brief: string | null
+          content_type: string
+          created_at: string | null
+          day_of_month: number | null
+          day_of_week: number | null
+          default_priority: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_duration_seconds: number | null
+          min_duration_seconds: number | null
+          platform: string | null
+          recurrence: string
+          required_hashtags: string[] | null
+          required_mentions: string[] | null
+          specific_tier_ids: string[] | null
+          specific_user_ids: string[] | null
+          title: string
+          updated_at: string | null
+          week_of_month: number | null
+        }
+        Insert: {
+          advance_days?: number | null
+          apply_to_all_creators?: boolean | null
+          auto_create?: boolean | null
+          bounty_campaign_id: string
+          content_brief?: string | null
+          content_type?: string
+          created_at?: string | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          default_priority?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_duration_seconds?: number | null
+          min_duration_seconds?: number | null
+          platform?: string | null
+          recurrence: string
+          required_hashtags?: string[] | null
+          required_mentions?: string[] | null
+          specific_tier_ids?: string[] | null
+          specific_user_ids?: string[] | null
+          title: string
+          updated_at?: string | null
+          week_of_month?: number | null
+        }
+        Update: {
+          advance_days?: number | null
+          apply_to_all_creators?: boolean | null
+          auto_create?: boolean | null
+          bounty_campaign_id?: string
+          content_brief?: string | null
+          content_type?: string
+          created_at?: string | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          default_priority?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_duration_seconds?: number | null
+          min_duration_seconds?: number | null
+          platform?: string | null
+          recurrence?: string
+          required_hashtags?: string[] | null
+          required_mentions?: string[] | null
+          specific_tier_ids?: string[] | null
+          specific_user_ids?: string[] | null
+          title?: string
+          updated_at?: string | null
+          week_of_month?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_templates_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demographic_scores: {
         Row: {
           calculated_at: string | null
@@ -3920,6 +4809,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           created_at: string
+          expires_at: string | null
           id: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -3934,6 +4824,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -3948,6 +4839,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -4067,6 +4959,20 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "discord_command_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_command_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       discord_emoji_sentiments: {
@@ -4153,6 +5059,20 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "discord_membership_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_membership_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       discord_reaction_tracking: {
@@ -4215,13 +5135,6 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "discord_reaction_tracking_broadcast_id_fkey"
-            columns: ["broadcast_id"]
-            isOneToOne: false
-            referencedRelation: "brand_broadcasts"
-            referencedColumns: ["id"]
-          },
         ]
       }
       discord_reactions: {
@@ -4258,15 +5171,7 @@ export type Database = {
           sentiment?: string | null
           tracking_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "discord_reactions_tracking_id_fkey"
-            columns: ["tracking_id"]
-            isOneToOne: false
-            referencedRelation: "discord_reaction_tracking"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       discord_role_mappings: {
         Row: {
@@ -4316,38 +5221,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "discord_role_mappings_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "discord_role_mappings_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_role_mappings_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_role_mappings_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_role_mappings_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "creator_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -4383,15 +5260,7 @@ export type Database = {
           id?: string
           ticket_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "discord_ticket_channels_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: true
-            referencedRelation: "support_tickets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       discord_ticket_config: {
         Row: {
@@ -4477,22 +5346,7 @@ export type Database = {
           ticket_id?: string
           ticket_message_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "discord_ticket_messages_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "support_tickets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_ticket_messages_ticket_message_id_fkey"
-            columns: ["ticket_message_id"]
-            isOneToOne: false
-            referencedRelation: "ticket_messages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       discord_tickets: {
         Row: {
@@ -4545,45 +5399,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "discord_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "discord_tickets_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_tickets_closed_by_fkey"
-            columns: ["closed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_tickets_closed_by_fkey"
-            columns: ["closed_by"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "discord_tickets_config_id_fkey"
-            columns: ["config_id"]
-            isOneToOne: false
-            referencedRelation: "discord_ticket_config"
             referencedColumns: ["id"]
           },
         ]
@@ -4619,7 +5438,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "discord_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       discord_user_links: {
         Row: {
@@ -4652,7 +5486,22 @@ export type Database = {
           user_id?: string
           verified?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "discord_user_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_user_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       discord_user_roles: {
         Row: {
@@ -4696,7 +5545,184 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "discord_user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      email_broadcasts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          failed_count: number | null
+          html_content: string
+          id: string
+          recipient_count: number | null
+          scheduled_at: string | null
+          segment: string | null
+          segment_filter: Json | null
+          sent_at: string | null
+          sent_count: number | null
+          status: string | null
+          subject: string
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          html_content: string
+          id?: string
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          segment?: string | null
+          segment_filter?: Json | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string | null
+          subject: string
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          html_content?: string
+          id?: string
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          segment?: string | null
+          segment_filter?: Json | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string | null
+          subject?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_broadcasts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_logs: {
+        Row: {
+          broadcast_id: string | null
+          clicked_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          recipient_id: string | null
+          resend_id: string | null
+          status: string | null
+          subject: string
+        }
+        Insert: {
+          broadcast_id?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          recipient_id?: string | null
+          resend_id?: string | null
+          status?: string | null
+          subject: string
+        }
+        Update: {
+          broadcast_id?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_id?: string | null
+          resend_id?: string | null
+          status?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "email_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          html_content: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          html_content: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      encryption_keys: {
+        Row: {
+          created_at: string | null
+          id: string
+          key_name: string
+          key_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key_name: string
+          key_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key_name?: string
+          key_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       feedback_submissions: {
         Row: {
@@ -4726,36 +5752,82 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "feedback_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fraud_evidence: {
         Row: {
-          created_at: string
-          evidence_data: Json | null
+          admin_notes: string | null
+          creator_id: string
           evidence_type: string
-          fraud_flag_id: string | null
+          expires_at: string | null
+          external_url: string | null
+          file_path: string | null
+          file_size_bytes: number | null
           id: string
+          payout_request_id: string
+          review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          uploaded_at: string
         }
         Insert: {
-          created_at?: string
-          evidence_data?: Json | null
+          admin_notes?: string | null
+          creator_id: string
           evidence_type: string
-          fraud_flag_id?: string | null
+          expires_at?: string | null
+          external_url?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
           id?: string
+          payout_request_id: string
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          uploaded_at?: string
         }
         Update: {
-          created_at?: string
-          evidence_data?: Json | null
+          admin_notes?: string | null
+          creator_id?: string
           evidence_type?: string
-          fraud_flag_id?: string | null
+          expires_at?: string | null
+          external_url?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
           id?: string
+          payout_request_id?: string
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          uploaded_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fraud_evidence_fraud_flag_id_fkey"
-            columns: ["fraud_flag_id"]
+            foreignKeyName: "fraud_evidence_creator_id_fkey"
+            columns: ["creator_id"]
             isOneToOne: false
-            referencedRelation: "fraud_flags"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_evidence_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -4763,44 +5835,68 @@ export type Database = {
       fraud_flags: {
         Row: {
           created_at: string
+          creator_id: string
+          detected_value: number | null
           flag_reason: string | null
           flag_type: string
           id: string
+          payout_request_id: string | null
+          resolution_notes: string | null
           resolved_at: string | null
           resolved_by: string | null
-          severity: string | null
-          status: string | null
+          source_type: string | null
+          status: string
           submission_id: string | null
-          updated_at: string
-          user_id: string | null
+          threshold_value: number | null
         }
         Insert: {
           created_at?: string
+          creator_id: string
+          detected_value?: number | null
           flag_reason?: string | null
           flag_type: string
           id?: string
+          payout_request_id?: string | null
+          resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
-          severity?: string | null
-          status?: string | null
+          source_type?: string | null
+          status?: string
           submission_id?: string | null
-          updated_at?: string
-          user_id?: string | null
+          threshold_value?: number | null
         }
         Update: {
           created_at?: string
+          creator_id?: string
+          detected_value?: number | null
           flag_reason?: string | null
           flag_type?: string
           id?: string
+          payout_request_id?: string | null
+          resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
-          severity?: string | null
-          status?: string | null
+          source_type?: string | null
+          status?: string
           submission_id?: string | null
-          updated_at?: string
-          user_id?: string | null
+          threshold_value?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fraud_flags_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fraud_flags_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ip_bans: {
         Row: {
@@ -4839,7 +5935,22 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ip_bans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ip_bans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       level_thresholds: {
         Row: {
@@ -4899,15 +6010,7 @@ export type Database = {
           referrer?: string | null
           user_agent?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "link_clicks_link_id_fkey"
-            columns: ["link_id"]
-            isOneToOne: false
-            referencedRelation: "campaign_links"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       link_conversions: {
         Row: {
@@ -4937,15 +6040,7 @@ export type Database = {
           order_id?: string | null
           value?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "link_conversions_link_id_fkey"
-            columns: ["link_id"]
-            isOneToOne: false
-            referencedRelation: "campaign_links"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       low_balance_alerts: {
         Row: {
@@ -5016,15 +6111,7 @@ export type Database = {
           sender_id?: string
           sender_type?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       milestone_achievements: {
         Row: {
@@ -5059,31 +6146,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "milestone_achievements_boost_id_fkey"
-            columns: ["boost_id"]
+            foreignKeyName: "milestone_achievements_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "bounty_campaigns"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "milestone_achievements_campaign_id_fkey"
-            columns: ["campaign_id"]
+            foreignKeyName: "milestone_achievements_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "milestone_achievements_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "milestone_achievements_milestone_config_id_fkey"
-            columns: ["milestone_config_id"]
-            isOneToOne: false
-            referencedRelation: "milestone_configs"
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5124,31 +6197,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "milestone_configs_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "milestone_configs_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "milestone_configs_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "milestone_configs_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -5177,10 +6229,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "module_completions_module_id_fkey"
-            columns: ["module_id"]
+            foreignKeyName: "module_completions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "course_modules"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5299,24 +6358,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "payment_ledger_boost_submission_id_fkey"
-            columns: ["boost_submission_id"]
+            foreignKeyName: "payment_ledger_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "boost_video_submissions"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payment_ledger_payout_request_id_fkey"
-            columns: ["payout_request_id"]
+            foreignKeyName: "payment_ledger_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "submission_payout_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_ledger_video_submission_id_fkey"
-            columns: ["video_submission_id"]
-            isOneToOne: false
-            referencedRelation: "video_submissions"
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5349,15 +6401,7 @@ export type Database = {
           vote?: string
           voted_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "payout_approval_votes_approval_id_fkey"
-            columns: ["approval_id"]
-            isOneToOne: false
-            referencedRelation: "payout_approvals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       payout_approvals: {
         Row: {
@@ -5420,7 +6464,22 @@ export type Database = {
           user_id?: string | null
           wallet_address?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payout_approvals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_approvals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payout_audit_log: {
         Row: {
@@ -5453,20 +6512,14 @@ export type Database = {
           ip_address?: string | null
           payout_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "payout_audit_log_approval_id_fkey"
-            columns: ["approval_id"]
-            isOneToOne: false
-            referencedRelation: "payout_approvals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       payout_requests: {
         Row: {
           amount: number
+          blockchain_network: string | null
           created_at: string
+          crypto_amount: number | null
           id: string
           notes: string | null
           payout_details: Json
@@ -5477,12 +6530,17 @@ export type Database = {
           requested_at: string
           status: Database["public"]["Enums"]["payout_status_new"]
           transaction_id: string | null
+          tx_confirmed_at: string | null
+          tx_signature: string | null
           updated_at: string
           user_id: string
+          wallet_address: string | null
         }
         Insert: {
           amount: number
+          blockchain_network?: string | null
           created_at?: string
+          crypto_amount?: number | null
           id?: string
           notes?: string | null
           payout_details: Json
@@ -5493,12 +6551,17 @@ export type Database = {
           requested_at?: string
           status?: Database["public"]["Enums"]["payout_status_new"]
           transaction_id?: string | null
+          tx_confirmed_at?: string | null
+          tx_signature?: string | null
           updated_at?: string
           user_id: string
+          wallet_address?: string | null
         }
         Update: {
           amount?: number
+          blockchain_network?: string | null
           created_at?: string
+          crypto_amount?: number | null
           id?: string
           notes?: string | null
           payout_details?: Json
@@ -5509,8 +6572,11 @@ export type Database = {
           requested_at?: string
           status?: Database["public"]["Enums"]["payout_status_new"]
           transaction_id?: string | null
+          tx_confirmed_at?: string | null
+          tx_signature?: string | null
           updated_at?: string
           user_id?: string
+          wallet_address?: string | null
         }
         Relationships: [
           {
@@ -5589,31 +6655,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pitches_boost_id_fkey"
-            columns: ["boost_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "pitches_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pitches_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pitches_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
           {
@@ -5666,15 +6711,7 @@ export type Database = {
           source_user_id?: string | null
           type?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "platform_income_source_brand_id_fkey"
-            columns: ["source_brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -5686,6 +6723,7 @@ export type Database = {
           banner_url: string | null
           billing_address: string | null
           bio: string | null
+          brand_referral_code: string | null
           city: string | null
           content_languages: string[] | null
           content_niches: string[] | null
@@ -5706,6 +6744,7 @@ export type Database = {
           discord_refresh_token: string | null
           discord_token_expires_at: string | null
           discord_username: string | null
+          editing_tools: string[] | null
           email: string | null
           fraud_flag_count: number | null
           fraud_flag_permanent: boolean | null
@@ -5715,9 +6754,20 @@ export type Database = {
           is_private: boolean
           last_fraud_at: string | null
           legal_business_name: string | null
+          notify_discord_campaign_updates: boolean
+          notify_discord_new_campaigns: boolean
+          notify_discord_payout_status: boolean
+          notify_discord_transactions: boolean
+          notify_email_campaign_updates: boolean
+          notify_email_new_campaigns: boolean
+          notify_email_payout_status: boolean
+          notify_email_transactions: boolean
+          notify_email_weekly_roundup: boolean
           onboarding_completed: boolean
+          onboarding_step: number | null
           phone_number: string | null
           portfolio_items: Json | null
+          referral_clicks: number | null
           referral_code: string | null
           referral_earnings: number | null
           referral_tier: Database["public"]["Enums"]["referral_tier"] | null
@@ -5733,6 +6783,7 @@ export type Database = {
           total_earnings: number | null
           total_referrals: number | null
           trust_score: number | null
+          trust_score_updated_at: string | null
           twitter_avatar: string | null
           twitter_connected_at: string | null
           twitter_id: string | null
@@ -5740,6 +6791,7 @@ export type Database = {
           twitter_username: string | null
           updated_at: string | null
           username: string
+          username_set_at: string | null
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
@@ -5747,6 +6799,8 @@ export type Database = {
           utm_term: string | null
           vat_number: string | null
           views_score: number | null
+          zktls_trust_level: string | null
+          zktls_verified_at: string | null
         }
         Insert: {
           account_type?: string
@@ -5757,6 +6811,7 @@ export type Database = {
           banner_url?: string | null
           billing_address?: string | null
           bio?: string | null
+          brand_referral_code?: string | null
           city?: string | null
           content_languages?: string[] | null
           content_niches?: string[] | null
@@ -5777,6 +6832,7 @@ export type Database = {
           discord_refresh_token?: string | null
           discord_token_expires_at?: string | null
           discord_username?: string | null
+          editing_tools?: string[] | null
           email?: string | null
           fraud_flag_count?: number | null
           fraud_flag_permanent?: boolean | null
@@ -5786,9 +6842,20 @@ export type Database = {
           is_private?: boolean
           last_fraud_at?: string | null
           legal_business_name?: string | null
+          notify_discord_campaign_updates?: boolean
+          notify_discord_new_campaigns?: boolean
+          notify_discord_payout_status?: boolean
+          notify_discord_transactions?: boolean
+          notify_email_campaign_updates?: boolean
+          notify_email_new_campaigns?: boolean
+          notify_email_payout_status?: boolean
+          notify_email_transactions?: boolean
+          notify_email_weekly_roundup?: boolean
           onboarding_completed?: boolean
+          onboarding_step?: number | null
           phone_number?: string | null
           portfolio_items?: Json | null
+          referral_clicks?: number | null
           referral_code?: string | null
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
@@ -5804,6 +6871,7 @@ export type Database = {
           total_earnings?: number | null
           total_referrals?: number | null
           trust_score?: number | null
+          trust_score_updated_at?: string | null
           twitter_avatar?: string | null
           twitter_connected_at?: string | null
           twitter_id?: string | null
@@ -5811,6 +6879,7 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string | null
           username: string
+          username_set_at?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -5818,6 +6887,8 @@ export type Database = {
           utm_term?: string | null
           vat_number?: string | null
           views_score?: number | null
+          zktls_trust_level?: string | null
+          zktls_verified_at?: string | null
         }
         Update: {
           account_type?: string
@@ -5828,6 +6899,7 @@ export type Database = {
           banner_url?: string | null
           billing_address?: string | null
           bio?: string | null
+          brand_referral_code?: string | null
           city?: string | null
           content_languages?: string[] | null
           content_niches?: string[] | null
@@ -5848,6 +6920,7 @@ export type Database = {
           discord_refresh_token?: string | null
           discord_token_expires_at?: string | null
           discord_username?: string | null
+          editing_tools?: string[] | null
           email?: string | null
           fraud_flag_count?: number | null
           fraud_flag_permanent?: boolean | null
@@ -5857,9 +6930,20 @@ export type Database = {
           is_private?: boolean
           last_fraud_at?: string | null
           legal_business_name?: string | null
+          notify_discord_campaign_updates?: boolean
+          notify_discord_new_campaigns?: boolean
+          notify_discord_payout_status?: boolean
+          notify_discord_transactions?: boolean
+          notify_email_campaign_updates?: boolean
+          notify_email_new_campaigns?: boolean
+          notify_email_payout_status?: boolean
+          notify_email_transactions?: boolean
+          notify_email_weekly_roundup?: boolean
           onboarding_completed?: boolean
+          onboarding_step?: number | null
           phone_number?: string | null
           portfolio_items?: Json | null
+          referral_clicks?: number | null
           referral_code?: string | null
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
@@ -5875,6 +6959,7 @@ export type Database = {
           total_earnings?: number | null
           total_referrals?: number | null
           trust_score?: number | null
+          trust_score_updated_at?: string | null
           twitter_avatar?: string | null
           twitter_connected_at?: string | null
           twitter_id?: string | null
@@ -5882,6 +6967,7 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string | null
           username?: string
+          username_set_at?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -5889,6 +6975,8 @@ export type Database = {
           utm_term?: string | null
           vat_number?: string | null
           views_score?: number | null
+          zktls_trust_level?: string | null
+          zktls_verified_at?: string | null
         }
         Relationships: []
       }
@@ -5994,22 +7082,7 @@ export type Database = {
           referral_id?: string
           reward_amount?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "referral_milestone_rewards_milestone_id_fkey"
-            columns: ["milestone_id"]
-            isOneToOne: false
-            referencedRelation: "referral_milestones"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referral_milestone_rewards_referral_id_fkey"
-            columns: ["referral_id"]
-            isOneToOne: false
-            referencedRelation: "referrals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       referral_milestones: {
         Row: {
@@ -6069,15 +7142,7 @@ export type Database = {
           team_id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "referral_team_invitations_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "referral_teams"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       referral_team_members: {
         Row: {
@@ -6106,10 +7171,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "referral_team_members_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "referral_teams"
+            foreignKeyName: "referral_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6183,6 +7255,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action_type: string
+          actor_id: string | null
+          actor_type: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       social_account_campaigns: {
         Row: {
           campaign_id: string
@@ -6236,6 +7347,20 @@ export type Database = {
             referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "social_account_campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_account_campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       social_accounts: {
@@ -6243,60 +7368,74 @@ export type Database = {
           account_link: string | null
           avatar_url: string | null
           bio: string | null
-          campaign_id: string | null
           connected_at: string | null
           follower_count: number | null
           hidden_from_public: boolean
           id: string
           is_verified: boolean | null
+          last_zktls_verification_id: string | null
           platform: string
           user_id: string
           username: string
           verification_screenshot_url: string | null
+          zktls_avg_views: number | null
+          zktls_demographics: Json | null
+          zktls_engagement_rate: number | null
+          zktls_expires_at: string | null
+          zktls_follower_count: number | null
+          zktls_verified: boolean | null
+          zktls_verified_at: string | null
         }
         Insert: {
           account_link?: string | null
           avatar_url?: string | null
           bio?: string | null
-          campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
           hidden_from_public?: boolean
           id?: string
           is_verified?: boolean | null
+          last_zktls_verification_id?: string | null
           platform: string
           user_id: string
           username: string
           verification_screenshot_url?: string | null
+          zktls_avg_views?: number | null
+          zktls_demographics?: Json | null
+          zktls_engagement_rate?: number | null
+          zktls_expires_at?: string | null
+          zktls_follower_count?: number | null
+          zktls_verified?: boolean | null
+          zktls_verified_at?: string | null
         }
         Update: {
           account_link?: string | null
           avatar_url?: string | null
           bio?: string | null
-          campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
           hidden_from_public?: boolean
           id?: string
           is_verified?: boolean | null
+          last_zktls_verification_id?: string | null
           platform?: string
           user_id?: string
           username?: string
           verification_screenshot_url?: string | null
+          zktls_avg_views?: number | null
+          zktls_demographics?: Json | null
+          zktls_engagement_rate?: number | null
+          zktls_expires_at?: string | null
+          zktls_follower_count?: number | null
+          zktls_verified?: boolean | null
+          zktls_verified_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "social_accounts_campaign_id_fkey"
-            columns: ["campaign_id"]
+            foreignKeyName: "social_accounts_last_zktls_verification_id_fkey"
+            columns: ["last_zktls_verification_id"]
             isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "social_accounts_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
+            referencedRelation: "zktls_verifications"
             referencedColumns: ["id"]
           },
           {
@@ -6435,15 +7574,7 @@ export type Database = {
           submission_id?: string
           views_at_request?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "submission_payout_items_payout_request_id_fkey"
-            columns: ["payout_request_id"]
-            isOneToOne: false
-            referencedRelation: "submission_payout_requests"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       submission_payout_requests: {
         Row: {
@@ -6460,6 +7591,7 @@ export type Database = {
           evidence_requested_at: string | null
           fraud_check_result: Json | null
           id: string
+          rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -6482,6 +7614,7 @@ export type Database = {
           evidence_requested_at?: string | null
           fraud_check_result?: Json | null
           id?: string
+          rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -6504,6 +7637,7 @@ export type Database = {
           evidence_requested_at?: string | null
           fraud_check_result?: Json | null
           id?: string
+          rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -6512,46 +7646,76 @@ export type Database = {
           user_id?: string
           views_snapshot?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "submission_payout_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submission_payout_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
           assigned_to: string | null
-          category: Database["public"]["Enums"]["ticket_category"]
-          created_at: string
+          category: string
+          created_at: string | null
           id: string
-          priority: Database["public"]["Enums"]["ticket_priority"]
-          status: Database["public"]["Enums"]["ticket_status"]
+          priority: string
+          status: string
           subject: string
           ticket_number: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           assigned_to?: string | null
-          category?: Database["public"]["Enums"]["ticket_category"]
-          created_at?: string
+          category: string
+          created_at?: string | null
           id?: string
-          priority?: Database["public"]["Enums"]["ticket_priority"]
-          status?: Database["public"]["Enums"]["ticket_status"]
+          priority?: string
+          status?: string
           subject: string
           ticket_number?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           assigned_to?: string | null
-          category?: Database["public"]["Enums"]["ticket_category"]
-          created_at?: string
+          category?: string
+          created_at?: string | null
           id?: string
-          priority?: Database["public"]["Enums"]["ticket_priority"]
-          status?: Database["public"]["Enums"]["ticket_status"]
+          priority?: string
+          status?: string
           subject?: string
           ticket_number?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_earnings: {
         Row: {
@@ -6584,29 +7748,7 @@ export type Database = {
           source_transaction_id?: string
           team_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "team_earnings_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_earnings_source_transaction_id_fkey"
-            columns: ["source_transaction_id"]
-            isOneToOne: true
-            referencedRelation: "wallet_transactions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_earnings_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       team_members: {
         Row: {
@@ -6638,10 +7780,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "team_members_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
+            foreignKeyName: "team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6679,40 +7828,96 @@ export type Database = {
       ticket_messages: {
         Row: {
           content: string
-          created_at: string
+          created_at: string | null
           discord_synced: boolean | null
           id: string
-          is_internal: boolean
+          is_internal: boolean | null
           sender_id: string
-          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          sender_type: string
           ticket_id: string
         }
         Insert: {
           content: string
-          created_at?: string
+          created_at?: string | null
           discord_synced?: boolean | null
           id?: string
-          is_internal?: boolean
+          is_internal?: boolean | null
           sender_id: string
-          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          sender_type: string
           ticket_id: string
         }
         Update: {
           content?: string
-          created_at?: string
+          created_at?: string | null
           discord_synced?: boolean | null
           id?: string
-          is_internal?: boolean
+          is_internal?: boolean | null
           sender_id?: string
-          sender_type?: Database["public"]["Enums"]["message_sender_type"]
+          sender_type?: string
           ticket_id?: string
+        }
+        Relationships: []
+      }
+      tier_change_history: {
+        Row: {
+          bounty_campaign_id: string
+          change_reason: string | null
+          change_type: string
+          changed_by: string | null
+          created_at: string | null
+          criteria_evaluation: Json | null
+          from_tier_id: string | null
+          id: string
+          performance_snapshot: Json | null
+          to_tier_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bounty_campaign_id: string
+          change_reason?: string | null
+          change_type: string
+          changed_by?: string | null
+          created_at?: string | null
+          criteria_evaluation?: Json | null
+          from_tier_id?: string | null
+          id?: string
+          performance_snapshot?: Json | null
+          to_tier_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bounty_campaign_id?: string
+          change_reason?: string | null
+          change_type?: string
+          changed_by?: string | null
+          created_at?: string | null
+          criteria_evaluation?: Json | null
+          from_tier_id?: string | null
+          id?: string
+          performance_snapshot?: Json | null
+          to_tier_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ticket_messages_ticket_id_fkey"
-            columns: ["ticket_id"]
+            foreignKeyName: "tier_change_history_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
             isOneToOne: false
-            referencedRelation: "support_tickets"
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_change_history_from_tier_id_fkey"
+            columns: ["from_tier_id"]
+            isOneToOne: false
+            referencedRelation: "boost_creator_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_change_history_to_tier_id_fkey"
+            columns: ["to_tier_id"]
+            isOneToOne: false
+            referencedRelation: "boost_creator_tiers"
             referencedColumns: ["id"]
           },
         ]
@@ -6760,24 +7965,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tier_change_log_from_tier_id_fkey"
-            columns: ["from_tier_id"]
+            foreignKeyName: "tier_change_log_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "creator_tiers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tier_change_log_rule_id_fkey"
-            columns: ["rule_id"]
+            foreignKeyName: "tier_change_log_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "tier_promotion_rules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tier_change_log_to_tier_id_fkey"
-            columns: ["to_tier_id"]
-            isOneToOne: false
-            referencedRelation: "creator_tiers"
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6824,21 +8022,489 @@ export type Database = {
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      tools_events: {
+        Row: {
+          all_day: boolean | null
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          google_event_id: string | null
+          id: string
+          location: string | null
+          partner_id: string | null
+          start_time: string
+          title: string
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          all_day?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          google_event_id?: string | null
+          id?: string
+          location?: string | null
+          partner_id?: string | null
+          start_time: string
+          title: string
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          all_day?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          google_event_id?: string | null
+          id?: string
+          location?: string | null
+          partner_id?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "tier_promotion_rules_from_tier_id_fkey"
-            columns: ["from_tier_id"]
+            foreignKeyName: "tools_events_workspace_id_fkey"
+            columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "creator_tiers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tier_promotion_rules_to_tier_id_fkey"
-            columns: ["to_tier_id"]
-            isOneToOne: false
-            referencedRelation: "creator_tiers"
+            referencedRelation: "tools_workspaces"
             referencedColumns: ["id"]
           },
         ]
+      }
+      tools_partners: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          created_at: string | null
+          deal_value: number | null
+          email: string | null
+          id: string
+          last_contact: string | null
+          name: string
+          next_followup: string | null
+          notes: string | null
+          phone: string | null
+          pipeline_stage: string | null
+          status: string | null
+          tags: string[] | null
+          type: string | null
+          updated_at: string | null
+          website: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string | null
+          deal_value?: number | null
+          email?: string | null
+          id?: string
+          last_contact?: string | null
+          name: string
+          next_followup?: string | null
+          notes?: string | null
+          phone?: string | null
+          pipeline_stage?: string | null
+          status?: string | null
+          tags?: string[] | null
+          type?: string | null
+          updated_at?: string | null
+          website?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string | null
+          deal_value?: number | null
+          email?: string | null
+          id?: string
+          last_contact?: string | null
+          name?: string
+          next_followup?: string | null
+          notes?: string | null
+          phone?: string | null
+          pipeline_stage?: string | null
+          status?: string | null
+          tags?: string[] | null
+          type?: string | null
+          updated_at?: string | null
+          website?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_partners_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "tools_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools_products: {
+        Row: {
+          billing_cycle: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          is_recurring: boolean | null
+          name: string
+          price: number | null
+          workspace_id: string | null
+        }
+        Insert: {
+          billing_cycle?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          name: string
+          price?: number | null
+          workspace_id?: string | null
+        }
+        Update: {
+          billing_cycle?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          name?: string
+          price?: number | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_products_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "tools_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_tasks_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "tools_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools_team_members: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_active: string | null
+          name: string
+          role: string | null
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_active?: string | null
+          name: string
+          role?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_active?: string | null
+          name?: string
+          role?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_team_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "tools_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools_time_entries: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          end_time: string | null
+          hourly_rate: number | null
+          id: string
+          is_billable: boolean | null
+          partner_id: string | null
+          start_time: string
+          task_id: string | null
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_billable?: boolean | null
+          partner_id?: string | null
+          start_time?: string
+          task_id?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_billable?: boolean | null
+          partner_id?: string | null
+          start_time?: string
+          task_id?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_time_entries_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "tools_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tools_time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tools_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tools_time_entries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "tools_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          date: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string | null
+          notes: string | null
+          paid_date: string | null
+          partner_id: string | null
+          product_id: string | null
+          status: string | null
+          type: string | null
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          date?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          paid_date?: string | null
+          partner_id?: string | null
+          product_id?: string | null
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          date?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          paid_date?: string | null
+          partner_id?: string | null
+          product_id?: string | null
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_transactions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "tools_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tools_transactions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "tools_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools_workspaces: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      training_conversations: {
+        Row: {
+          answer: string
+          category: string | null
+          created_at: string
+          id: string
+          imported_by: string | null
+          is_active: boolean | null
+          last_retrieved_at: string | null
+          quality_score: number | null
+          question: string
+          question_embedding: string | null
+          retrieval_count: number | null
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          imported_by?: string | null
+          is_active?: boolean | null
+          last_retrieved_at?: string | null
+          quality_score?: number | null
+          question: string
+          question_embedding?: string | null
+          retrieval_count?: number | null
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          imported_by?: string | null
+          is_active?: boolean | null
+          last_retrieved_at?: string | null
+          quality_score?: number | null
+          question?: string
+          question_embedding?: string | null
+          retrieval_count?: number | null
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       trust_score_history: {
         Row: {
@@ -6885,6 +8551,45 @@ export type Database = {
           },
         ]
       }
+      user_announcement_views: {
+        Row: {
+          announcement_id: string
+          dismissed_at: string | null
+          id: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          announcement_id: string
+          dismissed_at?: string | null
+          id?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          announcement_id?: string
+          dismissed_at?: string | null
+          id?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_announcement_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_announcement_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -6904,7 +8609,22 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_sessions: {
         Row: {
@@ -6978,7 +8698,10 @@ export type Database = {
           analytics_recording_uploaded_at: string | null
           analytics_recording_url: string | null
           bookmarks: number | null
+          bot_analysis_status: string | null
+          bot_analyzed_at: string | null
           bot_score: number | null
+          bot_score_breakdown: Json | null
           brand_id: string | null
           comments: number | null
           created_at: string | null
@@ -7022,7 +8745,10 @@ export type Database = {
           analytics_recording_uploaded_at?: string | null
           analytics_recording_url?: string | null
           bookmarks?: number | null
+          bot_analysis_status?: string | null
+          bot_analyzed_at?: string | null
           bot_score?: number | null
+          bot_score_breakdown?: Json | null
           brand_id?: string | null
           comments?: number | null
           created_at?: string | null
@@ -7066,7 +8792,10 @@ export type Database = {
           analytics_recording_uploaded_at?: string | null
           analytics_recording_url?: string | null
           bookmarks?: number | null
+          bot_analysis_status?: string | null
+          bot_analyzed_at?: string | null
           bot_score?: number | null
+          bot_score_breakdown?: Json | null
           brand_id?: string | null
           comments?: number | null
           created_at?: string | null
@@ -7114,68 +8843,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "video_submissions_social_account_id_fkey"
-            columns: ["social_account_id"]
+            foreignKeyName: "video_submissions_creator_id_fkey"
+            columns: ["creator_id"]
             isOneToOne: false
-            referencedRelation: "social_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      view_bonus_payouts: {
-        Row: {
-          amount_paid: number
-          bonus_id: string
-          created_at: string
-          creator_id: string
-          id: string
-          paid_at: string
-          transaction_id: string | null
-          video_submission_id: string
-          views_at_payout: number
-        }
-        Insert: {
-          amount_paid: number
-          bonus_id: string
-          created_at?: string
-          creator_id: string
-          id?: string
-          paid_at?: string
-          transaction_id?: string | null
-          video_submission_id: string
-          views_at_payout: number
-        }
-        Update: {
-          amount_paid?: number
-          bonus_id?: string
-          created_at?: string
-          creator_id?: string
-          id?: string
-          paid_at?: string
-          transaction_id?: string | null
-          video_submission_id?: string
-          views_at_payout?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "view_bonus_payouts_bonus_id_fkey"
-            columns: ["bonus_id"]
-            isOneToOne: false
-            referencedRelation: "boost_view_bonuses"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "view_bonus_payouts_transaction_id_fkey"
-            columns: ["transaction_id"]
+            foreignKeyName: "video_submissions_creator_id_fkey"
+            columns: ["creator_id"]
             isOneToOne: false
-            referencedRelation: "wallet_transactions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "view_bonus_payouts_video_submission_id_fkey"
-            columns: ["video_submission_id"]
-            isOneToOne: false
-            referencedRelation: "video_submissions"
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -7217,7 +8895,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wallets: {
         Row: {
@@ -7304,15 +8997,7 @@ export type Database = {
           success?: boolean
           webhook_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "webhook_logs_webhook_id_fkey"
-            columns: ["webhook_id"]
-            isOneToOne: false
-            referencedRelation: "brand_webhooks"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       xp_transactions: {
         Row: {
@@ -7355,6 +9040,77 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zktls_verifications: {
+        Row: {
+          avg_views: number | null
+          created_at: string | null
+          demographics: Json | null
+          engagement_rate: number | null
+          expires_at: string
+          follower_count: number | null
+          id: string
+          is_valid: boolean | null
+          proof_data: Json
+          proof_id: string
+          provider_id: string
+          public_data: Json | null
+          social_account_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          verified_at: string
+          video_id: string | null
+          video_metrics: Json | null
+        }
+        Insert: {
+          avg_views?: number | null
+          created_at?: string | null
+          demographics?: Json | null
+          engagement_rate?: number | null
+          expires_at?: string
+          follower_count?: number | null
+          id?: string
+          is_valid?: boolean | null
+          proof_data: Json
+          proof_id: string
+          provider_id: string
+          public_data?: Json | null
+          social_account_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified_at?: string
+          video_id?: string | null
+          video_metrics?: Json | null
+        }
+        Update: {
+          avg_views?: number | null
+          created_at?: string | null
+          demographics?: Json | null
+          engagement_rate?: number | null
+          expires_at?: string
+          follower_count?: number | null
+          id?: string
+          is_valid?: boolean | null
+          proof_data?: Json
+          proof_id?: string
+          provider_id?: string
+          public_data?: Json | null
+          social_account_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified_at?: string
+          video_id?: string | null
+          video_metrics?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zktls_verifications_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -7476,6 +9232,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_to_wallet: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: undefined
+      }
       atomic_allocate_budget: {
         Args: {
           p_amount: number
@@ -7510,9 +9270,37 @@ export type Database = {
         Returns: Json
       }
       brand_has_no_members: { Args: { _brand_id: string }; Returns: boolean }
+      calculate_audience_insights_score: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      calculate_reaction_sentiment: {
+        Args: { p_negative: number; p_positive: number; p_total: number }
+        Returns: number
+      }
+      calculate_reliability_score: {
+        Args: { p_brand_id: string; p_creator_id: string }
+        Returns: number
+      }
+      calculate_trust_penalty: {
+        Args: { p_fraud_amount: number }
+        Returns: number
+      }
+      calculate_trust_score_for_user: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      calculate_zktls_trust_bonus: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       can_view_payout_item: { Args: { _item_id: string }; Returns: boolean }
       can_view_profile: {
         Args: { _profile_id: string; _viewer_id: string }
+        Returns: boolean
+      }
+      check_approval_threshold: {
+        Args: { approval_uuid: string }
         Returns: boolean
       }
       check_rate_limit: {
@@ -7522,6 +9310,10 @@ export type Database = {
           p_user_id: string
           p_window_seconds?: number
         }
+        Returns: boolean
+      }
+      check_username_available: {
+        Args: { desired_username: string }
         Returns: boolean
       }
       cleanup_demographic_videos: { Args: never; Returns: undefined }
@@ -7541,8 +9333,18 @@ export type Database = {
       delete_discord_tokens: { Args: { p_user_id: string }; Returns: undefined }
       encrypt_discord_token: { Args: { token: string }; Returns: string }
       encrypt_payout_details: { Args: { details: Json }; Returns: string }
+      expire_old_insights_requests: { Args: never; Returns: number }
+      expire_old_pitches: { Args: never; Returns: undefined }
       generate_short_code: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_approval_thresholds: { Args: { p_amount: number }; Returns: Json }
+      get_approval_vote_count: {
+        Args: { approval_uuid: string }
+        Returns: {
+          approve_count: number
+          reject_count: number
+        }[]
+      }
       get_brand_creator_earnings: {
         Args: { p_brand_id: string }
         Returns: {
@@ -7601,6 +9403,17 @@ export type Database = {
           token_expires_at: string
         }[]
       }
+      get_effective_brand_limits: {
+        Args: { p_brand_id: string }
+        Returns: {
+          boosts_limit: number
+          campaigns_limit: number
+          custom_plan_name: string
+          hires_limit: number
+          is_custom: boolean
+        }[]
+      }
+      get_fraud_thresholds: { Args: { p_sensitivity: string }; Returns: Json }
       get_level_from_xp: {
         Args: { xp: number }
         Returns: {
@@ -7640,6 +9453,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_referral_clicks: {
+        Args: { referral_code_input: string }
+        Returns: undefined
+      }
       increment_template_usage: {
         Args: { template_id_param: string }
         Returns: undefined
@@ -7652,9 +9469,29 @@ export type Database = {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
       }
+      is_creator_banned: { Args: { p_creator_id: string }; Returns: boolean }
+      is_device_banned: { Args: { p_fingerprint: string }; Returns: boolean }
       is_member_of_active_brand: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      is_tools_admin: { Args: never; Returns: boolean }
+      is_zktls_verification_expired: {
+        Args: { verification_id: string }
+        Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_action_type: string
+          p_actor_id?: string
+          p_actor_type?: string
+          p_entity_id?: string
+          p_entity_type?: string
+          p_ip_address?: string
+          p_metadata?: Json
+          p_user_agent?: string
+        }
+        Returns: string
       }
       match_analytics_to_users: {
         Args: { p_campaign_id: string }
@@ -7664,7 +9501,22 @@ export type Database = {
           unmatched_count: number
         }[]
       }
+      match_training_conversations: {
+        Args: {
+          match_count?: number
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          answer: string
+          category: string
+          id: string
+          question: string
+          similarity: number
+        }[]
+      }
       owns_payout_request: { Args: { _request_id: string }; Returns: boolean }
+      update_zktls_trust_level: { Args: { p_user_id: string }; Returns: string }
       upsert_discord_tokens: {
         Args: {
           p_access_token: string
@@ -7857,3 +9709,4 @@ export const Constants = {
     },
   },
 } as const
+

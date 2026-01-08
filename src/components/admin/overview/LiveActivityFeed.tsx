@@ -7,7 +7,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { AdminCard } from "../design-system/AdminCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DollarSign, ArrowUpRight, Users, Link2, PieChart, AlertTriangle, UserPlus, ArrowDownLeft, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black-new.png";
@@ -38,25 +38,25 @@ interface UserProfile {
   created_at?: string;
 }
 
-const eventConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  signup: { label: "Signup", icon: <UserPlus className="w-3.5 h-3.5" />, color: "text-blue-400" },
-  payout: { label: "Payout", icon: <DollarSign className="w-3.5 h-3.5" />, color: "text-emerald-400" },
-  withdrawal: { label: "Withdrawal", icon: <ArrowDownLeft className="w-3.5 h-3.5" />, color: "text-amber-400" },
-  submission: { label: "Submission", icon: <ArrowUpRight className="w-3.5 h-3.5" />, color: "text-cyan-400" },
-  fraud: { label: "Alert", icon: <AlertTriangle className="w-3.5 h-3.5" />, color: "text-red-400" },
-  transaction: { label: "Transaction", icon: <DollarSign className="w-3.5 h-3.5" />, color: "text-emerald-400" },
-  bounty: { label: "Bounty App", icon: <Users className="w-3.5 h-3.5" />, color: "text-purple-400" },
-  link: { label: "Account Link", icon: <Link2 className="w-3.5 h-3.5" />, color: "text-cyan-400" },
-  demographics: { label: "Demographics", icon: <PieChart className="w-3.5 h-3.5" />, color: "text-pink-400" },
+const eventConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+  signup: { label: "Signup", color: "text-blue-500", bgColor: "bg-blue-500/10" },
+  payout: { label: "Payout", color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
+  withdrawal: { label: "Withdrawal", color: "text-amber-500", bgColor: "bg-amber-500/10" },
+  submission: { label: "Submission", color: "text-cyan-500", bgColor: "bg-cyan-500/10" },
+  fraud: { label: "Alert", color: "text-red-500", bgColor: "bg-red-500/10" },
+  transaction: { label: "Earning", color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
+  bounty: { label: "Bounty", color: "text-purple-500", bgColor: "bg-purple-500/10" },
+  link: { label: "Link", color: "text-cyan-500", bgColor: "bg-cyan-500/10" },
+  demographics: { label: "Demographics", color: "text-pink-500", bgColor: "bg-pink-500/10" },
 };
 
 const getPlatformIcon = (platform?: string) => {
   if (!platform) return null;
   const p = platform.toLowerCase();
-  if (p === 'tiktok') return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4 rounded" />;
-  if (p === 'instagram') return <img src={instagramLogo} alt="Instagram" className="w-4 h-4 rounded" />;
-  if (p === 'youtube') return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4 rounded" />;
-  if (p === 'x' || p === 'twitter') return <img src={xLogo} alt="X" className="w-4 h-4 rounded" />;
+  if (p === 'tiktok') return <img src={tiktokLogo} alt="TikTok" className="w-3.5 h-3.5" />;
+  if (p === 'instagram') return <img src={instagramLogo} alt="Instagram" className="w-3.5 h-3.5" />;
+  if (p === 'youtube') return <img src={youtubeLogo} alt="YouTube" className="w-3.5 h-3.5" />;
+  if (p === 'x' || p === 'twitter') return <img src={xLogo} alt="X" className="w-3.5 h-3.5 dark:invert" />;
   return null;
 };
 
@@ -72,43 +72,40 @@ const generateAccountLink = (platform?: string, username?: string) => {
 };
 
 const UserContextCard = ({ user }: { user: UserProfile | null }) => {
-  if (!user) return <div className="p-4 text-xs text-muted-foreground">Loading...</div>;
+  if (!user) return <div className="p-3 text-xs text-muted-foreground">Loading...</div>;
 
   return (
-    <div className="p-4 space-y-3 min-w-[240px]">
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10">
+    <div className="p-3 space-y-2.5 min-w-[200px]">
+      <div className="flex items-center gap-2.5">
+        <Avatar className="h-9 w-9">
           <AvatarImage src={user.avatar_url || undefined} />
-          <AvatarFallback className="bg-muted text-foreground text-sm">
+          <AvatarFallback className="bg-muted text-foreground text-xs">
             {user.username?.charAt(0).toUpperCase() || '?'}
           </AvatarFallback>
         </Avatar>
-        <div>
-          <p className="font-inter tracking-[-0.3px] text-sm font-medium text-foreground">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">
             {user.full_name || user.username}
           </p>
-          <p className="font-inter tracking-[-0.3px] text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             @{user.username}
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+      <div className="flex items-center gap-4 pt-2 border-t border-border">
         <div>
-          <p className="text-[10px] text-muted-foreground font-inter">Total Earnings</p>
-          <p className="text-sm font-medium text-emerald-400 font-inter">
-            ${(user.total_earnings || 0).toFixed(2)}
+          <p className="text-[10px] text-muted-foreground">Earned</p>
+          <p className="text-xs font-medium text-emerald-500">
+            ${(user.total_earnings || 0).toFixed(0)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-muted-foreground font-inter">Joined</p>
-          <p className="text-sm font-medium text-foreground font-inter">
-            {user.created_at ? format(new Date(user.created_at), 'MMM d, yyyy') : '-'}
+          <p className="text-[10px] text-muted-foreground">Joined</p>
+          <p className="text-xs font-medium text-foreground">
+            {user.created_at ? format(new Date(user.created_at), 'MMM yyyy') : '-'}
           </p>
         </div>
       </div>
-      {user.email && (
-        <p className="text-[10px] text-muted-foreground font-inter truncate">{user.email}</p>
-      )}
     </div>
   );
 };
@@ -497,11 +494,38 @@ export function LiveActivityFeed() {
 
     eventsRef.current = initialEvents.slice(0, 25);
     setEvents(eventsRef.current);
+
+    // Fetch profiles for events that don't have avatar data
+    const userIdsToFetch = new Set<string>();
+    eventsRef.current.forEach(event => {
+      if (event.userId && !event.userAvatar) {
+        userIdsToFetch.add(event.userId);
+      }
+    });
+
+    // Batch fetch user profiles
+    if (userIdsToFetch.size > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url, email, total_earnings, created_at")
+        .in("id", Array.from(userIdsToFetch));
+
+      if (profiles) {
+        const newProfiles = new Map(userProfiles);
+        profiles.forEach(p => newProfiles.set(p.id, p));
+        setUserProfiles(newProfiles);
+      }
+    }
   };
 
   const addEvent = (event: ActivityEvent) => {
     eventsRef.current = [event, ...eventsRef.current].slice(0, 25);
     setEvents([...eventsRef.current]);
+
+    // Auto-fetch user profile if we have userId but no avatar
+    if (event.userId && !event.userAvatar && !userProfiles.has(event.userId)) {
+      fetchUserProfile(event.userId);
+    }
   };
 
   // Calculate stats
@@ -517,40 +541,32 @@ export function LiveActivityFeed() {
       title="Live Activity"
       subtitle="Real-time platform events"
       action={
-        <div className="flex items-center gap-3">
-          {/* Mini stats */}
-          <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{stats.signups} signups</span>
-            <span>{stats.submissions} submissions</span>
-            <span>{stats.payouts} payouts</span>
-          </div>
-          <button
-            onClick={() => setIsLive(!isLive)}
+        <button
+          onClick={() => setIsLive(!isLive)}
+          className={cn(
+            "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+            "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <div
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-              "bg-muted border border-border text-muted-foreground hover:text-foreground"
+              "w-1.5 h-1.5 rounded-full",
+              isLive ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
             )}
-          >
-            <div
-              className={cn(
-                "w-1.5 h-1.5 rounded-full",
-                isLive ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
-              )}
-            />
-            {isLive ? "Live" : "Paused"}
-          </button>
-        </div>
+          />
+          {isLive ? "Live" : "Paused"}
+        </button>
       }
       noPadding
     >
-      <div className="max-h-[500px] overflow-y-auto">
+      <div className="max-h-[460px] overflow-y-auto">
         {events.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-muted-foreground text-sm font-inter">No recent activity</p>
+            <p className="text-muted-foreground text-sm">No recent activity</p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {events.map((event, index) => {
+          <div className="divide-y divide-border/50">
+            {events.map((event) => {
               const config = eventConfig[event.type];
               const profile = event.userId ? userProfiles.get(event.userId) : null;
               const displayUsername = event.username || profile?.username;
@@ -559,16 +575,8 @@ export function LiveActivityFeed() {
               return (
                 <div
                   key={event.id}
-                  className={cn(
-                    "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors",
-                    index === 0 && "bg-muted/20"
-                  )}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors"
                 >
-                  {/* Type icon */}
-                  <div className={cn("flex-shrink-0", config?.color)}>
-                    {config?.icon}
-                  </div>
-
                   {/* User avatar with popover */}
                   {event.userId ? (
                     <Popover>
@@ -577,9 +585,9 @@ export function LiveActivityFeed() {
                         onMouseEnter={() => fetchUserProfile(event.userId!)}
                       >
                         <button className="flex-shrink-0 hover:opacity-80 transition-opacity">
-                          <Avatar className="h-7 w-7">
+                          <Avatar className="h-8 w-8">
                             <AvatarImage src={displayAvatar || undefined} />
-                            <AvatarFallback className="bg-muted text-foreground text-[10px]">
+                            <AvatarFallback className="bg-muted text-foreground text-xs">
                               {(displayUsername || '?').charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -588,33 +596,31 @@ export function LiveActivityFeed() {
                       <PopoverContent
                         className="bg-card border-border p-0 w-auto"
                         align="start"
+                        sideOffset={8}
                       >
                         <UserContextCard user={profile} />
                       </PopoverContent>
                     </Popover>
                   ) : (
-                    <div className="w-7" />
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs text-muted-foreground">?</span>
+                    </div>
                   )}
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-foreground font-inter tracking-[-0.5px] truncate">
-                        {event.title}
-                      </p>
-                      {event.platform && getPlatformIcon(event.platform)}
-                    </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       {displayUsername && (
-                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                        <span className="text-sm font-medium text-foreground">
                           @{displayUsername}
-                        </p>
+                        </span>
                       )}
-                      {event.detail && !displayUsername && (
-                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate">
-                          {event.detail}
-                        </p>
+                      {!displayUsername && (
+                        <span className="text-sm text-foreground">
+                          {event.title}
+                        </span>
                       )}
+                      {event.platform && getPlatformIcon(event.platform)}
                       {event.accountLink && (
                         <a
                           href={event.accountLink}
@@ -626,31 +632,51 @@ export function LiveActivityFeed() {
                         </a>
                       )}
                     </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className={cn("font-medium", config?.color)}>
+                        {config?.label}
+                      </span>
+                      {event.detail && (
+                        <>
+                          <span>·</span>
+                          <span className="truncate">{event.detail}</span>
+                        </>
+                      )}
+                      {displayUsername && event.title !== `@${displayUsername}` && event.type !== 'signup' && (
+                        <>
+                          <span>·</span>
+                          <span className="truncate">{event.title}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Amount */}
-                  {event.amount !== undefined && (
-                    <span className="text-xs font-medium text-emerald-400 font-inter">
-                      ${event.amount.toFixed(2)}
-                    </span>
-                  )}
+                  {/* Right side: amount, status, time */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {/* Amount */}
+                    {event.amount !== undefined && (
+                      <span className="text-sm font-medium text-emerald-500 tabular-nums">
+                        ${event.amount.toFixed(2)}
+                      </span>
+                    )}
 
-                  {/* Status badge */}
-                  {event.status && (
-                    <span className={cn(
-                      "text-[10px] px-2 py-0.5 rounded font-medium font-inter uppercase",
-                      event.status === 'completed' || event.status === 'approved' ? "bg-emerald-500/10 text-emerald-400" :
-                      event.status === 'pending' ? "bg-amber-500/10 text-amber-400" :
-                      event.status === 'rejected' || event.status === 'failed' ? "bg-red-500/10 text-red-400" :
-                      "bg-muted text-muted-foreground"
-                    )}>
-                      {event.status}
-                    </span>
-                  )}
+                    {/* Status badge */}
+                    {event.status && (
+                      <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded font-medium capitalize",
+                        event.status === 'completed' || event.status === 'approved' ? "bg-emerald-500/10 text-emerald-500" :
+                        event.status === 'pending' ? "bg-amber-500/10 text-amber-500" :
+                        event.status === 'rejected' || event.status === 'failed' ? "bg-red-500/10 text-red-500" :
+                        "bg-muted text-muted-foreground"
+                      )}>
+                        {event.status}
+                      </span>
+                    )}
 
-                  {/* Timestamp */}
-                  <div className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] whitespace-nowrap">
-                    {formatDistanceToNow(event.timestamp, { addSuffix: false })}
+                    {/* Timestamp */}
+                    <span className="text-[11px] text-muted-foreground tabular-nums w-12 text-right">
+                      {formatDistanceToNow(event.timestamp, { addSuffix: false }).replace(' minutes', 'm').replace(' minute', 'm').replace(' hours', 'h').replace(' hour', 'h').replace(' days', 'd').replace(' day', 'd').replace(' seconds', 's').replace(' second', 's').replace('about ', '').replace('less than a', '<1')}
+                    </span>
                   </div>
                 </div>
               );

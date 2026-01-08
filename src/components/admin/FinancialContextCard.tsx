@@ -21,22 +21,44 @@ export function FinancialContextCard() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // Get user ID for @viral to exclude
-      const { data: excludedProfile } = await supabase
+      // Get user IDs for test accounts to exclude:
+      // 1. @viral username
+      // 2. matt@jenni.ai
+      // 3. Any @virality.gg emails
+      const excludedUserIds: string[] = [];
+
+      // Exclude @viral username
+      const { data: viralProfile } = await supabase
         .from("profiles")
         .select("id")
         .eq("username", "viral")
         .maybeSingle();
 
-      const excludedUserId = excludedProfile?.id;
+      if (viralProfile?.id) {
+        excludedUserIds.push(viralProfile.id);
+      }
 
-      // Get total user wallet balances (excluding @viral)
+      // Exclude matt@jenni.ai and @virality.gg emails
+      const { data: excludedUsers } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .or("email.eq.matt@jenni.ai,email.ilike.%@virality.gg");
+
+      if (excludedUsers) {
+        excludedUsers.forEach((user) => {
+          if (user.id && !excludedUserIds.includes(user.id)) {
+            excludedUserIds.push(user.id);
+          }
+        });
+      }
+
+      // Get total user wallet balances (excluding test accounts)
       const { data: walletsData } = await supabase
         .from("wallets")
         .select("balance, user_id");
 
       const filteredWallets = (walletsData || []).filter(
-        (wallet) => wallet.user_id !== excludedUserId
+        (wallet) => !excludedUserIds.includes(wallet.user_id)
       );
 
       const totalUserWalletBalance = filteredWallets.reduce(

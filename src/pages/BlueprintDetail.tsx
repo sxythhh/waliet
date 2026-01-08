@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink, Check, X, Image, Video, Users } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useAuth } from "@/contexts/AuthContext";
+import DOMPurify from "dompurify";
 
 interface Blueprint {
   id: string;
@@ -157,9 +158,9 @@ export default function BlueprintDetail() {
               </div>
               <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Overview</span>
             </div>
-            <div 
+            <div
               className="prose prose-sm dark:prose-invert max-w-none text-foreground/90 leading-relaxed font-inter tracking-[-0.3px]"
-              dangerouslySetInnerHTML={{ __html: blueprint.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blueprint.content) }}
             />
           </div>
         )}

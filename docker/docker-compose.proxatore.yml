@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  proxatore:
+    image: ghcr.io/lucentw/proxatore:main
+    ports:
+      - "8180:8080"
+    restart: unless-stopped
+    depends_on:
+      - cobalt
+    environment:
+      - COBALT_API_URL=http://cobalt:9000/
+
+  cobalt:
+    image: ghcr.io/imputnet/cobalt:11
+    init: true
+    read_only: true
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - API_URL=http://localhost:9000/

@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { Search, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, BadgeCheck, ArrowUpDown, ArrowUp, ArrowDown, Phone, X, Filter, RefreshCw } from "lucide-react";
+import { Search, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, BadgeCheck, ArrowUpDown, ArrowUp, ArrowDown, Phone, X, Filter, RefreshCw, Download, DollarSign, Ban, UserCheck, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkActionBar } from "@/components/admin/bulk-operations/BulkActionBar";
+import { BulkConfirmationDialog } from "@/components/admin/bulk-operations/BulkConfirmationDialog";
+import { BulkProgressDialog } from "@/components/admin/bulk-operations/BulkProgressDialog";
 import { PageLoading, LoadingBar } from "@/components/ui/loading-bar";
 import { formatDistanceToNow, format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -23,6 +27,23 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import discordIcon from "@/assets/discord-white-icon.webp";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { AudienceInsightsReviewDialog } from "@/components/admin/AudienceInsightsReviewDialog";
+import {
+  AdminSearchInput,
+  AdminButton,
+  AdminTabs,
+  AdminTabContent,
+  AdminToolbar,
+  AdminEmptyState,
+  AdminBadge,
+  AdminStatusBadge,
+  AdminFilterTabs,
+  TYPOGRAPHY,
+  PADDING,
+  BORDERS,
+  BACKGROUNDS,
+  TRANSITIONS,
+  TABLE,
+} from "@/components/admin/design-system";
 
 // Types
 interface User {
@@ -148,6 +169,14 @@ export default function AdminUsers() {
   const [paymentNotes, setPaymentNotes] = useState("");
   const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
 
+  // Bulk selection state
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkConfirmAction, setBulkConfirmAction] = useState<{ title: string; description: string; action: () => void; variant?: "default" | "destructive" } | null>(null);
+  const [bulkProgressOpen, setBulkProgressOpen] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ total: 0, completed: 0, failed: 0, errors: [] as string[] });
+
   // Demographics state
   const [submissions, setSubmissions] = useState<DemographicSubmission[]>([]);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -189,7 +218,9 @@ export default function AdminUsers() {
 
     try {
       // Check if we need to search across ALL users (for post-query filters)
-      const needsFullScan = filters.hasSocialAccount !== null ||
+      // Include search in needsFullScan because we need to search social account usernames client-side
+      const needsFullScan = debouncedSearch ||
+                           filters.hasSocialAccount !== null ||
                            filters.hasApprovedDemographics !== null ||
                            filters.hasBrandRole !== null ||
                            filters.campaign !== "all" ||
@@ -261,7 +292,7 @@ export default function AdminUsers() {
         social_accounts (id, platform, username, follower_count, demographic_submissions (status))
       `, { count: "exact" });
 
-      query = applyDatabaseFilters(query);
+      query = applyDatabaseFilters(query, true); // Skip search - will be applied client-side to include social accounts
       query = query.order("created_at", { ascending: false });
       query = query.range(offset, offset + BATCH_SIZE - 1);
 
@@ -286,6 +317,17 @@ export default function AdminUsers() {
 
     // Apply client-side filters
     let filtered = allUsers;
+
+    // Search filter - check profile fields AND social account usernames
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      filtered = filtered.filter(u =>
+        u.username?.toLowerCase().includes(term) ||
+        u.full_name?.toLowerCase().includes(term) ||
+        u.email?.toLowerCase().includes(term) ||
+        u.social_accounts?.some(acc => acc.username?.toLowerCase().includes(term))
+      );
+    }
 
     // Social account filter
     if (filters.hasSocialAccount === true) {
@@ -361,9 +403,9 @@ export default function AdminUsers() {
     setTotalCount(filtered.length);
   };
 
-  const applyDatabaseFilters = (query: any) => {
-    // Search filter
-    if (debouncedSearch) {
+  const applyDatabaseFilters = (query: any, skipSearch = false) => {
+    // Search filter - skip when doing full scan (search will be applied client-side to include social accounts)
+    if (debouncedSearch && !skipSearch) {
       const term = debouncedSearch.toLowerCase();
       query = query.or(`username.ilike.%${term}%,full_name.ilike.%${term}%,email.ilike.%${term}%`);
     }
@@ -581,75 +623,247 @@ export default function AdminUsers() {
     }
   };
 
+  // Bulk selection handlers
+  const toggleUserSelection = (userId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === users.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(users.map(u => u.id)));
+    }
+  };
+
+  const clearSelection = () => setSelectedUserIds(new Set());
+
+  const getSelectedUsers = () => users.filter(u => selectedUserIds.has(u.id));
+
+  // Bulk action: Export to CSV
+  const handleBulkExport = () => {
+    const selectedUsers = getSelectedUsers();
+    if (selectedUsers.length === 0) return;
+
+    const headers = ["Username", "Full Name", "Email", "Phone", "Balance", "Total Earned", "Trust Score", "Joined"];
+    const rows = selectedUsers.map(u => [
+      u.username,
+      u.full_name || "",
+      u.email || "",
+      u.phone_number || "",
+      u.wallets?.balance?.toFixed(2) || "0.00",
+      u.wallets?.total_earned?.toFixed(2) || "0.00",
+      u.trust_score?.toString() || "0",
+      u.created_at ? format(new Date(u.created_at), "yyyy-MM-dd") : "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `users-export-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success(`Exported ${selectedUsers.length} users to CSV`);
+    clearSelection();
+  };
+
+  // Bulk action: Send bulk payment
+  const handleBulkPayment = async () => {
+    const selectedUsers = getSelectedUsers();
+    if (selectedUsers.length === 0) return;
+
+    setBulkConfirmAction({
+      title: "Bulk Payment",
+      description: `Send payment to ${selectedUsers.length} selected users. You'll be prompted to enter the amount.`,
+      action: async () => {
+        const amountStr = prompt("Enter payment amount (USD) per user:");
+        if (!amountStr) return;
+
+        const amount = parseFloat(amountStr);
+        if (isNaN(amount) || amount <= 0) {
+          toast.error("Invalid amount");
+          return;
+        }
+
+        setBulkConfirmOpen(false);
+        setBulkProgress({ total: selectedUsers.length, completed: 0, failed: 0, errors: [] });
+        setBulkProgressOpen(true);
+        setBulkActionLoading(true);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Not authenticated");
+          setBulkActionLoading(false);
+          return;
+        }
+
+        for (const user of selectedUsers) {
+          try {
+            await supabase.rpc("add_to_wallet", {
+              p_user_id: user.id,
+              p_amount: amount,
+            });
+            await supabase.from("wallet_transactions").insert({
+              user_id: user.id,
+              type: "earning",
+              amount: amount,
+              description: "Bulk payment from admin",
+              metadata: { admin_id: session.user.id, bulk_payment: true }
+            });
+            setBulkProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
+          } catch (error: any) {
+            setBulkProgress(prev => ({
+              ...prev,
+              failed: prev.failed + 1,
+              errors: [...prev.errors, `${user.username}: ${error.message}`]
+            }));
+          }
+        }
+
+        setBulkActionLoading(false);
+        fetchUsers();
+      },
+    });
+    setBulkConfirmOpen(true);
+  };
+
+  // Bulk action definitions
+  const bulkActions = [
+    {
+      id: "export",
+      label: "Export CSV",
+      icon: <Download className="h-4 w-4" />,
+      onClick: handleBulkExport,
+    },
+    {
+      id: "pay",
+      label: "Bulk Pay",
+      icon: <DollarSign className="h-4 w-4" />,
+      onClick: handleBulkPayment,
+    },
+  ];
+
   // Computed values
   const pendingSubmissions = useMemo(() => submissions.filter(s => s.status === "pending"), [submissions]);
   const totalPages = Math.ceil(totalCount / USERS_PER_PAGE);
 
   return (
     <AdminPermissionGuard resource="users">
-      <div className="p-6 space-y-4">
-        <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="bg-muted/30 p-1 h-auto">
-            <TabsTrigger value="users" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
-              Users ({totalCount.toLocaleString()})
-            </TabsTrigger>
-            <TabsTrigger value="demographics" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
-              Audience Insights ({pendingSubmissions.length} pending)
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="users" className="space-y-4">
-            {/* Search & Actions Row */}
-            <div className="flex gap-3 items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search by username, name, email, or social account..."
-                  value={filters.search}
-                  onChange={(e) => updateFilter("search", e.target.value)}
-                  className="pl-10 h-10 bg-muted/30 border-0 font-['Inter'] tracking-[-0.3px]"
-                />
-                {filters.search && (
-                  <button
-                    onClick={() => updateFilter("search", "")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-
-              <Button
+      <div className="h-full flex flex-col">
+        {/* Page Header */}
+        <div className={cn("border-b", BORDERS.default, PADDING.page, "flex-shrink-0")}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={TYPOGRAPHY.pageTitle}>Users</h1>
+              <p className={cn(TYPOGRAPHY.caption, "mt-1")}>
+                Manage {totalCount.toLocaleString()} registered users
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <AdminButton
                 variant="ghost"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className={cn(
-                  "h-10 gap-2 font-['Inter'] tracking-[-0.3px]",
-                  showFilters || activeFilterCount > 0 ? "bg-primary/10 text-primary" : "bg-muted/30"
-                )}
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-
-              <button
                 onClick={fetchUsers}
                 disabled={loading}
-                className="h-10 w-10 flex items-center justify-center rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                leftIcon={loading ? <LoadingBar size="sm" /> : <RefreshCw className="h-4 w-4" />}
               >
-                {loading ? <LoadingBar size="sm" /> : <RefreshCw className="h-4 w-4 text-muted-foreground" />}
-              </button>
+                Refresh
+              </AdminButton>
             </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto p-6 space-y-5">
+          <Tabs defaultValue="users" className="space-y-5">
+            <TabsList className="p-1 h-auto bg-muted/30 rounded-xl border border-border/30">
+              <TabsTrigger
+                value="users"
+                className="text-sm px-5 py-2.5 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/40 font-medium tracking-tight transition-all"
+              >
+                <Users className="h-4 w-4 mr-2 opacity-60" />
+                Users
+                <span className="ml-2 text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">
+                  {totalCount.toLocaleString()}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="demographics"
+                className="text-sm px-5 py-2.5 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/40 font-medium tracking-tight transition-all"
+              >
+                <BadgeCheck className="h-4 w-4 mr-2 opacity-60" />
+                Audience Insights
+                {pendingSubmissions.length > 0 && (
+                  <span className="ml-2 text-xs bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full font-medium">
+                    {pendingSubmissions.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="users" className="space-y-4">
+              {/* Search & Filters Toolbar */}
+              <div className="bg-card border border-border/40 rounded-xl p-4 shadow-sm">
+                <div className="flex gap-3 items-center">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      ref={searchInputRef}
+                      placeholder="Search users..."
+                      value={filters.search}
+                      onChange={(e) => updateFilter("search", e.target.value)}
+                      className="pl-10 h-9 bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
+                    />
+                    {filters.search && (
+                      <button
+                        onClick={() => updateFilter("search", "")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="h-6 w-px bg-border/40" />
+
+                  <AdminButton
+                    variant={showFilters || activeFilterCount > 0 ? "primary" : "secondary"}
+                    onClick={() => setShowFilters(!showFilters)}
+                    leftIcon={<Filter className="h-4 w-4" />}
+                  >
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="ml-1.5 bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </AdminButton>
+
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {loading ? "Loading..." : `${totalCount.toLocaleString()} users`}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
             {/* Filters Panel */}
             {showFilters && (
-              <div className="bg-muted/20 rounded-xl p-4 space-y-4">
+              <div className="bg-card border border-border/40 rounded-xl p-4 space-y-4 shadow-sm">
                 {/* Quick Filters Row */}
                 <div className="flex flex-wrap gap-2">
                   {/* Campaign */}
@@ -860,54 +1074,71 @@ export default function AdminUsers() {
               </div>
             )}
 
-            {/* Results Count */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
-              <span>
-                {loading ? "Loading..." : `Showing ${users.length} of ${totalCount.toLocaleString()} users`}
-              </span>
-              {activeFilterCount > 0 && <span className="text-primary">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active</span>}
-            </div>
-
             {/* Users List */}
+            <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
             {loading ? (
-              <PageLoading />
+              <div className="p-8"><PageLoading /></div>
             ) : users.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground font-['Inter'] tracking-[-0.3px]">No users found</p>
-                {activeFilterCount > 0 && (
-                  <Button variant="link" onClick={clearFilters} className="mt-2 text-sm">
-                    Clear filters
-                  </Button>
-                )}
+              <div className="p-8">
+                <AdminEmptyState
+                  icon={<Users className="h-12 w-12" />}
+                  title="No users found"
+                  description={activeFilterCount > 0 ? "Try adjusting your filters" : undefined}
+                  action={activeFilterCount > 0 ? (
+                    <AdminButton variant="ghost" onClick={clearFilters}>
+                      Clear filters
+                    </AdminButton>
+                  ) : undefined}
+                />
               </div>
             ) : (
-              <div className="space-y-1">
-                {/* Header */}
-                <div className="grid grid-cols-12 gap-3 px-4 py-2 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">
-                  <div className="col-span-4">User</div>
-                  <div className="col-span-2">Accounts</div>
-                  <div className="col-span-1 text-center">Trust</div>
-                  <div className="col-span-2">Joined</div>
-                  <div className="col-span-1 text-right">Balance</div>
-                  <div className="col-span-1 text-right">Earned</div>
-                  <div className="col-span-1"></div>
+              <div>
+                {/* Table Header */}
+                <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] gap-3 px-4 py-3 bg-muted/30 border-b border-border/30 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="w-8 flex items-center">
+                    <Checkbox
+                      checked={users.length > 0 && selectedUserIds.size === users.length}
+                      onCheckedChange={toggleSelectAll}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  </div>
+                  <div className="min-w-[200px]">User</div>
+                  <div className="w-[120px]">Accounts</div>
+                  <div className="w-[60px] text-center">Trust</div>
+                  <div className="w-[100px]">Joined</div>
+                  <div className="w-[80px] text-right">Balance</div>
+                  <div className="w-[80px] text-right">Earned</div>
+                  <div className="w-[60px]"></div>
                 </div>
 
                 {/* User Rows */}
+                <div className="divide-y divide-border/20">
                 {users.map(user => {
                   const balance = user.wallets?.balance || 0;
                   const totalEarned = user.wallets?.total_earned || 0;
                   const trustScore = user.trust_score ?? 0;
                   const trustColor = trustScore >= 70 ? "text-emerald-500" : trustScore >= 40 ? "text-amber-500" : "text-red-400";
+                  const isSelected = selectedUserIds.has(user.id);
 
                   return (
                     <div
                       key={user.id}
                       onClick={() => openUserDetails(user)}
-                      className="grid grid-cols-12 gap-3 px-4 py-3 bg-muted/20 hover:bg-muted/40 rounded-xl cursor-pointer transition-colors items-center"
+                      className={cn(
+                        "grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] gap-3 items-center px-4 py-3 cursor-pointer transition-colors",
+                        isSelected ? "bg-primary/10" : "hover:bg-muted/40"
+                      )}
                     >
+                      {/* Checkbox */}
+                      <div className="w-8 flex items-center" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleUserSelection(user.id)}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      </div>
                       {/* User */}
-                      <div className="col-span-4 flex items-center gap-3 min-w-0">
+                      <div className="min-w-[200px] flex items-center gap-3 min-w-0">
                         {user.avatar_url ? (
                           <img src={user.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover shrink-0" />
                         ) : (
@@ -926,7 +1157,7 @@ export default function AdminUsers() {
                       </div>
 
                       {/* Accounts */}
-                      <div className="col-span-2">
+                      <div className="w-[120px]">
                         {user.social_accounts && user.social_accounts.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {user.social_accounts.slice(0, 3).map(acc => {
@@ -949,29 +1180,29 @@ export default function AdminUsers() {
                       </div>
 
                       {/* Trust */}
-                      <div className="col-span-1 text-center">
+                      <div className="w-[60px] text-center">
                         <span className={cn("text-sm font-medium", trustColor)}>{trustScore}</span>
                       </div>
 
                       {/* Joined */}
-                      <div className="col-span-2">
+                      <div className="w-[100px]">
                         <span className="text-xs text-muted-foreground">
                           {user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "—"}
                         </span>
                       </div>
 
                       {/* Balance */}
-                      <div className="col-span-1 text-right">
+                      <div className="w-[80px] text-right">
                         <span className="text-sm font-medium">${balance.toFixed(2)}</span>
                       </div>
 
                       {/* Earned */}
-                      <div className="col-span-1 text-right">
+                      <div className="w-[80px] text-right">
                         <span className="text-sm font-medium text-emerald-500">${totalEarned.toFixed(2)}</span>
                       </div>
 
                       {/* Actions */}
-                      <div className="col-span-1 flex justify-end">
+                      <div className="w-[60px] flex justify-end">
                         <Button
                           size="sm"
                           onClick={e => { e.stopPropagation(); openPayDialog(user); }}
@@ -983,8 +1214,10 @@ export default function AdminUsers() {
                     </div>
                   );
                 })}
+                </div>
               </div>
             )}
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -1043,19 +1276,19 @@ export default function AdminUsers() {
 
           {/* Demographics Tab */}
           <TabsContent value="demographics" className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-5">
               {/* Pending */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Pending</h3>
+              <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
+                  <h3 className="text-sm font-semibold tracking-tight">Pending Review</h3>
                   <Badge variant="secondary" className="text-xs">{pendingSubmissions.length}</Badge>
                 </div>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                <div className="p-3 space-y-2 max-h-[600px] overflow-y-auto">
                   {pendingSubmissions.map(sub => (
                     <div
                       key={sub.id}
                       onClick={() => { setReviewingSubmission(sub); setReviewDialogOpen(true); }}
-                      className="p-3 bg-muted/30 rounded-xl hover:bg-muted/50 cursor-pointer transition-colors"
+                      className="p-3 bg-muted/30 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors border border-transparent hover:border-border/30"
                     >
                       <div className="flex items-center gap-2 mb-2">
                         {getPlatformIcon(sub.social_accounts.platform)}
@@ -1074,16 +1307,16 @@ export default function AdminUsers() {
               </div>
 
               {/* Approved */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Approved</h3>
+              <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
+                  <h3 className="text-sm font-semibold tracking-tight">Approved</h3>
                   <Badge className="text-xs bg-emerald-500/20 text-emerald-400">
                     {submissions.filter(s => s.status === "approved").length}
                   </Badge>
                 </div>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                <div className="p-3 space-y-2 max-h-[600px] overflow-y-auto">
                   {submissions.filter(s => s.status === "approved").slice(0, 20).map(sub => (
-                    <div key={sub.id} className="p-3 bg-muted/30 rounded-xl">
+                    <div key={sub.id} className="p-3 bg-muted/30 rounded-lg border border-transparent">
                       <div className="flex items-center gap-2 mb-2">
                         {getPlatformIcon(sub.social_accounts.platform)}
                         <span className="text-sm font-medium truncate">@{sub.social_accounts.username}</span>
@@ -1098,16 +1331,16 @@ export default function AdminUsers() {
               </div>
 
               {/* Rejected */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Rejected</h3>
+              <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
+                  <h3 className="text-sm font-semibold tracking-tight">Rejected</h3>
                   <Badge variant="destructive" className="text-xs">
                     {submissions.filter(s => s.status === "rejected").length}
                   </Badge>
                 </div>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                <div className="p-3 space-y-2 max-h-[600px] overflow-y-auto">
                   {submissions.filter(s => s.status === "rejected").slice(0, 20).map(sub => (
-                    <div key={sub.id} className="p-3 bg-muted/30 rounded-xl">
+                    <div key={sub.id} className="p-3 bg-muted/30 rounded-lg border border-transparent">
                       <div className="flex items-center gap-2 mb-2">
                         {getPlatformIcon(sub.social_accounts.platform)}
                         <span className="text-sm font-medium truncate">@{sub.social_accounts.username}</span>
@@ -1122,6 +1355,7 @@ export default function AdminUsers() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
 
         {/* Payment Dialog */}
         <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
@@ -1190,6 +1424,43 @@ export default function AdminUsers() {
             isProcessing={processingSubmission === reviewingSubmission.id}
           />
         )}
+
+        {/* Bulk Action Bar */}
+        <BulkActionBar
+          selectedCount={selectedUserIds.size}
+          actions={bulkActions}
+          onClearSelection={clearSelection}
+          loading={bulkActionLoading}
+        />
+
+        {/* Bulk Confirmation Dialog */}
+        {bulkConfirmAction && (
+          <BulkConfirmationDialog
+            open={bulkConfirmOpen}
+            onOpenChange={setBulkConfirmOpen}
+            title={bulkConfirmAction.title}
+            description={bulkConfirmAction.description}
+            actionLabel="Confirm"
+            onConfirm={bulkConfirmAction.action}
+            variant={bulkConfirmAction.variant}
+          />
+        )}
+
+        {/* Bulk Progress Dialog */}
+        <BulkProgressDialog
+          open={bulkProgressOpen}
+          onOpenChange={setBulkProgressOpen}
+          title="Processing Bulk Action"
+          total={bulkProgress.total}
+          completed={bulkProgress.completed}
+          failed={bulkProgress.failed}
+          isComplete={!bulkActionLoading && bulkProgress.total > 0 && (bulkProgress.completed + bulkProgress.failed) === bulkProgress.total}
+          onClose={() => {
+            setBulkProgressOpen(false);
+            clearSelection();
+          }}
+          errors={bulkProgress.errors}
+        />
       </div>
     </AdminPermissionGuard>
   );

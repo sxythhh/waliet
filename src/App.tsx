@@ -38,6 +38,7 @@ const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Apply = lazy(() => import("./pages/Apply"));
 const Admin = lazy(() => import("./pages/Admin"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
+const DiscordBotOAuthCallback = lazy(() => import("./components/DiscordBotOAuthCallback").then(m => ({ default: m.DiscordBotOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
@@ -63,6 +64,9 @@ const PublicCourseDetail = lazy(() => import("./pages/PublicCourseDetail"));
 const Store = lazy(() => import("./pages/Store"));
 const BrandOnboarding = lazy(() => import("./pages/BrandOnboarding"));
 const AffiliateHowItWorks = lazy(() => import("./pages/AffiliateHowItWorks"));
+const CreatorCampaignDetails = lazy(() => import("./pages/CreatorCampaignDetails"));
+const CreatorBoostDetails = lazy(() => import("./pages/CreatorBoostDetails"));
+const PublicBoostApplication = lazy(() => import("./pages/PublicBoostApplication"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -114,9 +118,9 @@ function SubdomainHandler({ children }: { children: React.ReactNode }) {
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <AppSidebar />
-      <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0">{children}</main>
+      <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0 overflow-y-auto">{children}</main>
     </div>
   );
 }
@@ -152,6 +156,7 @@ const App = () => (
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+                  <Route path="/discord/bot-callback" element={<DiscordBotOAuthCallback />} />
                   <Route path="/x/callback" element={<XOAuthCallback />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/discover" element={<Discover />} />
@@ -189,9 +194,24 @@ const App = () => (
                   <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
                   <Route path="/join/:slug" element={<JoinRedirect />} />
                   <Route path="/c/:slug" element={<CampaignApply />} />
+                  <Route path="/apply/:slug" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PublicBoostApplication />
+                    </Suspense>
+                  } />
                   <Route path="/dashboard" element={
                     <Suspense fallback={<DashboardLoader />}>
                       <WorkspaceProvider><Dashboard /></WorkspaceProvider>
+                    </Suspense>
+                  } />
+                  <Route path="/dashboard/campaign/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <WorkspaceProvider><DashboardLayout><CreatorCampaignDetails /></DashboardLayout></WorkspaceProvider>
+                    </Suspense>
+                  } />
+                  <Route path="/dashboard/boost/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <WorkspaceProvider><DashboardLayout><CreatorBoostDetails /></DashboardLayout></WorkspaceProvider>
                     </Suspense>
                   } />
                   <Route path="/campaign/:id" element={

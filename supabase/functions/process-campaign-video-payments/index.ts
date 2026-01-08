@@ -96,46 +96,28 @@ Deno.serve(async (req) => {
 
         console.log(`Video ${submission.id}: ${currentViews} views at $${campaign.rpm_rate}/CPM = $${cpmEarned.toFixed(2)} total (already paid: $${alreadyPaidCpm.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
 
-        // Create wallet transaction for the creator
-        const { data: transaction, error: txError } = await supabase
-          .from('wallet_transactions')
-          .insert({
-            user_id: submission.creator_id,
-            amount: amountToPay,
-            type: 'campaign',
-            description: `CPM payment: $${campaign.rpm_rate}/1K views (${currentViews.toLocaleString()} views) - ${campaign.title}`,
-            metadata: {
+        // Use atomic RPC function to create transaction and update balance atomically
+        const { data: paymentResult, error: paymentError } = await supabase
+          .rpc('atomic_campaign_payment', {
+            p_creator_id: submission.creator_id,
+            p_campaign_id: campaign.id,
+            p_amount: amountToPay,
+            p_description: `CPM payment: $${campaign.rpm_rate}/1K views (${currentViews.toLocaleString()} views) - ${campaign.title}`,
+            p_metadata: {
               campaign_id: campaign.id,
               video_submission_id: submission.id,
               views_at_payout: currentViews,
               cpm_rate: campaign.rpm_rate,
               payment_type: 'cpm'
             }
-          })
-          .select()
-          .single();
+          });
 
-        if (txError) {
-          console.error('Error creating CPM transaction:', txError);
+        if (paymentError) {
+          console.error('Error processing atomic campaign payment:', paymentError);
           continue;
         }
 
-        // Update creator's wallet balance
-        const { data: wallet } = await supabase
-          .from('wallets')
-          .select('balance, total_earned')
-          .eq('user_id', submission.creator_id)
-          .single();
-
-        if (wallet) {
-          await supabase
-            .from('wallets')
-            .update({
-              balance: (wallet.balance || 0) + amountToPay,
-              total_earned: (wallet.total_earned || 0) + amountToPay
-            })
-            .eq('user_id', submission.creator_id);
-        }
+        const transaction = paymentResult;
 
         // Upsert the CPM payout record
         if (existingPayout) {
@@ -144,7 +126,7 @@ Deno.serve(async (req) => {
             .update({
               views_at_payout: currentViews,
               cpm_amount_paid: cpmEarned,
-              transaction_id: transaction?.id,
+              transaction_id: transaction?.transaction_id,
               updated_at: new Date().toISOString()
             })
             .eq('id', existingPayout.id);
@@ -158,7 +140,7 @@ Deno.serve(async (req) => {
               views_at_payout: currentViews,
               cpm_amount_paid: cpmEarned,
               flat_rate_paid: campaign.post_rate || 0,
-              transaction_id: transaction?.id
+              transaction_id: transaction?.transaction_id
             });
         }
 

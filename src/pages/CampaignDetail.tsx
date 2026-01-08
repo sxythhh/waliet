@@ -200,14 +200,25 @@ const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
       if (submissionError) throw submissionError;
 
-      // 2. Unlink all social accounts from this campaign
-      const { error: accountError } = await supabase
+      // 2. Disconnect all social accounts from this campaign in junction table
+      const { data: userAccounts } = await supabase
         .from("social_accounts")
-        .update({ campaign_id: null })
-        .eq("campaign_id", id)
+        .select("id")
         .eq("user_id", user.id);
 
-      if (accountError) throw accountError;
+      if (userAccounts && userAccounts.length > 0) {
+        const accountIds = userAccounts.map(acc => acc.id);
+        const { error: accountError } = await supabase
+          .from("social_account_campaigns")
+          .update({
+            status: 'disconnected',
+            disconnected_at: new Date().toISOString()
+          })
+          .in("social_account_id", accountIds)
+          .eq("campaign_id", id);
+
+        if (accountError) throw accountError;
+      }
 
       toast({
         title: "Left Campaign",

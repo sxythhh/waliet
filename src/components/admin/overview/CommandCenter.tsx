@@ -1,12 +1,11 @@
 "use client";
 
 import { MetricsGrid } from "./MetricsGrid";
+import { InsightsMetricsGrid } from "./InsightsMetricsGrid";
 import { LiveActivityFeed } from "./LiveActivityFeed";
 import { QuickActions } from "./QuickActions";
 import { SendAnnouncementDialog } from "../SendAnnouncementDialog";
 import { FraudAnalyticsCard } from "../FraudAnalyticsCard";
-import { PlatformHealthMetrics } from "./PlatformHealthMetrics";
-import { PostHogAnalytics } from "./PostHogAnalytics";
 
 export function CommandCenter() {
   return (
@@ -25,14 +24,11 @@ export function CommandCenter() {
           <SendAnnouncementDialog />
         </div>
 
-        {/* Metrics Grid */}
+        {/* Primary Metrics Grid */}
         <MetricsGrid />
 
-        {/* Platform Health Metrics */}
-        <PlatformHealthMetrics />
-
-        {/* PostHog Site Analytics */}
-        <PostHogAnalytics />
+        {/* Platform Insights - Additional Metrics */}
+        <InsightsMetricsGrid />
 
         {/* Two column layout for activity and quick actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

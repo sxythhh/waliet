@@ -80,14 +80,32 @@ export default function ResetPassword() {
     };
   }, [navigate, toast]);
 
+  // Password validation helper
+  const validatePassword = (password: string): { valid: boolean; error?: string } => {
+    if (password.length < 8) {
+      return { valid: false, error: "Password must be at least 8 characters long." };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return { valid: false, error: "Password must contain at least one uppercase letter." };
+    }
+    if (!/[a-z]/.test(password)) {
+      return { valid: false, error: "Password must contain at least one lowercase letter." };
+    }
+    if (!/[0-9]/.test(password)) {
+      return { valid: false, error: "Password must contain at least one number." };
+    }
+    return { valid: true };
+  };
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (newPassword.length < 6) {
+
+    const validation = validatePassword(newPassword);
+    if (!validation.valid) {
       toast({
         variant: "destructive",
-        title: "Password too short",
-        description: "Password must be at least 6 characters long."
+        title: "Weak password",
+        description: validation.error
       });
       return;
     }
@@ -161,7 +179,7 @@ export default function ResetPassword() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   disabled={loading}
-                  minLength={6}
+                  minLength={8}
                   className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10"
                 />
                 <button
@@ -172,6 +190,9 @@ export default function ResetPassword() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Must be 8+ characters with uppercase, lowercase, and number
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -185,7 +206,7 @@ export default function ResetPassword() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={loading}
-                  minLength={6}
+                  minLength={8}
                   className="h-11 bg-[#0F0F0F] border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors pr-10"
                 />
                 <button

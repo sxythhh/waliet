@@ -626,7 +626,7 @@ export function CampaignsTab({
       // 2. Get all linked social accounts before unlinking
       const {
         data: linkedAccounts
-      } = await supabase.from("social_account_campaigns").select("social_account_id, social_accounts(id)").eq("campaign_id", selectedCampaignId).eq("social_accounts.user_id", user.id);
+      } = await supabase.from("social_account_campaigns").select("social_account_id, social_accounts(id)").eq("campaign_id", selectedCampaignId).eq("user_id", user.id);
 
       // 3. Stop tracking in Shortimize for each linked account
       if (linkedAccounts && linkedAccounts.length > 0) {
@@ -705,64 +705,67 @@ export function CampaignsTab({
         </div>
       </div>
 
-      {/* Actions Section - Hidden if user has joined campaigns AND has payment method */}
-      {!shouldHideActionCards && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <button onClick={() => window.open('https://discord.gg/virality', '_blank')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
-            <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-              <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Join Discord </h3>
-              <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-                Connect with our community and be the first to know about new campaigns.
-              </p>
-            </div>
-          </button>
-
-          <button onClick={() => navigate('/resources')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
-            <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-              <img src={resolvedTheme === 'dark' ? schoolIcon : schoolIconBlack} alt="" className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Start Learning</h3>
-              <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-                Go through our creator training resources to learn how to earn from opportunities.
-              </p>
-            </div>
-          </button>
-
-          <button onClick={() => navigate('/dashboard?tab=profile')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
-            <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-              <img src={creditCardIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Manage Payouts </h3>
-              <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-                Set up your wallet, payment details, and cash out your earnings.
-              </p>
-            </div>
-          </button>
-        </div>}
-
       {/* Earnings & Transactions Section */}
       {(walletTransactions.length > 0 || totalEarned > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Earnings Chart */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
-              <div className="text-right">
-                <p className="text-lg font-bold text-emerald-500 font-geist tracking-[-0.5px]">
-                  ${totalEarned.toFixed(2)}
-                </p>
-                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
+          {/* Left Column - Chart + Quick Actions */}
+          <div className="space-y-4">
+            {/* Earnings Chart */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-emerald-500 font-geist tracking-[-0.5px]">
+                    ${totalEarned.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
+                </div>
+              </div>
+              <EarningsChart transactions={walletTransactions} totalEarned={totalEarned} showPeriodSelector={true} />
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-card border border-border rounded-xl p-4">
+              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm mb-3">Quick Actions</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => window.open('https://discord.gg/virality', '_blank')}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-left group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center flex-shrink-0">
+                    <img src={discordWhiteIcon} alt="" className="w-4 h-4 invert dark:invert-0" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] flex-1">Join Discord</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </button>
+
+                <button
+                  onClick={() => navigate('/resources')}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-left group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center flex-shrink-0">
+                    <img src={resolvedTheme === 'dark' ? schoolIcon : schoolIconBlack} alt="" className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] flex-1">Start Learning</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </button>
+
+                <button
+                  onClick={() => navigate('/dashboard?tab=profile')}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-left group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-background flex items-center justify-center flex-shrink-0">
+                    <img src={creditCardIcon} alt="" className="w-4 h-4 invert dark:invert-0" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] flex-1">Manage Payouts</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </button>
               </div>
             </div>
-            <EarningsChart transactions={walletTransactions} totalEarned={totalEarned} showPeriodSelector={true} />
           </div>
 
-          {/* Recent Transactions */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          {/* Right Column - Transactions */}
+          <div className="bg-card border border-border rounded-xl p-5 lg:self-start">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Transactions</h3>
               <TransactionFilterDropdown
@@ -779,6 +782,7 @@ export function CampaignsTab({
                 return true;
               })}
               showPagination={false}
+              variant="compact"
               maxHeight="400px"
               onTransactionClick={(t) => {
                 setSelectedTransaction(t);
@@ -1191,7 +1195,7 @@ export function CampaignsTab({
                       <span className="text-xs font-mono text-muted-foreground break-all">
                         {selectedTransaction.id}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" onClick={() => {
+                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" aria-label="Copy transaction ID" onClick={() => {
                     navigator.clipboard.writeText(selectedTransaction.id);
                     setCopiedId(true);
                     setTimeout(() => setCopiedId(false), 2000);

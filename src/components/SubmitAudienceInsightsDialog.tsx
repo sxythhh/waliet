@@ -9,7 +9,6 @@ import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, CheckCircle2, Clock, XCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
-import { AudienceInsightsGuidance } from "./AudienceInsightsGuidance";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -273,128 +272,147 @@ export function SubmitAudienceInsightsDialog({
     setVideoFile(file);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]" style={{
-      fontFamily: 'Inter',
-      letterSpacing: '-0.5px'
-    }}>
-        <DialogHeader>
-          <DialogTitle style={{
-          fontFamily: 'Inter',
-          letterSpacing: '-0.5px'
-        }}>Share Audience Insights</DialogTitle>
-          <DialogDescription style={{
-          fontFamily: 'Inter',
-          letterSpacing: '-0.3px'
-        }}>
-            Upload a video showing your audience insights
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4">
+          <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
+            Submit Audience Insights
+          </h2>
 
-        {/* Account Info */}
-        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border/50">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-            {getPlatformIcon(platform)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+          {/* Account Label */}
+          <div className="inline-flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-muted/60 dark:bg-muted/40">
+            <div className="w-6 h-6 rounded-lg bg-white dark:bg-background flex items-center justify-center flex-shrink-0">
+              {getPlatformIcon(platform)}
+            </div>
+            <span className="text-sm font-medium font-inter tracking-[-0.3px]">
               @{username}
-            </p>
-            <p className="text-xs text-muted-foreground capitalize">{platform}</p>
+            </span>
           </div>
+
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-4">
+            Audience insights help brands understand your follower demographics. Accounts with verified insights get prioritized for campaign invites and higher payouts.
+          </p>
         </div>
 
-        {/* Previous Submissions */}
-        {!loadingSubmissions && previousSubmissions.length > 0 && (
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Previous Submissions</Label>
-            <div className="space-y-2 max-h-[120px] overflow-y-auto">
-              {previousSubmissions.map((submission) => {
-                const statusConfig = getStatusConfig(submission.status);
-                const StatusIcon = statusConfig.icon;
-                return (
-                  <div 
-                    key={submission.id} 
-                    className="flex items-center justify-between p-2 bg-muted/30 rounded-md border border-border/30"
-                  >
-                    <div className="flex items-center gap-2">
-                      <StatusIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(submission.submitted_at), 'MMM d, yyyy')}
+        {/* Content */}
+        <div className="px-6 pb-6 space-y-4">
+          {/* Previous Submissions */}
+          {!loadingSubmissions && previousSubmissions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Previous Submissions</p>
+              <div className="space-y-1.5 max-h-[100px] overflow-y-auto">
+                {previousSubmissions.map((submission) => {
+                  const statusConfig = getStatusConfig(submission.status);
+                  const StatusIcon = statusConfig.icon;
+                  return (
+                    <div
+                      key={submission.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/50 dark:bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2">
+                        <StatusIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                          {format(new Date(submission.submitted_at), 'MMM d, yyyy')}
+                        </span>
+                      </div>
+                      <span className={`text-xs font-medium font-inter tracking-[-0.3px] px-2 py-0.5 rounded-full ${
+                        submission.status === 'approved'
+                          ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                          : submission.status === 'rejected'
+                            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {statusConfig.label}
                       </span>
                     </div>
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusConfig.className}`}>
-                      {statusConfig.label}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {hasPendingSubmission && (
-          <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-            <p className="text-xs text-yellow-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-              You have a pending submission being reviewed. You cannot submit again until it's processed.
-            </p>
-          </div>
-        )}
-
-        {/* Recording Guidance - expanded by default for first-time submitters */}
-        {!hasPendingSubmission && (
-          <AudienceInsightsGuidance
-            platform={platform}
-            defaultExpanded={previousSubmissions.length === 0}
-          />
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-
-
-          {/* Video Upload */}
-          <div className="space-y-2">
-            <Label style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.3px'
-          }}>Audience Insights Video</Label>
-            
-            <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => !uploading && fileInputRef.current?.click()}>
-              {videoFile ? <div className="space-y-2">
-                  <CheckCircle2 className="h-8 w-8 mx-auto text-primary" />
-                  <p className="text-sm font-medium" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>{videoFile.name}</p>
-                  <p className="text-xs text-muted-foreground">{!uploading && 'Click to change'}</p>
-                </div> : <div className="space-y-2">
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>Upload Video (Max 50MB)</p>
-                  <p className="text-xs text-muted-foreground">MP4, MOV, or other video formats</p>
-                </div>}
-            </div>
-            <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" required />
-          </div>
-
-          {/* Upload Progress */}
-          {uploading && <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Uploading...</span>
-                <span>{Math.round(uploadProgress)}%</span>
+                  );
+                })}
               </div>
-              <Progress value={uploadProgress} className="h-2" />
-            </div>}
+            </div>
+          )}
 
-          {/* Submit Button */}
-          <Button type="submit" className="w-full" disabled={uploading} style={{
-          fontFamily: 'Inter',
-          letterSpacing: '-0.3px'
-        }}>
-            {uploading ? "Uploading..." : "Submit Insights"}
-          </Button>
-        </form>
+          {/* Pending Warning */}
+          {hasPendingSubmission && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10">
+              <p className="text-sm text-amber-600 dark:text-amber-400 font-inter tracking-[-0.3px]">
+                You have a pending submission being reviewed. You cannot submit again until it's processed.
+              </p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Video Upload */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Upload Video</p>
+
+              <div
+                className={`rounded-xl p-6 text-center cursor-pointer transition-colors ${
+                  videoFile
+                    ? 'bg-primary/5 dark:bg-primary/10'
+                    : 'bg-muted/50 dark:bg-muted/30 hover:bg-muted/80 dark:hover:bg-muted/50'
+                }`}
+                onClick={() => !uploading && fileInputRef.current?.click()}
+              >
+                {videoFile ? (
+                  <div className="space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium font-inter tracking-[-0.3px] truncate max-w-[250px] mx-auto">
+                      {videoFile.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      {!uploading && 'Click to change'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-muted dark:bg-muted/50 flex items-center justify-center mx-auto">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium font-inter tracking-[-0.3px]">
+                      Click to upload video
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      MP4, MOV up to 50MB
+                    </p>
+                  </div>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileChange} className="hidden" required />
+            </div>
+
+            {/* Upload Progress */}
+            {uploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                  <span>Uploading...</span>
+                  <span>{Math.round(uploadProgress)}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-1.5" />
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border/50 flex gap-3">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 h-11 rounded-xl bg-muted/60 dark:bg-muted/40 hover:bg-muted transition-colors text-sm font-medium font-inter tracking-[-0.3px]"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={uploading || hasPendingSubmission || !videoFile}
+            className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium font-inter tracking-[-0.3px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {uploading ? "Uploading..." : "Submit"}
+          </button>
+        </div>
       </DialogContent>
     </Dialog>;
 }

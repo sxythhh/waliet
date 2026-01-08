@@ -3,6 +3,11 @@ const ALLOWED_ORIGINS = [
   'https://virality.gg',
   'https://www.virality.gg',
   'https://app.virality.gg',
+  // Vercel deployment URLs
+  'https://virality-nexus.vercel.app',
+  'https://virality-nexus-git-main.vercel.app',
+  // Allow all Vercel preview deployments
+  //'https://*.vercel.app', // Uncomment if needed for preview deployments
   // Allow localhost for development
   'http://localhost:3000',
   'http://localhost:5173',

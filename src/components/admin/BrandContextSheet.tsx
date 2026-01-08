@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
 import { CustomPlanManager } from "./CustomPlanManager";
+import { BrandCRMTab } from "./BrandCRMTab";
 
 interface Brand {
   id: string;
@@ -106,7 +107,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "activity" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "activity" | "crm" | "settings">("overview");
 
   // Subscription editing state
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
@@ -371,7 +372,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-[420px] p-0 border-l border-border/50 bg-background">
+      <SheetContent width="md" className="w-full p-0 border-l border-border/50 bg-background">
         <ScrollArea className="h-full">
           {/* Header */}
           <div className="px-6 pt-6 pb-5 border-b border-border/50">
@@ -524,6 +525,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
               {[
                 { id: "overview", label: "Overview" },
                 { id: "activity", label: "Activity" },
+                { id: "crm", label: "CRM" },
                 { id: "settings", label: "Settings" },
               ].map((tab) => (
                 <button
@@ -756,6 +758,10 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   </p>
                 )}
               </section>
+            )}
+
+            {activeTab === "crm" && (
+              <BrandCRMTab brandId={brand.id} brandName={brand.name} />
             )}
 
             {activeTab === "settings" && (

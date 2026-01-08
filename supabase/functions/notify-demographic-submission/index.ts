@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
   try {
     const notification: DemographicSubmissionNotification = await req.json();
 
-    const webhookUrl = 'https://discord.com/api/webhooks/1424687897663242301/M8G4DRyvS1N-6ElAZT4-10VufFG_Tn1LsB4FeLaKObnlDLNe8zUtJVuLXdoO2tKkjD6h';
+    const webhookUrl = Deno.env.get('DISCORD_DEMOGRAPHIC_SUBMISSION_WEBHOOK_URL');
     
     if (!webhookUrl) {
       console.error('Discord webhook URL not configured');

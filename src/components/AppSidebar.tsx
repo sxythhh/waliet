@@ -634,9 +634,9 @@ export function AppSidebar() {
                     {/* Creator Dashboard */}
                     {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isCreatorMode ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
                         <div className="flex items-center gap-2.5">
-                          <Avatar className="w-6 h-6">
-                            {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" /> : null}
-                            <AvatarFallback className="text-[10px] font-semibold uppercase">{displayName?.charAt(0) || 'C'}</AvatarFallback>
+                          <Avatar className="w-6 h-6 rounded-md">
+                            {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} className="object-cover rounded-md" /> : null}
+                            <AvatarFallback className="text-[10px] font-semibold uppercase rounded-md">{displayName?.charAt(0) || 'C'}</AvatarFallback>
                           </Avatar>
                           <span className="text-[13px] font-medium text-foreground">Creator Dashboard</span>
                         </div>
@@ -646,25 +646,25 @@ export function AppSidebar() {
                     {/* Admin brands */}
                     {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === brand.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
-                            {brand.logo_url ? <Avatar className="w-6 h-6">
-                                <AvatarImage src={brand.logo_url} alt={brand.name} className="object-cover" />
-                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{brand.name.charAt(0)}</AvatarFallback>
-                              </Avatar> : <Avatar className="w-6 h-6">
-                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{brand.name.charAt(0)}</AvatarFallback>
+                            {brand.logo_url ? <Avatar className="w-6 h-6 rounded-md">
+                                <AvatarImage src={brand.logo_url} alt={brand.name} className="object-cover rounded-md" />
+                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brand.name.charAt(0)}</AvatarFallback>
+                              </Avatar> : <Avatar className="w-6 h-6 rounded-md">
+                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brand.name.charAt(0)}</AvatarFallback>
                               </Avatar>}
                             <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{brand.name}</span>
                           </div>
                           {workspace === brand.slug && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center"><Check className="w-2.5 h-2.5 text-primary-foreground" /></div>}
                         </button>)}
-                    
+
                     {/* Non-admin brand memberships */}
                     {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === membership.brands.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
-                            {membership.brands.logo_url ? <Avatar className="w-6 h-6">
-                                <AvatarImage src={membership.brands.logo_url} alt={membership.brands.name} className="object-cover" />
-                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{membership.brands.name.charAt(0)}</AvatarFallback>
-                              </Avatar> : <Avatar className="w-6 h-6">
-                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{membership.brands.name.charAt(0)}</AvatarFallback>
+                            {membership.brands.logo_url ? <Avatar className="w-6 h-6 rounded-md">
+                                <AvatarImage src={membership.brands.logo_url} alt={membership.brands.name} className="object-cover rounded-md" />
+                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{membership.brands.name.charAt(0)}</AvatarFallback>
+                              </Avatar> : <Avatar className="w-6 h-6 rounded-md">
+                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{membership.brands.name.charAt(0)}</AvatarFallback>
                               </Avatar>}
                             <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{membership.brands.name}</span>
                           </div>

@@ -2,13 +2,9 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import paypalLogo from "@/assets/paypal-logo.svg";
-import ethereumLogo from "@/assets/ethereum-logo.png";
-import optimismLogo from "@/assets/optimism-logo.png";
 import solanaLogo from "@/assets/solana-logo.png";
-import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 import walletIcon from "@/assets/wallet-active.svg";
 import bankIcon from "@/assets/bank-icon.svg";
@@ -21,13 +17,6 @@ interface PayoutMethodDialogProps {
   currentMethodCount: number;
 }
 
-const cryptoNetworks = [
-  { id: "ethereum", name: "Ethereum", logo: ethereumLogo },
-  { id: "optimism", name: "Optimism", logo: optimismLogo },
-  { id: "solana", name: "Solana", logo: solanaLogo },
-  { id: "polygon", name: "Polygon", logo: polygonLogo },
-];
-
 export default function PayoutMethodDialog({
   open,
   onOpenChange,
@@ -35,7 +24,6 @@ export default function PayoutMethodDialog({
   currentMethodCount
 }: PayoutMethodDialogProps) {
   const [selectedMethod, setSelectedMethod] = useState<"crypto" | "paypal" | "bank" | "upi">("crypto");
-  const [selectedNetwork, setSelectedNetwork] = useState(cryptoNetworks[0].id);
   const [walletAddress, setWalletAddress] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
   const [bankName, setBankName] = useState("");
@@ -50,7 +38,7 @@ export default function PayoutMethodDialog({
       if (!walletAddress) return;
       onSave("crypto", {
         currency: "usdc",
-        network: selectedNetwork,
+        network: "solana",
         address: walletAddress
       });
     } else if (selectedMethod === "paypal") {
@@ -80,12 +68,10 @@ export default function PayoutMethodDialog({
   };
 
   const isMaxMethodsReached = currentMethodCount >= 3;
-  const isDisabled = (selectedMethod === "crypto" && !walletAddress) || 
+  const isDisabled = (selectedMethod === "crypto" && !walletAddress) ||
                      (selectedMethod === "paypal" && !paypalEmail) ||
                      (selectedMethod === "bank" && (!bankName || !accountNumber || !routingNumber || !accountHolderName)) ||
                      (selectedMethod === "upi" && !upiId);
-
-  const selectedNetworkData = cryptoNetworks.find(n => n.id === selectedNetwork);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,55 +174,33 @@ export default function PayoutMethodDialog({
             <div className="px-6 py-5 space-y-5">
               {selectedMethod === "crypto" && (
                 <>
-                  {/* Currency Display */}
+                  {/* Currency & Network Display */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <img src={usdcLogo} alt="USDC" className="w-8 h-8" />
-                    <div>
-                      <p className="text-sm font-medium">USDC</p>
-                      <p className="text-xs text-muted-foreground">USD Coin</p>
+                    <div className="relative">
+                      <img src={usdcLogo} alt="USDC" className="w-8 h-8" />
+                      <img src={solanaLogo} alt="Solana" className="w-4 h-4 absolute -bottom-0.5 -right-0.5 rounded-full border border-background" />
                     </div>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <label className="text-xs font-medium text-foreground font-inter tracking-[-0.5px]">
-                      Network
-                    </label>
-                    <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-                      <SelectTrigger className="h-11 bg-muted/50 border-transparent focus:ring-0 font-inter tracking-[-0.5px]">
-                        <SelectValue>
-                          {selectedNetworkData && (
-                            <div className="flex items-center gap-2">
-                              <img src={selectedNetworkData.logo} alt={selectedNetworkData.name} className="w-5 h-5" />
-                              <span>{selectedNetworkData.name}</span>
-                            </div>
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        {cryptoNetworks.map((network) => (
-                          <SelectItem key={network.id} value={network.id} className="font-inter tracking-[-0.5px]">
-                            <div className="flex items-center gap-2">
-                              <img src={network.logo} alt={network.name} className="w-5 h-5" />
-                              <span>{network.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div>
+                      <p className="text-sm font-medium">USDC on Solana</p>
+                      <p className="text-xs text-muted-foreground">Fast & low fees</p>
+                    </div>
                   </div>
 
                   {/* Wallet Address */}
                   <div className="space-y-2.5">
                     <label htmlFor="wallet-address" className="text-xs font-medium text-foreground font-inter tracking-[-0.5px]">
-                      Wallet Address
+                      Solana Wallet Address
                     </label>
                     <Input
                       id="wallet-address"
-                      placeholder="0x..."
+                      placeholder="Enter your Solana address..."
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
                       className="h-11 bg-muted/50 border-transparent focus:border-transparent focus:bg-background placeholder:text-muted-foreground/50 font-inter tracking-[-0.5px]"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Only send to a Solana wallet that supports USDC (SPL token).
+                    </p>
                   </div>
 
                   {/* Add Method Button */}

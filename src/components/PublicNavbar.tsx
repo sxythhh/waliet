@@ -1,5 +1,4 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
 import HelpIcon from "@mui/icons-material/Help";
 import searchIcon from "@/assets/search-icon.svg";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ import { FloatingFooter } from "@/components/FloatingFooter";
 import forBrandsIcon from "@/assets/for-brands-icon.png";
 import forBrandsIconLight from "@/assets/for-brands-icon-light.svg";
 import exploreIconDark from "@/assets/explore-icon-dark.svg";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface PublicNavbarProps {
   searchQuery?: string;
@@ -25,7 +23,6 @@ export default function PublicNavbar({
 }: PublicNavbarProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -86,9 +83,6 @@ export default function PublicNavbar({
     return () => subscription.unsubscribe();
   }, []);
   const isActive = (path: string) => location.pathname === path;
-  const handleMobileNavClick = () => {
-    setMobileMenuOpen(false);
-  };
   return <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#0a0a0a] border-b border-border">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
@@ -193,79 +187,21 @@ export default function PublicNavbar({
                   </>}
               </div>
 
-              {/* Mobile Create Account Button */}
-              {isAuthenticated === false && <Button size="sm" onClick={() => setShowAuthDialog(true)} className="md:hidden font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 shadow-[0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-md">
-                  Create Account
-                </Button>}
-
-              {/* Mobile Hamburger Menu */}
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild className="md:hidden">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Open menu</span>
+              {/* Mobile Auth Buttons */}
+              <div className="md:hidden">
+                {isAuthenticated === true && (
+                  <Link to="/dashboard">
+                    <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
+                      Dashboard
+                    </Button>
+                  </Link>
+                )}
+                {isAuthenticated === false && (
+                  <Button size="sm" onClick={() => setShowAuthDialog(true)} className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 shadow-[0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-md">
+                    Create Account
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[280px] bg-background border-border p-0">
-                  <div className="flex flex-col h-full">
-                    
-
-                    <div className="flex-1 overflow-y-auto py-4">
-                      <div className="px-4 space-y-1">
-                        <Link to="/discover" onClick={handleMobileNavClick} className="block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] text-foreground hover:bg-muted/50 rounded-lg transition-colors">
-                          Discover
-                        </Link>
-                        <Link to="/new" onClick={handleMobileNavClick} className="block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] text-foreground hover:bg-muted/50 rounded-lg transition-colors">
-                          For Brands
-                        </Link>
-                        <Link to="/resources" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] rounded-lg transition-colors ${isActive('/resources') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
-                          Resources
-                        </Link>
-                        <Link to="/contact" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] rounded-lg transition-colors ${isActive('/contact') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
-                          Contact
-                        </Link>
-                        <Link to="/support" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] rounded-lg transition-colors ${isActive('/support') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
-                          Support
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="p-4 border-t border-border space-y-2">
-                      {isAuthenticated === null ? null : isAuthenticated ? <>
-                          <Link to="/dashboard" onClick={handleMobileNavClick} className="block">
-                            <Button size="sm" className="w-full font-geist font-medium tracking-[-0.5px] bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] rounded-lg">
-                              Dashboard
-                            </Button>
-                          </Link>
-                          {userProfile?.username && (
-                            <Link to={`/@${userProfile.username}`} onClick={handleMobileNavClick} className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 rounded-lg transition-colors">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={userProfile.avatar_url || ''} alt={userProfile.username} />
-                                <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
-                                  {userProfile.username[0]?.toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm font-semibold font-['Inter'] tracking-[-0.3px] text-foreground">View Profile</span>
-                            </Link>
-                          )}
-                        </> : <>
-                          <Button variant="ghost" size="sm" className="w-full font-geist font-medium tracking-[-0.5px]" onClick={() => {
-                        setShowAuthDialog(true);
-                        setMobileMenuOpen(false);
-                      }}>
-                            Sign In
-                          </Button>
-                          <Button size="sm" onClick={() => {
-                        setShowAuthDialog(true);
-                        setMobileMenuOpen(false);
-                      }} className="w-full font-geist font-medium tracking-[-0.5px] bg-gradient-to-b from-primary via-primary to-primary/70 border-t border-[#a11010]/[0.26] rounded-lg">
-                            Create Account
-                          </Button>
-                        </>}
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                )}
+              </div>
             </div>
           </div>
         </nav>

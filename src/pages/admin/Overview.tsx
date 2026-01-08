@@ -1,7 +1,7 @@
 import { CommandCenter } from "@/components/admin/overview/CommandCenter";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { ScheduledFunctionsTab } from "@/components/admin/ScheduledFunctionsTab";
-import { AdminContentCalendar } from "@/components/admin/AdminContentCalendar";
+import { PlatformHealthCard } from "@/components/admin/overview/PlatformHealthCard";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 
 export default function AdminOverview() {
@@ -13,8 +13,8 @@ export default function AdminOverview() {
       {/* Additional Analytics Sections */}
       <div className="w-full p-4 md:p-6 pt-0">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Content Calendar */}
-          <AdminContentCalendar />
+          {/* Platform Health & Database Metrics */}
+          <PlatformHealthCard />
 
           {/* Detailed Analytics */}
           <AnalyticsTab />

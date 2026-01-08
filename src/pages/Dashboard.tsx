@@ -12,9 +12,7 @@ import { BrandCampaignsTab } from "@/components/dashboard/BrandCampaignsTab";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
-import { UserOnboardingFlow, AnnouncementPopup } from "@/components/onboarding";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
+import { AnnouncementPopup } from "@/components/onboarding";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
@@ -41,9 +39,7 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
-  const [showUserOnboarding, setShowUserOnboarding] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
-  const { markOnboardingComplete } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
   const navigate = useNavigate();
@@ -150,16 +146,6 @@ export default function Dashboard() {
       if (pendingBrand === "true") {
         sessionStorage.removeItem("pendingBrandCreation");
         setShowCreateBrandDialog(true);
-        return;
-      }
-
-      // Show user onboarding for new users with auto-generated usernames in creator mode
-      const currentWorkspace = searchParams.get("workspace") || "creator";
-      const hasAutoUsername = profileData?.username?.startsWith("user_");
-      const needsOnboarding = !profileData?.onboarding_completed || hasAutoUsername;
-
-      if (profileData && needsOnboarding && currentWorkspace === "creator") {
-        setShowUserOnboarding(true);
       }
     };
 
@@ -342,9 +328,9 @@ export default function Dashboard() {
       <AppSidebar />
       
       {/* Main Content */}
-      <main className="flex-1 h-screen overflow-hidden flex flex-col">
+      <main className="flex-1 h-screen overflow-hidden flex flex-col bg-background">
         <div className={`
-          pt-14 md:pt-0 flex-1 overflow-y-auto pb-[50px] md:pb-0
+          pt-14 md:pt-0 flex-1 overflow-y-auto pb-[50px] md:pb-0 bg-background
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
           {renderContent()}
@@ -353,22 +339,8 @@ export default function Dashboard() {
 
       <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
 
-      {/* User Onboarding Flow - shown for new users or users without custom username */}
-      {userId && (
-        <UserOnboardingFlow
-          open={showUserOnboarding}
-          onOpenChange={setShowUserOnboarding}
-          userId={userId}
-          onComplete={() => {
-            markOnboardingComplete();
-            // Reload profile to get updated data
-            window.location.reload();
-          }}
-        />
-      )}
-
-      {/* Announcements Popup - shown after onboarding for unread announcements */}
-      {userId && !showUserOnboarding && <AnnouncementPopup userId={userId} />}
+      {/* Announcements Popup */}
+      {userId && <AnnouncementPopup userId={userId} />}
 
       {/* Brand Creation Dialog - triggered when user selected Brand during onboarding */}
       <CreateBrandDialog

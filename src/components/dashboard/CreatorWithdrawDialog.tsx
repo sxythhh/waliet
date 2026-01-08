@@ -7,8 +7,10 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Building2, Smartphone, CreditCard, Check, X } from "lucide-react";
+import { Plus, Building2, Smartphone, CreditCard, Check, X, FileText, AlertTriangle } from "lucide-react";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
+import { useTaxFormRequirement } from "@/hooks/useTaxFormRequirement";
+import { TaxFormWizard } from "@/components/tax/TaxFormWizard";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import walletActiveIcon from "@/assets/wallet-active.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
@@ -37,7 +39,15 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
   const [loading, setLoading] = useState(true);
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
   const [addMethodDialogOpen, setAddMethodDialogOpen] = useState(false);
+  const [taxFormWizardOpen, setTaxFormWizardOpen] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
+
+  // Tax form requirement check
+  const { requirement: taxRequirement, isLoading: taxLoading, refetch: refetchTaxRequirement } = useTaxFormRequirement(
+    userId,
+    parseFloat(payoutAmount) || 0
+  );
 
   useEffect(() => {
     if (open) {
@@ -52,6 +62,9 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
       setLoading(false);
       return;
     }
+
+    // Set userId for tax form check
+    setUserId(session.user.id);
 
     // Fetch wallet with payout details
     const { data: walletData } = await supabase
@@ -198,6 +211,12 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
     const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
     if (!selectedMethod) return;
 
+    // Check if tax form is required - TEMPORARILY DISABLED
+    // if (taxRequirement?.required) {
+    //   setTaxFormWizardOpen(true);
+    //   return;
+    // }
+
     // Block UPI withdrawals
     if (selectedMethod.method === 'upi') {
       toast({
@@ -261,69 +280,21 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
     }
 
     try {
-      const balance_before = wallet.balance;
-      const balance_after = wallet.balance - amount;
-
-      // Create payout request
-      const { error: payoutError } = await supabase
-        .from("payout_requests")
-        .insert({
-          user_id: session.user.id,
+      // Use secure edge function for withdrawal
+      const { data, error } = await supabase.functions.invoke('request-withdrawal', {
+        body: {
           amount: amount,
           payout_method: selectedMethod.method,
-          payout_details: selectedMethod.details,
-          status: 'pending'
-        });
+          payout_details: selectedMethod.details
+        }
+      });
 
-      if (payoutError) throw payoutError;
+      if (error) {
+        throw new Error(error.message || 'Failed to submit payout request');
+      }
 
-      // Create wallet transaction
-      const { error: txnError } = await supabase
-        .from("wallet_transactions")
-        .insert({
-          user_id: session.user.id,
-          amount: -amount,
-          type: 'withdrawal',
-          status: 'pending',
-          description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : selectedMethod.method === 'crypto' ? 'Crypto' : selectedMethod.method}`,
-          metadata: {
-            payout_method: selectedMethod.method,
-            network: selectedMethod.details.network || null,
-            balance_before: balance_before,
-            balance_after: balance_after
-          },
-          created_by: session.user.id
-        });
-
-      if (txnError) throw txnError;
-
-      // Update wallet balance
-      const { error: walletError } = await supabase
-        .from("wallets")
-        .update({
-          balance: wallet.balance - amount,
-          total_withdrawn: wallet.total_withdrawn + amount
-        })
-        .eq("id", wallet.id);
-
-      if (walletError) throw walletError;
-
-      // Send Discord notification
-      try {
-        await supabase.functions.invoke('notify-withdrawal', {
-          body: {
-            username: session.user.user_metadata?.username || 'Unknown',
-            email: session.user.email || 'Unknown',
-            amount: amount,
-            payout_method: selectedMethod.method,
-            payout_details: selectedMethod.details,
-            balance_before: balance_before,
-            balance_after: balance_after,
-            date: new Date().toISOString()
-          }
-        });
-      } catch (notifError) {
-        console.error('Failed to send Discord notification:', notifError);
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast({
@@ -480,8 +451,16 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
             </div>
           </div>
         ) : payoutMethods.length === 0 ? (
-          <div className="py-8 text-center">
+          <div className="py-8 text-center space-y-4">
             <p className="text-muted-foreground font-inter tracking-[-0.5px]">Please add a payout method first.</p>
+            <Button
+              variant="outline"
+              onClick={() => setAddMethodDialogOpen(true)}
+              className="font-inter tracking-[-0.5px]"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Payment Method
+            </Button>
           </div>
         ) : pendingWithdrawals > 0 ? (
           <div className="py-8 text-center">
@@ -522,6 +501,33 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                 Minimum: ${minimumAmount}.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
               </p>
             </div>
+
+            {/* Tax Form Warning - TEMPORARILY HIDDEN */}
+            {/* {taxRequirement?.required && (
+              <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 flex items-start gap-3">
+                <div className="p-1.5 rounded bg-amber-500/10">
+                  <FileText className="h-4 w-4 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-600 font-inter tracking-[-0.5px]">
+                    Tax Form Required
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.5px]">
+                    {taxRequirement.form_type === 'w9'
+                      ? `Your total payouts will reach $${(taxRequirement.cumulative_payouts || 0).toFixed(0)} after this withdrawal. A W-9 form is required for US creators once you exceed $600.`
+                      : 'A W-8BEN form is required for non-US creators before receiving any payout.'}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 h-7 text-xs border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+                    onClick={() => setTaxFormWizardOpen(true)}
+                  >
+                    Complete Tax Form
+                  </Button>
+                </div>
+              </div>
+            )} */}
 
             <div className="space-y-2">
               <Label className="font-inter tracking-[-0.5px]">Payment Method</Label>
@@ -681,12 +687,28 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
       </DialogContent>
     </Dialog>
 
-      <PayoutMethodDialog 
-        open={addMethodDialogOpen} 
-        onOpenChange={setAddMethodDialogOpen} 
+      <PayoutMethodDialog
+        open={addMethodDialogOpen}
+        onOpenChange={setAddMethodDialogOpen}
         onSave={handleAddPayoutMethod}
         currentMethodCount={payoutMethods.length}
       />
+
+      {userId && (
+        <TaxFormWizard
+          open={taxFormWizardOpen}
+          onOpenChange={setTaxFormWizardOpen}
+          userId={userId}
+          onSuccess={() => {
+            refetchTaxRequirement();
+            // If tax form was successfully submitted, retry the payout
+            if (!taxRequirement?.required) {
+              handleConfirmPayout();
+            }
+          }}
+          existingFormType={taxRequirement?.form_type as 'w9' | 'w8ben' | undefined}
+        />
+      )}
     </>
   );
 }
