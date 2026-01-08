@@ -197,10 +197,11 @@ describe('usePaymentLedger', () => {
     });
   });
 
-  describe('FIX #3: Authorization Logging', () => {
-    it('should log warning when accessing different user data', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
+  describe('FIX #3: Authorization via RLS', () => {
+    it('should allow cross-user access when RLS permits (admin context)', async () => {
+      // Note: Authorization is now handled by RLS on the database side.
+      // No client-side warning is logged to avoid PII exposure.
+      // This test verifies the hook proceeds without error when accessing different user data.
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: { session: { user: { id: 'authenticated-user-123' } } },
         error: null,
@@ -212,16 +213,15 @@ describe('usePaymentLedger', () => {
         order: vi.fn().mockResolvedValue({ data: [], error: null }),
       } as any));
 
-      renderHook(() => usePaymentLedger('different-user-456'));
+      const { result } = renderHook(() => usePaymentLedger('different-user-456'));
 
       await waitFor(() => {
-        // FIX VERIFIED: Warning is logged for cross-user access
-        expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Payment ledger accessed for different user')
-        );
+        expect(result.current.loading).toBe(false);
       });
 
-      consoleSpy.mockRestore();
+      // RLS handles authorization - hook should complete without error
+      expect(result.current.error).toBeNull();
+      expect(result.current.entries).toEqual([]);
     });
   });
 
