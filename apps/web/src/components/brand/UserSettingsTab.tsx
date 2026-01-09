@@ -29,7 +29,6 @@ import { CustomWebhooksTab } from "./CustomWebhooksTab";
 import { BillingUsageCard } from "./BillingUsageCard";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { DataExportDialog, AccountDeletionDialog } from "@/components/dashboard/settings";
-import { DiscordIntegrationTab } from "./DiscordIntegrationTab";
 
 // Plan ID to display name mapping
 const PLAN_DISPLAY_NAMES: Record<string, string> = {
@@ -1403,11 +1402,6 @@ export function UserSettingsTab() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Discord Integration - Full Width Section */}
-            <div className="mt-6 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] overflow-hidden">
-              <DiscordIntegrationTab brandId={brand.id} />
             </div>
             </>
           )}

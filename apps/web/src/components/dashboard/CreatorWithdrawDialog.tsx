@@ -526,16 +526,8 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
             </div>
           </div>
         ) : payoutMethods.length === 0 ? (
-          <div className="py-8 text-center space-y-4">
+          <div className="py-8 text-center">
             <p className="text-muted-foreground font-inter tracking-[-0.5px]">Please add a payout method first.</p>
-            <Button
-              variant="outline"
-              onClick={() => setAddMethodDialogOpen(true)}
-              className="font-inter tracking-[-0.5px]"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Payment Method
-            </Button>
           </div>
         ) : pendingWithdrawals > 0 ? (
           <div className="py-6 text-center space-y-4">
@@ -566,7 +558,12 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
         ) : (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="payout-amount" className="font-inter tracking-[-0.5px]">Amount ($)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="payout-amount" className="font-inter tracking-[-0.5px]">Amount ($)</Label>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Minimum: ${minimumAmount}.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
+                </p>
+              </div>
               <Input
                 id="payout-amount"
                 type="number"
@@ -578,24 +575,6 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                 onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))}
                 className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50 font-inter tracking-[-0.5px]"
               />
-              <div className="flex gap-2 flex-wrap">
-                {amounts.map(amount => (
-                  <Button
-                    key={amount}
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPayoutAmount(amount.toString())}
-                    disabled={wallet?.balance ? wallet.balance < amount : true}
-                    className="bg-muted hover:bg-accent font-inter tracking-[-0.5px]"
-                  >
-                    ${amount}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                Minimum: ${minimumAmount}.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
-              </p>
             </div>
 
             {/* Tax Form Warning - TEMPORARILY HIDDEN */}
@@ -686,22 +665,6 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                     </button>
                   );
                 })}
-                
-                {/* Add Method Button */}
-                {payoutMethods.length < 3 && (
-                  <button
-                    type="button"
-                    onClick={() => setAddMethodDialogOpen(true)}
-                    className="rounded-xl p-3 border border-dashed border-border bg-muted/50 hover:bg-muted hover:border-primary/50 transition-all"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Plus className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.4px]">
-                        Add Payment Method
-                      </span>
-                    </div>
-                  </button>
-                )}
               </div>
             </div>
 

@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Unlink, Server, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -388,15 +390,15 @@ export function DiscordServerSettings({
                       <span className="text-xs font-inter tracking-[-0.5px]">{role.name}</span>
                     </div>
                     {role.canAssign ? (
-                      <Badge variant="outline" className="text-[9px] h-5 bg-green-500/10 text-green-600 border-green-500/30">
-                        <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium font-inter tracking-[-0.5px] bg-green-600 text-white">
+                        <CheckCircleIcon style={{ fontSize: 12 }} />
                         Assignable
-                      </Badge>
+                      </span>
                     ) : (
-                      <Badge variant="outline" className="text-[9px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                        <AlertCircle className="w-2.5 h-2.5 mr-0.5" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium font-inter tracking-[-0.5px] bg-amber-600 text-white">
+                        <WarningIcon style={{ fontSize: 12 }} />
                         Bot role too low
-                      </Badge>
+                      </span>
                     )}
                   </div>
                 ))}
