@@ -5,10 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
-import { CampaignCreationWizard, CampaignTemplate } from "@/components/brand/CampaignCreationWizard";
-import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
+import { CampaignWizard, CampaignType, WizardMode } from "@/components/brand/CampaignWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
@@ -83,9 +81,11 @@ export function BrandCampaignsTab({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
-  const [createBountyOpen, setCreateBountyOpen] = useState(false);
-  const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<CampaignTemplate | undefined>(undefined);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardMode, setWizardMode] = useState<WizardMode>('create');
+  const [wizardType, setWizardType] = useState<CampaignType | undefined>(undefined);
+  const [wizardCampaignId, setWizardCampaignId] = useState<string | undefined>(undefined);
+  const [wizardBoostId, setWizardBoostId] = useState<string | undefined>(undefined);
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
   const [brandColor, setBrandColor] = useState<string | undefined>(undefined);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
@@ -101,10 +101,6 @@ export function BrandCampaignsTab({
     id: string;
     type: 'campaign' | 'boost';
   } | null>(null);
-  const [editCampaignOpen, setEditCampaignOpen] = useState(false);
-  const [editBoostOpen, setEditBoostOpen] = useState(false);
-  const [selectedCampaignForEdit, setSelectedCampaignForEdit] = useState<Campaign | null>(null);
-  const [selectedBoostForEdit, setSelectedBoostForEdit] = useState<string | null>(null);
   const {
     isAdmin,
     loading: adminLoading
@@ -530,13 +526,24 @@ export function BrandCampaignsTab({
               <span className="hidden sm:inline">Launch Opportunity</span>
               <span className="sm:hidden">Launch</span>
             </Button>
-            <CreateCampaignTypeDialog brandId={brandId} subscriptionPlan={subscriptionPlan} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={(blueprintId, template) => {
-          setSelectedTemplate(template);
-          setCreateCampaignOpen(true);
+            <CreateCampaignTypeDialog brandId={brandId} subscriptionPlan={subscriptionPlan} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
+          setWizardMode('create');
+          setWizardType('cpm');
+          setWizardCampaignId(undefined);
+          setWizardBoostId(undefined);
+          setWizardOpen(true);
         }} onSelectManaged={() => {
-          setCreateBountyOpen(true);
+          setWizardMode('create');
+          setWizardType('boost');
+          setWizardCampaignId(undefined);
+          setWizardBoostId(undefined);
+          setWizardOpen(true);
         }} onSelectBoost={() => {
-          setCreateBountyOpen(true);
+          setWizardMode('create');
+          setWizardType('boost');
+          setWizardCampaignId(undefined);
+          setWizardBoostId(undefined);
+          setWizardOpen(true);
         }} onSelectJobPost={() => {
           setCreateJobPostOpen(true);
         }} />
@@ -571,8 +578,11 @@ export function BrandCampaignsTab({
                 type: "campaign";
               };
               return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} brandColor={brandColor || null} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} slug={campaign.slug} onClick={() => handleCampaignClick(campaign)} onEdit={() => {
-                setSelectedCampaignForEdit(campaign);
-                setEditCampaignOpen(true);
+                setWizardMode('edit');
+                setWizardType('cpm');
+                setWizardCampaignId(campaign.id);
+                setWizardBoostId(undefined);
+                setWizardOpen(true);
               }} onDuplicate={() => handleDuplicateCampaign(campaign)} onDelete={() => handleDeleteClick(campaign)} onTopUp={() => {
                 setSelectedCampaignForFunding({
                   id: campaign.id,
@@ -586,8 +596,11 @@ export function BrandCampaignsTab({
               };
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
               return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)} onEdit={() => {
-                setSelectedBoostForEdit(bounty.id);
-                setEditBoostOpen(true);
+                setWizardMode('edit');
+                setWizardType('boost');
+                setWizardCampaignId(undefined);
+                setWizardBoostId(bounty.id);
+                setWizardOpen(true);
               }} onDuplicate={() => handleDuplicateBounty(bounty)} onPause={bounty.status !== 'ended' && bounty.status !== 'draft' ? () => handlePauseBounty(bounty) : undefined} onDelete={() => handleDeleteBountyClick(bounty)} onTopUp={() => {
                 setSelectedCampaignForFunding({
                   id: bounty.id,
@@ -610,43 +623,27 @@ export function BrandCampaignsTab({
         </>}
 
 
-      {/* Create Campaign Wizard (Clipping) */}
-      <CampaignCreationWizard brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} subscriptionPlan={subscriptionPlan} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={(open) => {
-        setCreateCampaignOpen(open);
-        if (!open) setSelectedTemplate(undefined);
-      }} template={selectedTemplate} />
-
-      {/* Edit Campaign Dialog */}
-      {selectedCampaignForEdit && (
-        <CampaignCreationWizard
-          brandId={brandId}
-          brandName={brandName}
-          brandLogoUrl={brandLogoUrl}
-          campaign={selectedCampaignForEdit}
-          open={editCampaignOpen}
-          onOpenChange={(open) => {
-            setEditCampaignOpen(open);
-            if (!open) setSelectedCampaignForEdit(null);
-          }}
-          onSuccess={fetchBrandData}
-        />
-      )}
-
-      {/* Edit Boost Dialog */}
-      {selectedBoostForEdit && (
-        <EditBountyDialog
-          bountyId={selectedBoostForEdit}
-          open={editBoostOpen}
-          onOpenChange={(open) => {
-            setEditBoostOpen(open);
-            if (!open) setSelectedBoostForEdit(null);
-          }}
-          onSuccess={fetchBrandData}
-        />
-      )}
-
-      {/* Create Bounty Dialog (Managed) */}
-      <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} subscriptionPlan={subscriptionPlan} onSuccess={fetchBrandData} />
+      {/* Unified Campaign Wizard */}
+      <CampaignWizard
+        open={wizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) {
+            setWizardCampaignId(undefined);
+            setWizardBoostId(undefined);
+            setWizardType(undefined);
+          }
+        }}
+        brandId={brandId}
+        brandName={brandName}
+        brandLogoUrl={brandLogoUrl}
+        subscriptionPlan={subscriptionPlan}
+        onSuccess={fetchBrandData}
+        mode={wizardMode}
+        campaignId={wizardCampaignId}
+        boostId={wizardBoostId}
+        initialType={wizardType}
+      />
 
       {/* Create Job Post Dialog */}
       <CreateJobPostDialog open={createJobPostOpen} onOpenChange={setCreateJobPostOpen} brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} />

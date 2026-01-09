@@ -8,9 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { CampaignCreationWizard } from "./CampaignCreationWizard";
 import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
-import { CreateBountyDialog } from "./CreateBountyDialog";
+import { CampaignWizard, CampaignType } from "./CampaignWizard";
 import { TemplateSelector } from "./TemplateSelector";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { format, formatDistanceToNow } from "date-fns";
@@ -68,8 +67,8 @@ export function BlueprintsTab({
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
-  const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
-  const [createBoostOpen, setCreateBoostOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardType, setWizardType] = useState<CampaignType | undefined>(undefined);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
   const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -168,11 +167,13 @@ export function BlueprintsTab({
   const handleSelectClipping = (blueprintId?: string) => {
     setTypeDialogOpen(false);
     if (blueprintId) setSelectedBlueprintId(blueprintId);
-    setCreateCampaignOpen(true);
+    setWizardType('cpm');
+    setWizardOpen(true);
   };
   const handleSelectBoost = () => {
     setTypeDialogOpen(false);
-    setCreateBoostOpen(true);
+    setWizardType('boost');
+    setWizardOpen(true);
   };
   const handleSelectTemplate = async (template: any) => {
     const {
@@ -356,9 +357,21 @@ export function BlueprintsTab({
       {/* Dialogs */}
       <CreateCampaignTypeDialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen} brandId={brandId} subscriptionPlan={brandInfo?.subscriptionPlan} defaultBlueprintId={selectedBlueprintId || undefined} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} />
 
-      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} subscriptionPlan={brandInfo.subscriptionPlan} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
-
-      {brandInfo && <CreateBountyDialog brandId={brandId} subscriptionPlan={brandInfo.subscriptionPlan} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
+      {brandInfo && <CampaignWizard
+        brandId={brandId}
+        brandName={brandInfo.name}
+        brandLogoUrl={brandInfo.logoUrl}
+        subscriptionPlan={brandInfo.subscriptionPlan}
+        initialBlueprintId={selectedBlueprintId || undefined}
+        initialType={wizardType}
+        onSuccess={() => setWizardOpen(false)}
+        open={wizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) setWizardType(undefined);
+        }}
+        mode="create"
+      />}
 
       <TemplateSelector open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen} onSelectTemplate={handleSelectTemplate} onStartBlank={createBlueprint} />
 

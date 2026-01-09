@@ -27,6 +27,7 @@ interface Campaign {
   payment_type: string;
   rpm_rate: number | null;
   flat_rate_per_video: number | null;
+  payout_type?: string;
 }
 
 interface BountyCampaign {
@@ -34,6 +35,7 @@ interface BountyCampaign {
   brand_id: string;
   monthly_retainer: number;
   view_bonuses_enabled: boolean | null;
+  payout_type?: string;
 }
 
 interface ViewBonus {
@@ -144,9 +146,10 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
 
   try {
     // Fetch active campaigns with RPM rate
+    // Also fetch payout_type to determine if we should process payments
     let campaignQuery = supabase
       .from('campaigns')
-      .select('id, brand_id, payment_type, rpm_rate, flat_rate_per_video, status')
+      .select('id, brand_id, payment_type, rpm_rate, flat_rate_per_video, status, payout_type')
       .eq('status', 'active')
       .gt('rpm_rate', 0);
 
@@ -165,6 +168,12 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
 
     for (const campaign of campaigns || []) {
       try {
+        // Skip off-platform campaigns - they don't use on-platform payment processing
+        if (campaign.payout_type === 'off_platform') {
+          console.log(`Skipping off-platform campaign ${campaign.id}`);
+          continue;
+        }
+
         // Fetch approved video submissions for this campaign
         const { data: submissions, error: submissionError } = await supabase
           .from('video_submissions')
@@ -346,9 +355,10 @@ async function processBoostPayments(supabase: any, boostId?: string) {
 
   try {
     // Fetch active boosts
+    // Also fetch payout_type to determine if we should process payments
     let boostQuery = supabase
       .from('bounty_campaigns')
-      .select('id, brand_id, monthly_retainer, view_bonuses_enabled, status')
+      .select('id, brand_id, monthly_retainer, view_bonuses_enabled, status, payout_type')
       .eq('status', 'active');
 
     if (boostId) {
@@ -366,6 +376,12 @@ async function processBoostPayments(supabase: any, boostId?: string) {
 
     for (const boost of boosts || []) {
       try {
+        // Skip off-platform boosts - they don't use on-platform payment processing
+        if (boost.payout_type === 'off_platform') {
+          console.log(`Skipping off-platform boost ${boost.id}`);
+          continue;
+        }
+
         // Fetch approved boost submissions
         const { data: submissions, error: submissionError } = await supabase
           .from('boost_video_submissions')

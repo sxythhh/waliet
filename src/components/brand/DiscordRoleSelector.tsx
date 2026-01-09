@@ -133,12 +133,25 @@ export function DiscordRoleSelector({
         </Button>
       </div>
 
-      <Select value={selectedRoleId} onValueChange={onRoleChange} disabled={disabled || isLoading}>
+      {hasUnassignableRoles && (
+        <Alert className="py-2 border-amber-500/50 bg-amber-500/10">
+          <AlertCircle className="h-3 w-3 text-amber-500" />
+          <AlertDescription className="text-[10px] text-amber-600 dark:text-amber-400 font-inter tracking-[-0.5px]">
+            Some roles cannot be assigned because the bot's role is below them in Discord. Move the bot's role higher in server settings.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Select
+        value={selectedRoleId || "none"}
+        onValueChange={(value) => onRoleChange(value === "none" ? "" : value)}
+        disabled={disabled || isLoading}
+      >
         <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] text-sm">
           <SelectValue placeholder="Select a role to assign..." />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">
+          <SelectItem value="none">
             <span className="text-muted-foreground">No role</span>
           </SelectItem>
           {roles.map((role) => (
@@ -161,15 +174,6 @@ export function DiscordRoleSelector({
           ))}
         </SelectContent>
       </Select>
-
-      {hasUnassignableRoles && (
-        <Alert className="py-2 border-amber-500/50 bg-amber-500/10">
-          <AlertCircle className="h-3 w-3 text-amber-500" />
-          <AlertDescription className="text-[10px] text-amber-600 dark:text-amber-400 font-inter tracking-[-0.5px]">
-            Some roles are grayed out because the bot's role is below them. Move the bot's role higher in Discord settings.
-          </AlertDescription>
-        </Alert>
-      )}
 
       {selectedRoleId && (
         <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">

@@ -6,8 +6,8 @@ import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import { TrainingTab } from "@/components/dashboard/TrainingTab";
 import { ReferralsTab } from "@/components/dashboard/ReferralsTab";
-import { WalletTab } from "@/components/dashboard/WalletTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
+import { SettingsTab } from "@/components/dashboard/SettingsTab";
 import { BrandCampaignsTab } from "@/components/dashboard/BrandCampaignsTab";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
@@ -44,8 +44,17 @@ export default function Dashboard() {
   const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
   const navigate = useNavigate();
 
-  const currentTab = searchParams.get("tab") || "campaigns";
+  // Valid tabs for each mode
+  const CREATOR_TABS = ["campaigns", "discover", "training", "profile", "settings", "wallet"];
+  const BRAND_TABS = ["campaigns", "analytics", "blueprints", "creators", "education", "settings"];
+
+  const rawTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
+
+  // Validate and sanitize tab parameter
+  const isCreatorModeForValidation = workspace === "creator";
+  const validTabs = isCreatorModeForValidation ? CREATOR_TABS : BRAND_TABS;
+  const currentTab = validTabs.includes(rawTab) ? rawTab : "campaigns";
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBoostId = searchParams.get("boost");
   const selectedBlueprintId = searchParams.get("blueprint");
@@ -89,6 +98,18 @@ export default function Dashboard() {
 
     run();
   }, []);
+
+  // Handle invalid tab parameter
+  useEffect(() => {
+    if (rawTab !== currentTab) {
+      toast.error("Invalid tab", {
+        description: `The tab "${rawTab}" doesn't exist. Redirecting to campaigns.`
+      });
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("tab", "campaigns");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [rawTab, currentTab, searchParams, setSearchParams]);
 
   useEffect(() => {
     // Restore last workspace from localStorage if no workspace is set in URL
@@ -311,10 +332,9 @@ export default function Dashboard() {
       case "training":
         return <TrainingTab />;
       case "profile":
-        return <WalletTab />;
-      case "settings":
         return <ProfileTab />;
-      // Payments tab (wallet)
+      case "settings":
+        return <SettingsTab />;
       case "wallet":
         return <ReferralsTab />;
       default:

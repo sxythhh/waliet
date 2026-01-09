@@ -88,6 +88,9 @@ export function CampaignApplicationsView({
   const [bulkActionDialog, setBulkActionDialog] = useState<{ type: 'accept' | 'reject' | 'waitlist' | 'message' | null; open: boolean }>({ type: null, open: false });
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
+  // Shareable campaign link state
+  const [shareableCampaignSlug, setShareableCampaignSlug] = useState<string | null>(null);
+
   const isBoost = !!boostId && !brandId;
 
   // Use the brand ID to get usage limits
@@ -140,7 +143,14 @@ export function CampaignApplicationsView({
       let boostCampaignMap = new Map<string, string>();
       if (isAllMode && brandId) {
         // Fetch all applications across all campaigns and boosts for this brand
-        const [campaignsResult, boostCampaignsResult] = await Promise.all([supabase.from("campaigns").select("id, title").eq("brand_id", brandId), supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId)]);
+        const [campaignsResult, boostCampaignsResult] = await Promise.all([supabase.from("campaigns").select("id, title, slug").eq("brand_id", brandId), supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId)]);
+
+        // Set the first campaign slug for sharing
+        if (campaignsResult.data && campaignsResult.data.length > 0) {
+          setShareableCampaignSlug(campaignsResult.data[0].slug);
+        } else {
+          setShareableCampaignSlug(null);
+        }
         const campaigns = campaignsResult.data || [];
         const boostCampaigns = boostCampaignsResult.data || [];
         const campaignIds = campaigns.map(c => c.id);
@@ -204,6 +214,16 @@ export function CampaignApplicationsView({
           is_boost: true
         }));
       } else if (campaignId) {
+        // Fetch campaign slug for sharing
+        const { data: campaignInfo } = await supabase
+          .from("campaigns")
+          .select("slug")
+          .eq("id", campaignId)
+          .single();
+        if (campaignInfo?.slug) {
+          setShareableCampaignSlug(campaignInfo.slug);
+        }
+
         // Fetch all campaign applications
         const {
           data: campaignData,
@@ -542,18 +562,19 @@ export function CampaignApplicationsView({
             When creators apply to {isAllMode ? "your campaigns" : isBoost ? "this boost" : "this campaign"}, they'll appear here for review.
           </p>
 
-          {/* CTA Button */}
-          <Button
-            className="bg-foreground text-background hover:bg-foreground/90 font-medium px-6"
-            onClick={() => {
-              // Copy campaign link or navigate to share
-              const baseUrl = window.location.origin;
-              navigator.clipboard.writeText(`${baseUrl}/campaigns`);
-              toast.success("Link copied to clipboard");
-            }}
-          >
-            Share campaign
-          </Button>
+          {/* CTA Button - only show if there's a campaign to share */}
+          {shareableCampaignSlug && (
+            <Button
+              className="bg-foreground text-background hover:bg-foreground/90 font-medium px-6"
+              onClick={() => {
+                const baseUrl = window.location.origin;
+                navigator.clipboard.writeText(`${baseUrl}/c/${shareableCampaignSlug}`);
+                toast.success("Link copied to clipboard");
+              }}
+            >
+              Share campaign
+            </Button>
+          )}
         </div>
       </div>
     );

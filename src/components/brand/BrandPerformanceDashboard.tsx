@@ -344,73 +344,64 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
       {/* Creator ROI Table */}
       <Card className="p-4 bg-card border-border">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold tracking-[-0.5px]">Creator ROI</h3>
-          </div>
+          <h3 className="text-sm font-semibold tracking-[-0.5px]">Creator ROI</h3>
           <Button variant="ghost" size="sm" onClick={handleExportCSV} className="text-xs">
             <Download className="h-3.5 w-3.5 mr-1.5" />
             Export CSV
           </Button>
         </div>
 
-        {creatorROI.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Creator</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Videos</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Total Views</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Avg Views</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Total Paid</th>
-                  <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">CPM</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Creator</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Videos</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Total Views</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Avg Views</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Total Paid</th>
+                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">CPM</th>
+              </tr>
+            </thead>
+            <tbody>
+              {creatorROI.slice(0, 10).map((creator, index) => (
+                <tr key={creator.oduserId} className="border-b border-border/50 hover:bg-muted/30">
+                  <td className="py-3 px-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-4">{index + 1}</span>
+                      {creator.avatarUrl ? (
+                        <img
+                          src={creator.avatarUrl}
+                          alt={creator.username}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                          <Users className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      )}
+                      <span className="font-medium tracking-[-0.3px]">@{creator.username}</span>
+                    </div>
+                  </td>
+                  <td className="text-right py-3 px-2 tabular-nums">{creator.videoCount}</td>
+                  <td className="text-right py-3 px-2 tabular-nums">{formatNumber(creator.totalViews)}</td>
+                  <td className="text-right py-3 px-2 tabular-nums">{formatNumber(creator.avgViewsPerVideo)}</td>
+                  <td className="text-right py-3 px-2 tabular-nums">{formatCurrency(creator.totalPaid)}</td>
+                  <td className="text-right py-3 px-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded text-xs font-medium tabular-nums",
+                      creator.costPerView < stats.effectiveCPM
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : "bg-orange-500/10 text-orange-500"
+                    )}>
+                      ${creator.costPerView.toFixed(2)}
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {creatorROI.slice(0, 10).map((creator, index) => (
-                  <tr key={creator.oduserId} className="border-b border-border/50 hover:bg-muted/30">
-                    <td className="py-3 px-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground w-4">{index + 1}</span>
-                        {creator.avatarUrl ? (
-                          <img
-                            src={creator.avatarUrl}
-                            alt={creator.username}
-                            className="w-6 h-6 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                            <Users className="h-3 w-3 text-muted-foreground" />
-                          </div>
-                        )}
-                        <span className="font-medium tracking-[-0.3px]">@{creator.username}</span>
-                      </div>
-                    </td>
-                    <td className="text-right py-3 px-2 tabular-nums">{creator.videoCount}</td>
-                    <td className="text-right py-3 px-2 tabular-nums">{formatNumber(creator.totalViews)}</td>
-                    <td className="text-right py-3 px-2 tabular-nums">{formatNumber(creator.avgViewsPerVideo)}</td>
-                    <td className="text-right py-3 px-2 tabular-nums">{formatCurrency(creator.totalPaid)}</td>
-                    <td className="text-right py-3 px-2">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-xs font-medium tabular-nums",
-                        creator.costPerView < stats.effectiveCPM
-                          ? "bg-emerald-500/10 text-emerald-500"
-                          : "bg-orange-500/10 text-orange-500"
-                      )}>
-                        ${creator.costPerView.toFixed(2)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            No creator data available for this period
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );

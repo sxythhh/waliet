@@ -20,9 +20,10 @@ Deno.serve(async (req) => {
     console.log('Processing CPM payments for campaign:', campaign_id || 'all pay_per_post campaigns');
 
     // Get all campaigns with pay_per_post model and positive rpm_rate (or specific one)
+    // Also fetch payout_type to determine if we should credit wallet
     let campaignQuery = supabase
       .from('campaigns')
-      .select('id, brand_id, budget, budget_used, rpm_rate, post_rate, payment_model, title')
+      .select('id, brand_id, budget, budget_used, rpm_rate, post_rate, payment_model, title, payout_type')
       .eq('payment_model', 'pay_per_post')
       .gt('rpm_rate', 0)
       .eq('status', 'active');
@@ -96,28 +97,36 @@ Deno.serve(async (req) => {
 
         console.log(`Video ${submission.id}: ${currentViews} views at $${campaign.rpm_rate}/CPM = $${cpmEarned.toFixed(2)} total (already paid: $${alreadyPaidCpm.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
 
-        // Use atomic RPC function to create transaction and update balance atomically
-        const { data: paymentResult, error: paymentError } = await supabase
-          .rpc('atomic_campaign_payment', {
-            p_creator_id: submission.creator_id,
-            p_campaign_id: campaign.id,
-            p_amount: amountToPay,
-            p_description: `CPM payment: $${campaign.rpm_rate}/1K views (${currentViews.toLocaleString()} views) - ${campaign.title}`,
-            p_metadata: {
-              campaign_id: campaign.id,
-              video_submission_id: submission.id,
-              views_at_payout: currentViews,
-              cpm_rate: campaign.rpm_rate,
-              payment_type: 'cpm'
-            }
-          });
+        // Check payout_type: only credit wallet for on_platform campaigns
+        let transaction = null;
+        const isOnPlatform = campaign.payout_type !== 'off_platform';
 
-        if (paymentError) {
-          console.error('Error processing atomic campaign payment:', paymentError);
-          continue;
+        if (isOnPlatform) {
+          // Use atomic RPC function to create transaction and update balance atomically
+          const { data: paymentResult, error: paymentError } = await supabase
+            .rpc('atomic_campaign_payment', {
+              p_creator_id: submission.creator_id,
+              p_campaign_id: campaign.id,
+              p_amount: amountToPay,
+              p_description: `CPM payment: $${campaign.rpm_rate}/1K views (${currentViews.toLocaleString()} views) - ${campaign.title}`,
+              p_metadata: {
+                campaign_id: campaign.id,
+                video_submission_id: submission.id,
+                views_at_payout: currentViews,
+                cpm_rate: campaign.rpm_rate,
+                payment_type: 'cpm'
+              }
+            });
+
+          if (paymentError) {
+            console.error('Error processing atomic campaign payment:', paymentError);
+            continue;
+          }
+
+          transaction = paymentResult;
+        } else {
+          console.log(`Skipping wallet credit for off-platform campaign ${campaign.id}`);
         }
-
-        const transaction = paymentResult;
 
         // Upsert the CPM payout record
         if (existingPayout) {

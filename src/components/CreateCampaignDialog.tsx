@@ -467,7 +467,7 @@ export function CreateCampaignDialog({
                 }) => <FormItem>
                     <FormLabel className="text-white">Budget ($)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" step="0.01" disabled={form.watch("is_infinite_budget")} className="bg-[#191919] text-white placeholder:text-white/40 disabled:opacity-50" {...field} />
+                      <Input type="number" placeholder="0.00" step="0.01" min="0" disabled={form.watch("is_infinite_budget")} className="bg-[#191919] text-white placeholder:text-white/40 disabled:opacity-50" {...field} />
                     </FormControl>
                     <FormMessage className="text-destructive/80" />
                   </FormItem>} />
@@ -477,7 +477,7 @@ export function CreateCampaignDialog({
                 }) => <FormItem>
                     <FormLabel className="text-white">RPM Rate ($)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" step="0.01" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
+                      <Input type="number" placeholder="0.00" step="0.01" min="0" className="bg-[#191919] text-white placeholder:text-white/40" {...field} />
                     </FormControl>
                     <FormMessage className="text-destructive/80" />
                   </FormItem>} />

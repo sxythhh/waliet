@@ -5,6 +5,7 @@ import RocketLaunchRounded from "@mui/icons-material/RocketLaunchRounded";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface OnboardingStep {
   id: string;
@@ -32,6 +33,10 @@ export function BrandOnboardingSteps({
   completedSteps = [],
   className,
 }: BrandOnboardingStepsProps) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const workspace = searchParams.get("workspace") || "creator";
+
   const steps: OnboardingStep[] = [
     {
       id: "blueprint",
@@ -40,7 +45,7 @@ export function BrandOnboardingSteps({
       icon: <DescriptionRounded sx={{ fontSize: 20 }} />,
       action: "Create Blueprint",
       completed: completedSteps.includes("blueprint"),
-      onClick: onDraftBlueprint,
+      onClick: onDraftBlueprint || (() => navigate(`/dashboard?workspace=${workspace}&tab=blueprints`)),
     },
     {
       id: "call",
@@ -49,7 +54,7 @@ export function BrandOnboardingSteps({
       icon: <EventRounded sx={{ fontSize: 20 }} />,
       action: "Book a Call",
       completed: completedSteps.includes("call"),
-      href: "https://calendly.com/virality",
+      href: "https://virality.gg/contact",
       onClick: onScheduleCall,
     },
     {
@@ -133,7 +138,8 @@ export function BrandOnboardingSteps({
                   className={cn(
                     "w-full justify-between h-9 px-3",
                     "text-sm font-medium",
-                    "hover:bg-primary/10 hover:text-primary",
+                    "dark:bg-[#1e1e1e]",
+                    "hover:bg-muted dark:hover:bg-[#2a2a2a]",
                     "transition-all duration-200",
                     step.completed && "text-primary"
                   )}

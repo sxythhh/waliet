@@ -50,7 +50,7 @@ export function BlueprintSection({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative rounded-2xl border border-border/40 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm transition-all duration-200",
+        "group relative rounded-2xl border border-border/40 bg-card transition-all duration-200",
         "hover:border-border/60 hover:shadow-sm",
         isDragging && "opacity-50 z-50 shadow-2xl scale-[1.02]"
       )}

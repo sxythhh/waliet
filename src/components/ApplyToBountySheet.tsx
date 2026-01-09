@@ -143,8 +143,29 @@ export function ApplyToBountySheet({
         return;
       }
 
+      // Real-time check for available spots before submission
+      const { data: currentBoost, error: boostError } = await supabase
+        .from('bounty_campaigns')
+        .select('max_accepted_creators, accepted_creators_count, status')
+        .eq('id', bounty.id)
+        .single();
+
+      if (boostError || !currentBoost) {
+        toast.error("Failed to verify boost availability");
+        setSubmitting(false);
+        return;
+      }
+
+      if (currentBoost.status !== 'active') {
+        toast.error("This boost is no longer accepting applications");
+        setSubmitting(false);
+        return;
+      }
+
       // Check if boost is full - if so, add to waitlist
-      const applicationStatus = isFull ? 'waitlisted' : 'pending';
+      const currentlyFull = currentBoost.max_accepted_creators > 0 &&
+        currentBoost.accepted_creators_count >= currentBoost.max_accepted_creators;
+      const applicationStatus = currentlyFull ? 'waitlisted' : 'pending';
 
       // Prepare application answers for storage
       const answersToStore = Object.keys(questionAnswers).length > 0 ? questionAnswers : null;
@@ -158,7 +179,7 @@ export function ApplyToBountySheet({
         status: applicationStatus
       } as any);
       if (error) throw error;
-      toast.success(isFull ? "You've been added to the waitlist!" : "Application submitted successfully!");
+      toast.success(currentlyFull ? "You've been added to the waitlist!" : "Application submitted successfully!");
       onSuccess();
       onOpenChange(false);
 

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Brand {
   id: string;
@@ -47,6 +48,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       setCurrentBrand(data);
+    } else if (!data && slug !== "creator") {
+      // Brand slug not found - show toast and reset to creator mode
+      toast.error("Brand not found", {
+        description: `The workspace "${slug}" doesn't exist or you don't have access.`
+      });
+      setCurrentBrand(null);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("workspace");
+      newParams.set("tab", "campaigns");
+      setSearchParams(newParams);
     }
   };
 

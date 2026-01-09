@@ -3,14 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronRight, ChevronLeft, Zap, AlertTriangle } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import clippingIcon from "@/assets/clipping-icon.svg";
 import boostIcon from "@/assets/boost-icon.svg";
 import blueprintsIcon from "@/assets/blueprints-inactive.svg";
-import noteStackIcon from "@/assets/icons/note-stack.svg";
-import { CAMPAIGN_TEMPLATES, CampaignTemplate } from "./CampaignCreationWizard";
+import { CAMPAIGN_TEMPLATES, CampaignTemplate } from "./CampaignWizard";
 import { useBrandUsage } from "@/hooks/useBrandUsage";
 interface Blueprint {
   id: string;
@@ -105,6 +104,13 @@ export function CreateCampaignTypeDialog({
   };
   const hasBlueprints = blueprints.length > 0;
 
+  // Google Material icon: note-stack (filled)
+  const NoteStackIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="white">
+      <path d="M280-160v-441q0-33 24-56t57-23h439q33 0 56.5 23.5T880-600v320L680-80H360q-33 0-56.5-23.5T280-160ZM81-710q-6-33 13-59.5t52-32.5l434-77q33-6 59.5 13t32.5 52l10 54h-82l-7-40-433 77 40 226v279q-16-9-27.5-24T158-276L81-710Zm279 110v440h280v-160h160v-280H360Zm220 220Z"/>
+    </svg>
+  );
+
   // If controlled, don't render trigger
   if (controlledOpen !== undefined) {
     return <Dialog open={open} onOpenChange={setOpen}>
@@ -136,8 +142,11 @@ export function CreateCampaignTypeDialog({
                   onClick={() => handleTemplateSelect(template)}
                   className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#7e47ff] flex items-center justify-center shrink-0">
-                    <img src={noteStackIcon} alt="" className="h-5 w-5" />
+                  <div
+                    className="w-10 h-10 rounded-xl bg-[#7e47ff] flex items-center justify-center shrink-0 border-t-2"
+                    style={{ borderTopColor: 'rgba(180, 150, 255, 0.6)' }}
+                  >
+                    <NoteStackIcon />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -194,37 +203,41 @@ export function CreateCampaignTypeDialog({
                   </Button>
                 </div>}
 
-              {/* Quick Start Templates Button */}
-              {hasBlueprints && (
-                <button
-                  onClick={() => setShowTemplates(true)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-[#7e47ff] flex items-center justify-center shrink-0">
-                    <img src={noteStackIcon} alt="" className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
-                      Quick Start Templates
-                    </span>
-                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                      Choose from pre-built campaign setups
-                    </span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </button>
-              )}
-
               {/* Campaign Type Selection */}
-              <div className="space-y-3">
+              <div className="space-y-2">
+                {/* Quick Start Templates Button */}
+                {hasBlueprints && (
+                  <button
+                    onClick={() => setShowTemplates(true)}
+                    className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl bg-[#7e47ff] flex items-center justify-center shrink-0 border-t-2"
+                      style={{ borderTopColor: 'rgba(180, 150, 255, 0.6)' }}
+                    >
+                      <NoteStackIcon />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
+                        Quick Start Templates
+                      </span>
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                        Choose from pre-built campaign setups
+                      </p>
+                    </div>
+                  </button>
+                )}
 
-
-                <div className="space-y-2">
-                  {/* Clipping Option */}
-                  <button onClick={handleClippingClick} disabled={!hasBlueprints || !canCreateCampaign} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                      backgroundColor: '#a7751e'
-                    }}>
+                {/* Clipping Option */}
+                  <button
+                    onClick={handleClippingClick}
+                    disabled={!hasBlueprints || !canCreateCampaign}
+                    className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-t-2"
+                      style={{ backgroundColor: '#a7751e', borderTopColor: 'rgba(220, 180, 100, 0.6)' }}
+                    >
                       <img alt="Clipping" className="h-5 w-5" src="/lovable-uploads/348a9219-b53a-4497-a2a3-967c3bbf6d01.png" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -245,10 +258,15 @@ export function CreateCampaignTypeDialog({
                   </button>
 
                   {/* Boost Option */}
-                  <button onClick={handleBoostClick} disabled={!canCreateBoost} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                      backgroundColor: '#1ea75e'
-                    }}>
+                  <button
+                    onClick={handleBoostClick}
+                    disabled={!canCreateBoost}
+                    className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-t-2"
+                      style={{ backgroundColor: '#1ea75e', borderTopColor: 'rgba(100, 220, 150, 0.6)' }}
+                    >
                       <img alt="Boost" className="h-5 w-5" src={boostIcon} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -268,8 +286,8 @@ export function CreateCampaignTypeDialog({
                 </div>
               </button>
 
-                  {/* Job Post Option */}
-                  <button onClick={handleJobPostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
+                  {/* Job Post Option - Hidden for now */}
+                  <button onClick={handleJobPostClick} className="hidden w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
                       backgroundColor: '#7c3aed'
                     }}>
@@ -286,7 +304,6 @@ export function CreateCampaignTypeDialog({
                       </p>
                     </div>
                   </button>
-                </div>
               </div>
             </>
           )}
@@ -346,10 +363,15 @@ export function CreateCampaignTypeDialog({
             
             <div className="space-y-2">
               {/* Clipping Option */}
-              <button onClick={handleClippingClick} disabled={!hasBlueprints || !canCreateCampaign} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#a7751e'
-              }}>
+              <button
+                onClick={handleClippingClick}
+                disabled={!hasBlueprints || !canCreateCampaign}
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-t-2"
+                  style={{ backgroundColor: '#a7751e', borderTopColor: 'rgba(220, 180, 100, 0.6)' }}
+                >
                   <img src={clippingIcon} alt="Clipping" className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -370,10 +392,15 @@ export function CreateCampaignTypeDialog({
               </button>
 
               {/* Boost Option */}
-              <button onClick={handleBoostClick} disabled={!canCreateBoost} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#1ea75e'
-              }}>
+              <button
+                onClick={handleBoostClick}
+                disabled={!canCreateBoost}
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-t-2"
+                  style={{ backgroundColor: '#1ea75e', borderTopColor: 'rgba(100, 220, 150, 0.6)' }}
+                >
                   <img alt="Boost" className="h-5 w-5" src={boostIcon} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -393,11 +420,15 @@ export function CreateCampaignTypeDialog({
                 </div>
               </button>
 
-              {/* Job Post Option */}
-              <button onClick={handleJobPostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#7c3aed'
-              }}>
+              {/* Job Post Option - Hidden for now */}
+              <button
+                onClick={handleJobPostClick}
+                className="hidden w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-t-2"
+                  style={{ backgroundColor: '#7c3aed', borderTopColor: 'rgba(180, 130, 255, 0.6)' }}
+                >
                   <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>

@@ -289,7 +289,7 @@ export function CreateBrandDialog({
               field
             }) => <FormItem>
                     <FormLabel className="text-sm text-foreground font-inter tracking-[-0.5px]">
-                      Name
+                      Name <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter brand name" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" {...field} />

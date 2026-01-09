@@ -71,6 +71,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const hasTrackedSession = useRef<string | null>(null);
 
+  // Detect if we're in a popup window (OAuth callbacks)
+  // Popups should not initialize auth to avoid affecting main window's session
+  const isPopup = typeof window !== 'undefined' && window.opener !== null;
+
   const updateAuthState = useCallback((newSession: Session | null) => {
     setSession(newSession);
     setUser(newSession?.user ?? null);
@@ -78,6 +82,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    // Skip auth initialization in popup windows to prevent cross-tab auth sync issues
+    if (isPopup) {
+      setLoading(false);
+      return;
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {

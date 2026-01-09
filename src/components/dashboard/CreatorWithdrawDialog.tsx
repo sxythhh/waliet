@@ -39,6 +39,8 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
+  const [pendingWithdrawalId, setPendingWithdrawalId] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [addMethodDialogOpen, setAddMethodDialogOpen] = useState(false);
   const [taxFormWizardOpen, setTaxFormWizardOpen] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
@@ -50,6 +52,30 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
     userId,
     parseFloat(payoutAmount) || 0
   );
+
+  // Get minimum amount for a payout method
+  const getMinimumForMethod = (method: string) => {
+    if (isAdmin) return 1;
+    return method === 'bank' ? 250 : 20;
+  };
+
+  // Handle payout method selection with minimum amount validation
+  const handleMethodSelect = (methodId: string) => {
+    const method = payoutMethods.find(m => m.id === methodId);
+    if (!method) return;
+
+    setSelectedPayoutMethod(methodId);
+
+    // Warn if current amount doesn't meet minimum for new method
+    const currentAmount = parseFloat(payoutAmount) || 0;
+    const minimum = getMinimumForMethod(method.method);
+    if (currentAmount > 0 && currentAmount < minimum) {
+      toast({
+        title: "Minimum Amount",
+        description: `${method.method === 'bank' ? 'Bank transfers' : 'This method'} require${method.method === 'bank' ? '' : 's'} a minimum of $${minimum}`
+      });
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -95,16 +121,56 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
     // Fetch pending withdrawals
     const { data: payoutRequests } = await supabase
       .from("payout_requests")
-      .select("amount")
+      .select("id, amount, status")
       .eq("user_id", session.user.id)
       .in("status", ["pending", "in_transit"]);
 
-    if (payoutRequests) {
+    if (payoutRequests && payoutRequests.length > 0) {
       const totalPending = payoutRequests.reduce((sum, req) => sum + (req.amount || 0), 0);
       setPendingWithdrawals(totalPending);
+      // Store the first pending request ID for cancellation (only allow cancelling "pending" status)
+      const cancellableRequest = payoutRequests.find(req => req.status === "pending");
+      setPendingWithdrawalId(cancellableRequest?.id || null);
+    } else {
+      setPendingWithdrawals(0);
+      setPendingWithdrawalId(null);
     }
 
     setLoading(false);
+  };
+
+  const handleCancelPendingWithdrawal = async () => {
+    if (!pendingWithdrawalId) return;
+
+    setIsCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("payout_requests")
+        .update({ status: "cancelled" })
+        .eq("id", pendingWithdrawalId)
+        .eq("status", "pending"); // Only cancel if still pending
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Withdrawal Cancelled",
+        description: "Your pending withdrawal has been cancelled. The funds have been returned to your balance."
+      });
+
+      // Refresh data
+      await fetchData();
+      onSuccess?.();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to cancel withdrawal. It may have already been processed."
+      });
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   const handleAddPayoutMethod = async (method: string, details: any) => {
@@ -282,12 +348,16 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
     }
 
     try {
+      // Generate idempotency key to prevent duplicate payouts
+      const idempotencyKey = `${session.user.id}-${amount}-${Date.now()}`;
+
       // Use secure edge function for withdrawal
       const { data, error } = await supabase.functions.invoke('request-withdrawal', {
         body: {
           amount: amount,
           payout_method: selectedMethod.method,
-          payout_details: selectedMethod.details
+          payout_details: selectedMethod.details,
+          idempotency_key: idempotencyKey
         }
       });
 
@@ -468,9 +538,30 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
             </Button>
           </div>
         ) : pendingWithdrawals > 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-muted-foreground font-inter tracking-[-0.5px]">You have a pending withdrawal of ${pendingWithdrawals.toFixed(2)}.</p>
-            <p className="text-sm text-muted-foreground mt-2 font-inter tracking-[-0.5px]">Please wait for it to be processed.</p>
+          <div className="py-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">
+                You have a pending withdrawal of <span className="font-semibold text-foreground">${pendingWithdrawals.toFixed(2)}</span>
+              </p>
+              <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
+                {pendingWithdrawalId
+                  ? "You can cancel this request if it hasn't been processed yet."
+                  : "This withdrawal is being processed and cannot be cancelled."}
+              </p>
+            </div>
+            {pendingWithdrawalId && (
+              <Button
+                variant="outline"
+                onClick={handleCancelPendingWithdrawal}
+                disabled={isCancelling}
+                className="font-inter tracking-[-0.5px] border-destructive/50 text-destructive hover:bg-destructive/10"
+              >
+                {isCancelling ? "Cancelling..." : "Cancel Pending Withdrawal"}
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-4 py-4">
@@ -546,7 +637,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                     <button
                       key={method.id}
                       type="button"
-                      onClick={() => setSelectedPayoutMethod(method.id)}
+                      onClick={() => handleMethodSelect(method.id)}
                       className={`relative rounded-xl p-3 border transition-all text-left ${
                         isSelected 
                           ? 'border-primary bg-primary/5' 

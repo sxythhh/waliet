@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -41,6 +42,7 @@ const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallbac
 const DiscordBotOAuthCallback = lazy(() => import("./components/DiscordBotOAuthCallback").then(m => ({ default: m.DiscordBotOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const GoogleCalendarOAuthCallback = lazy(() => import("./components/GoogleCalendarOAuthCallback").then(m => ({ default: m.GoogleCalendarOAuthCallback })));
+const GoogleDocsOAuthCallback = lazy(() => import("./components/GoogleDocsOAuthCallback").then(m => ({ default: m.GoogleDocsOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -94,6 +96,9 @@ function BoostRedirect() {
       if (data?.slug) {
         navigate(`/c/${data.slug}`, { replace: true });
       } else {
+        toast.error("Boost not found", {
+          description: "The boost you're looking for doesn't exist or has been removed."
+        });
         navigate("/dashboard", { replace: true });
       }
     };
@@ -160,6 +165,7 @@ const App = () => (
                   <Route path="/discord/bot-callback" element={<DiscordBotOAuthCallback />} />
                   <Route path="/x/callback" element={<XOAuthCallback />} />
                   <Route path="/google/calendar-callback" element={<GoogleCalendarOAuthCallback />} />
+                  <Route path="/google/docs-callback" element={<GoogleDocsOAuthCallback />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/discover" element={<Discover />} />
                   <Route path="/creator-terms" element={<CreatorTerms />} />

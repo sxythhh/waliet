@@ -132,7 +132,7 @@ export function BrandWalletTab({
     setSearchParams(searchParams, {
       replace: true
     });
-    const pendingTopupData = sessionStorage.getItem(`pending_topup_${brandId}`);
+    const pendingTopupData = localStorage.getItem(`pending_topup_${brandId}`);
     if (!pendingTopupData) {
       toast.success('Checkout completed.');
       fetchWalletData();
@@ -146,7 +146,7 @@ export function BrandWalletTab({
       amount: number;
       transactionId?: string;
     };
-    sessionStorage.removeItem(`pending_topup_${brandId}`);
+    localStorage.removeItem(`pending_topup_${brandId}`);
     const finalizeTopup = async () => {
       toast.loading('Finalizing top-up...', {
         id: 'topup-finalize'
@@ -269,7 +269,7 @@ export function BrandWalletTab({
       if (error) throw error;
 
       if (data?.checkout_url) {
-        sessionStorage.setItem(
+        localStorage.setItem(
           `pending_topup_${brandId}`,
           JSON.stringify({ amount: tx.amount, transactionId: tx.id })
         );

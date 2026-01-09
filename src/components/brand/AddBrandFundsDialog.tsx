@@ -81,7 +81,8 @@ export function AddBrandFundsDialog({
       // If we got a checkout URL, redirect to it
       if (data?.checkout_url) {
         // Store the amount + intent id so we can finalize the top-up after returning from checkout
-        sessionStorage.setItem(
+        // Using localStorage (not sessionStorage) to persist across browser closes
+        localStorage.setItem(
           `pending_topup_${brandId}`,
           JSON.stringify({ amount, transactionId: data?.transaction_id })
         );
@@ -110,6 +111,8 @@ export function AddBrandFundsDialog({
   const finalAmount = getFinalAmount();
   const processingFee = finalAmount > 0 ? (finalAmount * 0.03) + 0.30 : 0;
   const totalCharged = finalAmount + processingFee;
+  // Calculate effective fee percentage for small amounts
+  const effectiveFeePercent = finalAmount > 0 ? ((processingFee / finalAmount) * 100).toFixed(1) : '0';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -194,13 +197,18 @@ export function AddBrandFundsDialog({
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span 
+                <span
                   className="text-sm text-muted-foreground tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Payment Processor
+                  {parseFloat(effectiveFeePercent) > 5 && (
+                    <span className="ml-1 text-xs text-amber-500">
+                      ({effectiveFeePercent}%)
+                    </span>
+                  )}
                 </span>
-                <span 
+                <span
                   className="text-sm text-muted-foreground font-medium tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >

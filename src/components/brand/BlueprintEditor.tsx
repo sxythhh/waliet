@@ -12,13 +12,13 @@ import { toast } from "sonner";
 import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useTheme } from "@/components/ThemeProvider";
-import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
-import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
+import { CampaignWizard, CampaignType } from "@/components/brand/CampaignWizard";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
 import { TrainingModuleEditor, type TrainingModule } from "@/components/brand/TrainingModuleEditor";
+import { GoogleDocsImportButton } from "@/components/brand/GoogleDocsImportButton";
 import { DndContext, pointerWithin, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -117,9 +117,9 @@ export function BlueprintEditor({
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadingFileName, setUploadingFileName] = useState("");
-  const [showCampaignWizard, setShowCampaignWizard] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardType, setWizardType] = useState<CampaignType | undefined>(undefined);
   const [showCampaignTypeDialog, setShowCampaignTypeDialog] = useState(false);
-  const [showBoostDialog, setShowBoostDialog] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
   const [activeId, setActiveId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -213,13 +213,51 @@ export function BlueprintEditor({
   const activateBlueprint = () => {
     setShowCampaignTypeDialog(true);
   };
+  const handleGoogleDocsImport = (fields: Partial<Blueprint>) => {
+    if (!blueprint) return;
+    // Merge imported fields with existing blueprint data
+    const updates: Partial<Blueprint> = {};
+
+    if (fields.title && !blueprint.title) updates.title = fields.title;
+    if (fields.content) updates.content = fields.content;
+    if (fields.brand_voice) updates.brand_voice = fields.brand_voice;
+    if (fields.target_personas?.length) {
+      updates.target_personas = [...(blueprint.target_personas || []), ...fields.target_personas];
+    }
+    if (fields.hooks?.length) {
+      updates.hooks = [...(blueprint.hooks || []), ...fields.hooks];
+    }
+    if (fields.talking_points?.length) {
+      updates.talking_points = [...(blueprint.talking_points || []), ...fields.talking_points];
+    }
+    if (fields.dos_and_donts) {
+      updates.dos_and_donts = {
+        dos: [...(blueprint.dos_and_donts?.dos || []), ...(fields.dos_and_donts.dos || [])],
+        donts: [...(blueprint.dos_and_donts?.donts || []), ...(fields.dos_and_donts.donts || [])],
+      };
+    }
+    if (fields.call_to_action) updates.call_to_action = fields.call_to_action;
+    if (fields.hashtags?.length) {
+      updates.hashtags = [...new Set([...(blueprint.hashtags || []), ...fields.hashtags])];
+    }
+    if (fields.platforms?.length) {
+      updates.platforms = [...new Set([...(blueprint.platforms || []), ...fields.platforms])];
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updateBlueprint(updates);
+      toast.success("Content imported from Google Docs");
+    }
+  };
   const handleSelectClipping = (selectedBlueprintId?: string) => {
     setShowCampaignTypeDialog(false);
-    setShowCampaignWizard(true);
+    setWizardType('cpm');
+    setWizardOpen(true);
   };
   const handleSelectBoost = () => {
     setShowCampaignTypeDialog(false);
-    setShowBoostDialog(true);
+    setWizardType('boost');
+    setWizardOpen(true);
   };
   const toggleSection = (sectionId: SectionType) => {
     setEnabledSections(prev => {
@@ -690,7 +728,7 @@ export function BlueprintEditor({
                       flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-200 font-inter tracking-[-0.3px] text-sm
                       ${isSelected
                         ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"}
+                        : "bg-muted/50 text-foreground hover:bg-muted/70"}
                     `}>
                     <img src={platform.logo} alt={platform.label} className={`h-4 w-4 object-contain ${isSelected ? "brightness-0 invert" : ""}`} />
                     <span className="font-medium">{platform.label}</span>
@@ -702,7 +740,7 @@ export function BlueprintEditor({
         return <BlueprintSection key="brand_voice" id="brand_voice" title="Brand Voice" icon={<Mic className="h-4 w-4" />} status={getSectionStatus("brand_voice").status} onRemove={() => toggleSection("brand_voice")}>
             <Textarea value={blueprint.brand_voice || ""} onChange={e => updateBlueprint({
             brand_voice: e.target.value
-          })} placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)" className="min-h-[100px] resize-none rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+          })} placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)" className="min-h-[100px] resize-none rounded-xl bg-muted/30 border-0 focus-visible:ring-0 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
           </BlueprintSection>;
       case "hooks":
         return <BlueprintSection key="hooks" id="hooks" title="Hooks" icon={<MessageSquare className="h-4 w-4" />} status={getSectionStatus("hooks").status} onRemove={() => toggleSection("hooks")}>
@@ -710,7 +748,7 @@ export function BlueprintEditor({
               {blueprint.hooks.length === 0 ? <div className="rounded-xl bg-muted/20 py-8 text-center">
                   <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add attention-grabbing hooks for creators to use</p>
                 </div> : blueprint.hooks.map((hook, index) => <div key={`hook-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
-                    <Input value={hook} onChange={e => updateHook(index, e.target.value)} placeholder={`Hook #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                    <Input value={hook} onChange={e => updateHook(index, e.target.value)} placeholder={`Hook #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-0 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                     <Button variant="ghost" size="icon" onClick={() => removeHook(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove hook">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -727,7 +765,7 @@ export function BlueprintEditor({
               {blueprint.talking_points.length === 0 ? <div className="rounded-xl bg-muted/20 py-8 text-center">
                   <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add requirements that creators must follow</p>
                 </div> : blueprint.talking_points.map((point, index) => <div key={`point-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
-                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Requirement #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Requirement #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-0 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                     <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove requirement">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -747,7 +785,7 @@ export function BlueprintEditor({
                 </div>
                 <div className="space-y-2">
                   {blueprint.dos_and_donts.dos.map((item, index) => <div key={`do-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
-                      <Input value={item} onChange={e => updateDo(index, e.target.value)} placeholder="Add a do..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-emerald-500/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                      <Input value={item} onChange={e => updateDo(index, e.target.value)} placeholder="Add a do..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-0 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                       <Button variant="ghost" size="icon" onClick={() => removeDo(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove do item">
                         <X className="h-3 w-3" />
                       </Button>
@@ -764,7 +802,7 @@ export function BlueprintEditor({
                 </div>
                 <div className="space-y-2">
                   {blueprint.dos_and_donts.donts.map((item, index) => <div key={`dont-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
-                      <Input value={item} onChange={e => updateDont(index, e.target.value)} placeholder="Add a don't..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-red-500/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                      <Input value={item} onChange={e => updateDont(index, e.target.value)} placeholder="Add a don't..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-0 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                       <Button variant="ghost" size="icon" onClick={() => removeDont(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove don't item">
                         <X className="h-3 w-3" />
                       </Button>
@@ -781,7 +819,7 @@ export function BlueprintEditor({
         return <BlueprintSection key="call_to_action" id="call_to_action" title="Call to Action" icon={<MessageSquare className="h-4 w-4" />} status={getSectionStatus("call_to_action").status} onRemove={() => toggleSection("call_to_action")}>
             <Input value={blueprint.call_to_action || ""} onChange={e => updateBlueprint({
             call_to_action: e.target.value
-          })} placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')" className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+          })} placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')" className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-0 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
           </BlueprintSection>;
       case "assets":
         return <BlueprintSection key="assets" id="assets" title="Assets & Files" icon={<Folder className="h-4 w-4" />} status={getSectionStatus("assets").status} onRemove={() => toggleSection("assets")}>
@@ -792,9 +830,9 @@ export function BlueprintEditor({
                     <div className="flex-1 grid grid-cols-2 gap-2">
                       <div className="relative">
                         <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
-                        <Input value={asset.link} onChange={e => updateAsset(index, "link", e.target.value)} placeholder="https://drive.google.com/..." className="pl-9 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                        <Input value={asset.link} onChange={e => updateAsset(index, "link", e.target.value)} placeholder="https://drive.google.com/..." className="pl-9 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-0 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                       </div>
-                      <Input value={asset.notes} onChange={e => updateAsset(index, "notes", e.target.value)} placeholder="Description..." className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                      <Input value={asset.notes} onChange={e => updateAsset(index, "notes", e.target.value)} placeholder="Description..." className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-0 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => removeAsset(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove asset">
                       <Trash2 className="h-3.5 w-3.5" />
@@ -847,8 +885,8 @@ export function BlueprintEditor({
                   {blueprint.example_videos.map((video, index) => <div key={`video-${index}-${blueprint.id}`} className="group rounded-xl bg-muted/20 p-3 transition-colors hover:bg-muted/30">
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0 space-y-2">
-                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
-                          <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-0 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                          <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-0 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                         </div>
                         <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove example video">
                           <Trash2 className="h-3.5 w-3.5" />
@@ -877,13 +915,13 @@ export function BlueprintEditor({
                         value={faq.question}
                         onChange={e => updateFAQ(index, "question", e.target.value)}
                         placeholder="Question"
-                        className="flex-1 h-10 rounded-xl bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm font-medium placeholder:text-muted-foreground/50 transition-colors"
+                        className="flex-1 h-10 rounded-xl bg-background/60 border-0 focus-visible:ring-0 font-inter tracking-[-0.3px] text-sm font-medium placeholder:text-muted-foreground/50 transition-colors"
                       />
                       <Textarea
                         value={faq.answer}
                         onChange={e => updateFAQ(index, "answer", e.target.value)}
                         placeholder="Answer"
-                        className="min-h-[80px] resize-none rounded-xl bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors"
+                        className="min-h-[80px] resize-none rounded-xl bg-background/60 border-0 focus-visible:ring-0 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors"
                       />
                     </div>
                     <Button
@@ -907,20 +945,13 @@ export function BlueprintEditor({
         return null;
     }
   };
-  if (loading) {
-    return <div className="h-full flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-      </div>;
-  }
-  if (!blueprint) return null;
+  if (loading || !blueprint) return null;
   return <>
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col bg-background border border-border rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
           <div className="sticky top-0 z-10 flex items-center justify-between gap-2 py-2 sm:py-2.5 bg-background border-b border-border px-3 sm:px-[14px]">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-              
-              
               {brand?.logo_url ? <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
               prev.delete('blueprint');
               return prev;
@@ -932,15 +963,20 @@ export function BlueprintEditor({
             })}>
                   {(brand?.name || 'B').charAt(0).toUpperCase()}
                 </div>}
+              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px] shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
+              prev.delete('blueprint');
+              return prev;
+            })}>{brand?.name}</span>
               <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input value={blueprint.title} onChange={e => updateBlueprint({
               title: e.target.value
-            })} className="h-8 flex-1 min-w-0 !bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] text-sm hover:underline" placeholder="Untitled" />
+            })} className="h-8 flex-1 min-w-0 !bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] text-sm" placeholder="Untitled" />
               {saving && <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px] shrink-0">
                   Saving...
                 </span>}
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <GoogleDocsImportButton onImport={handleGoogleDocsImport} />
               <button onClick={() => window.open(`/blueprint/${blueprintId}/preview`, '_blank')} className="p-1.5 rounded-md border border-border bg-muted dark:bg-muted/50 text-secondary-foreground hover:bg-muted/80 dark:hover:bg-muted/70 transition-colors">
                 <img src={playArrowIcon} alt="Preview" className="h-5 w-5" />
               </button>
@@ -989,10 +1025,20 @@ export function BlueprintEditor({
       {/* Campaign Type Selection Dialog */}
       <CreateCampaignTypeDialog open={showCampaignTypeDialog} onOpenChange={setShowCampaignTypeDialog} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} brandId={brandId} subscriptionPlan={brand?.subscription_plan} defaultBlueprintId={blueprintId} />
 
-      {/* Campaign Creation Wizard */}
-      {showCampaignWizard && <CampaignCreationWizard open={showCampaignWizard} onOpenChange={setShowCampaignWizard} brandId={brandId} brandName={brand?.name || ""} brandLogoUrl={brand?.logo_url || undefined} subscriptionPlan={brand?.subscription_plan} initialBlueprintId={blueprintId} />}
-
-      {/* Boost Creation Dialog */}
-      {showBoostDialog && <CreateBountyDialog open={showBoostDialog} onOpenChange={setShowBoostDialog} brandId={brandId} subscriptionPlan={brand?.subscription_plan} initialBlueprintId={blueprintId} />}
+      {/* Campaign/Boost Creation Wizard */}
+      <CampaignWizard
+        open={wizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) setWizardType(undefined);
+        }}
+        brandId={brandId}
+        brandName={brand?.name || ""}
+        brandLogoUrl={brand?.logo_url || undefined}
+        subscriptionPlan={brand?.subscription_plan}
+        initialBlueprintId={blueprintId}
+        initialType={wizardType}
+        mode="create"
+      />
     </>;
 }

@@ -189,12 +189,20 @@ export function BrandToPersonalTransferDialog({
           </div>
 
           {/* Info */}
-          <p 
-            className="text-xs text-muted-foreground tracking-[-0.3px]"
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            Transfers are instant. From your personal wallet, you can request a withdrawal to your payout method.
-          </p>
+          <div className="space-y-2">
+            <p
+              className="text-xs text-muted-foreground tracking-[-0.3px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Transfers are instant. From your personal wallet, you can request a withdrawal to your payout method.
+            </p>
+            <p
+              className="text-xs text-amber-500/80 tracking-[-0.3px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Note: Ensure you maintain sufficient balance for pending creator payouts.
+            </p>
+          </div>
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">

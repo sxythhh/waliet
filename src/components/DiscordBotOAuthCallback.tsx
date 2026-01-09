@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 export function DiscordBotOAuthCallback() {
@@ -80,18 +79,29 @@ export function DiscordBotOAuthCallback() {
       }
 
       try {
-        // Call edge function to verify bot is in guild and update brand
-        const { data, error: functionError } = await supabase.functions.invoke('discord-bot-oauth', {
-          body: {
+        // Call edge function directly via fetch (popup doesn't have auth session)
+        // The connect action validates by checking bot is in guild using bot token
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/discord-bot-oauth`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': anonKey,
+          },
+          body: JSON.stringify({
             action: 'connect',
             code,
             guildId,
             brandId,
-          }
+          }),
         });
 
-        if (functionError) {
-          throw new Error(functionError.message || 'Failed to connect Discord server');
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to connect Discord server');
         }
 
         if (data?.error) {

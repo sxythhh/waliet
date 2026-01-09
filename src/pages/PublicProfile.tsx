@@ -19,6 +19,7 @@ import { PortfolioDisplay as LegacyPortfolioDisplay } from "@/components/profile
 import { PortfolioDisplay } from "@/components/portfolio/display/PortfolioDisplay";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import type { CreatorPortfolio } from "@/types/portfolio";
+import { TrustScoreBadge } from "@/components/TrustScoreBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -537,8 +538,16 @@ export default function PublicProfile() {
                   </button>)}
               </div>}
 
-            {/* Trust Score & Audience Quality Badges - Hidden for now */}
-            {/* {profile.trust_score !== null || profile.audience_quality_score !== null} */}
+            {/* Trust Score Badge */}
+            {profile.trust_score !== null && (
+              <div className="flex items-center gap-2 mt-4">
+                <TrustScoreBadge
+                  score={profile.trust_score}
+                  size="md"
+                  showLabel
+                />
+              </div>
+            )}
 
             {/* Location & Join Date */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-sm text-muted-foreground">

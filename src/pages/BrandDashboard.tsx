@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
-import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
+import { CampaignWizard } from "@/components/brand/CampaignWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { supabase } from "@/integrations/supabase/client";
@@ -485,12 +485,14 @@ export default function BrandDashboard() {
         </AlertDialog>
 
         {/* Bounty Creation Dialog */}
-        <CreateBountyDialog
+        <CampaignWizard
           open={createBountyOpen}
           onOpenChange={setCreateBountyOpen}
           brandId={brand.id}
           subscriptionPlan={brand.subscription_plan}
           onSuccess={fetchBrandData}
+          mode="create"
+          initialType="boost"
         />
         </div>
       </div>

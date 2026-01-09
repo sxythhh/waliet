@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageLoading } from "@/components/ui/loading-bar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -13,10 +12,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertCircle, CheckCircle2, Send, UserPlus, DollarSign, Video, ExternalLink, Webhook } from "lucide-react";
 import { toast } from "sonner";
 import discordLogo from "@/assets/discord-logo.png";
-import { DiscordBotConfigSection } from "./DiscordBotConfigSection";
-import { DiscordRoleSyncSection } from "./DiscordRoleSyncSection";
-import { DiscordReactionAnalytics } from "./DiscordReactionAnalytics";
-import { DiscordMembershipLog } from "./DiscordMembershipLog";
 import { CustomWebhooksTab } from "./CustomWebhooksTab";
 
 interface DiscordIntegrationTabProps {
@@ -163,13 +158,9 @@ export function DiscordIntegrationTab({ brandId }: DiscordIntegrationTabProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-[300px]">
           <TabsTrigger value="webhooks">Discord</TabsTrigger>
           <TabsTrigger value="custom">Custom</TabsTrigger>
-          <TabsTrigger value="bot">Bot</TabsTrigger>
-          <TabsTrigger value="roles">Role Sync</TabsTrigger>
-          <TabsTrigger value="reactions">Reactions</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
         </TabsList>
 
         <TabsContent value="webhooks" className="space-y-4 mt-4">
@@ -316,22 +307,6 @@ export function DiscordIntegrationTab({ brandId }: DiscordIntegrationTabProps) {
 
         <TabsContent value="custom" className="mt-4 -mx-6 -mb-6">
           <CustomWebhooksTab brandId={brandId} />
-        </TabsContent>
-
-        <TabsContent value="bot" className="mt-4">
-          <DiscordBotConfigSection brandId={brandId} />
-        </TabsContent>
-
-        <TabsContent value="roles" className="mt-4">
-          <DiscordRoleSyncSection brandId={brandId} />
-        </TabsContent>
-
-        <TabsContent value="reactions" className="mt-4">
-          <DiscordReactionAnalytics brandId={brandId} />
-        </TabsContent>
-
-        <TabsContent value="members" className="mt-4">
-          <DiscordMembershipLog brandId={brandId} />
         </TabsContent>
       </Tabs>
     </div>

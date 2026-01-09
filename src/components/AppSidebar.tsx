@@ -783,7 +783,7 @@ export function AppSidebar() {
                 <TooltipTrigger asChild>
                   {buttonContent}
                 </TooltipTrigger>
-                <TooltipContent side="right" className="z-[100] font-inter font-medium tracking-[-0.3px] bg-popover border border-border shadow-lg">
+                <TooltipContent side="right" className="z-[9999] font-inter font-medium tracking-[-0.3px] bg-popover border border-border shadow-lg">
                   {item.title}
                 </TooltipContent>
               </Tooltip>

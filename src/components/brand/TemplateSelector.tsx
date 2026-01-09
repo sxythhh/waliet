@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GoogleDocsImportButton } from "@/components/brand/GoogleDocsImportButton";
 interface BlueprintTemplate {
   id: string;
   title: string;
@@ -36,17 +37,39 @@ interface BlueprintTemplate {
   }>;
   content_guidelines: string | null;
 }
+interface BlueprintImportFields {
+  title?: string;
+  content?: string;
+  brand_voice?: string;
+  target_personas?: Array<{
+    name: string;
+    target_audience: string;
+    description: string;
+  }>;
+  hooks?: string[];
+  talking_points?: string[];
+  dos_and_donts?: {
+    dos: string[];
+    donts: string[];
+  };
+  call_to_action?: string;
+  hashtags?: string[];
+  platforms?: string[];
+}
+
 interface TemplateSelectorProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSelectTemplate: (template: BlueprintTemplate) => void;
   onStartBlank?: () => void;
+  onImportFromGoogleDocs?: (fields: BlueprintImportFields) => void;
 }
 export function TemplateSelector({
   open: controlledOpen,
   onOpenChange,
   onSelectTemplate,
-  onStartBlank
+  onStartBlank,
+  onImportFromGoogleDocs
 }: TemplateSelectorProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [templates, setTemplates] = useState<BlueprintTemplate[]>([]);
@@ -109,6 +132,13 @@ export function TemplateSelector({
     setOpen(false);
   };
 
+  const handleGoogleDocsImport = (fields: BlueprintImportFields) => {
+    if (onImportFromGoogleDocs) {
+      onImportFromGoogleDocs(fields);
+    }
+    setOpen(false);
+  };
+
   // If controlled, don't render the trigger button
   if (isControlled) {
     return <Dialog open={open} onOpenChange={setOpen}>
@@ -129,7 +159,7 @@ export function TemplateSelector({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    
+
                     <h3 className="font-medium text-[15px] text-foreground font-inter tracking-[-0.5px]">
                       Start with blank
                     </h3>
@@ -141,6 +171,17 @@ export function TemplateSelector({
                 <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-foreground transition-colors shrink-0 mt-1" />
               </div>
             </button>
+
+            {/* Import from Google Docs Option */}
+            {onImportFromGoogleDocs && (
+              <div className="mb-3">
+                <GoogleDocsImportButton
+                  variant="card"
+                  onImport={handleGoogleDocsImport}
+                  className="w-full"
+                />
+              </div>
+            )}
 
             {loading ? <div className="space-y-3">
                 {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}

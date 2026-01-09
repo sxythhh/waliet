@@ -29,6 +29,7 @@ export function TransferDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<"input" | "confirm">("input");
   const [recipientProfile, setRecipientProfile] = useState<{ avatar_url: string | null; username: string } | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   const parsedAmount = parseFloat(amount) || 0;
   const fee = Math.round(parsedAmount * TRANSFER_FEE_RATE * 100) / 100;
@@ -40,12 +41,17 @@ export function TransferDialog({
   useEffect(() => {
     const fetchRecipientProfile = async () => {
       if (step === "confirm" && username.trim()) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("avatar_url, username")
-          .ilike("username", username.trim())
-          .single();
-        setRecipientProfile(data);
+        setLoadingProfile(true);
+        try {
+          const { data } = await supabase
+            .from("profiles")
+            .select("avatar_url, username")
+            .ilike("username", username.trim())
+            .single();
+          setRecipientProfile(data);
+        } finally {
+          setLoadingProfile(false);
+        }
       }
     };
     fetchRecipientProfile();
@@ -167,12 +173,16 @@ export function TransferDialog({
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">To</span>
                 <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={recipientProfile?.avatar_url || undefined} alt={username} />
-                    <AvatarFallback className="text-xs">
-                      {username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  {loadingProfile ? (
+                    <div className="h-6 w-6 rounded-full bg-muted animate-pulse" />
+                  ) : (
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={recipientProfile?.avatar_url || undefined} alt={username} />
+                      <AvatarFallback className="text-xs">
+                        {username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">@{username}</span>
                 </div>
               </div>

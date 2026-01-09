@@ -215,7 +215,7 @@ export function PaymentMethodsSection() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3">
         {payoutMethods.map((method, index) => {
           const isDefault = index === 0;
           const methodIcon = getMethodIcon(method.method);
@@ -287,11 +287,11 @@ export function PaymentMethodsSection() {
         
         {/* Add Method Card */}
         {payoutMethods.length < 3 && (
-          <button 
-            onClick={() => setDialogOpen(true)} 
-            className="group rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors p-4 min-h-[80px] border border-border dark:border-transparent"
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="group rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors p-4 border border-dashed border-border dark:border-border/50"
           >
-            <div className="h-full flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <Plus className="h-4 w-4 text-neutral-500 group-hover:text-foreground dark:group-hover:text-white transition-colors" />
               <span className="text-sm text-neutral-500 group-hover:text-foreground dark:group-hover:text-white transition-colors font-inter tracking-[-0.4px]">
                 Add Method

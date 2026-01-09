@@ -92,8 +92,9 @@ serve(async (req) => {
 
     // Action: Connect (handle OAuth callback)
     if (action === 'connect') {
-      if (!code || !guildId || !brandId) {
-        throw new Error('code, guildId, and brandId are required for connect');
+      // code is optional - only present when OAuth2 Code Grant is enabled
+      if (!guildId || !brandId) {
+        throw new Error('guildId and brandId are required for connect');
       }
 
       const DISCORD_CLIENT_SECRET = Deno.env.get('DISCORD_CLIENT_SECRET');

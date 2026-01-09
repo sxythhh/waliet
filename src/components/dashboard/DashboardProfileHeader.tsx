@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
+import { TrustScoreBadge } from "@/components/TrustScoreBadge";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -35,6 +36,7 @@ interface DashboardProfileHeaderProps {
     created_at: string;
     country?: string | null;
     city?: string | null;
+    trust_score?: number | null;
   };
   socialAccounts: SocialAccount[];
   onEditProfile: () => void;
@@ -266,28 +268,39 @@ export function DashboardProfileHeader({
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl font-bold font-inter tracking-[-0.5px]">
-                {displayName}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold font-inter tracking-[-0.5px]">
+                  {displayName}
+                </h1>
+                {profile.trust_score !== null && profile.trust_score !== undefined && (
+                  <TrustScoreBadge
+                    score={profile.trust_score}
+                    size="md"
+                    showLabel={false}
+                  />
+                )}
+              </div>
               <p className="text-muted-foreground font-inter tracking-[-0.5px]">
                 @{profile.username}
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCopyProfileUrl}
-                className="h-9 w-9 bg-muted/50 hover:bg-muted border-0"
-                title="Copy profile URL"
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Link2 className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
+              {profile.username && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopyProfileUrl}
+                  className="h-9 w-9 bg-muted/50 hover:bg-muted border-0"
+                  title="Copy profile URL"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Link2 className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 onClick={onEditProfile}

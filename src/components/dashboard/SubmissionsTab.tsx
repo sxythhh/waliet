@@ -668,13 +668,26 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
 
       {/* Submissions Table */}
       <div className="pb-6 px-0">
-        {submissions.length === 0 ? <div className="text-center py-12">
-            <p className="text-xs text-muted-foreground/60" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
-              Submit videos to campaigns to see them here
-            </p>
+        {submissions.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
+            <img
+              src={resolvedTheme === 'light' ? emptySubmissionsGhostLight : emptySubmissionsGhost}
+              alt="No submissions"
+              className="w-24 h-24 opacity-60"
+            />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
+                No submissions yet
+              </p>
+              <p className="text-xs text-muted-foreground/60" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
+                Submit videos to campaigns to see them here
+              </p>
+            </div>
           </div> : <>
             <div className="overflow-x-auto border border-border rounded-xl">
               <Table>

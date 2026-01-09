@@ -137,9 +137,19 @@ export function CampaignRowCard({
               {daysLeft} days left
             </span>
           )}
+          {daysLeft !== null && daysLeft === 0 && status !== "draft" && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-red-500/90 text-white rounded">
+              Expired
+            </span>
+          )}
           {status === "draft" && (
             <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-muted-foreground/80 text-white rounded">
               Draft
+            </span>
+          )}
+          {status === "paused" && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-amber-600/90 text-white rounded">
+              Paused{budget > 0 && budgetUsed >= budget ? " (Budget Depleted)" : ""}
             </span>
           )}
         </div>

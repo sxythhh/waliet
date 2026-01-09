@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Lock, Link2, FileVideo, Upload } from "lucide-react";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Lock, Link2, FileVideo, Upload, Check } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
-import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
+import { CampaignWizard } from "@/components/brand/CampaignWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { BoostHomeTab } from "@/components/brand/BoostHomeTab";
 import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
 import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { CampaignVideosPanel } from "@/components/brand/CampaignVideosPanel";
-import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { BrandPerformanceDashboard } from "@/components/brand/BrandPerformanceDashboard";
 import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
@@ -375,38 +374,68 @@ export function BrandCampaignDetailView({
             {/* Campaign/Boost Selector Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-lg font-semibold tracking-[-0.5px] flex items-center gap-2 rounded-[7px] px-2 py-1 transition-colors bg-[#1f1f1f]/0">
+                <button className="group text-lg font-semibold tracking-[-0.5px] flex items-center gap-2 rounded-lg px-3 py-1.5 transition-all duration-150 hover:bg-muted/60 dark:hover:bg-[#0d0d0d]">
                   {entityTitle}
                   {isBoost && boost?.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
                       Private
                     </Badge>}
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-data-[state=open]:rotate-180" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 z-50 bg-white dark:bg-[#080808] border-border dark:border-[#1f1f1f] rounded-[7px]">
+              <DropdownMenuContent align="start" className="w-72 z-50 bg-white dark:bg-[#080808] rounded-xl shadow-xl dark:shadow-2xl dark:shadow-black/50 p-1.5">
                 {/* All Programs option */}
-                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={isAllMode ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
-                  <span className="font-medium">All Programs</span>
+                <DropdownMenuItem
+                  onClick={() => handleSelectEntity("all")}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
+                    isAllMode
+                      ? "bg-primary/10 dark:bg-primary/15 text-primary"
+                      : "hover:bg-muted/60 dark:hover:bg-[#0d0d0d]"
+                  }`}
+                >
+                  <span className="font-medium flex-1">All Programs</span>
+                  {isAllMode && <Check className="h-4 w-4 text-primary" />}
                 </DropdownMenuItem>
-                
-                {(campaigns.length > 0 || boosts.length > 0) && <DropdownMenuSeparator />}
-                
-                {/* All Programs (Campaigns + Boosts) */}
-                <div className="flex flex-col gap-1 py-1">
-                  {campaigns.map(c => <DropdownMenuItem key={c.id} onClick={() => handleSelectEntity({
-                  type: "campaign",
-                  id: c.id
-                })} className={campaignId === c.id ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
-                      <span className="truncate">{c.title}</span>
-                      
-                    </DropdownMenuItem>)}
-                  {boosts.map(b => <DropdownMenuItem key={b.id} onClick={() => handleSelectEntity({
-                  type: "boost",
-                  id: b.id
-                })} className={boostId === b.id ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
-                      <span className="truncate">{b.title}</span>
-                      
-                    </DropdownMenuItem>)}
+
+                {(campaigns.length > 0 || boosts.length > 0) && (
+                  <div className="h-px bg-white/5 my-1.5 mx-2" />
+                )}
+
+                {/* Campaigns & Boosts list */}
+                <div className="flex flex-col gap-0.5">
+                  {campaigns.map(c => {
+                    const isSelected = campaignId === c.id;
+                    return (
+                      <DropdownMenuItem
+                        key={c.id}
+                        onClick={() => handleSelectEntity({ type: "campaign", id: c.id })}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
+                          isSelected
+                            ? "bg-primary/10 dark:bg-primary/15 text-primary"
+                            : "hover:bg-muted/60 dark:hover:bg-[#0d0d0d]"
+                        }`}
+                      >
+                        <span className="truncate flex-1">{c.title}</span>
+                        {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  {boosts.map(b => {
+                    const isSelected = boostId === b.id;
+                    return (
+                      <DropdownMenuItem
+                        key={b.id}
+                        onClick={() => handleSelectEntity({ type: "boost", id: b.id })}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
+                          isSelected
+                            ? "bg-primary/10 dark:bg-primary/15 text-primary"
+                            : "hover:bg-muted/60 dark:hover:bg-[#0d0d0d]"
+                        }`}
+                      >
+                        <span className="truncate flex-1">{b.title}</span>
+                        {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -437,17 +466,23 @@ export function BrandCampaignDetailView({
           </div>
         </div>
 
-        {/* Campaign Edit Dialog */}
-        {campaign?.brand_id && !isBoost && <CampaignCreationWizard brandId={campaign.brand_id} brandName={campaign.brand_name || ""} brandLogoUrl={campaign.brand_logo_url || undefined} campaign={campaign} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
-        fetchCampaign();
-        setEditDialogOpen(false);
-      }} />}
-
-      {/* Boost Edit Dialog */}
-        {isBoost && boost && <EditBountyDialog bountyId={boostId!} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
-        fetchBoost();
-        setEditDialogOpen(false);
-      }} />}
+        {/* Campaign/Boost Edit Dialog */}
+        {campaign?.brand_id && <CampaignWizard
+          brandId={campaign.brand_id}
+          brandName={campaign.brand_name || ""}
+          brandLogoUrl={campaign.brand_logo_url || undefined}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          mode="edit"
+          campaignId={!isBoost ? campaign.id : undefined}
+          boostId={isBoost && boostId ? boostId : undefined}
+          initialType={isBoost ? "boost" : "cpm"}
+          onSuccess={() => {
+            if (isBoost) fetchBoost();
+            else fetchCampaign();
+            setEditDialogOpen(false);
+          }}
+        />}
 
         {/* Boost Top Up Dialog */}
         {isBoost && boost && <TopUpBalanceDialog boostId={boostId!} boostTitle={boost.title} currentBalance={boost.budget || 0} open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} onSuccess={fetchBoost} />}

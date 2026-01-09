@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ExternalLink, Check, X, Clock, User } from "lucide-react";
+import { ExternalLink, Check, X, Clock, User, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -276,26 +276,41 @@ export function BountyApplicationsSheet({
 
                   {/* Action Buttons */}
                   {application.status === 'pending' && (
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                        disabled={processing === application.id || acceptedCount >= maxAccepted || !canHireCreator}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                        size="sm"
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Accept
-                      </Button>
-                      <Button
-                        onClick={() => handleUpdateStatus(application.id, 'rejected')}
-                        disabled={processing === application.id}
-                        variant="destructive"
-                        className="flex-1"
-                        size="sm"
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
+                    <div className="space-y-2 pt-2">
+                      {/* Capacity Warning */}
+                      {acceptedCount >= maxAccepted && (
+                        <div className="flex items-center gap-2 p-2 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                          <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                          <span>Boost is at full capacity ({acceptedCount}/{maxAccepted}). Increase max creators to accept more applications.</span>
+                        </div>
+                      )}
+                      {!canHireCreator && acceptedCount < maxAccepted && (
+                        <div className="flex items-center gap-2 p-2 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                          <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                          <span>Hire limit reached. Upgrade your plan to accept more creators.</span>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateStatus(application.id, 'accepted')}
+                          disabled={processing === application.id || acceptedCount >= maxAccepted || !canHireCreator}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                          size="sm"
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Accept
+                        </Button>
+                        <Button
+                          onClick={() => handleUpdateStatus(application.id, 'rejected')}
+                          disabled={processing === application.id}
+                          variant="destructive"
+                          className="flex-1"
+                          size="sm"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
                     </div>
                   )}
 

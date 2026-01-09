@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter, FileText, Settings2, ChevronDown, Copy, Star, Variable } from "lucide-react";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -504,18 +506,34 @@ export function CreatorContractsTab({
                     <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-popover border-0">
-                  <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="gap-2">
-                    <FileText className="h-4 w-4" />
-                    New Contract
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                  resetTemplateForm();
-                  setTemplateDialogOpen(true);
-                }} className="gap-2">
-                    <Copy className="h-4 w-4" />
-                    New Template
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-64 p-1.5 bg-[#0a0a0a] border border-white/[0.06]">
+                  <button
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/[0.03] transition-colors text-left"
+                  >
+                    <DescriptionOutlinedIcon className="h-[18px] w-[18px] text-white/60" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium font-inter tracking-[-0.3px] text-white/90">New Contract</p>
+                      <p className="text-[11px] text-white/40 font-inter tracking-[-0.3px]">
+                        Send an agreement to a creator
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetTemplateForm();
+                      setTemplateDialogOpen(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/[0.03] transition-colors text-left"
+                  >
+                    <ContentCopyOutlinedIcon className="h-[18px] w-[18px] text-white/60" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium font-inter tracking-[-0.3px] text-white/90">New Template</p>
+                      <p className="text-[11px] text-white/40 font-inter tracking-[-0.3px]">
+                        Create a reusable template
+                      </p>
+                    </div>
+                  </button>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -575,7 +593,9 @@ export function CreatorContractsTab({
           {/* Contracts List */}
           <div className="space-y-3">
             {filteredContracts.length === 0 ? <div className="flex flex-col items-center justify-center py-16 text-center">
-                
+                <div className="w-14 h-14 rounded-2xl bg-[#1a1a1a] flex items-center justify-center mb-4">
+                  <DescriptionOutlinedIcon className="text-white/50" style={{ fontSize: 28 }} />
+                </div>
                 <p className="text-base font-medium font-inter tracking-[-0.5px] mb-1">No contracts yet</p>
                 <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] max-w-xs">
                   Create your first contract to start managing creator agreements
@@ -653,20 +673,20 @@ export function CreatorContractsTab({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-border/50 rounded-lg bg-muted/20">
-                <FileText className="h-10 w-10 text-muted-foreground/50 mb-3" />
+              <div className="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-white/[0.06] rounded-lg bg-white/[0.02]">
+                <DescriptionOutlinedIcon className="h-10 w-10 text-white/20 mb-3" />
                 <p className="text-sm font-inter tracking-[-0.5px] text-foreground mb-1">No templates yet</p>
                 <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] text-center mb-4">
                   Create a contract template first to send contracts to creators
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setCreateDialogOpen(false);
                     setTemplateDialogOpen(true);
                   }}
-                  className="font-inter tracking-[-0.5px]"
+                  className="font-inter tracking-[-0.5px] bg-white/[0.03] hover:bg-white/[0.06] border-0"
                 >
                   <Plus className="h-4 w-4 mr-1.5" />
                   Create Template

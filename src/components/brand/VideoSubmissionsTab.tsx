@@ -37,6 +37,11 @@ import { BotRiskIndicator } from "./BotRiskIndicator";
 import { VideoPreview } from "@/components/ui/VideoPreview";
 import { ProxatoreVideoModal } from "@/components/ui/ProxatoreVideoModal";
 
+// Round to 2 decimal places to avoid floating point precision issues
+const roundCurrency = (amount: number): number => {
+  return Math.round(amount * 100) / 100;
+};
+
 // Helper to extract platform video ID from URL
 const extractPlatformVideoId = (url: string, platform: string): string | null => {
   if (!url) return null;
@@ -298,11 +303,11 @@ export function VideoSubmissionsTab({
   // Calculate payout breakdown for pay_per_post campaigns (flat rate + CPM)
   const getPayoutBreakdown = (submission: UnifiedVideo) => {
     const flatRate = campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
-    const cpmEarnings = campaign?.rpm_rate && submission.views ? submission.views / 1000 * campaign.rpm_rate : 0;
+    const cpmEarnings = campaign?.rpm_rate && submission.views ? roundCurrency(submission.views / 1000 * campaign.rpm_rate) : 0;
     return {
       flatRate,
       cpmEarnings,
-      total: flatRate + cpmEarnings
+      total: roundCurrency(flatRate + cpmEarnings)
     };
   };
 
@@ -310,40 +315,40 @@ export function VideoSubmissionsTab({
   const getPayoutForSubmission = (video: UnifiedVideo) => {
     // For tracked videos, calculate based on RPM
     if (video.source === "tracked") {
-      return video.estimatedPayout || (video.views ? video.views / 1000 * rpmRate : 0);
+      return video.estimatedPayout || (video.views ? roundCurrency(video.views / 1000 * rpmRate) : 0);
     }
 
     // If payout_amount is already set and it's not a pay_per_post with views, use it
     if (video.payout_amount !== null && video.payout_amount !== undefined) {
       // For pay_per_post, add CPM earnings on top of flat rate
       if (campaign?.payment_model === "pay_per_post" && campaign?.rpm_rate && video.views) {
-        const cpmEarnings = video.views / 1000 * campaign.rpm_rate;
-        return video.payout_amount + cpmEarnings;
+        const cpmEarnings = roundCurrency(video.views / 1000 * campaign.rpm_rate);
+        return roundCurrency(video.payout_amount + cpmEarnings);
       }
       return video.payout_amount;
     }
 
     // For boosts, calculate based on monthly retainer / videos per month
     if (isBoost) {
-      return monthlyRetainer / videosPerMonth;
+      return videosPerMonth > 0 ? roundCurrency(monthlyRetainer / videosPerMonth) : 0;
     }
 
     // For pay_per_post campaigns: flat rate + CPM from views
     if (campaign?.payment_model === "pay_per_post") {
       const flatRate = campaign?.post_rate || 0;
-      const cpmEarnings = campaign?.rpm_rate && video.views ? video.views / 1000 * campaign.rpm_rate : 0;
-      return flatRate + cpmEarnings;
+      const cpmEarnings = campaign?.rpm_rate && video.views ? roundCurrency(video.views / 1000 * campaign.rpm_rate) : 0;
+      return roundCurrency(flatRate + cpmEarnings);
     }
 
     // For RPM-based campaigns (pay_per_view), calculate based on views only
     if (campaign?.rpm_rate && video.views) {
-      return video.views / 1000 * campaign.rpm_rate;
+      return roundCurrency(video.views / 1000 * campaign.rpm_rate);
     }
     return 0;
   };
 
   // Get flat rate for display purposes
-  const payoutPerVideo = isBoost ? monthlyRetainer / videosPerMonth : campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
+  const payoutPerVideo = isBoost ? (videosPerMonth > 0 ? roundCurrency(monthlyRetainer / videosPerMonth) : 0) : campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
   const isPayPerPost = isBoost || campaign?.payment_model === "pay_per_post";
   const hasCpmBonus = campaign?.payment_model === "pay_per_post" && campaign?.rpm_rate && campaign.rpm_rate > 0;
   const getPlatformLogo = (platform: string) => {
@@ -1269,6 +1274,21 @@ export function VideoSubmissionsTab({
   }, [focusedVideoIndex, viewMode]);
 
   return <div className="h-full flex flex-col overflow-hidden">
+      {/* Zero Retainer Warning for Boosts */}
+      {isBoost && monthlyRetainer === 0 && (
+        <div className="flex-shrink-0 px-4 pt-4">
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
+            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium font-inter tracking-[-0.5px]">Unfunded Boost</p>
+              <p className="text-[11px] opacity-80 font-inter tracking-[-0.5px]">Monthly retainer is $0. Creators will not receive payouts for their videos.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Header */}
       <div className="flex-shrink-0 p-4 border-b border-border space-y-3">
         {/* Top row: Title, hashtags, sync button */}

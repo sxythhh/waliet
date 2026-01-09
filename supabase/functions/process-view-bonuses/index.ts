@@ -30,9 +30,10 @@ Deno.serve(async (req) => {
     console.log('Processing view bonuses for boost:', bounty_campaign_id || 'all boosts');
 
     // Get all boosts with view bonuses enabled (or specific one)
+    // Also fetch payout_type to determine if we should credit wallet
     let boostQuery = supabase
       .from('bounty_campaigns')
-      .select('id, brand_id, budget, budget_used')
+      .select('id, brand_id, budget, budget_used, payout_type')
       .eq('view_bonuses_enabled', true)
       .eq('status', 'active');
 
@@ -135,29 +136,37 @@ Deno.serve(async (req) => {
 
             console.log(`CPM bonus for video ${submission.id}: ${eligibleViews} eligible views (${minViews}-${tier.view_threshold}) at $${tier.cpm_rate}/CPM = $${totalEarned.toFixed(2)} (already paid: $${alreadyPaid.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
 
-            // Use atomic RPC function to create transaction and update balance atomically
-            const { data: paymentResult, error: paymentError } = await supabase
-              .rpc('atomic_view_bonus_payment', {
-                p_creator_id: submission.user_id,
-                p_boost_id: boost.id,
-                p_amount: amountToPay,
-                p_description: `CPM bonus: $${tier.cpm_rate}/1K views (${eligibleViews.toLocaleString()} views)`,
-                p_metadata: {
-                  boost_id: boost.id,
-                  bonus_id: tier.id,
-                  video_submission_id: submission.id,
-                  views_at_payout: currentViews,
-                  bonus_type: 'cpm',
-                  cpm_rate: tier.cpm_rate
-                }
-              });
+            // Check payout_type: only credit wallet for on_platform boosts
+            let transaction = null;
+            const isOnPlatform = boost.payout_type !== 'off_platform';
 
-            if (paymentError) {
-              console.error('Error processing atomic view bonus payment:', paymentError);
-              continue;
+            if (isOnPlatform) {
+              // Use atomic RPC function to create transaction and update balance atomically
+              const { data: paymentResult, error: paymentError } = await supabase
+                .rpc('atomic_view_bonus_payment', {
+                  p_creator_id: submission.user_id,
+                  p_boost_id: boost.id,
+                  p_amount: amountToPay,
+                  p_description: `CPM bonus: $${tier.cpm_rate}/1K views (${eligibleViews.toLocaleString()} views)`,
+                  p_metadata: {
+                    boost_id: boost.id,
+                    bonus_id: tier.id,
+                    video_submission_id: submission.id,
+                    views_at_payout: currentViews,
+                    bonus_type: 'cpm',
+                    cpm_rate: tier.cpm_rate
+                  }
+                });
+
+              if (paymentError) {
+                console.error('Error processing atomic view bonus payment:', paymentError);
+                continue;
+              }
+
+              transaction = paymentResult;
+            } else {
+              console.log(`Skipping wallet credit for off-platform boost ${boost.id}`);
             }
-
-            const transaction = paymentResult;
 
             // Upsert the bonus payout record
             if (existingPayout) {
@@ -209,28 +218,38 @@ Deno.serve(async (req) => {
 
             console.log(`Milestone bonus for video ${submission.id}: crossed ${tier.view_threshold} views, paying $${tier.bonus_amount}`);
 
-            // Use atomic RPC function to create transaction and update balance atomically
-            const { data: milestonePaymentResult, error: milestonePaymentError } = await supabase
-              .rpc('atomic_view_bonus_payment', {
-                p_creator_id: submission.user_id,
-                p_boost_id: boost.id,
-                p_amount: tier.bonus_amount,
-                p_description: `View bonus: ${tier.view_threshold.toLocaleString()} views reached`,
-                p_metadata: {
-                  boost_id: boost.id,
-                  bonus_id: tier.id,
-                  video_submission_id: submission.id,
-                  views_at_payout: currentViews,
-                  bonus_type: 'milestone'
-                }
-              });
+            // Check payout_type: only credit wallet for on_platform boosts
+            let milestoneTransaction = null;
+            const isOnPlatformMilestone = boost.payout_type !== 'off_platform';
 
-            if (milestonePaymentError) {
-              console.error('Error processing atomic milestone bonus payment:', milestonePaymentError);
-              continue;
+            if (isOnPlatformMilestone) {
+              // Use atomic RPC function to create transaction and update balance atomically
+              const { data: milestonePaymentResult, error: milestonePaymentError } = await supabase
+                .rpc('atomic_view_bonus_payment', {
+                  p_creator_id: submission.user_id,
+                  p_boost_id: boost.id,
+                  p_amount: tier.bonus_amount,
+                  p_description: `View bonus: ${tier.view_threshold.toLocaleString()} views reached`,
+                  p_metadata: {
+                    boost_id: boost.id,
+                    bonus_id: tier.id,
+                    video_submission_id: submission.id,
+                    views_at_payout: currentViews,
+                    bonus_type: 'milestone'
+                  }
+                });
+
+              if (milestonePaymentError) {
+                console.error('Error processing atomic milestone bonus payment:', milestonePaymentError);
+                continue;
+              }
+
+              milestoneTransaction = milestonePaymentResult;
+            } else {
+              console.log(`Skipping wallet credit for off-platform boost ${boost.id} (milestone)`);
             }
 
-            const transaction = milestonePaymentResult;
+            const transaction = milestoneTransaction;
 
             // Record the bonus payout
             await supabase

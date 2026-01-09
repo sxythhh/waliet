@@ -36,6 +36,7 @@ import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { BoostCardCompact } from "@/components/dashboard/BoostCardCompact";
 import { CreatorPitchesWidget } from "@/components/dashboard/CreatorPitchesWidget";
@@ -221,6 +222,7 @@ export function CampaignsTab({
     full_name: string | null;
     username: string;
     total_earnings: number | null;
+    trust_score: number | null;
   } | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [recommendedCampaigns, setRecommendedCampaigns] = useState<RecommendedCampaign[]>([]);
@@ -349,7 +351,7 @@ export function CampaignsTab({
     // Fetch profile
     const {
       data: profileData
-    } = await supabase.from("profiles").select("full_name, username, total_earnings, avatar_url").eq("id", user.id).single();
+    } = await supabase.from("profiles").select("full_name, username, total_earnings, avatar_url, trust_score").eq("id", user.id).single();
     if (profileData) {
       setProfile(profileData);
       setUserProfile({ username: profileData.username, avatar_url: profileData.avatar_url });
@@ -755,6 +757,11 @@ export function CampaignsTab({
   const hasNoCampaigns = campaigns.length === 0;
   const hasJoinedCampaigns = campaigns.length > 0;
   const shouldHideActionCards = hasJoinedCampaigns && hasPaymentMethod;
+
+  if (loading) {
+    return <PageLoading />;
+  }
+
   return <div className={`space-y-4 pt-6 ${className || ''}`}>
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -106,6 +106,7 @@ const DEFAULT_SETTINGS: BrandSettings = {
 };
 
 export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsTabProps) {
+  console.log('[BrandSettingsTab] Rendered with brandId:', brandId, 'subscriptionStatus:', subscriptionStatus);
   const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState<BrandSettings>(DEFAULT_SETTINGS);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -358,37 +359,41 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
   }
 
   return (
-    <div className="p-6 space-y-10 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 pb-20 space-y-8">
+      {/* Global Save Button - Fixed */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold tracking-[-0.5px]">Settings</h1>
+          <p className="text-sm text-muted-foreground">Configure your brand preferences</p>
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSaveSettings}
+          disabled={savingSettings}
+          className="font-inter tracking-[-0.5px]"
+        >
+          {savingSettings ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
+
       {/* Discord Server Integration */}
       <DiscordServerSettings
         brandId={brandId}
         subscriptionStatus={subscriptionStatus}
       />
 
-      <hr className="border-border/50" />
-
       {/* Application Settings */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Application Settings</h2>
-            <p className="text-xs text-muted-foreground">Configure how creators can apply to your campaigns</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={handleSaveSettings}
-            disabled={savingSettings}
-            className="font-inter tracking-[-0.5px]"
-          >
-            {savingSettings ? "Saving..." : "Save Changes"}
-          </Button>
+      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        <div className="md:pt-1">
+          <h2 className="text-sm font-medium tracking-[-0.3px]">Applications</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Configure how creators can apply to your campaigns</p>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+        <div className="rounded-lg border border-border/50 dark:border-white/[0.06] divide-y divide-border/50 dark:divide-white/[0.06] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
             <div>
-              <p className="text-sm font-medium">Auto-approve Applications</p>
-              <p className="text-xs text-muted-foreground">Automatically accept creators who meet your criteria</p>
+              <p className="text-sm font-medium tracking-[-0.3px]">Auto-approve Applications</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Automatically accept creators who meet your criteria</p>
             </div>
             <Switch
               checked={settings.auto_approve_applications}
@@ -397,22 +402,22 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
           </div>
 
           {settings.auto_approve_applications && (
-            <div className="p-4 rounded-lg border bg-muted/30 ml-4">
+            <div className="px-4 py-3 bg-muted/20">
               <Label className="text-xs text-muted-foreground">Minimum follower count for auto-approval</Label>
               <Input
                 type="number"
                 placeholder="e.g., 1000 (leave empty for any)"
                 value={settings.auto_approve_min_followers || ""}
                 onChange={(e) => updateSetting("auto_approve_min_followers", e.target.value ? parseInt(e.target.value, 10) : null)}
-                className="mt-1.5 h-9"
+                className="mt-1.5 h-9 max-w-xs"
               />
             </div>
           )}
 
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
             <div>
-              <p className="text-sm font-medium">Require Application Questions</p>
-              <p className="text-xs text-muted-foreground">Creators must answer your custom questions when applying</p>
+              <p className="text-sm font-medium tracking-[-0.3px]">Require Application Questions</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Creators must answer your custom questions when applying</p>
             </div>
             <Switch
               checked={settings.application_questions_required}
@@ -420,10 +425,10 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
             <div>
-              <p className="text-sm font-medium">Require Contract Signature</p>
-              <p className="text-xs text-muted-foreground">Creators must sign a contract before they can submit content</p>
+              <p className="text-sm font-medium tracking-[-0.3px]">Require Contract Signature</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Creators must sign a contract before they can submit content</p>
             </div>
             <Switch
               checked={settings.require_contract_signature}
@@ -433,50 +438,52 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
         </div>
       </section>
 
-      <hr className="border-border/50" />
-
       {/* Payout Settings */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Payout Settings</h2>
-          <p className="text-xs text-muted-foreground">Configure payout timing and review periods</p>
+      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        <div className="md:pt-1">
+          <h2 className="text-sm font-medium tracking-[-0.3px]">Payouts</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Configure payout timing and review periods</p>
         </div>
 
-        <div className="p-4 rounded-lg border bg-card">
-          <Label className="text-xs text-muted-foreground">Payout Clearing Period (days)</Label>
-          <p className="text-xs text-muted-foreground mt-0.5 mb-2">Time to review submissions before payouts are released</p>
-          <Select
-            value={settings.payout_clearing_days.toString()}
-            onValueChange={(v) => updateSetting("payout_clearing_days", parseInt(v, 10))}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3">3 days</SelectItem>
-              <SelectItem value="5">5 days</SelectItem>
-              <SelectItem value="7">7 days</SelectItem>
-              <SelectItem value="14">14 days</SelectItem>
-              <SelectItem value="30">30 days</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="rounded-lg border border-border/50 dark:border-white/[0.06] overflow-hidden">
+          <div className="px-4 py-3 bg-card/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium tracking-[-0.3px]">Clearing Period</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Time to review submissions before payouts are released</p>
+              </div>
+              <Select
+                value={settings.payout_clearing_days.toString()}
+                onValueChange={(v) => updateSetting("payout_clearing_days", parseInt(v, 10))}
+              >
+                <SelectTrigger className="w-28 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">3 days</SelectItem>
+                  <SelectItem value="5">5 days</SelectItem>
+                  <SelectItem value="7">7 days</SelectItem>
+                  <SelectItem value="14">14 days</SelectItem>
+                  <SelectItem value="30">30 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </section>
 
-      <hr className="border-border/50" />
-
       {/* Notification Settings */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Notification Preferences</h2>
-          <p className="text-xs text-muted-foreground">Choose when to receive email notifications</p>
+      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        <div className="md:pt-1">
+          <h2 className="text-sm font-medium tracking-[-0.3px]">Notifications</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Choose when to receive email notifications</p>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+        <div className="rounded-lg border border-border/50 dark:border-white/[0.06] divide-y divide-border/50 dark:divide-white/[0.06] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
             <div>
-              <p className="text-sm font-medium">New Application</p>
-              <p className="text-xs text-muted-foreground">Email when a creator applies to your campaign</p>
+              <p className="text-sm font-medium tracking-[-0.3px]">New Application</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Email when a creator applies to your campaign</p>
             </div>
             <Switch
               checked={settings.email_on_new_application}
@@ -484,10 +491,10 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
             <div>
-              <p className="text-sm font-medium">Content Submission</p>
-              <p className="text-xs text-muted-foreground">Email when a creator submits new content</p>
+              <p className="text-sm font-medium tracking-[-0.3px]">Content Submission</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Email when a creator submits new content</p>
             </div>
             <Switch
               checked={settings.email_on_submission}
@@ -495,10 +502,10 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
             <div>
-              <p className="text-sm font-medium">Payout Request</p>
-              <p className="text-xs text-muted-foreground">Email when a creator requests a payout</p>
+              <p className="text-sm font-medium tracking-[-0.3px]">Payout Request</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Email when a creator requests a payout</p>
             </div>
             <Switch
               checked={settings.email_on_payout_request}
@@ -508,266 +515,275 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
         </div>
       </section>
 
-      <hr className="border-border/50" />
-
       {/* Milestones */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Milestone Notifications</h2>
-            <p className="text-xs text-muted-foreground">Auto-notify creators when they hit performance milestones</p>
-          </div>
-          <Dialog open={milestoneDialogOpen} onOpenChange={setMilestoneDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]">
-                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Milestone</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={milestoneType} onValueChange={(v) => setMilestoneType(v as MilestoneType)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="views">Views</SelectItem>
-                      <SelectItem value="earnings">Earnings ($)</SelectItem>
-                      <SelectItem value="submissions">Submissions</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Threshold</Label>
-                  <Input type="number" placeholder={milestoneType === "earnings" ? "100" : "10000"} value={milestoneThreshold} onChange={(e) => setMilestoneThreshold(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Message</Label>
-                  <Textarea placeholder="Congratulations on reaching this milestone!" value={milestoneMessage} onChange={(e) => setMilestoneMessage(e.target.value)} rows={2} />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setMilestoneDialogOpen(false)}>Cancel</Button>
-                  <Button className="font-inter tracking-[-0.5px]" onClick={handleAddMilestone}>Create</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        <div className="md:pt-1">
+          <h2 className="text-sm font-medium tracking-[-0.3px]">Milestones</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Auto-notify creators when they hit performance milestones</p>
         </div>
 
-        {milestones.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No milestones configured yet</p>
-        ) : (
-          <div className="space-y-2">
-            {milestones.map((m) => (
-              <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                <div className="flex items-center gap-3">
-                  <Switch checked={m.is_active} onCheckedChange={async (checked) => {
-                    await supabase.from("milestone_configs" as "brands").update({ is_active: checked } as Record<string, unknown>).eq("id", m.id);
-                    setMilestones(milestones.map(x => x.id === m.id ? { ...x, is_active: checked } : x));
-                  }} />
-                  <div>
-                    <p className="text-sm font-medium">
-                      {m.milestone_type === "earnings" ? `$${m.threshold.toLocaleString()}` : m.threshold >= 1000 ? `${(m.threshold / 1000).toFixed(0)}K` : m.threshold} {m.milestone_type}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{m.message_template}</p>
-                  </div>
-                </div>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMilestone(m.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
+        <div>
+          <div className="flex justify-end mb-2">
+            <Dialog open={milestoneDialogOpen} onOpenChange={setMilestoneDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-7 text-xs font-inter tracking-[-0.3px]">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
                 </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <hr className="border-border/50" />
-
-      {/* Creator Tiers */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Creator Tiers</h2>
-            <p className="text-xs text-muted-foreground">Reward top performers with tier-based RPM multipliers</p>
-          </div>
-          {tiers.length === 0 ? (
-            <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]" onClick={handleCreateDefaultTiers}>
-              Create Default Tiers
-            </Button>
-          ) : (
-            <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => { resetTierForm(); setTierDialogOpen(true); }}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
-            </Button>
-          )}
-          <Dialog open={tierDialogOpen} onOpenChange={(open) => { if (!open) resetTierForm(); else setTierDialogOpen(true); }}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingTier ? "Edit Tier" : "Add Tier"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input placeholder="e.g., Gold" value={tierName} onChange={(e) => setTierName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input placeholder="e.g., For top performers" value={tierDescription} onChange={(e) => setTierDescription(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>RPM Multiplier</Label>
-                    <Input type="number" step="0.1" value={tierRpm} onChange={(e) => setTierRpm(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Color</Label>
-                    <Input type="color" value={tierColor} onChange={(e) => setTierColor(e.target.value)} className="h-10 w-20" />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={resetTierForm}>Cancel</Button>
-                  <Button className="font-inter tracking-[-0.5px]" onClick={editingTier ? handleEditTier : handleAddTier}>
-                    {editingTier ? "Save" : "Create"}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {tiers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tiers configured yet</p>
-        ) : (
-          <div className="space-y-2">
-            {tiers.map((t) => (
-              <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || "#8B5CF6" }} />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium font-geist">{t.name}</span>
-                      {t.is_default && <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px]">Default</Badge>}
-                      <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px]">{t.rpm_multiplier}x RPM</Badge>
-                    </div>
-                    {t.description && <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{t.description}</p>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEditTierDialog(t)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTier(t.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <hr className="border-border/50" />
-
-      {/* Creator Strikes */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Creator Strikes</h2>
-            <p className="text-xs text-muted-foreground">Track missed deadlines and content issues</p>
-          </div>
-          <Dialog open={strikeDialogOpen} onOpenChange={setStrikeDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]">
-                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Record Strike</DialogTitle>
-                <DialogDescription>Add a strike to a creator's record</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Creator</Label>
-                  <Select value={selectedCreatorId} onValueChange={setSelectedCreatorId}>
-                    <SelectTrigger><SelectValue placeholder="Select creator" /></SelectTrigger>
-                    <SelectContent>
-                      {creators.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.full_name || c.username}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Milestone</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label>Type</Label>
-                    <Select value={strikeType} onValueChange={setStrikeType}>
+                    <Select value={milestoneType} onValueChange={(v) => setMilestoneType(v as MilestoneType)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {STRIKE_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                        ))}
+                        <SelectItem value="views">Views</SelectItem>
+                        <SelectItem value="earnings">Earnings ($)</SelectItem>
+                        <SelectItem value="submissions">Submissions</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Severity</Label>
-                    <Select value={strikeSeverity.toString()} onValueChange={(v) => setStrikeSeverity(parseInt(v, 10))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Label>Threshold</Label>
+                    <Input type="number" placeholder={milestoneType === "earnings" ? "100" : "10000"} value={milestoneThreshold} onChange={(e) => setMilestoneThreshold(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Message</Label>
+                    <Textarea placeholder="Congratulations on reaching this milestone!" value={milestoneMessage} onChange={(e) => setMilestoneMessage(e.target.value)} rows={2} />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setMilestoneDialogOpen(false)}>Cancel</Button>
+                    <Button className="font-inter tracking-[-0.5px]" onClick={handleAddMilestone}>Create</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {milestones.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/50 dark:border-white/[0.06] px-4 py-6 text-center">
+              <p className="text-xs text-muted-foreground">No milestones configured</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/50 dark:border-white/[0.06] divide-y divide-border/50 dark:divide-white/[0.06] overflow-hidden">
+              {milestones.map((m) => (
+                <div key={m.id} className="flex items-center justify-between px-4 py-3 bg-card/50">
+                  <div className="flex items-center gap-3">
+                    <Switch checked={m.is_active} onCheckedChange={async (checked) => {
+                      await supabase.from("milestone_configs" as "brands").update({ is_active: checked } as Record<string, unknown>).eq("id", m.id);
+                      setMilestones(milestones.map(x => x.id === m.id ? { ...x, is_active: checked } : x));
+                    }} />
+                    <div>
+                      <p className="text-sm font-medium tracking-[-0.3px]">
+                        {m.milestone_type === "earnings" ? `$${m.threshold.toLocaleString()}` : m.threshold >= 1000 ? `${(m.threshold / 1000).toFixed(0)}K` : m.threshold} {m.milestone_type}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[240px]">{m.message_template}</p>
+                    </div>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMilestone(m.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Creator Tiers */}
+      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        <div className="md:pt-1">
+          <h2 className="text-sm font-medium tracking-[-0.3px]">Creator Tiers</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Reward top performers with tier-based RPM multipliers</p>
+        </div>
+
+        <div>
+          <div className="flex justify-end mb-2">
+            {tiers.length === 0 ? (
+              <Button size="sm" variant="ghost" className="h-7 text-xs font-inter tracking-[-0.3px]" onClick={handleCreateDefaultTiers}>
+                Create Default Tiers
+              </Button>
+            ) : (
+              <Button size="sm" variant="ghost" className="h-7 text-xs font-inter tracking-[-0.3px]" onClick={() => { resetTierForm(); setTierDialogOpen(true); }}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add
+              </Button>
+            )}
+            <Dialog open={tierDialogOpen} onOpenChange={(open) => { if (!open) resetTierForm(); else setTierDialogOpen(true); }}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingTier ? "Edit Tier" : "Add Tier"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input placeholder="e.g., Gold" value={tierName} onChange={(e) => setTierName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input placeholder="e.g., For top performers" value={tierDescription} onChange={(e) => setTierDescription(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>RPM Multiplier</Label>
+                      <Input type="number" step="0.1" value={tierRpm} onChange={(e) => setTierRpm(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Color</Label>
+                      <Input type="color" value={tierColor} onChange={(e) => setTierColor(e.target.value)} className="h-10 w-20" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={resetTierForm}>Cancel</Button>
+                    <Button className="font-inter tracking-[-0.5px]" onClick={editingTier ? handleEditTier : handleAddTier}>
+                      {editingTier ? "Save" : "Create"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {tiers.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/50 dark:border-white/[0.06] px-4 py-6 text-center">
+              <p className="text-xs text-muted-foreground">No tiers configured</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/50 dark:border-white/[0.06] divide-y divide-border/50 dark:divide-white/[0.06] overflow-hidden">
+              {tiers.map((t) => (
+                <div key={t.id} className="flex items-center justify-between px-4 py-3 bg-card/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: t.color || "#8B5CF6" }} />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium tracking-[-0.3px]">{t.name}</span>
+                        {t.is_default && <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.3px] h-5">Default</Badge>}
+                        <span className="text-xs text-muted-foreground tabular-nums">{t.rpm_multiplier}x RPM</span>
+                      </div>
+                      {t.description && <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEditTierDialog(t)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTier(t.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Creator Strikes */}
+      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
+        <div className="md:pt-1">
+          <h2 className="text-sm font-medium tracking-[-0.3px]">Creator Strikes</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Track missed deadlines and content issues</p>
+        </div>
+
+        <div>
+          <div className="flex justify-end mb-2">
+            <Dialog open={strikeDialogOpen} onOpenChange={setStrikeDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-7 text-xs font-inter tracking-[-0.3px]">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Record Strike</DialogTitle>
+                  <DialogDescription>Add a strike to a creator's record</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Creator</Label>
+                    <Select value={selectedCreatorId} onValueChange={setSelectedCreatorId}>
+                      <SelectTrigger><SelectValue placeholder="Select creator" /></SelectTrigger>
                       <SelectContent>
-                        {SEVERITY_LEVELS.map((l) => (
-                          <SelectItem key={l.value} value={l.value.toString()}>{l.label}</SelectItem>
+                        {creators.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.full_name || c.username}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Reason (Optional)</Label>
-                  <Textarea placeholder="Describe the issue..." value={strikeReason} onChange={(e) => setStrikeReason(e.target.value)} rows={2} />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setStrikeDialogOpen(false)}>Cancel</Button>
-                  <Button className="font-inter tracking-[-0.5px]" onClick={handleAddStrike}>Record Strike</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {strikes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No strikes recorded - all creators meeting commitments</p>
-        ) : (
-          <div className="space-y-2">
-            {strikes.map((s) => {
-              const severityInfo = SEVERITY_LEVELS.find(l => l.value === s.severity);
-              return (
-                <div key={s.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={s.creator?.avatar_url || undefined} />
-                      <AvatarFallback className="text-[10px]">{s.creator?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{s.creator?.full_name || s.creator?.username}</span>
-                        <Badge variant="outline" className={`text-[10px] ${severityInfo?.color}`}>{severityInfo?.label}</Badge>
-                        {s.is_appealed && <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-500">{s.appeal_status || "Appeal Pending"}</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {STRIKE_TYPES.find(t => t.value === s.strike_type)?.label} · {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
-                      </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select value={strikeType} onValueChange={setStrikeType}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {STRIKE_TYPES.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Severity</Label>
+                      <Select value={strikeSeverity.toString()} onValueChange={(v) => setStrikeSeverity(parseInt(v, 10))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SEVERITY_LEVELS.map((l) => (
+                            <SelectItem key={l.value} value={l.value.toString()}>{l.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveStrike(s.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="space-y-2">
+                    <Label>Reason (Optional)</Label>
+                    <Textarea placeholder="Describe the issue..." value={strikeReason} onChange={(e) => setStrikeReason(e.target.value)} rows={2} />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setStrikeDialogOpen(false)}>Cancel</Button>
+                    <Button className="font-inter tracking-[-0.5px]" onClick={handleAddStrike}>Record Strike</Button>
+                  </div>
                 </div>
-              );
-            })}
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
+
+          {strikes.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/50 dark:border-white/[0.06] px-4 py-6 text-center">
+              <p className="text-xs text-muted-foreground">No strikes recorded</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/50 dark:border-white/[0.06] divide-y divide-border/50 dark:divide-white/[0.06] overflow-hidden">
+              {strikes.map((s) => {
+                const severityInfo = SEVERITY_LEVELS.find(l => l.value === s.severity);
+                return (
+                  <div key={s.id} className="flex items-center justify-between px-4 py-3 bg-card/50">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={s.creator?.avatar_url || undefined} />
+                        <AvatarFallback className="text-[10px]">{s.creator?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium tracking-[-0.3px]">{s.creator?.full_name || s.creator?.username}</span>
+                          <Badge variant="outline" className={`text-[10px] h-5 ${severityInfo?.color}`}>{severityInfo?.label}</Badge>
+                          {s.is_appealed && <Badge variant="outline" className="text-[10px] h-5 bg-blue-500/10 text-blue-500">{s.appeal_status || "Appeal Pending"}</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {STRIKE_TYPES.find(t => t.value === s.strike_type)?.label} · {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveStrike(s.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

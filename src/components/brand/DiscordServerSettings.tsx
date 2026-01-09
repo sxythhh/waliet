@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, ExternalLink, Unlink, Server, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Unlink, Server, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +20,7 @@ import {
 interface DiscordServerSettingsProps {
   brandId: string;
   subscriptionStatus?: string | null;
+  subscriptionPlan?: string | null;
   onServerChange?: () => void;
 }
 
@@ -30,9 +30,18 @@ interface GuildInfo {
   icon: string | null;
 }
 
+interface DiscordRole {
+  id: string;
+  name: string;
+  color: number;
+  position: number;
+  canAssign: boolean;
+}
+
 export function DiscordServerSettings({
   brandId,
   subscriptionStatus,
+  subscriptionPlan,
   onServerChange,
 }: DiscordServerSettingsProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -41,29 +50,64 @@ export function DiscordServerSettings({
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
   const [guild, setGuild] = useState<GuildInfo | null>(null);
   const [connectedAt, setConnectedAt] = useState<string | null>(null);
-  const [internalSubscriptionStatus, setInternalSubscriptionStatus] = useState<string | null>(subscriptionStatus || null);
+  const [hasActivePlan, setHasActivePlan] = useState(false);
+  const [roles, setRoles] = useState<DiscordRole[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const [rolesError, setRolesError] = useState<string | null>(null);
 
-  const hasActivePlan = (subscriptionStatus || internalSubscriptionStatus) === 'active';
+  console.log('[DiscordServerSettings] Component rendered with brandId:', brandId);
 
   useEffect(() => {
+    console.log('[DiscordServerSettings] useEffect triggered, calling fetchGuildInfo');
     fetchGuildInfo();
   }, [brandId]);
 
   const fetchGuildInfo = async () => {
     setIsLoading(true);
     try {
-      const { data: brand, error } = await supabase
+      // Fetch brand info
+      const brandResult = await supabase
         .from('brands')
-        .select('discord_guild_id, discord_guild_name, discord_guild_icon, discord_bot_added_at, subscription_status')
+        .select('discord_guild_id, discord_guild_name, discord_guild_icon, discord_bot_added_at, subscription_status, subscription_plan')
         .eq('id', brandId)
         .single();
 
-      if (error) throw error;
+      if (brandResult.error) throw brandResult.error;
+      const brand = brandResult.data;
 
-      // Update internal subscription status if not provided via props
-      if (!subscriptionStatus && brand?.subscription_status) {
-        setInternalSubscriptionStatus(brand.subscription_status);
+      // Try to check for custom plan (may fail due to RLS, that's ok)
+      let hasCustom = false;
+      try {
+        const customPlanResult = await supabase
+          .from('custom_brand_plans')
+          .select('id')
+          .eq('brand_id', brandId)
+          .eq('is_active', true)
+          .maybeSingle();
+        hasCustom = !!customPlanResult.data;
+      } catch {
+        // Custom plan check failed (likely RLS), continue without it
+        console.log('[DiscordServerSettings] Custom plan check failed, continuing...');
       }
+
+      // Determine if brand has an active plan
+      const hasActiveStatus = brand?.subscription_status === 'active';
+      const hasPlan = Boolean(brand?.subscription_plan);
+
+      console.log('[DiscordServerSettings] Brand data:', {
+        brandId,
+        subscription_status: brand?.subscription_status,
+        subscription_plan: brand?.subscription_plan,
+        hasCustom,
+        hasActiveStatus,
+        hasPlan,
+        result: hasActiveStatus || hasPlan || hasCustom
+      });
+
+      // Allow Discord if any plan indicator is present
+      const activePlanResult = hasActiveStatus || hasPlan || hasCustom;
+      console.log('[DiscordServerSettings] Setting hasActivePlan to:', activePlanResult);
+      setHasActivePlan(activePlanResult);
 
       if (brand?.discord_guild_id) {
         setGuild({
@@ -81,6 +125,43 @@ export function DiscordServerSettings({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchRoles = async (guildId: string) => {
+    setIsLoadingRoles(true);
+    setRolesError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-discord-guild-roles', {
+        body: { guildId, brandId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setRoles(data?.roles || []);
+    } catch (err: any) {
+      console.error('Error fetching roles:', err);
+      setRolesError(err.message || 'Failed to fetch roles');
+      setRoles([]);
+    } finally {
+      setIsLoadingRoles(false);
+    }
+  };
+
+  // Fetch roles when guild changes
+  useEffect(() => {
+    if (guild?.id) {
+      fetchRoles(guild.id);
+    } else {
+      setRoles([]);
+      setRolesError(null);
+    }
+  }, [guild?.id]);
+
+  // Convert Discord color int to hex
+  const colorToHex = (color: number): string => {
+    if (color === 0) return '#99AAB5'; // Default Discord gray
+    return `#${color.toString(16).padStart(6, '0')}`;
   };
 
   const handleConnectServer = async () => {
@@ -102,10 +183,12 @@ export function DiscordServerSettings({
       const redirectUri = `${window.location.origin}/discord/bot-callback`;
       const state = btoa(JSON.stringify({ brandId }));
 
+      // Note: response_type=code requires "Requires OAuth2 Code Grant" to be ENABLED in Discord Developer Portal
       const oauthUrl = `https://discord.com/api/oauth2/authorize?` +
         `client_id=${DISCORD_CLIENT_ID}` +
         `&permissions=${permissions}` +
         `&scope=${encodeURIComponent(scopes)}` +
+        `&response_type=code` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
         `&state=${state}`;
 
@@ -180,23 +263,17 @@ export function DiscordServerSettings({
 
   return (
     <section>
-      <div className="flex items-center gap-2 mb-4">
-        <svg className="h-5 w-5 text-[#5865F2]" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-        </svg>
-        <div>
-          <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Discord Server</h2>
-          <p className="text-xs text-muted-foreground">Connect your Discord server to enable creator auto-join</p>
-        </div>
+      <div className="mb-4">
+        <h2 className="text-sm font-medium tracking-[-0.3px]">Discord Server</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">Connect your Discord server to enable creator auto-join</p>
       </div>
 
       {!hasActivePlan && (
-        <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="text-xs text-amber-600 dark:text-amber-400">
+        <div className="mb-4 px-4 py-3 rounded-lg border border-border/50 dark:border-white/[0.06] bg-card/50">
+          <p className="text-sm text-muted-foreground tracking-[-0.3px]">
             Discord integration requires an active subscription. Upgrade your plan to connect your server.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
       )}
 
       {guild ? (
@@ -264,6 +341,71 @@ export function DiscordServerSettings({
               </div>
             </div>
           </div>
+
+          {/* Server Roles Section */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-foreground font-inter tracking-[-0.5px]">Server Roles</p>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-muted-foreground hover:text-foreground"
+                onClick={() => guild && fetchRoles(guild.id)}
+                disabled={isLoadingRoles}
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoadingRoles ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
+
+            {isLoadingRoles ? (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-3/4" />
+              </div>
+            ) : rolesError ? (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                <p className="text-xs text-destructive font-inter tracking-[-0.5px]">{rolesError}</p>
+              </div>
+            ) : roles.length === 0 ? (
+              <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] text-center">
+                  No assignable roles found in this server.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {roles.map((role) => (
+                  <div
+                    key={role.id}
+                    className="flex items-center justify-between p-2 rounded-md bg-muted/20 hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: colorToHex(role.color) }}
+                      />
+                      <span className="text-xs font-inter tracking-[-0.5px]">{role.name}</span>
+                    </div>
+                    {role.canAssign ? (
+                      <Badge variant="outline" className="text-[9px] h-5 bg-green-500/10 text-green-600 border-green-500/30">
+                        <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                        Assignable
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[9px] h-5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                        <AlertCircle className="w-2.5 h-2.5 mr-0.5" />
+                        Bot role too low
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-2 font-inter tracking-[-0.5px]">
+              {roles.filter(r => r.canAssign).length} of {roles.length} roles can be assigned by the bot.
+            </p>
+          </div>
         </Card>
       ) : (
         <Card className="p-6 border-dashed">
@@ -288,10 +430,7 @@ export function DiscordServerSettings({
                   Connecting...
                 </>
               ) : (
-                <>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Add Bot to Server
-                </>
+                'Add Bot to Server'
               )}
             </Button>
           </div>

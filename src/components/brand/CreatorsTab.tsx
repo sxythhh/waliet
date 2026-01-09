@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Megaphone, Briefcase } from "lucide-react";
-import { BrandBroadcastsTab } from "@/components/brand/BrandBroadcastsTab";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Briefcase } from "lucide-react";
 import { BrandPitchesPanel } from "@/components/brand/BrandPitchesPanel";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -128,7 +127,6 @@ export function CreatorsTab({
   } | null>(null);
   const [recruitDialogOpen, setRecruitDialogOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
-  const [showBroadcasts, setShowBroadcasts] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -689,9 +687,6 @@ export function CreatorsTab({
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input placeholder="Search messages..." className="h-8 pl-8 text-xs bg-muted/50 border-0" />
           </div>
-          <Button variant="ghost" size="icon" className={`h-8 w-8 shrink-0 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setShowBroadcasts(!showBroadcasts)}>
-            <Megaphone className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Message Filters */}
@@ -791,10 +786,10 @@ export function CreatorsTab({
         )}
       </div>
 
-      {/* Middle Column - Active Conversation + Broadcasts Panel */}
+      {/* Middle Column - Active Conversation */}
       <div className={`flex-1 flex min-w-0 ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
         {/* Chat Area */}
-        <div className={`flex-1 flex flex-col min-w-0 border-r border-border transition-all duration-300 ${showBroadcasts ? 'lg:w-1/2' : 'w-full'}`}>
+        <div className="flex-1 flex flex-col min-w-0 border-r border-border">
         {activeConversation ? <>
             {/* Conversation Header */}
             <div className="h-16 px-4 border-b border-border/50 flex items-center gap-3 shrink-0 bg-background/80 backdrop-blur-sm">
@@ -882,24 +877,7 @@ export function CreatorsTab({
             </div>
           </div>}
         </div>
-
-        {/* Broadcasts Panel */}
-        {showBroadcasts && <div className="hidden lg:flex flex-col w-1/2 border-r border-border bg-background overflow-hidden">
-            <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2">
-                
-                <h2 className="font-semibold text-sm">Broadcasts</h2>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setShowBroadcasts(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-auto">
-              <BrandBroadcastsTab brandId={brandId} />
-            </div>
-          </div>}
       </div>
-
 
       {/* Creator Details Dialog */}
       <Dialog open={!!selectedCreator} onOpenChange={() => setSelectedCreator(null)}>

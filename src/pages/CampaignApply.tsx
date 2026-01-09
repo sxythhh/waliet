@@ -357,7 +357,9 @@ export default function CampaignApply() {
         } = await supabase.from("bounty_campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
         if (boostError) throw boostError;
         if (!boostData) {
-          toast.error("Campaign not found");
+          toast.error("Campaign not found", {
+            description: "This campaign may have been removed or is no longer available."
+          });
           navigate("/dashboard");
           return;
         }

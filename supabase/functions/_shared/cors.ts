@@ -6,8 +6,6 @@ const ALLOWED_ORIGINS = [
   // Vercel deployment URLs
   'https://virality-nexus.vercel.app',
   'https://virality-nexus-git-main.vercel.app',
-  // Allow all Vercel preview deployments
-  //'https://*.vercel.app', // Uncomment if needed for preview deployments
   // Allow localhost for development
   'http://localhost:3000',
   'http://localhost:5173',
@@ -17,7 +15,9 @@ const ALLOWED_ORIGINS = [
 // Check if origin is allowed
 export function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
-  return ALLOWED_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed));
+  // Allow all Vercel preview deployments
+  if (origin.endsWith('.vercel.app')) return true;
+  return ALLOWED_ORIGINS.some(allowed => origin === allowed);
 }
 
 // Get CORS headers with proper origin validation

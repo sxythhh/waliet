@@ -25,6 +25,24 @@ export function BudgetProgressCard({
   const budgetRemaining = Math.max(0, budgetTotal - budgetUsed);
   const budgetPercentage = budgetTotal > 0 ? budgetUsed / budgetTotal * 100 : 0;
   const creatorPercentage = maxCreators > 0 ? acceptedCreators / maxCreators * 100 : 0;
+
+  // Budget status indicators
+  const isUnfunded = budgetTotal === 0;
+  const isDepleted = budgetTotal > 0 && budgetPercentage >= 100;
+  const isWarning = budgetTotal > 0 && budgetPercentage >= 80 && budgetPercentage < 90;
+  const isCritical = budgetTotal > 0 && budgetPercentage >= 90;
+
+  // Get gradient color based on budget status
+  const getBudgetGradient = () => {
+    if (isUnfunded || isDepleted || isCritical) {
+      return { start: "hsl(0 84% 60%)", end: "hsl(0 84% 50%)" }; // Red
+    }
+    if (isWarning) {
+      return { start: "hsl(38 92% 50%)", end: "hsl(45 93% 47%)" }; // Amber
+    }
+    return { start: "hsl(160 84% 39%)", end: "hsl(142 71% 45%)" }; // Green (default)
+  };
+  const budgetGradient = getBudgetGradient();
   return <div className="rounded-xl p-6 bg-muted/30 dark:bg-[#0a0a0a]">
       {/* Header */}
       <div className="mb-6 flex items-end justify-between">
@@ -58,18 +76,32 @@ export function BudgetProgressCard({
                 {/* Gradient definition */}
                 <defs>
                   <linearGradient id="budgetGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="hsl(160 84% 39%)" />
-                    <stop offset="100%" stopColor="hsl(142 71% 45%)" />
+                    <stop offset="0%" stopColor={budgetGradient.start} />
+                    <stop offset="100%" stopColor={budgetGradient.end} />
                   </linearGradient>
                 </defs>
               </svg>
               
               {/* Center content */}
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
-                <div className="flex items-baseline gap-0.5">
-                  <span className="font-bold tracking-[-1px] text-foreground text-lg">{budgetPercentage.toFixed(0)}%</span>
-                  <span className="text-sm text-muted-foreground font-medium">used</span>
-                </div>
+                {isUnfunded ? (
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold tracking-[-1px] text-red-500 text-sm">Unfunded</span>
+                    <span className="text-xs text-muted-foreground">Add funds to start</span>
+                  </div>
+                ) : isDepleted ? (
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold tracking-[-1px] text-red-500 text-sm">Depleted</span>
+                    <span className="text-xs text-muted-foreground">Budget exhausted</span>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-0.5">
+                    <span className={`font-bold tracking-[-1px] text-lg ${isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-foreground'}`}>
+                      {budgetPercentage.toFixed(0)}%
+                    </span>
+                    <span className="text-sm text-muted-foreground font-medium">used</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

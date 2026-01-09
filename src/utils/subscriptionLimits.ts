@@ -57,6 +57,36 @@ export function getPlanLimits(plan: string | null | undefined): PlanLimits {
 }
 
 /**
+ * Check if a subscription has lapsed (no valid plan)
+ */
+export function isSubscriptionLapsed(plan: string | null | undefined): boolean {
+  const normalizedPlan = normalizePlanName(plan);
+  return !normalizedPlan || !(normalizedPlan in PLAN_LIMITS);
+}
+
+/**
+ * Get subscription status message for UI display
+ */
+export function getSubscriptionStatusMessage(plan: string | null | undefined): {
+  isLapsed: boolean;
+  message: string;
+  upgradeRequired: boolean;
+} {
+  if (isSubscriptionLapsed(plan)) {
+    return {
+      isLapsed: true,
+      message: "Your subscription has expired. Upgrade to continue creating campaigns and boosts.",
+      upgradeRequired: true,
+    };
+  }
+  return {
+    isLapsed: false,
+    message: "",
+    upgradeRequired: false,
+  };
+}
+
+/**
  * Get effective plan limits for a brand, checking for custom plans first.
  * Custom plan values: null = use standard, -1 = unlimited
  */
@@ -104,6 +134,56 @@ export async function getEffectivePlanLimits(
       customPlanName: null,
     };
   }
+}
+
+/**
+ * Data integrity issue detection
+ */
+export interface DataIntegrityIssue {
+  type: "negative_count" | "invalid_value";
+  resource: string;
+  value: number;
+  message: string;
+}
+
+/**
+ * Check for data integrity issues and return them for UI display
+ */
+export function checkDataIntegrity(counts: {
+  campaigns?: number;
+  boosts?: number;
+  hires?: number;
+}): DataIntegrityIssue[] {
+  const issues: DataIntegrityIssue[] = [];
+
+  if (counts.campaigns !== undefined && counts.campaigns < 0) {
+    issues.push({
+      type: "negative_count",
+      resource: "campaigns",
+      value: counts.campaigns,
+      message: `Data integrity warning: Campaign count is negative (${counts.campaigns}). Please contact support.`,
+    });
+  }
+
+  if (counts.boosts !== undefined && counts.boosts < 0) {
+    issues.push({
+      type: "negative_count",
+      resource: "boosts",
+      value: counts.boosts,
+      message: `Data integrity warning: Boost count is negative (${counts.boosts}). Please contact support.`,
+    });
+  }
+
+  if (counts.hires !== undefined && counts.hires < 0) {
+    issues.push({
+      type: "negative_count",
+      resource: "hires",
+      value: counts.hires,
+      message: `Data integrity warning: Hire count is negative (${counts.hires}). Please contact support.`,
+    });
+  }
+
+  return issues;
 }
 
 /**

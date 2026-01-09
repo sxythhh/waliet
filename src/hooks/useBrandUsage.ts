@@ -18,6 +18,9 @@ export interface BrandUsage {
   // Custom plan info
   isCustomPlan: boolean;
   customPlanName: string | null;
+  // Subscription status
+  hasActiveSubscription: boolean;
+  subscriptionWarning: string | null;
 }
 
 export function useBrandUsage(brandId: string | undefined, plan: string | null | undefined): BrandUsage {
@@ -139,6 +142,24 @@ export function useBrandUsage(brandId: string | undefined, plan: string | null |
     [hiresUsed, effectiveLimits.hires]
   );
 
+  // Subscription status check
+  const hasActiveSubscription = useMemo(() => {
+    // Check if plan is a valid plan name (not null/undefined/empty)
+    const normalizedPlan = plan?.trim().toLowerCase();
+    return !!normalizedPlan && ['starter', 'growth', 'enterprise'].includes(normalizedPlan);
+  }, [plan]);
+
+  const subscriptionWarning = useMemo(() => {
+    if (hasActiveSubscription) return null;
+    if (effectiveLimits.isCustom) return null; // Custom plans don't need subscription
+
+    // Check if brand has active campaigns/boosts but no subscription
+    if (campaignsUsed > 0 || boostsUsed > 0) {
+      return "Your subscription has lapsed. Active campaigns may be affected. Please renew your subscription.";
+    }
+    return null;
+  }, [hasActiveSubscription, effectiveLimits.isCustom, campaignsUsed, boostsUsed]);
+
   return {
     campaignsUsed,
     campaignsLimit: effectiveLimits.campaigns,
@@ -154,5 +175,7 @@ export function useBrandUsage(brandId: string | undefined, plan: string | null |
     refetch: fetchUsage,
     isCustomPlan: effectiveLimits.isCustom,
     customPlanName: effectiveLimits.customPlanName,
+    hasActiveSubscription,
+    subscriptionWarning,
   };
 }
