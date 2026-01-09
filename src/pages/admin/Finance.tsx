@@ -642,6 +642,11 @@ export default function Finance() {
     toast({ title: "Copied!" });
   };
 
+  const truncateAddress = (address: string, chars = 8) => {
+    if (!address || address.length <= chars * 2 + 3) return address;
+    return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+  };
+
   const exportToCSV = () => {
     const headers = ['Date', 'Type', 'User', 'Amount', 'Status', 'Details'];
     const rows = combinedItems.map(item => {
@@ -1173,16 +1178,24 @@ export default function Finance() {
                     </Badge>
                   </div>
 
-                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-5 border border-primary/20">
-                    <p className="text-xs text-muted-foreground mb-1">Requested Amount</p>
-                    <p className="text-3xl font-bold">${Number(selectedPayout.amount).toFixed(2)}</p>
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                        Requested Amount
+                      </span>
+                    </div>
+                    <p className="text-2xl font-semibold tracking-[-0.5px]">
+                      ${Number(selectedPayout.amount).toFixed(2)}
+                    </p>
                     {selectedPayout.payout_method === 'crypto' && (
-                      <div className="mt-2 pt-2 border-t border-primary/10">
-                        <p className="text-xs text-muted-foreground">Amount after fees ($1 + 0.75%)</p>
-                        <p className="text-lg font-semibold text-emerald-500">
+                      <>
+                        <p className="text-[12px] text-muted-foreground mt-2">
+                          Amount after fees (${Number(selectedPayout.amount).toFixed(2)} + 0.75%)
+                        </p>
+                        <p className="text-sm font-medium mt-0.5">
                           ${(Number(selectedPayout.amount) - (Number(selectedPayout.amount) * 0.0075) - 1).toFixed(2)}
                         </p>
-                      </div>
+                      </>
                     )}
                   </div>
 
@@ -1197,11 +1210,20 @@ export default function Finance() {
                         </div>
                       )}
                       <div className="space-y-1.5">
-                        <span className="text-sm text-muted-foreground">Wallet Address</span>
-                        <div className="flex items-center gap-2 bg-background/50 rounded-lg p-2">
-                          <code className="text-xs font-mono break-all flex-1">{selectedPayout.payout_details?.address || selectedPayout.payout_details?.email || 'N/A'}</code>
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 flex-shrink-0" onClick={() => copyToClipboard(selectedPayout.payout_details?.address || selectedPayout.payout_details?.email || '')}>
-                            <Copy className="h-3.5 w-3.5" />
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                          Wallet Address
+                        </span>
+                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5">
+                          <code className="flex-1 text-[12px] font-mono text-foreground truncate min-w-0">
+                            {truncateAddress(selectedPayout.payout_details?.address || selectedPayout.payout_details?.wallet_address || selectedPayout.payout_details?.email || 'N/A', 12)}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 shrink-0 hover:bg-muted"
+                            onClick={() => copyToClipboard(selectedPayout.payout_details?.address || selectedPayout.payout_details?.wallet_address || selectedPayout.payout_details?.email || '')}
+                          >
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
                         </div>
                       </div>
@@ -1234,14 +1256,44 @@ export default function Finance() {
                     )}
 
                     {selectedPayout.tx_signature && (
-                      <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-emerald-500">Transaction Confirmed</span>
-                          <a href={`https://solscan.io/tx/${selectedPayout.tx_signature}`} target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:text-emerald-400">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
+                      <div className="bg-muted/30 rounded-xl p-4 border border-border space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-medium">Transaction Confirmed</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              Solana • {selectedPayout.blockchain_network || 'mainnet'}
+                            </p>
+                          </div>
                         </div>
-                        <code className="text-xs bg-background p-2 rounded block font-mono truncate">{selectedPayout.tx_signature}</code>
+                        <div className="space-y-1.5">
+                          <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                            Signature
+                          </span>
+                          <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5">
+                            <code className="flex-1 text-[12px] font-mono text-foreground truncate min-w-0">
+                              {truncateAddress(selectedPayout.tx_signature, 12)}
+                            </code>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 shrink-0 hover:bg-muted"
+                              onClick={() => copyToClipboard(selectedPayout.tx_signature!)}
+                            >
+                              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                            <a
+                              href={`https://solscan.io/tx/${selectedPayout.tx_signature}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

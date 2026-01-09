@@ -7,7 +7,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -15,11 +14,11 @@ import {
   Wallet,
   ExternalLink,
   Copy,
-  CheckCircle2,
-  AlertTriangle,
-  Coins,
+  Check,
+  AlertCircle,
+  ArrowUpRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import solanaLogo from "@/assets/solana-logo.png";
 
 interface CryptoPayoutDialogProps {
   open: boolean;
@@ -52,6 +51,8 @@ export function CryptoPayoutDialog({
   const [status, setStatus] = useState<ProcessingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [txSignature, setTxSignature] = useState<string | null>(null);
+  const [copiedWallet, setCopiedWallet] = useState(false);
+  const [copiedTx, setCopiedTx] = useState(false);
 
   const walletAddress =
     payoutRequest?.payout_details?.wallet_address ||
@@ -97,9 +98,16 @@ export function CryptoPayoutDialog({
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
+  const copyToClipboard = async (text: string, type: "wallet" | "tx") => {
+    await navigator.clipboard.writeText(text);
+    if (type === "wallet") {
+      setCopiedWallet(true);
+      setTimeout(() => setCopiedWallet(false), 2000);
+    } else {
+      setCopiedTx(true);
+      setTimeout(() => setCopiedTx(false), 2000);
+    }
+    toast.success("Copied to clipboard");
   };
 
   const handleClose = () => {
@@ -111,179 +119,191 @@ export function CryptoPayoutDialog({
     }
   };
 
+  const truncateAddress = (address: string, chars = 8) => {
+    if (address.length <= chars * 2 + 3) return address;
+    return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+  };
+
   if (!payoutRequest) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent size="md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-amber-500" />
-            Process Crypto Payout
+      <DialogContent className="sm:max-w-[400px] p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="px-5 pt-5 pb-4">
+          <DialogTitle className="text-[15px] font-semibold tracking-[-0.3px]">
+            Send USDC
           </DialogTitle>
-          <DialogDescription>
-            Send USDC on Solana to the creator's wallet
+          <DialogDescription className="text-[13px] text-muted-foreground mt-0.5">
+            Process crypto payout via Solana
           </DialogDescription>
         </DialogHeader>
 
-        {/* Amount Display */}
-        <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl p-5 border border-amber-500/20">
-          <p className="text-xs text-muted-foreground mb-1">Amount to Send</p>
-          <p className="text-3xl font-bold tracking-tight">
-            ${payoutRequest.amount.toFixed(2)}
-            <span className="text-lg font-normal text-muted-foreground ml-2">USDC</span>
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            to @{payoutRequest.profiles?.username || "Unknown"}
-          </p>
-        </div>
-
-        {/* Wallet Address */}
-        <div className="bg-muted/30 rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Recipient Wallet</span>
-            <Badge variant="secondary" className="text-xs">
-              Solana
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs bg-background p-2 rounded font-mono truncate">
-              {walletAddress}
-            </code>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 shrink-0"
-              onClick={() => copyToClipboard(walletAddress, "Wallet address")}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Status Display */}
-        {status === "processing" && (
-          <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-              <div>
-                <p className="text-sm font-medium text-blue-500">Processing Transaction</p>
-                <p className="text-xs text-blue-400">
-                  Sending USDC to the creator's wallet...
-                </p>
+        <div className="px-5 pb-5 space-y-4">
+          {/* Amount Card */}
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                Amount
+              </span>
+              <div className="flex items-center gap-1.5">
+                <img src={solanaLogo} alt="Solana" className="w-3.5 h-3.5" />
+                <span className="text-[11px] text-muted-foreground font-medium">USDC</span>
               </div>
             </div>
+            <p className="text-2xl font-semibold tracking-[-0.5px]">
+              ${payoutRequest.amount.toFixed(2)}
+            </p>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              to @{payoutRequest.profiles?.username || "Unknown"}
+            </p>
           </div>
-        )}
 
-        {status === "success" && txSignature && (
-          <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20 space-y-3">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              <div>
-                <p className="text-sm font-medium text-emerald-500">
-                  Transaction Confirmed
-                </p>
-                <p className="text-xs text-emerald-400">
-                  USDC has been sent successfully
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs bg-background p-2 rounded font-mono truncate">
-                {txSignature}
+          {/* Recipient Wallet */}
+          <div className="space-y-2">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+              Recipient Wallet
+            </span>
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5">
+              <code className="flex-1 text-[12px] font-mono text-foreground truncate min-w-0">
+                {truncateAddress(walletAddress, 12)}
               </code>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 shrink-0"
-                onClick={() => copyToClipboard(txSignature, "Transaction signature")}
+              <button
+                onClick={() => copyToClipboard(walletAddress, "wallet")}
+                className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
               >
-                <Copy className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 shrink-0"
-                asChild
-              >
-                <a
-                  href={`https://solscan.io/tx/${txSignature}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </Button>
+                {copiedWallet ? (
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </button>
             </div>
           </div>
-        )}
 
-        {status === "error" && error && (
-          <div className="bg-rose-500/10 rounded-xl p-4 border border-rose-500/20">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-rose-500">Transaction Failed</p>
-                <p className="text-xs text-rose-400 mt-1">{error}</p>
+          {/* Status States */}
+          {status === "processing" && (
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Warning */}
-        {status === "idle" && (
-          <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-amber-500">Confirm Details</p>
-                <p className="text-xs text-amber-400 mt-1">
-                  This action will send real USDC from the treasury wallet.
-                  Please verify the wallet address before proceeding.
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium">Processing...</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Sending USDC on Solana
                 </p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex justify-end gap-2 pt-2">
-          {status === "success" ? (
-            <Button onClick={handleClose}>Done</Button>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                onClick={handleClose}
-                disabled={status === "processing"}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleProcess}
-                disabled={status === "processing" || !walletAddress}
-                className={cn(
-                  "gap-2",
-                  status === "error" && "bg-rose-600 hover:bg-rose-700"
-                )}
-              >
-                {status === "processing" ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : status === "error" ? (
-                  "Retry"
-                ) : (
-                  <>
-                    <Wallet className="h-4 w-4" />
-                    Send USDC
-                  </>
-                )}
-              </Button>
-            </>
           )}
+
+          {status === "success" && txSignature && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Check className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-primary">Sent Successfully</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Transaction confirmed
+                  </p>
+                </div>
+              </div>
+
+              {/* Transaction Signature */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                  Transaction
+                </span>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5">
+                  <code className="flex-1 text-[12px] font-mono text-foreground truncate min-w-0">
+                    {truncateAddress(txSignature, 12)}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(txSignature, "tx")}
+                    className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+                  >
+                    {copiedTx ? (
+                      <Check className="h-3.5 w-3.5 text-primary" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                  </button>
+                  <a
+                    href={`https://solscan.io/tx/${txSignature}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {status === "error" && error && (
+            <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center mt-0.5">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-destructive">Failed</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 break-words">
+                  {error}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Warning for idle state */}
+          {status === "idle" && (
+            <p className="text-[11px] text-muted-foreground text-center">
+              This will send real USDC from the treasury wallet
+            </p>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            {status === "success" ? (
+              <Button
+                onClick={handleClose}
+                className="flex-1 h-10 text-[13px] font-medium"
+              >
+                Done
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={handleClose}
+                  disabled={status === "processing"}
+                  className="flex-1 h-10 text-[13px] font-medium hover:bg-muted"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleProcess}
+                  disabled={status === "processing" || !walletAddress}
+                  className="flex-1 h-10 text-[13px] font-medium gap-2"
+                >
+                  {status === "processing" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : status === "error" ? (
+                    "Retry"
+                  ) : (
+                    <>
+                      <ArrowUpRight className="h-4 w-4" />
+                      Send USDC
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -20,25 +20,33 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Authenticate user using anon key with auth header
+    // Authenticate user using auth header
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('No Authorization header provided');
+      return new Response(JSON.stringify({ error: 'Unauthorized - no auth header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Create user client for authentication
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    // Extract the JWT token from "Bearer <token>"
+    const token = authHeader.replace('Bearer ', '');
+    console.log('Token extracted, length:', token.length);
 
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    // Create anon client and verify token
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Use getUser with the JWT token directly
+    console.log('Calling getUser with token...');
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+    console.log('getUser result - user:', !!user, 'error:', authError?.message || 'none');
 
     if (authError || !user) {
-      console.error('Auth error:', authError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('Auth error details:', JSON.stringify(authError));
+      return new Response(JSON.stringify({ error: 'Unauthorized - auth failed', details: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -116,8 +124,8 @@ Deno.serve(async (req) => {
     let withholdingRate = 0;
     let withholdingAmount = 0;
 
-    if (taxReq?.required) {
-      // Tax form is required but not submitted - reject withdrawal
+    if (taxReq?.required && !isAdmin) {
+      // Tax form is required but not submitted - reject withdrawal (admins bypass)
       const formTypeLabel = taxReq.form_type === 'w9' ? 'W-9' : 'W-8BEN';
       return new Response(JSON.stringify({
         error: `A ${formTypeLabel} tax form is required before you can withdraw. Please submit your tax form in Settings.`,

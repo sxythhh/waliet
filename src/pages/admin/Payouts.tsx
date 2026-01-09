@@ -447,6 +447,11 @@ export default function AdminPayouts() {
     toast({ title: "Copied!", description: "Copied to clipboard" });
   };
 
+  const truncateAddress = (address: string, chars = 8) => {
+    if (!address || address.length <= chars * 2 + 3) return address;
+    return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+  };
+
   const getNetAmount = (request: PayoutRequest) => {
     const amount = Number(request.amount);
     if (request.payout_method === 'paypal') {
@@ -803,13 +808,20 @@ export default function AdminPayouts() {
                   </div>
 
                   {/* Amount Card */}
-                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
-                    <p className="text-xs text-muted-foreground font-inter mb-1">Requested Amount</p>
-                    <p className="text-3xl font-bold font-inter tracking-[-0.5px]">
+                  <div className="rounded-xl border border-border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                        Requested Amount
+                      </span>
+                    </div>
+                    <p className="text-2xl font-semibold tracking-[-0.5px]">
                       ${Number(selectedRequest.amount).toFixed(2)}
                     </p>
-                    <p className="text-sm text-muted-foreground font-inter mt-1">
-                      Net: ${getNetAmount(selectedRequest).toFixed(2)} after fees
+                    <p className="text-[12px] text-muted-foreground mt-1">
+                      Amount after fees (${Number(selectedRequest.amount).toFixed(2)} + 0.75%)
+                    </p>
+                    <p className="text-sm font-medium mt-0.5">
+                      ${getNetAmount(selectedRequest).toFixed(2)}
                     </p>
                   </div>
 
@@ -832,19 +844,21 @@ export default function AdminPayouts() {
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-muted-foreground font-inter shrink-0">
-                          {selectedRequest.payout_method === 'crypto' ? 'Address' : 'Account'}
+                      <div className="space-y-1.5">
+                        <span className="text-sm text-muted-foreground font-inter">
+                          {selectedRequest.payout_method === 'crypto' ? 'Wallet Address' : 'Account'}
                         </span>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm font-mono truncate">{getPaymentInfo(selectedRequest)}</span>
+                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5">
+                          <code className="flex-1 text-[12px] font-mono text-foreground truncate min-w-0">
+                            {truncateAddress(getPaymentInfo(selectedRequest), 12)}
+                          </code>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 shrink-0"
+                            className="h-7 w-7 p-0 shrink-0 hover:bg-muted"
                             onClick={() => copyToClipboard(getPaymentInfo(selectedRequest))}
                           >
-                            <Copy className="h-3.5 w-3.5" />
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
                         </div>
                       </div>
@@ -922,30 +936,43 @@ export default function AdminPayouts() {
 
                   {/* Transaction Signature (for crypto payouts) */}
                   {selectedRequest.tx_signature && (
-                    <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-emerald-500">Transaction Confirmed</span>
-                        <a
-                          href={`https://solscan.io/tx/${selectedRequest.tx_signature}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-500 hover:text-emerald-400"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-medium">Transaction Confirmed</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Solana • {selectedRequest.blockchain_network || 'mainnet'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 text-xs bg-background p-2 rounded font-mono truncate">
-                          {selectedRequest.tx_signature}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 shrink-0"
-                          onClick={() => copyToClipboard(selectedRequest.tx_signature!)}
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                          Signature
+                        </span>
+                        <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-2.5">
+                          <code className="flex-1 text-[12px] font-mono text-foreground truncate min-w-0">
+                            {truncateAddress(selectedRequest.tx_signature, 12)}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 shrink-0 hover:bg-muted"
+                            onClick={() => copyToClipboard(selectedRequest.tx_signature!)}
+                          >
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                          <a
+                            href={`https://solscan.io/tx/${selectedRequest.tx_signature}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   )}
