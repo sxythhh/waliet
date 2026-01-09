@@ -56,6 +56,9 @@ export function GoogleCalendarConnect({
           workspace_id: workspaceId,
           redirect_uri: redirectUri,
         },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
       });
 
       if (error) {
@@ -127,8 +130,12 @@ export function GoogleCalendarConnect({
   const handleDisconnect = async () => {
     setLoading(true);
     try {
+      const { data: session } = await supabase.auth.getSession();
       const { error } = await supabase.functions.invoke("google-calendar-disconnect", {
         body: { workspace_id: workspaceId },
+        headers: session?.session?.access_token
+          ? { Authorization: `Bearer ${session.session.access_token}` }
+          : undefined,
       });
 
       if (error) {
@@ -157,11 +164,17 @@ export function GoogleCalendarConnect({
   const handleSync = async () => {
     setSyncing(true);
     try {
+      const { data: session } = await supabase.auth.getSession();
+      const authHeaders = session?.session?.access_token
+        ? { Authorization: `Bearer ${session.session.access_token}` }
+        : undefined;
+
       const { data, error } = await supabase.functions.invoke("google-calendar-sync", {
         body: {
           action: "pull_events",
           workspace_id: workspaceId,
         },
+        headers: authHeaders,
       });
 
       if (error) {
@@ -176,6 +189,7 @@ export function GoogleCalendarConnect({
             action: "pull_events",
             workspace_id: workspaceId,
           },
+          headers: authHeaders,
         });
 
         if (retryError) {

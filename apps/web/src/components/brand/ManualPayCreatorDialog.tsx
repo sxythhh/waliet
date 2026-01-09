@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertCircle, DollarSign, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -116,111 +115,109 @@ export function ManualPayCreatorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-instrument tracking-tight">
+      <DialogContent className="sm:max-w-[380px] p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-4">
+          <DialogTitle className="text-base font-semibold font-inter tracking-[-0.3px]">
             Pay Creator
           </DialogTitle>
-          <DialogDescription className="font-inter tracking-[-0.3px]">
-            Send a manual payment from your personal wallet.
+          <DialogDescription className="text-[13px] text-muted-foreground font-inter tracking-[-0.3px] mt-1">
+            Send from your personal wallet
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-4 py-4">
+        <div className="px-5 pb-5 space-y-4">
           {/* Creator Info */}
           {creator && (
-            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <Avatar className="h-10 w-10">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-9 w-9">
                 <AvatarImage src={creator.avatar_url || undefined} />
-                <AvatarFallback className="text-sm">
+                <AvatarFallback className="text-xs bg-muted">
                   {(creator.full_name || creator.username)?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="font-medium text-sm font-inter tracking-[-0.3px]">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-[13px] font-inter tracking-[-0.3px] truncate">
                   {creator.full_name || creator.username}
                 </p>
-                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px]">
                   @{creator.username}
                 </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px]">
+                  Your balance
+                </p>
+                {fetchingBalance ? (
+                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-auto" />
+                ) : (
+                  <p className="text-[13px] font-semibold font-inter tracking-[-0.3px] tabular-nums">
+                    ${(ownerBalance || 0).toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
           )}
 
-          {/* Your Balance */}
-          <div className="p-3 bg-muted/20 rounded-lg border border-border/50">
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mb-1">
-              Your Balance
-            </p>
-            {fetchingBalance ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Loading...</span>
-              </div>
-            ) : (
-              <p className="text-lg font-bold font-geist tracking-[-0.5px]">
-                ${(ownerBalance || 0).toFixed(2)}
-              </p>
-            )}
-          </div>
-
           {/* Amount Input */}
-          <div className="space-y-2">
-            <Label className="font-inter tracking-[-0.3px] text-sm">
-              Amount <span className="text-destructive">*</span>
-            </Label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">
+              Amount
+            </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground font-inter">
+                $
+              </span>
               <Input
                 type="number"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-9 font-geist tracking-[-0.5px]"
+                className="pl-7 h-10 text-[14px] font-inter tracking-[-0.3px] bg-muted/40 border-border/50 focus:bg-muted/60 tabular-nums"
                 step="0.01"
                 min="0"
               />
             </div>
             {amountNum > 0 && ownerBalance !== null && amountNum > ownerBalance && (
-              <div className="flex items-center gap-1.5 text-destructive text-xs">
-                <AlertCircle className="h-3 w-3" />
-                <span>Insufficient balance</span>
-              </div>
+              <p className="text-[11px] text-destructive font-inter tracking-[-0.3px]">
+                Insufficient balance
+              </p>
             )}
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label className="font-inter tracking-[-0.3px] text-sm">
-              Description (optional)
-            </Label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">
+              Note <span className="font-normal">(optional)</span>
+            </label>
             <Textarea
               placeholder="e.g., Bonus for exceptional work"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="font-inter tracking-[-0.3px]"
+              className="text-[13px] font-inter tracking-[-0.3px] bg-muted/40 border-border/50 focus:bg-muted/60 resize-none min-h-[72px]"
             />
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="font-inter tracking-[-0.3px]"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading || !isValidAmount || !creator}
-            className="gap-2 font-inter tracking-[-0.3px]"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Pay ${amountNum.toFixed(2)}
-          </Button>
-        </DialogFooter>
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="flex-1 h-9 text-[13px] font-inter tracking-[-0.3px] text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={loading || !isValidAmount || !creator}
+              className="flex-1 h-9 text-[13px] gap-1.5 font-inter tracking-[-0.3px]"
+            >
+              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Pay ${amountNum.toFixed(2)}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

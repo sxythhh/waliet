@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy, StickyNote, Tag, DollarSign } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy, Tag, DollarSign } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -27,7 +27,6 @@ import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
-import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
 import { CreatorDiscoveryWizard } from "@/components/brand/CreatorDiscoveryWizard";
 import { ManualPayCreatorDialog } from "@/components/brand/ManualPayCreatorDialog";
 import { BulkPitchDialog } from "@/components/brand/BulkPitchDialog";
@@ -352,10 +351,6 @@ export function CreatorDatabaseTab({
   // Testimonial dialog state
   const [testimonialDialogOpen, setTestimonialDialogOpen] = useState(false);
   const [testimonialCreator, setTestimonialCreator] = useState<Creator | null>(null);
-
-  // Notes dialog state
-  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
-  const [notesCreator, setNotesCreator] = useState<{ id: string; name: string; username: string; avatarUrl?: string | null } | null>(null);
 
   // Manual pay dialog state
   const [manualPayDialogOpen, setManualPayDialogOpen] = useState(false);
@@ -1862,39 +1857,19 @@ export function CreatorDatabaseTab({
               </div>
             )}
             {/* Secondary Actions */}
-            <div className="grid grid-cols-2 gap-2">
+            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
               <button
-                className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] border border-border/60 text-foreground rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] border border-border/60 text-foreground rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
                 onClick={e => {
                   e.stopPropagation();
-                  setNotesCreator({
-                    id: selectedCreatorPanel.id,
-                    name: selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name || "Unknown",
-                    username: selectedCreatorPanel.username || selectedCreatorPanel.external_handle || "unknown",
-                    avatarUrl: selectedCreatorPanel.avatar_url
-                  });
-                  setNotesDialogOpen(true);
+                  setTestimonialCreator(selectedCreatorPanel);
+                  setTestimonialDialogOpen(true);
                 }}
               >
-                <StickyNote className="h-3.5 w-3.5" />
-                Notes
+                <Star className="h-3.5 w-3.5" />
+                Review
               </button>
-              {!selectedCreatorPanel.is_external && selectedCreatorPanel.id ? (
-                <button
-                  className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] border border-border/60 text-foreground rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setTestimonialCreator(selectedCreatorPanel);
-                    setTestimonialDialogOpen(true);
-                  }}
-                >
-                  <Star className="h-3.5 w-3.5" />
-                  Review
-                </button>
-              ) : (
-                <div />
-              )}
-            </div>
+            )}
             {/* Remove Button */}
             <button
               className="w-full py-2 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -2261,22 +2236,6 @@ export function CreatorDatabaseTab({
       setTestimonialCreator(null);
     }} />}
 
-      {/* Creator Notes Dialog */}
-      {notesCreator && (
-        <CreatorNotesDialog
-          open={notesDialogOpen}
-          onOpenChange={setNotesDialogOpen}
-          brandId={brandId}
-          creatorId={notesCreator.id}
-          creatorName={notesCreator.name}
-          creatorUsername={notesCreator.username}
-          creatorAvatarUrl={notesCreator.avatarUrl}
-          onSuccess={() => {
-            // Refresh available tags when notes are saved
-            fetchAvailableTags();
-          }}
-        />
-      )}
 
       {/* Creator Discovery Wizard */}
       <CreatorDiscoveryWizard

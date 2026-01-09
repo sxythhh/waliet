@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, MessageCircle, Megaphone, ChevronUp, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -188,6 +188,46 @@ export function UnifiedMessagesWidget() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Lightweight function to just fetch unread count (for badge)
+  const fetchUnreadCount = useCallback(async () => {
+    if (!userId) return;
+
+    // Get all conversation IDs for this user
+    const { data: convos } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("creator_id", userId);
+
+    let unreadMessages = 0;
+    if (convos && convos.length > 0) {
+      const convIds = convos.map(c => c.id);
+      const { count } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .in("conversation_id", convIds)
+        .eq("sender_type", "brand")
+        .eq("is_read", false);
+      unreadMessages = count || 0;
+    }
+
+    // Only count unread conversation messages (tickets don't have read tracking)
+    setTotalUnread(unreadMessages);
+  }, [userId]);
+
+  // Mark messages as read and update badge
+  const markMessagesAsRead = useCallback(async (conversationId: string) => {
+    const { error } = await supabase
+      .from("messages")
+      .update({ is_read: true })
+      .eq("conversation_id", conversationId)
+      .eq("sender_type", "brand")
+      .eq("is_read", false);
+
+    if (!error) {
+      await fetchUnreadCount();
+    }
+  }, [fetchUnreadCount]);
+
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -198,6 +238,14 @@ export function UnifiedMessagesWidget() {
     fetchUser();
   }, []);
 
+  // Fetch unread count on mount (for badge display)
+  useEffect(() => {
+    if (userId) {
+      fetchUnreadCount();
+    }
+  }, [userId, fetchUnreadCount]);
+
+  // Fetch full data when panel opens
   useEffect(() => {
     if (userId && isOpen) {
       fetchConversations();
@@ -217,13 +265,13 @@ export function UnifiedMessagesWidget() {
         fetchTicketMessages(ticket.id);
       }
     }
-  }, [activeThread]);
+  }, [activeThread, markMessagesAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, ticketMessages]);
 
-  // Real-time subscriptions
+  // Real-time subscriptions - always active for badge updates
   useEffect(() => {
     if (!userId) return;
 
@@ -241,7 +289,12 @@ export function UnifiedMessagesWidget() {
             markMessagesAsRead(conv.id);
           }
         }
-        fetchConversations();
+        // Always update unread count for badge
+        fetchUnreadCount();
+        // Only fetch full conversations if panel is open
+        if (isOpen) {
+          fetchConversations();
+        }
       })
       .on('postgres_changes', {
         event: '*',
@@ -249,7 +302,11 @@ export function UnifiedMessagesWidget() {
         table: 'support_tickets',
         filter: `user_id=eq.${userId}`
       }, () => {
-        fetchTickets();
+        // Always update unread count for badge
+        fetchUnreadCount();
+        if (isOpen) {
+          fetchTickets();
+        }
       })
       .on('postgres_changes', {
         event: 'INSERT',
@@ -263,14 +320,17 @@ export function UnifiedMessagesWidget() {
             setTicketMessages(prev => [...prev, newMsg]);
           }
         }
-        fetchTickets();
+        fetchUnreadCount();
+        if (isOpen) {
+          fetchTickets();
+        }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, activeThread]);
+  }, [userId, activeThread, isOpen, fetchUnreadCount, markMessagesAsRead]);
 
   const fetchConversations = async () => {
     if (!userId) return;
@@ -368,16 +428,6 @@ export function UnifiedMessagesWidget() {
     }
   };
 
-  const markMessagesAsRead = async (conversationId: string) => {
-    await supabase
-      .from("messages")
-      .update({ is_read: true })
-      .eq("conversation_id", conversationId)
-      .eq("sender_type", "brand")
-      .eq("is_read", false);
-    fetchConversations();
-  };
-
   const handleBack = () => {
     setActiveThread(null);
     setMessages([]);
@@ -472,12 +522,6 @@ export function UnifiedMessagesWidget() {
     return threads;
   }, [tickets, conversations]);
 
-  // Calculate total unread
-  useEffect(() => {
-    const convUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
-    setTotalUnread(convUnread + tickets.length); // Count open tickets as "unread"
-  }, [conversations, tickets]);
-
   return (
     <>
       {/* Floating Button - Mobile (Circle) */}
@@ -496,7 +540,7 @@ export function UnifiedMessagesWidget() {
       {/* Floating Button - Desktop (Card) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex fixed bottom-0 right-6 z-50 items-center justify-between gap-3 w-[320px] px-5 py-3 rounded-t-2xl rounded-b-none bg-background hover:bg-gray-50 dark:hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl border border-b-0 border-border"
+        className="hidden md:flex fixed bottom-0 right-6 z-50 items-center justify-between gap-3 w-[320px] px-5 py-3 rounded-t-2xl rounded-b-none bg-background hover:bg-gray-50 dark:hover:bg-[#0e0e0e] transition-all duration-200 shadow-lg hover:shadow-xl border border-b-0 border-border"
       >
         <span className="font-medium text-sm text-foreground font-inter tracking-[-0.5px]">Messages</span>
         <div className="flex items-center gap-2">

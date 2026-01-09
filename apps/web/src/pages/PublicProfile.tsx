@@ -14,6 +14,7 @@ import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviews
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import { SEOHead } from "@/components/SEOHead";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { generateProfileSchema, getCanonicalUrl, truncateDescription } from "@/lib/seo";
 import { PortfolioDisplay as LegacyPortfolioDisplay } from "@/components/profile/PortfolioDisplay";
 import { PortfolioDisplay } from "@/components/portfolio/display/PortfolioDisplay";
@@ -455,7 +456,7 @@ export default function PublicProfile() {
     }
   };
   if (loading) {
-    return null;
+    return <PageLoading />;
   }
   if (!profile) {
     return null;

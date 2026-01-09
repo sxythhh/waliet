@@ -2263,6 +2263,17 @@ export function CampaignWizard({
                                   {formData.payout_type === 'on_platform' ? 'On Platform' : 'Off Platform'}
                                 </span>
                               </div>
+                              {!formData.is_infinite_budget && parseFloat(formData.budget) > 0 && parseFloat(formData.rpm_rate) > 0 && (
+                                <>
+                                  <div className="h-px bg-border/50 my-3" />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">Estimated views</span>
+                                    <span className="text-base font-bold text-primary tabular-nums">
+                                      {Math.round((parseFloat(formData.budget) / parseFloat(formData.rpm_rate)) * 1000).toLocaleString('en-US')}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </>
                         )}

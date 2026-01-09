@@ -186,7 +186,7 @@ export default function PublicNavbar({
                       </Link>
                     )}
                     <Link to="/dashboard">
-                      <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-primary hover:bg-primary/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
+                      <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 h-[34px] bg-primary hover:bg-primary/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
                         Dashboard
                       </Button>
                     </Link>
@@ -221,7 +221,7 @@ export default function PublicNavbar({
                 )}
                 {isAuthenticated === true && (
                   <Link to="/dashboard">
-                    <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 bg-primary hover:bg-primary/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
+                    <Button size="sm" className="font-geist font-medium tracking-[-0.5px] px-5 h-[34px] bg-primary hover:bg-primary/90 border-t border-[#3d75f0] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 rounded-lg">
                       Dashboard
                     </Button>
                   </Link>

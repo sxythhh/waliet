@@ -811,15 +811,20 @@ export function CampaignAnalyticsTable({
           data: analyticsData
         } = await supabase.from("campaign_account_analytics").select("id, last_payment_amount").in("id", analyticsIds);
 
-        // Filter out earning transactions where the analytics record shows no payment (reverted)
-        // But keep all balance_correction transactions regardless
+        // Filter out earning transactions where the analytics record explicitly shows 0 payment (reverted)
+        // But keep all balance_correction transactions and transactions where analytics record doesn't exist
         const activeTransactions = campaignTransactions.filter(txn => {
           // Always keep balance corrections
           if (txn.type === 'balance_correction') return true;
 
           // For earning transactions, check if they've been reverted
-          const analytics = analyticsData?.find(a => a.id === (txn.metadata as TransactionMetadata)?.analytics_id);
-          return analytics && analytics.last_payment_amount > 0;
+          const analyticsId = (txn.metadata as TransactionMetadata)?.analytics_id;
+          const analytics = analyticsId ? analyticsData?.find(a => a.id === analyticsId) : null;
+
+          // If analytics record doesn't exist, keep the transaction (it's valid)
+          // Only filter out if analytics record exists AND shows 0 payment (explicitly reverted)
+          if (!analytics) return true;
+          return analytics.last_payment_amount > 0;
         });
         const transactionsWithProfiles = activeTransactions.map(txn => ({
           ...txn,
@@ -1662,12 +1667,151 @@ export function CampaignAnalyticsTable({
         </CardContent>
       </Card>}
 
-        {/* Transactions View - Now only shows PayoutRequestsTable */}
+        {/* Transactions View - PayoutRequestsTable + Transaction History */}
         {activeTab === 'transactions' && <>
             {/* Payout Requests Section */}
             <div className="py-2">
               <PayoutRequestsTable campaignId={campaignId} showEmpty={true} />
             </div>
+
+            {/* Transaction History Section */}
+            <Card className="mt-4 bg-card border border-border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <h3 className="text-sm font-semibold tracking-[-0.3px]">Payment History</h3>
+                <p className="text-xs text-muted-foreground tracking-[-0.2px] mt-0.5">All payments made to creators for this campaign</p>
+              </div>
+              <CardContent className="p-0">
+                {filteredTransactions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center mb-2">
+                      <DollarSign className="h-4 w-4 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No payments yet</p>
+                  </div>
+                ) : (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5">Creator</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 hidden sm:table-cell">Account</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 hidden md:table-cell">Platform</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 hidden md:table-cell">Views</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5">Date</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedTransactions.map((txn) => {
+                          const metadata = (txn.metadata || {}) as TransactionMetadata;
+                          return (
+                            <TableRow key={txn.id} className="hover:bg-muted/20">
+                              <TableCell className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-7 w-7">
+                                    <AvatarImage src={txn.profiles?.avatar_url || undefined} />
+                                    <AvatarFallback className="text-[10px] bg-muted">
+                                      {(txn.profiles?.username || '?').charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm font-medium truncate max-w-[120px]">
+                                    @{txn.profiles?.username || 'unknown'}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                <span className="text-sm text-muted-foreground">
+                                  {metadata.account_username || '—'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 hidden md:table-cell">
+                                <span className="text-sm text-muted-foreground capitalize">
+                                  {metadata.platform || '—'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 hidden md:table-cell">
+                                <span className="text-sm text-muted-foreground tabular-nums">
+                                  {metadata.views ? metadata.views.toLocaleString() : '—'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <span className="text-sm text-muted-foreground">
+                                  {format(new Date(txn.created_at), 'MMM d, yyyy')}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-4 py-3 text-right">
+                                <span className={`text-sm font-semibold tabular-nums ${
+                                  txn.type === 'balance_correction' && Number(txn.amount) < 0
+                                    ? 'text-red-500'
+                                    : 'text-emerald-500'
+                                }`}>
+                                  {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+
+                    {/* Pagination */}
+                    {totalTransactionPages > 1 && (
+                      <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                        <span className="text-xs text-muted-foreground">
+                          {filteredTransactions.length} payment{filteredTransactions.length !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setTransactionsCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={transactionsCurrentPage === 1}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          {Array.from({ length: totalTransactionPages }, (_, i) => i + 1)
+                            .filter(page => {
+                              if (totalTransactionPages <= 5) return true;
+                              if (page === 1 || page === totalTransactionPages) return true;
+                              if (Math.abs(page - transactionsCurrentPage) <= 1) return true;
+                              return false;
+                            })
+                            .map((page, index, arr) => (
+                              <span key={page}>
+                                {index > 0 && arr[index - 1] !== page - 1 && (
+                                  <span className="px-1 text-muted-foreground/50">...</span>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setTransactionsCurrentPage(page)}
+                                  className={`h-7 w-7 p-0 text-xs ${
+                                    transactionsCurrentPage === page
+                                      ? 'bg-muted text-foreground'
+                                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                  }`}
+                                >
+                                  {page}
+                                </Button>
+                              </span>
+                            ))}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setTransactionsCurrentPage(p => Math.min(totalTransactionPages, p + 1))}
+                            disabled={transactionsCurrentPage === totalTransactionPages}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </>}
 
          {/* Budget Adjustments */}

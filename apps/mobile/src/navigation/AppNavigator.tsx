@@ -1,53 +1,50 @@
 import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { CampaignsScreen } from '../screens/CampaignsScreen';
+import { CampaignDetailScreen } from '../screens/CampaignDetailScreen';
+import { MyCampaignsScreen } from '../screens/MyCampaignsScreen';
 import { WalletScreen } from '../screens/WalletScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { LiquidGlassTabBar } from '../components/LiquidGlassTabBar';
 
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <LiquidGlassTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen name="Discover" component={CampaignsScreen} />
+      <Tab.Screen name="MyCampaigns" component={MyCampaignsScreen} />
+      <Tab.Screen name="Wallet" component={WalletScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
 
 export function AppNavigator() {
   return (
-    <Tab.Navigator
+    <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#000',
-          borderTopColor: '#333',
-          borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 60,
-        },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#888',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
+        contentStyle: { backgroundColor: '#000' },
+        animation: 'slide_from_right',
       }}
     >
-      <Tab.Screen
-        name="Campaigns"
-        component={CampaignsScreen}
+      <Stack.Screen name="Main" component={TabNavigator} />
+      <Stack.Screen
+        name="CampaignDetail"
+        component={CampaignDetailScreen}
         options={{
-          tabBarLabel: 'Discover',
+          animation: 'slide_from_bottom',
+          presentation: 'card',
         }}
       />
-      <Tab.Screen
-        name="Wallet"
-        component={WalletScreen}
-        options={{
-          tabBarLabel: 'Wallet',
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Profile',
-        }}
-      />
-    </Tab.Navigator>
+    </Stack.Navigator>
   );
 }

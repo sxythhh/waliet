@@ -268,110 +268,156 @@ export function TransactionsTable({
               >
                 {/* Source */}
                 <TableCell className="py-4">
-                  {transaction.boost?.brand_name ? (
-                    <div
-                      className="flex items-center gap-2 hover:underline cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation();
-                        if (transaction.boost?.brand_slug) {
-                          navigate(`/b/${transaction.boost.brand_slug}`);
-                        }
-                      }}
-                    >
-                      {transaction.boost?.brand_logo_url ? (
-                        <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
-                          <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name} className="w-full h-full object-cover" />
+                  {(() => {
+                    // Earnings from brand (campaign or boost)
+                    if ((transaction.type === 'earning' || transaction.type === 'boost_earning') && (transaction.boost?.brand_name || transaction.campaign?.brand_name)) {
+                      const brand = transaction.boost || transaction.campaign;
+                      return (
+                        <div
+                          className="flex items-center gap-2 hover:underline cursor-pointer"
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (brand?.brand_slug) navigate(`/b/${brand.brand_slug}`);
+                          }}
+                        >
+                          {brand?.brand_logo_url ? (
+                            <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                              <img src={brand.brand_logo_url} alt={brand.brand_name} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs text-foreground font-medium">
+                                {brand?.brand_name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-sm font-medium">{brand?.brand_name}</span>
                         </div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs text-foreground font-medium">
-                            {transaction.boost.brand_name.charAt(0).toUpperCase()}
-                          </span>
+                      );
+                    }
+                    // Incoming transfer - show sender
+                    if ((transaction.type === 'transfer_received' || transaction.type === 'transfer_in') && (transaction.sender || transaction.metadata?.sender_username)) {
+                      return (
+                        <div
+                          className="flex items-center gap-2 hover:underline cursor-pointer"
+                          onClick={e => {
+                            e.stopPropagation();
+                            navigate(`/@${transaction.sender?.username || transaction.metadata.sender_username}`);
+                          }}
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={transaction.sender?.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {(transaction.sender?.username || transaction.metadata?.sender_username || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">@{transaction.sender?.username || transaction.metadata.sender_username}</span>
                         </div>
-                      )}
-                      <span className="text-sm font-medium">{transaction.boost.brand_name}</span>
-                    </div>
-                  ) : transaction.campaign?.brand_name ? (
-                    <div
-                      className="flex items-center gap-2 hover:underline cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation();
-                        if (transaction.campaign?.brand_slug) {
-                          navigate(`/b/${transaction.campaign.brand_slug}`);
-                        }
-                      }}
-                    >
-                      {transaction.campaign?.brand_logo_url ? (
-                        <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
-                          <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
+                      );
+                    }
+                    // Outgoing (withdrawal, transfer_sent) - source is wallet
+                    if (transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out') {
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs text-foreground font-medium">💳</span>
+                          </div>
+                          <span className="text-sm font-medium">Wallet</span>
                         </div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs text-foreground font-medium">
-                            {transaction.campaign.brand_name.charAt(0).toUpperCase()}
-                          </span>
+                      );
+                    }
+                    // Referral bonus
+                    if (transaction.type === 'referral') {
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[7px] bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs">🎁</span>
+                          </div>
+                          <span className="text-sm font-medium">Referral Bonus</span>
                         </div>
-                      )}
-                      <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
-                    </div>
-                  ) : (transaction.type === 'transfer_received' || transaction.type === 'transfer_in') && (transaction.sender || transaction.metadata?.sender_username) ? (
-                    <div
-                      className="flex items-center gap-2 hover:underline cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation();
-                        navigate(`/@${transaction.sender?.username || transaction.metadata.sender_username}`);
-                      }}
-                    >
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={transaction.sender?.avatar_url || undefined} alt={transaction.sender?.username || transaction.metadata?.sender_username} />
-                        <AvatarFallback className="text-xs">
-                          {(transaction.sender?.username || transaction.metadata?.sender_username || 'U').charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">@{transaction.sender?.username || transaction.metadata.sender_username}</span>
-                    </div>
-                  ) : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? (
-                    <span className="text-sm text-foreground">Wallet</span>
-                  ) : transaction.type === 'transfer_in' && !transaction.sender && !transaction.metadata?.sender_username ? (
-                    <span className="text-sm text-foreground">Transfer</span>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>
-                  )}
+                      );
+                    }
+                    // Balance correction
+                    if (transaction.type === 'balance_correction') {
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs">⚙️</span>
+                          </div>
+                          <span className="text-sm font-medium">Adjustment</span>
+                        </div>
+                      );
+                    }
+                    return <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>;
+                  })()}
                 </TableCell>
 
                 {/* Destination */}
                 <TableCell className="py-4">
-                  {transaction.type === 'transfer_sent' && transaction.recipient ? (
-                    <div
-                      className="flex items-center gap-2 hover:underline cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation();
-                        navigate(`/@${transaction.recipient?.username}`);
-                      }}
-                    >
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={transaction.recipient.avatar_url || undefined} alt={transaction.recipient.username} />
-                        <AvatarFallback className="text-xs">
-                          {transaction.recipient.username.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">@{transaction.recipient.username}</span>
-                    </div>
-                  ) : transaction.type === 'transfer_sent' && transaction.metadata?.recipient_username ? (
-                    <div
-                      className="flex items-center gap-2 hover:underline cursor-pointer"
-                      onClick={e => {
-                        e.stopPropagation();
-                        navigate(`/@${transaction.metadata.recipient_username}`);
-                      }}
-                    >
-                      <span className="text-sm font-medium">@{transaction.metadata.recipient_username}</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-foreground">
-                      {transaction.destination || 'Wallet'}
-                    </span>
-                  )}
+                  {(() => {
+                    // Outgoing transfer - show recipient
+                    if ((transaction.type === 'transfer_sent' || transaction.type === 'transfer_out') && (transaction.recipient || transaction.metadata?.recipient_username)) {
+                      return (
+                        <div
+                          className="flex items-center gap-2 hover:underline cursor-pointer"
+                          onClick={e => {
+                            e.stopPropagation();
+                            navigate(`/@${transaction.recipient?.username || transaction.metadata.recipient_username}`);
+                          }}
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={transaction.recipient?.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {(transaction.recipient?.username || transaction.metadata?.recipient_username || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">@{transaction.recipient?.username || transaction.metadata.recipient_username}</span>
+                        </div>
+                      );
+                    }
+                    // Withdrawal - show withdrawal method/address
+                    if (transaction.type === 'withdrawal') {
+                      const withdrawalDest = transaction.destination || transaction.metadata?.withdrawal_address || transaction.metadata?.withdrawal_method;
+                      if (withdrawalDest) {
+                        // Truncate long addresses
+                        const displayDest = withdrawalDest.length > 20
+                          ? `${withdrawalDest.slice(0, 8)}...${withdrawalDest.slice(-6)}`
+                          : withdrawalDest;
+                        return (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs">🏦</span>
+                            </div>
+                            <span className="text-sm font-medium font-mono">{displayDest}</span>
+                          </div>
+                        );
+                      }
+                      return <span className="text-sm text-muted-foreground">External</span>;
+                    }
+                    // Incoming (earnings, transfers received) - destination is wallet
+                    if (transaction.type === 'earning' || transaction.type === 'boost_earning' || transaction.type === 'transfer_received' || transaction.type === 'transfer_in' || transaction.type === 'referral') {
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs">💳</span>
+                          </div>
+                          <span className="text-sm font-medium">Wallet</span>
+                        </div>
+                      );
+                    }
+                    // Balance correction
+                    if (transaction.type === 'balance_correction') {
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs">💳</span>
+                          </div>
+                          <span className="text-sm font-medium">Wallet</span>
+                        </div>
+                      );
+                    }
+                    return <span className="text-sm text-foreground">{transaction.destination || 'Wallet'}</span>;
+                  })()}
                 </TableCell>
 
                 {/* Status */}

@@ -118,6 +118,12 @@ export function GoogleCalendarOAuthCallback() {
       try {
         const redirectUri = `${window.location.origin}/google/calendar-callback`;
 
+        // Get session for auth header
+        const { data: sessionData } = await supabase.auth.getSession();
+        const authHeaders = sessionData?.session?.access_token
+          ? { Authorization: `Bearer ${sessionData.session.access_token}` }
+          : undefined;
+
         // Exchange code for tokens
         const { data, error: functionError } = await supabase.functions.invoke(
           "google-calendar-auth",
@@ -129,6 +135,7 @@ export function GoogleCalendarOAuthCallback() {
               redirect_uri: redirectUri,
               state,
             },
+            headers: authHeaders,
           }
         );
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check, CheckCircle2, Circle, ExternalLink, ArrowDownLeft, ArrowUpRight, Gift, Wallet, ChevronLeft, ChevronRight, Users, Minus } from "lucide-react";
+import { Copy, Check, CheckCircle2, Circle, Wallet, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { X, Clock, Hourglass } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis } from "recharts";
 import { format, subMonths } from "date-fns";
-import { Link } from "react-router-dom";
 import { EarningsChart, EarningsChartPeriod } from "@/components/dashboard/EarningsChart";
 import { TransactionShareDialog } from "@/components/dashboard/TransactionShareDialog";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
@@ -25,6 +24,7 @@ interface WalletTransaction {
   date: Date;
   status?: string;
   rejection_reason?: string;
+  destination?: string;
   campaign?: {
     id: string;
     title: string;
@@ -37,9 +37,26 @@ interface WalletTransaction {
     brand_name: string;
     brand_logo_url?: string | null;
   } | null;
+  sender?: {
+    username: string;
+    full_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  recipient?: {
+    username: string;
+    full_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
   metadata?: {
     sender_username?: string;
+    sender_full_name?: string;
+    sender_avatar_url?: string;
     recipient_username?: string;
+    recipient_full_name?: string;
+    recipient_avatar_url?: string;
+    brand_name?: string;
+    brand_logo_url?: string;
+    withdrawal_address?: string;
     period_start?: string;
     period_end?: string;
   };
@@ -164,9 +181,42 @@ export function ReferralsTab(): JSX.Element {
       }, {} as Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }>);
     }
 
+    // Fetch user profiles for transfer transactions
+    const transferUserIds = txns
+      .filter(t => ['transfer_sent', 'transfer_received', 'transfer_in', 'transfer_out'].includes(t.type))
+      .flatMap(t => {
+        const meta = t.metadata as any;
+        return [meta?.sender_id, meta?.recipient_id].filter(Boolean);
+      });
+
+    let usersMap: Record<string, { username: string; full_name: string | null; avatar_url: string | null }> = {};
+    if (transferUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .in("id", [...new Set(transferUserIds)]);
+      usersMap = (profiles || []).reduce((acc, p) => {
+        acc[p.id] = { username: p.username, full_name: p.full_name, avatar_url: p.avatar_url };
+        return acc;
+      }, {} as Record<string, { username: string; full_name: string | null; avatar_url: string | null }>);
+    }
+
     const formattedTransactions: WalletTransaction[] = txns.map(txn => {
       const metadata = txn.metadata as any;
       const isBoostEarning = txn.type === 'earning' && metadata?.boost_id;
+
+      // Get sender/recipient from profiles lookup or metadata
+      const sender = metadata?.sender_id && usersMap[metadata.sender_id]
+        ? usersMap[metadata.sender_id]
+        : metadata?.sender_username
+          ? { username: metadata.sender_username, full_name: metadata.sender_full_name || null, avatar_url: metadata.sender_avatar_url || null }
+          : null;
+
+      const recipient = metadata?.recipient_id && usersMap[metadata.recipient_id]
+        ? usersMap[metadata.recipient_id]
+        : metadata?.recipient_username
+          ? { username: metadata.recipient_username, full_name: metadata.recipient_full_name || null, avatar_url: metadata.recipient_avatar_url || null }
+          : null;
 
       return {
         id: txn.id,
@@ -176,6 +226,8 @@ export function ReferralsTab(): JSX.Element {
         status: txn.status,
         campaign: metadata?.campaign_id ? campaignsMap[metadata.campaign_id] || null : null,
         boost: metadata?.boost_id ? boostsMap[metadata.boost_id] || null : null,
+        sender,
+        recipient,
         metadata: metadata || undefined,
       };
     });
@@ -282,7 +334,7 @@ export function ReferralsTab(): JSX.Element {
     const pointCount = Math.min(days, 30);
     const interval = Math.max(1, Math.floor(days / pointCount));
 
-    for (let i = 0; i <= pointCount; i++) {
+    for (let i = 0; i < pointCount; i++) {
       const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
       const dateStr = format(currentDate, 'MMM dd');
@@ -415,24 +467,6 @@ export function ReferralsTab(): JSX.Element {
         const startIndex = (currentPage - 1) * transactionsPerPage;
         const paginatedTransactions = transactions.slice(startIndex, startIndex + transactionsPerPage);
 
-        const getTransactionIcon = (type: string, isOutgoing: boolean) => {
-          if (type === 'withdrawal') return <ArrowUpRight className="h-4 w-4" />;
-          if (type === 'transfer_sent' || type === 'transfer_out') return <Users className="h-4 w-4" />;
-          if (type === 'transfer_received' || type === 'transfer_in') return <Users className="h-4 w-4" />;
-          if (type === 'referral') return <Gift className="h-4 w-4" />;
-          if (type === 'balance_correction') return <Minus className="h-4 w-4" />;
-          return <ArrowDownLeft className="h-4 w-4" />;
-        };
-
-        const getIconBgColor = (type: string, isOutgoing: boolean) => {
-          if (type === 'withdrawal') return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400';
-          if (type === 'transfer_sent' || type === 'transfer_out') return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400';
-          if (type === 'transfer_received' || type === 'transfer_in') return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400';
-          if (type === 'referral') return 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400';
-          if (type === 'balance_correction') return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400';
-          return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
-        };
-
         return (
           <Card className="bg-card border border-border rounded-2xl overflow-hidden">
             <CardContent className="p-0">
@@ -450,12 +484,12 @@ export function ReferralsTab(): JSX.Element {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto" style={{ minHeight: `${transactionsPerPage * 56 + 42}px` }}>
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border bg-muted/30">
-                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px]">Transaction</th>
-                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden md:table-cell">Type</th>
+                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px]">Source</th>
+                          <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden md:table-cell">Destination</th>
                           <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden sm:table-cell">Date</th>
                           <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px]">Amount</th>
                           <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3 tracking-[-0.3px] hidden sm:table-cell">Status</th>
@@ -463,33 +497,19 @@ export function ReferralsTab(): JSX.Element {
                       </thead>
                       <tbody>
                         {paginatedTransactions.map((transaction, index) => {
-                          const brandName = transaction.boost?.brand_name || transaction.campaign?.brand_name;
-                          const brandLogo = transaction.boost?.brand_logo_url || transaction.campaign?.brand_logo_url;
+                          // Get brand info from campaign/boost relations or directly from metadata
+                          const brandName = transaction.boost?.brand_name || transaction.campaign?.brand_name || transaction.metadata?.brand_name;
+                          const brandLogo = transaction.boost?.brand_logo_url || transaction.campaign?.brand_logo_url || transaction.metadata?.brand_logo_url;
                           const isOutgoing = transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' || (transaction.type === 'balance_correction' && transaction.amount < 0);
                           const isIncomingTransfer = transaction.type === 'transfer_received' || transaction.type === 'transfer_in';
                           const isOutgoingTransfer = transaction.type === 'transfer_sent' || transaction.type === 'transfer_out';
+                          const isEarning = transaction.type === 'earning' || transaction.type === 'boost_earning';
 
-                          const displayName = brandName ||
-                            (isIncomingTransfer ? `From @${transaction.metadata?.sender_username || 'user'}` :
-                            isOutgoingTransfer ? `To @${transaction.metadata?.recipient_username || 'user'}` :
-                            transaction.type === 'withdrawal' ? 'Withdrawal' :
-                            transaction.type === 'referral' ? 'Referral Bonus' :
-                            transaction.type === 'balance_correction' ? 'Balance Adjustment' :
-                            'Transaction');
-
-                          const typeLabel = transaction.type === 'earning' || transaction.type === 'boost_earning'
-                            ? 'Campaign Payout'
-                            : transaction.type === 'withdrawal'
-                            ? 'Withdrawal'
-                            : isOutgoingTransfer
-                            ? 'Transfer Sent'
-                            : isIncomingTransfer
-                            ? 'Transfer Received'
-                            : transaction.type === 'referral'
-                            ? 'Referral Bonus'
-                            : transaction.type === 'balance_correction'
-                            ? 'Adjustment'
-                            : 'Transaction';
+                          // Get withdrawal address if available
+                          const withdrawalAddress = transaction.destination || transaction.metadata?.withdrawal_address;
+                          const truncatedAddress = withdrawalAddress && withdrawalAddress.length > 12
+                            ? `${withdrawalAddress.slice(0, 6)}...${withdrawalAddress.slice(-4)}`
+                            : withdrawalAddress;
 
                           return (
                             <tr
@@ -502,34 +522,78 @@ export function ReferralsTab(): JSX.Element {
                                 index !== paginatedTransactions.length - 1 ? 'border-b border-border/50' : ''
                               }`}
                             >
+                              {/* Source */}
                               <td className="px-5 py-3.5">
                                 <div className="flex items-center gap-3">
-                                  {brandLogo ? (
-                                    <img src={brandLogo} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
-                                  ) : (
-                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconBgColor(transaction.type, isOutgoing)}`}>
-                                      {getTransactionIcon(transaction.type, isOutgoing)}
+                                  {/* Show brand logo for earnings and adjustments */}
+                                  {(isEarning || transaction.type === 'balance_correction') && brandLogo ? (
+                                    <img src={brandLogo} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                  ) : (isEarning || transaction.type === 'balance_correction') && brandName ? (
+                                    <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                                      <span className="text-xs font-medium text-muted-foreground">{brandName.charAt(0).toUpperCase()}</span>
                                     </div>
-                                  )}
+                                  ) : isIncomingTransfer ? (
+                                    // Show sender avatar for incoming transfers
+                                    transaction.sender?.avatar_url ? (
+                                      <img src={transaction.sender.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                          {(transaction.sender?.full_name || transaction.sender?.username || 'U').charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )
+                                  ) : null}
                                   <div className="min-w-0">
                                     <span className="text-sm font-medium text-foreground truncate block tracking-[-0.3px]">
-                                      {displayName}
+                                      {(isEarning || transaction.type === 'balance_correction') && brandName ? brandName :
+                                       isIncomingTransfer ? (transaction.sender?.full_name || `@${transaction.sender?.username || 'user'}`) :
+                                       transaction.type === 'withdrawal' || isOutgoingTransfer ? 'Your wallet' :
+                                       transaction.type === 'referral' ? 'Referral bonus' :
+                                       'Transaction'}
                                     </span>
-                                    {(transaction.campaign?.title || transaction.boost?.title) && (
+                                    {/* Show campaign/boost title for earnings */}
+                                    {isEarning && (transaction.campaign?.title || transaction.boost?.title) && (
                                       <span className="text-xs text-muted-foreground truncate block tracking-[-0.2px]">
                                         {transaction.campaign?.title || transaction.boost?.title}
                                       </span>
                                     )}
+                                    {/* Show @username for incoming transfers if showing full_name */}
+                                    {isIncomingTransfer && transaction.sender?.full_name && transaction.sender?.username && (
+                                      <span className="text-xs text-muted-foreground truncate block tracking-[-0.2px]">
+                                        @{transaction.sender.username}
+                                      </span>
+                                    )}
+                                    {/* Mobile: show destination */}
                                     <span className="text-xs text-muted-foreground md:hidden tracking-[-0.2px]">
-                                      {typeLabel}
+                                      → {isOutgoingTransfer ? (transaction.recipient?.full_name || `@${transaction.recipient?.username || 'user'}`) :
+                                         transaction.type === 'withdrawal' ? (truncatedAddress || 'Withdrawal') :
+                                         'Wallet'}
                                     </span>
                                   </div>
                                 </div>
                               </td>
+                              {/* Destination */}
                               <td className="px-5 py-3.5 hidden md:table-cell">
-                                <span className="text-sm text-muted-foreground tracking-[-0.3px]">
-                                  {typeLabel}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  {/* Show recipient avatar for outgoing transfers */}
+                                  {isOutgoingTransfer ? (
+                                    transaction.recipient?.avatar_url ? (
+                                      <img src={transaction.recipient.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                                    ) : (
+                                      <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                          {(transaction.recipient?.full_name || transaction.recipient?.username || 'U').charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )
+                                  ) : null}
+                                  <span className="text-sm font-medium text-foreground tracking-[-0.3px]">
+                                    {isOutgoingTransfer ? (transaction.recipient?.full_name || `@${transaction.recipient?.username || 'user'}`) :
+                                     transaction.type === 'withdrawal' ? (truncatedAddress || 'Withdrawal') :
+                                     'Wallet'}
+                                  </span>
+                                </div>
                               </td>
                               <td className="px-5 py-3.5 hidden sm:table-cell">
                                 <span className="text-sm text-muted-foreground tracking-[-0.3px]">
@@ -576,13 +640,13 @@ export function ReferralsTab(): JSX.Element {
                       <span className="text-sm text-muted-foreground tracking-[-0.3px]">
                         Showing {startIndex + 1}-{Math.min(startIndex + transactionsPerPage, transactions.length)} of {transactions.length}
                       </span>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40"
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -596,13 +660,17 @@ export function ReferralsTab(): JSX.Element {
                           .map((page, index, arr) => (
                             <React.Fragment key={page}>
                               {index > 0 && arr[index - 1] !== page - 1 && (
-                                <span className="px-1 text-muted-foreground">...</span>
+                                <span className="px-1 text-muted-foreground/50">...</span>
                               )}
                               <Button
-                                variant={currentPage === page ? "default" : "ghost"}
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => setCurrentPage(page)}
-                                className="h-8 w-8 p-0 text-xs"
+                                className={`h-7 w-7 p-0 text-xs ${
+                                  currentPage === page
+                                    ? 'bg-muted text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                }`}
                               >
                                 {page}
                               </Button>
@@ -613,7 +681,7 @@ export function ReferralsTab(): JSX.Element {
                           size="sm"
                           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                           disabled={currentPage === totalPages}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40"
                         >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
@@ -674,13 +742,6 @@ export function ReferralsTab(): JSX.Element {
                   <h3 className="font-semibold text-sm font-inter tracking-[-0.5px]">Your Referral Link</h3>
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Share to earn rewards on signups & brand subscriptions</p>
                 </div>
-                <Link
-                  to="/affiliate"
-                  className="text-xs text-primary hover:underline flex items-center gap-1 font-inter tracking-[-0.5px] shrink-0"
-                >
-                  How it works
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
               </div>
             </div>
 
@@ -693,7 +754,7 @@ export function ReferralsTab(): JSX.Element {
                 />
                 <Button
                   onClick={copyReferralLink}
-                  className="gap-2 shrink-0 h-10 bg-foreground text-background hover:bg-foreground/90 font-inter tracking-[-0.5px]"
+                  className="gap-2 shrink-0 h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-inter tracking-[-0.5px]"
                 >
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   {copied ? "Copied" : "Copy"}
