@@ -7,8 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
-    "dev:web": "turbo run dev --filter=@virality/web",
+    "dev": "npm run dev --workspace=@virality/web",
+    "dev:turbo": "turbo run dev",
+    "dev:web": "npm run dev --workspace=@virality/web",
     "dev:mobile": "turbo run dev --filter=@virality/mobile",
     "build": "turbo run build",
     "build:web": "turbo run build --filter=@virality/web",
