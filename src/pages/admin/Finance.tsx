@@ -388,7 +388,7 @@ export default function Finance() {
     try {
       const { data, error } = await supabase
         .from("payout_requests")
-        .select(`*, profiles:user_id (id, username, full_name, avatar_url, wallets (balance, total_earned, total_withdrawn))`)
+        .select(`*, profiles!fk_payout_requests_user_id (id, username, full_name, avatar_url, wallets (balance, total_earned, total_withdrawn))`)
         .order("requested_at", { ascending: false });
 
       if (error) {
@@ -397,7 +397,6 @@ export default function Finance() {
         return;
       }
 
-      console.log("Fetched payout requests:", data?.length || 0);
       setPayoutRequests((data as PayoutRequest[]) || []);
     } catch (err) {
       console.error("Exception fetching payout requests:", err);
@@ -583,17 +582,8 @@ export default function Finance() {
       return matchesSearch && matchesStatus;
     });
 
-    console.log("Payouts filter debug:", {
-      total: payoutRequests.length,
-      afterDateFilter: dateFilteredPayouts.length,
-      afterAllFilters: filtered.length,
-      statusFilter: payoutStatusFilter,
-      searchTerm,
-      viewMode
-    });
-
     return filtered;
-  }, [dateFilteredPayouts, searchTerm, payoutStatusFilter, payoutRequests.length, viewMode]);
+  }, [dateFilteredPayouts, searchTerm, payoutStatusFilter]);
 
   // Pending payouts always shows all pending (not date filtered)
   const pendingPayouts = payoutRequests.filter(r => r.status === 'pending');
