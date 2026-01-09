@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsOptions } from '../_shared/cors.ts';
 
 interface BotOAuthRequest {
   code?: string;
@@ -15,9 +11,13 @@ interface BotOAuthRequest {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight with proper origin validation
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
+
+  // Get validated CORS headers for all responses
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const { code, guildId, brandId, action, redirectUri } = await req.json() as BotOAuthRequest;
@@ -60,10 +60,61 @@ serve(async (req) => {
         throw new Error('brandId is required for disconnect');
       }
 
-      // Check if user has access to this brand (basic auth check)
+      // Verify user authentication and authorization
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
-        throw new Error('Authorization required');
+        return new Response(
+          JSON.stringify({ error: 'Authorization required' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Verify user has access to this brand (owner or team member)
+      const { data: brand, error: brandError } = await supabaseClient
+        .from('brands')
+        .select('id, user_id')
+        .eq('id', brandId)
+        .single();
+
+      if (brandError || !brand) {
+        return new Response(
+          JSON.stringify({ error: 'Brand not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check if user is brand owner
+      const isOwner = brand.user_id === user.id;
+
+      // Check if user is a team member with appropriate role
+      const { data: teamMember } = await supabaseClient
+        .from('brand_team_members')
+        .select('role')
+        .eq('brand_id', brandId)
+        .eq('user_id', user.id)
+        .single();
+
+      const hasTeamAccess = teamMember && ['owner', 'admin'].includes(teamMember.role);
+
+      if (!isOwner && !hasTeamAccess) {
+        console.error('Unauthorized Discord disconnect attempt:', {
+          user_id: user.id,
+          brand_id: brandId,
+        });
+        return new Response(
+          JSON.stringify({ error: 'You do not have permission to modify this brand' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       // Clear Discord fields from brand
@@ -82,7 +133,7 @@ serve(async (req) => {
         throw error;
       }
 
-      console.log('Discord server disconnected from brand:', brandId);
+      console.log('Discord server disconnected from brand:', { brandId, by_user: user.id });
 
       return new Response(
         JSON.stringify({ success: true, message: 'Discord server disconnected' }),

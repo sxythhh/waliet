@@ -91,13 +91,7 @@ export function BountyApplicationsSheet({
   };
 
   const handleUpdateStatus = async (applicationId: string, newStatus: 'accepted' | 'rejected') => {
-    // Check if we're at capacity when trying to accept
-    if (newStatus === 'accepted' && currentAccepted >= maxAccepted) {
-      toast.error(`You've reached the maximum of ${maxAccepted} accepted creators`);
-      return;
-    }
-
-    // Check hire limit based on subscription plan
+    // Check hire limit based on subscription plan (early exit)
     if (newStatus === 'accepted' && !canHireCreator) {
       toast.error("Hire limit reached. Upgrade your plan to work with more creators.");
       return;
@@ -108,6 +102,27 @@ export function BountyApplicationsSheet({
       // Get the application details
       const application = applications.find(app => app.id === applicationId);
       if (!application) throw new Error('Application not found');
+
+      // RACE CONDITION FIX: Re-fetch current accepted count from database
+      // This prevents exceeding max_accepted_creators during rapid-fire accepts
+      if (newStatus === 'accepted') {
+        const { count: freshAcceptedCount, error: countError } = await supabase
+          .from('bounty_applications')
+          .select('*', { count: 'exact', head: true })
+          .eq('bounty_campaign_id', bountyId)
+          .eq('status', 'accepted');
+
+        if (countError) {
+          throw new Error('Failed to verify capacity');
+        }
+
+        if ((freshAcceptedCount ?? 0) >= maxAccepted) {
+          toast.error(`Maximum capacity of ${maxAccepted} creators reached. Another user may have just been accepted.`);
+          setProcessing(null);
+          fetchApplications(); // Refresh to show updated state
+          return;
+        }
+      }
 
       const { error } = await supabase
         .from('bounty_applications')

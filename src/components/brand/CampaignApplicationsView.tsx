@@ -439,7 +439,7 @@ export function CampaignApplicationsView({
     const selectedIds = Array.from(selectedApps);
     const selectedApplications = applications.filter(a => selectedIds.includes(a.id) && a.status === 'pending');
 
-    // Check if accepting all would exceed hire limit
+    // Early check with cached values
     if (hiresUsed + selectedApplications.length > hiresLimit) {
       toast.error(`Cannot accept ${selectedApplications.length} applications. Only ${Math.max(0, hiresLimit - hiresUsed)} more hires allowed on your plan.`);
       setBulkActionDialog({ type: null, open: false });
@@ -448,6 +448,31 @@ export function CampaignApplicationsView({
 
     setBulkProcessing(true);
     try {
+      // RACE CONDITION FIX: Re-fetch current hire count from database
+      // This prevents exceeding hire limit during concurrent bulk accepts
+      if (currentBrandId) {
+        const [boostResult, campaignResult] = await Promise.all([
+          supabase
+            .from('bounty_applications')
+            .select('id', { count: 'exact', head: true })
+            .eq('brand_id', currentBrandId)
+            .eq('status', 'accepted'),
+          supabase
+            .from('campaign_submissions')
+            .select('id', { count: 'exact', head: true })
+            .eq('brand_id', currentBrandId)
+            .eq('status', 'approved')
+        ]);
+
+        const freshHiresUsed = (boostResult.count ?? 0) + (campaignResult.count ?? 0);
+
+        if (freshHiresUsed + selectedApplications.length > hiresLimit) {
+          toast.error(`Cannot accept ${selectedApplications.length} applications. Only ${Math.max(0, hiresLimit - freshHiresUsed)} more hires allowed. Another user may have just accepted applications.`);
+          setBulkProcessing(false);
+          setBulkActionDialog({ type: null, open: false });
+          return;
+        }
+      }
 
       for (const app of selectedApplications) {
         const appIsBoost = app.is_boost || !!app.bounty_campaign_id;
