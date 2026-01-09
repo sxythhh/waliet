@@ -1,3 +1,6 @@
+// Import Tables type for use in this file
+import type { Tables } from './database';
+
 // Re-export all types from the auto-generated database types
 export type {
   Json,
@@ -19,4 +22,6 @@ export type CampaignVideo = Tables<'campaign_videos'>;
 export type Brand = Tables<'brands'>;
 export type Wallet = Tables<'wallets'>;
 export type PaymentLedger = Tables<'payment_ledger'>;
-export type BoostCampaign = Tables<'boost_campaigns'>;
+export type BountyCampaign = Tables<'bounty_campaigns'>;
+// Alias for backwards compatibility
+export type BoostCampaign = Tables<'bounty_campaigns'>;
