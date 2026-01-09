@@ -39,9 +39,14 @@ service-account*.json
 # Build outputs
 build/
 
-# Capacitor
-android/app/build/
-ios/App/Pods/
+# Capacitor (in apps/web/)
+apps/web/android/app/build/
+apps/web/ios/App/Pods/
 
 # Supabase
-supabase/.temp/
+apps/supabase/.temp/
+
+# Turborepo
+.turbo
+.vercel
+.env*.local

@@ -1,0 +1,13 @@
+{
+  "name": "@virality/supabase",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "supabase start",
+    "stop": "supabase stop",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "functions:serve": "supabase functions serve",
+    "gen:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > ../web/src/integrations/supabase/types.ts"
+  }
+}

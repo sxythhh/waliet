@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { DiscordServerSettings } from "./DiscordServerSettings";
 
 interface BrandSettingsTabProps {
   brandId: string;
@@ -375,12 +374,6 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
           {savingSettings ? "Saving..." : "Save Changes"}
         </Button>
       </div>
-
-      {/* Discord Server Integration */}
-      <DiscordServerSettings
-        brandId={brandId}
-        subscriptionStatus={subscriptionStatus}
-      />
 
       {/* Application Settings */}
       <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
