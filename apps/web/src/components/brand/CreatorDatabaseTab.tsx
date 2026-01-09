@@ -1830,53 +1830,81 @@ export function CreatorDatabaseTab({
 
           {/* Action Buttons */}
           <div className="p-4 border-t border-border/50 flex flex-col gap-2">
-            {/* Notes Button */}
-            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/50 text-foreground rounded-lg hover:bg-muted transition-colors flex items-center justify-center gap-1.5" onClick={e => {
-              e.stopPropagation();
-              setNotesCreator({
-                id: selectedCreatorPanel.id,
-                name: selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name || "Unknown",
-                username: selectedCreatorPanel.username || selectedCreatorPanel.external_handle || "unknown",
-                avatarUrl: selectedCreatorPanel.avatar_url
-              });
-              setNotesDialogOpen(true);
-            }}>
-              <StickyNote className="h-3.5 w-3.5" />
-              Notes & Tags
-            </button>
-            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
-            e.stopPropagation();
-            setTestimonialCreator(selectedCreatorPanel);
-            setTestimonialDialogOpen(true);
-          }}>
-                <Star className="h-3.5 w-3.5" />
-                Leave Review
-              </button>}
-            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
-            e.stopPropagation();
-            handleSendMessage(selectedCreatorPanel);
-          }}>
-                <MessageSquare className="h-3.5 w-3.5" />
-                Message
-              </button>}
-            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
-            e.stopPropagation();
-            setCreatorToPay({
-              id: selectedCreatorPanel.id,
-              username: selectedCreatorPanel.username,
-              full_name: selectedCreatorPanel.full_name,
-              avatar_url: selectedCreatorPanel.avatar_url
-            });
-            setManualPayDialogOpen(true);
-          }}>
-                <DollarSign className="h-3.5 w-3.5" />
-                Pay
-              </button>}
-            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
-            e.stopPropagation();
-            initiateRemoveCreator(selectedCreatorPanel);
-          }} disabled={selectedCreatorPanel.campaigns.length > 0}>
-              Remove
+            {/* Primary Actions Row */}
+            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-foreground text-background rounded-lg hover:bg-foreground/90 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleSendMessage(selectedCreatorPanel);
+                  }}
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Message
+                </button>
+                <button
+                  className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setCreatorToPay({
+                      id: selectedCreatorPanel.id,
+                      username: selectedCreatorPanel.username,
+                      full_name: selectedCreatorPanel.full_name,
+                      avatar_url: selectedCreatorPanel.avatar_url
+                    });
+                    setManualPayDialogOpen(true);
+                  }}
+                >
+                  <DollarSign className="h-3.5 w-3.5" />
+                  Pay
+                </button>
+              </div>
+            )}
+            {/* Secondary Actions */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] border border-border/60 text-foreground rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                onClick={e => {
+                  e.stopPropagation();
+                  setNotesCreator({
+                    id: selectedCreatorPanel.id,
+                    name: selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name || "Unknown",
+                    username: selectedCreatorPanel.username || selectedCreatorPanel.external_handle || "unknown",
+                    avatarUrl: selectedCreatorPanel.avatar_url
+                  });
+                  setNotesDialogOpen(true);
+                }}
+              >
+                <StickyNote className="h-3.5 w-3.5" />
+                Notes
+              </button>
+              {!selectedCreatorPanel.is_external && selectedCreatorPanel.id ? (
+                <button
+                  className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] border border-border/60 text-foreground rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setTestimonialCreator(selectedCreatorPanel);
+                    setTestimonialDialogOpen(true);
+                  }}
+                >
+                  <Star className="h-3.5 w-3.5" />
+                  Review
+                </button>
+              ) : (
+                <div />
+              )}
+            </div>
+            {/* Remove Button */}
+            <button
+              className="w-full py-2 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={e => {
+                e.stopPropagation();
+                initiateRemoveCreator(selectedCreatorPanel);
+              }}
+              disabled={selectedCreatorPanel.campaigns.length > 0}
+            >
+              Remove from database
             </button>
           </div>
         </div>
