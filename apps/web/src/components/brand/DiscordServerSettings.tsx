@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Unlink, Server, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { Unlink, Server, RefreshCw } from "lucide-react";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import { toast } from "sonner";
@@ -279,28 +278,22 @@ export function DiscordServerSettings({
       )}
 
       {guild ? (
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
+        <Card className="p-0 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               {guild.icon ? (
                 <img
                   src={guild.icon}
                   alt={guild.name}
-                  className="w-12 h-12 rounded-full"
+                  className="w-12 h-12 rounded-lg"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-[#5865F2]/20 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg bg-[#5865F2]/20 flex items-center justify-center">
                   <Server className="w-6 h-6 text-[#5865F2]" />
                 </div>
               )}
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium font-inter tracking-[-0.5px]">{guild.name}</span>
-                  <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-600 border-green-500/30">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Connected
-                  </Badge>
-                </div>
+                <span className="font-medium font-inter tracking-[-0.5px]">{guild.name}</span>
                 <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   Server ID: {guild.id}
                 </p>
@@ -311,12 +304,12 @@ export function DiscordServerSettings({
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={fetchGuildInfo}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-neutral-500 hover:text-neutral-600 hover:bg-transparent"
               >
                 <RefreshCw className="w-4 h-4" />
               </Button>
@@ -324,34 +317,31 @@ export function DiscordServerSettings({
                 size="sm"
                 variant="ghost"
                 onClick={() => setDisconnectDialogOpen(true)}
-                className="text-muted-foreground hover:text-destructive"
+                className="text-neutral-500 hover:text-neutral-600 hover:bg-transparent"
               >
                 <Unlink className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border/50">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-              <div className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                <p className="font-medium text-foreground mb-1">Role Assignment Setup</p>
-                <p>
-                  To assign roles to creators, make sure the bot's role is positioned <strong>above</strong> the roles
-                  you want to assign in your Discord server's role settings. Roles at a higher position can manage roles below them.
-                </p>
-              </div>
+          <div className="px-4 py-3 bg-muted/30 border-t border-border/50">
+            <div className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+              <p className="font-medium text-foreground mb-1">Role Assignment Setup</p>
+              <p>
+                To assign roles to creators, make sure the bot's role is positioned <strong>above</strong> the roles
+                you want to assign in your Discord server's role settings. Roles at a higher position can manage roles below them.
+              </p>
             </div>
           </div>
 
           {/* Server Roles Section */}
-          <div className="mt-4">
+          <div className="px-4 py-3 border-t border-border/50">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-medium text-foreground font-inter tracking-[-0.5px]">Server Roles</p>
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 px-2 text-muted-foreground hover:text-foreground"
+                className="h-6 px-2 text-neutral-500 hover:text-neutral-600 hover:bg-transparent"
                 onClick={() => guild && fetchRoles(guild.id)}
                 disabled={isLoadingRoles}
               >
