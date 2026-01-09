@@ -1,7 +1,22 @@
-// Placeholder - will be populated from apps/web/src/integrations/supabase/types.ts
-export type { Database } from './database';
+// Re-export all types from the auto-generated database types
+export type {
+  Json,
+  Database,
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+  Enums,
+  CompositeTypes,
+} from './database';
 
-// Re-export for convenience
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
-export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
-export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
+export { Constants } from './database';
+
+// Convenience type aliases for common table types
+export type Profile = Tables<'profiles'>;
+export type Campaign = Tables<'campaigns'>;
+export type CampaignSubmission = Tables<'campaign_submissions'>;
+export type CampaignVideo = Tables<'campaign_videos'>;
+export type Brand = Tables<'brands'>;
+export type Wallet = Tables<'wallets'>;
+export type PaymentLedger = Tables<'payment_ledger'>;
+export type BoostCampaign = Tables<'boost_campaigns'>;

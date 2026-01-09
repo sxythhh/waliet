@@ -19,6 +19,7 @@
     "cap:run:android": "npm run build && npx cap sync android && npx cap run android"
   },
   "dependencies": {
+    "@virality/shared-types": "*",
     "@capacitor/android": "^8.0.0",
     "@capacitor/browser": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
