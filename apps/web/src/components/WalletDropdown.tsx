@@ -148,9 +148,6 @@ function WalletDropdownContent({
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <Button variant="outline" className="w-full font-inter tracking-[-0.5px] border-transparent hover:bg-muted hover:text-foreground" size="sm" onClick={onTransfer}>
-          Transfer
-        </Button>
         <Button className="w-full font-inter tracking-[-0.5px]" size="sm" onClick={onWithdraw}>
           Withdraw
         </Button>

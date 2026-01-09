@@ -15,8 +15,7 @@ import { Link } from "react-router-dom";
 import { EarningsChart, EarningsChartPeriod } from "@/components/dashboard/EarningsChart";
 import { TransactionShareDialog } from "@/components/dashboard/TransactionShareDialog";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
-import { TransferDialog } from "@/components/dashboard/TransferDialog";
-import { Share2, ArrowRightLeft } from "lucide-react";
+import { Share2 } from "lucide-react";
 
 interface WalletTransaction {
   id: string;
@@ -102,7 +101,6 @@ export function ReferralsTab(): JSX.Element {
   const [selectedTransaction, setSelectedTransaction] = useState<WalletTransaction | null>(null);
   const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 10;
@@ -388,20 +386,9 @@ export function ReferralsTab(): JSX.Element {
         {/* Payment Methods */}
         <Card className="bg-card border border-border rounded-2xl">
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
-                Payment Methods
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setTransferDialogOpen(true)}
-                className="text-sm font-medium tracking-[-0.3px] gap-1.5"
-              >
-                <ArrowRightLeft className="h-4 w-4" />
-                Transfer
-              </Button>
-            </div>
+            <CardTitle className="text-base font-semibold text-foreground tracking-[-0.5px]">
+              Payment Methods
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <PaymentMethodsSection />
@@ -1020,14 +1007,6 @@ export function ReferralsTab(): JSX.Element {
         onOpenChange={setShareDialogOpen}
         transaction={selectedTransaction as any}
         userProfile={profile}
-      />
-
-      {/* Transfer Dialog */}
-      <TransferDialog
-        open={transferDialogOpen}
-        onOpenChange={setTransferDialogOpen}
-        currentBalance={walletBalance}
-        onSuccess={fetchTransactions}
       />
     </div>
   );
