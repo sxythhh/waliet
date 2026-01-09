@@ -301,7 +301,7 @@ export function BlueprintsTab({
         const contentPreview = getContentPreview(blueprint.content);
         const completion = getCompletionScore(blueprint);
         const isLinked = !!campaignLinks[blueprint.id];
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={cn("group relative cursor-pointer", "rounded-2xl border border-border/60", "bg-card/60 backdrop-blur-sm", "hover:bg-card hover:border-border hover:shadow-md", "transition-all duration-200 ease-out")}>
+        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={cn("group relative cursor-pointer", "rounded-2xl border border-border/60", "bg-card/60 backdrop-blur-sm", "hover:bg-card dark:hover:bg-[#0e0e0e] hover:shadow-md", "transition-all duration-200 ease-out")}>
                 <div className="p-4">
                   {/* Header row */}
                   <div className="mb-2">
