@@ -16,6 +16,23 @@ interface GoogleTokenResponse {
   token_type: string;
 }
 
+interface StoredToken {
+  access_token: string;
+  refresh_token: string | null;
+}
+
+// Type guard for validating RPC response
+function isValidTokenArray(data: unknown): data is StoredToken[] {
+  if (!Array.isArray(data)) return false;
+  return data.every(
+    (item) =>
+      typeof item === 'object' &&
+      item !== null &&
+      'access_token' in item &&
+      typeof (item as { access_token: unknown }).access_token === 'string'
+  );
+}
+
 const GOOGLE_OAUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
@@ -24,6 +41,30 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/documents.readonly',
 ].join(' ');
+
+// Allowed redirect URIs to prevent open redirect attacks
+const ALLOWED_REDIRECT_URIS = [
+  'https://virality.gg/google/docs-callback',
+  'https://www.virality.gg/google/docs-callback',
+  'https://app.virality.gg/google/docs-callback',
+  'http://localhost:5173/google/docs-callback',
+  'http://localhost:3000/google/docs-callback',
+];
+
+function isAllowedRedirectUri(uri: string): boolean {
+  // Check exact match first
+  if (ALLOWED_REDIRECT_URIS.includes(uri)) return true;
+  // Allow Vercel preview deployments
+  try {
+    const url = new URL(uri);
+    if (url.hostname.endsWith('.vercel.app') && url.pathname === '/google/docs-callback') {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -183,7 +224,8 @@ Deno.serve(async (req) => {
         p_user_id: user.id,
       });
 
-      if (tokens && tokens.length > 0) {
+      // Validate response type before accessing properties
+      if (isValidTokenArray(tokens) && tokens.length > 0) {
         const accessToken = tokens[0].access_token;
         // Attempt to revoke token with Google (best effort)
         try {
@@ -210,6 +252,16 @@ Deno.serve(async (req) => {
 
     // Generate OAuth URL
     if (action === 'get_auth_url') {
+      // Determine and validate redirect_uri
+      const finalRedirectUri = redirect_uri || `${Deno.env.get('PUBLIC_SITE_URL') || 'https://virality.gg'}/google/docs-callback`;
+      if (!isAllowedRedirectUri(finalRedirectUri)) {
+        console.error('Invalid redirect_uri attempted:', finalRedirectUri);
+        return new Response(JSON.stringify({ error: 'Invalid redirect_uri' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Generate a secure state parameter for CSRF protection
       const stateData = JSON.stringify({
         user_id: user.id,
@@ -221,7 +273,7 @@ Deno.serve(async (req) => {
       // Build the OAuth URL
       const params = new URLSearchParams({
         client_id: GOOGLE_CLIENT_ID,
-        redirect_uri: redirect_uri || `${Deno.env.get('PUBLIC_SITE_URL') || 'https://virality.gg'}/google/docs-callback`,
+        redirect_uri: finalRedirectUri,
         response_type: 'code',
         scope: SCOPES,
         access_type: 'offline', // Get refresh token
@@ -251,6 +303,15 @@ Deno.serve(async (req) => {
 
       if (!redirect_uri) {
         return new Response(JSON.stringify({ error: 'redirect_uri is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Validate redirect_uri against allowlist
+      if (!isAllowedRedirectUri(redirect_uri)) {
+        console.error('Invalid redirect_uri in exchange_code:', redirect_uri);
+        return new Response(JSON.stringify({ error: 'Invalid redirect_uri' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
