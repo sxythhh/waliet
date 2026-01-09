@@ -52,6 +52,7 @@ import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 interface UserProfile {
   username?: string;
   avatar_url?: string;
@@ -227,6 +228,7 @@ interface Transaction {
 type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
 export function WalletTab() {
   const navigate = useNavigate();
+  const { isAdmin } = useAdminCheck();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [earningsData, setEarningsData] = useState<EarningsDataPoint[]>([]);
@@ -1362,11 +1364,12 @@ export function WalletTab() {
     }
   };
   const handleRequestPayout = async () => {
-    if (!wallet?.balance || wallet.balance < 20) {
+    const minBalanceRequired = isAdmin ? 1 : 20;
+    if (!wallet?.balance || wallet.balance < minBalanceRequired) {
       toast({
         variant: "destructive",
         title: "Insufficient Balance",
-        description: "Minimum payout amount is $20"
+        description: `Minimum payout amount is $${minBalanceRequired}`
       });
       return;
     }
@@ -1426,8 +1429,8 @@ export function WalletTab() {
       return;
     }
 
-    // Bank minimum is $250
-    const minimumAmount = selectedMethod.method === 'bank' ? 250 : 20;
+    // Bank minimum is $250, others $20 (admins bypass minimum)
+    const minimumAmount = isAdmin ? 1 : (selectedMethod.method === 'bank' ? 250 : 20);
     if (amount < minimumAmount) {
       toast({
         variant: "destructive",
@@ -2288,7 +2291,9 @@ export function WalletTab() {
               <div className="flex gap-2 flex-wrap">
                 {(() => {
                 const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                const amounts = method?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500];
+                const amounts = isAdmin
+                  ? [1, 5, 10, 20]
+                  : (method?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500]);
                 return amounts.map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
                       ${amount}
                     </Button>);
@@ -2297,7 +2302,7 @@ export function WalletTab() {
               <p className="text-xs text-muted-foreground">
                 {(() => {
                 const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
-                const minimum = method?.method === 'bank' ? '$250.00' : '$20.00';
+                const minimum = isAdmin ? '$1.00' : (method?.method === 'bank' ? '$250.00' : '$20.00');
                 return `Minimum: ${minimum} • Available: $${wallet?.balance?.toFixed(2) || "0.00"}`;
               })()}
               </p>
@@ -2411,7 +2416,7 @@ export function WalletTab() {
             const isPayPal = selectedMethod?.method === 'paypal';
             const isUpi = selectedMethod?.method === 'upi';
             const isBank = selectedMethod?.method === 'bank';
-            const minimumAmount = isBank ? 250 : 20;
+            const minimumAmount = isAdmin ? 1 : (isBank ? 250 : 20);
 
             // Don't show fee breakdown for PayPal or UPI
             if (isPayPal || isUpi || amount < minimumAmount) {

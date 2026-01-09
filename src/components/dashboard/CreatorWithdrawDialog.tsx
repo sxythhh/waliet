@@ -11,6 +11,7 @@ import { Plus, Building2, Smartphone, CreditCard, Check, X, FileText, AlertTrian
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { useTaxFormRequirement } from "@/hooks/useTaxFormRequirement";
 import { TaxFormWizard } from "@/components/tax/TaxFormWizard";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import walletActiveIcon from "@/assets/wallet-active.svg";
 import ethereumLogo from "@/assets/ethereum-logo.png";
@@ -42,6 +43,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
   const [taxFormWizardOpen, setTaxFormWizardOpen] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
+  const { isAdmin } = useAdminCheck();
 
   // Tax form requirement check
   const { requirement: taxRequirement, isLoading: taxLoading, refetch: refetchTaxRequirement } = useTaxFormRequirement(
@@ -227,8 +229,8 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
       return;
     }
 
-    // Bank minimum is $250
-    const minimumAmount = selectedMethod.method === 'bank' ? 250 : 20;
+    // Bank minimum is $250, others $20 (admins bypass minimum)
+    const minimumAmount = isAdmin ? 1 : (selectedMethod.method === 'bank' ? 250 : 20);
     if (amount < minimumAmount) {
       toast({
         variant: "destructive",
@@ -360,10 +362,13 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
   };
 
   const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
-  const minimumAmount = selectedMethod?.method === 'bank' ? 250 : 20;
-  const amounts = selectedMethod?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500];
+  const minimumAmount = isAdmin ? 1 : (selectedMethod?.method === 'bank' ? 250 : 20);
+  const amounts = isAdmin
+    ? [1, 5, 10, 20]
+    : (selectedMethod?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500]);
 
-  const canWithdraw = wallet && wallet.balance >= 20 && payoutMethods.length > 0 && pendingWithdrawals === 0;
+  const minBalanceRequired = isAdmin ? 1 : 20;
+  const canWithdraw = wallet && wallet.balance >= minBalanceRequired && payoutMethods.length > 0 && pendingWithdrawals === 0;
 
   return (
     <>
@@ -378,10 +383,10 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
 
         {loading ? (
           <div className="py-8 text-center text-muted-foreground font-inter tracking-[-0.5px]">Loading...</div>
-        ) : !wallet || wallet.balance < 20 ? (
+        ) : !wallet || wallet.balance < minBalanceRequired ? (
           <div className="space-y-4 py-4">
             <div className="py-4 text-center">
-              <p className="text-muted-foreground font-inter tracking-[-0.5px]">Minimum balance of $20 required to withdraw.</p>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">Minimum balance of ${minBalanceRequired} required to withdraw.</p>
               <p className="text-sm text-muted-foreground mt-2 font-inter tracking-[-0.5px]">Current balance: ${wallet?.balance?.toFixed(2) || '0.00'}</p>
             </div>
             

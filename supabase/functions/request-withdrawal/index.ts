@@ -73,8 +73,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Minimum amount validation
-    const minimumAmount = payout_method === 'bank' ? 250 : 20;
+    // Check if user is an admin (admins can bypass minimum amount)
+    const { data: adminRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    const isAdmin = !!adminRole;
+
+    // Minimum amount validation (admins bypass minimum)
+    const minimumAmount = isAdmin ? 1 : (payout_method === 'bank' ? 250 : 20);
     if (amount < minimumAmount) {
       return new Response(JSON.stringify({
         error: `Minimum payout amount is $${minimumAmount}${payout_method === 'bank' ? ' for bank transfers' : ''}`
