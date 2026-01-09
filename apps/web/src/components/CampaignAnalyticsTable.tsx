@@ -1699,6 +1699,7 @@ export function CampaignAnalyticsTable({
                           <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 hidden md:table-cell">Views</TableHead>
                           <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5">Date</TableHead>
                           <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 text-right">Amount</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground px-4 py-2.5 w-[60px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1747,6 +1748,30 @@ export function CampaignAnalyticsTable({
                                 }`}>
                                   {Number(txn.amount) >= 0 ? '+' : ''}${Number(txn.amount).toFixed(2)}
                                 </span>
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                {txn.type === 'earning' && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                                          onClick={() => {
+                                            setSelectedTransaction(txn);
+                                            setRevertDialogOpen(true);
+                                          }}
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Revert payment</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
                               </TableCell>
                             </TableRow>
                           );
