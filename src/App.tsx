@@ -56,7 +56,6 @@ const New = lazy(() => import("./pages/New"));
 const Contact = lazy(() => import("./pages/Contact"));
 const CaseStudies = lazy(() => import("./pages/CaseStudies"));
 const BlueprintDetail = lazy(() => import("./pages/BlueprintDetail"));
-const BlueprintPreview = lazy(() => import("./pages/BlueprintPreview"));
 const Resources = lazy(() => import("./pages/Resources"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BrandPublicPage = lazy(() => import("./pages/BrandPublicPage"));
@@ -198,7 +197,6 @@ const App = () => (
                   } />
                   <Route path="/boost/:id" element={<BoostRedirect />} />
                   <Route path="/blueprint/:id" element={<BlueprintDetail />} />
-                  <Route path="/blueprint/:blueprintId/preview" element={<BlueprintPreview />} />
                   <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
                   <Route path="/join/:slug" element={<JoinRedirect />} />
                   <Route path="/c/:slug" element={<CampaignApply />} />
