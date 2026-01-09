@@ -33,8 +33,18 @@ Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Validate environment variables first
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables');
+      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body first to check the action
@@ -70,9 +80,29 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-    if (authError || !user) {
+    // Wrap getUser in try/catch as it can throw exceptions
+    let user: { id: string } | null = null;
+    try {
+      const { data, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !data?.user) {
+        console.log('Auth validation failed:', authError?.message || 'No user data');
+        if (action === 'check_connection') {
+          return new Response(JSON.stringify({
+            success: true,
+            connected: false,
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      user = data.user;
+    } catch (authException) {
+      console.error('Exception during auth validation:', authException);
       if (action === 'check_connection') {
         return new Response(JSON.stringify({
           success: true,
@@ -81,7 +111,16 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Safety check - user should never be null here, but TypeScript doesn't know that
+    if (!user) {
+      console.error('User is null after auth validation - this should not happen');
+      return new Response(JSON.stringify({ error: 'Authentication error' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -91,24 +130,38 @@ Deno.serve(async (req) => {
 
     // Check if user has a valid connection (doesn't need Google credentials)
     if (action === 'check_connection') {
-      const { data: hasConnection, error: rpcError } = await supabase.rpc('check_google_docs_connection', {
-        p_user_id: user.id,
-      });
+      try {
+        const { data: hasConnection, error: rpcError } = await supabase.rpc('check_google_docs_connection', {
+          p_user_id: user.id,
+        });
 
-      if (rpcError) {
-        console.error('RPC error checking connection:', rpcError);
-        return new Response(JSON.stringify({ error: rpcError.message }), {
-          status: 500,
+        if (rpcError) {
+          console.error('RPC error checking connection:', rpcError);
+          // Return connected: false on RPC errors instead of 500
+          return new Response(JSON.stringify({
+            success: true,
+            connected: false,
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          connected: hasConnection || false,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (rpcCatchError) {
+        console.error('Exception in check_connection:', rpcCatchError);
+        // Return connected: false on any error instead of 500
+        return new Response(JSON.stringify({
+          success: true,
+          connected: false,
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-
-      return new Response(JSON.stringify({
-        success: true,
-        connected: hasConnection || false,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
 
     // All other actions require Google OAuth credentials
