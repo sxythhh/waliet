@@ -324,13 +324,15 @@ export function DiscordServerSettings({
             </div>
           </div>
 
-          <div className="px-4 py-3 bg-muted/30 border-t border-border/50">
-            <div className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-              <p className="font-medium text-foreground mb-1">Role Assignment Setup</p>
-              <p>
-                To assign roles to creators, make sure the bot's role is positioned <strong>above</strong> the roles
-                you want to assign in your Discord server's role settings. Roles at a higher position can manage roles below them.
-              </p>
+          <div className="px-4 py-3">
+            <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+              <div className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                <p className="font-medium text-foreground mb-1">Role Assignment Setup</p>
+                <p>
+                  To assign roles to creators, make sure the bot's role is positioned <strong>above</strong> the roles
+                  you want to assign in your Discord server's role settings. Roles at a higher position can manage roles below them.
+                </p>
+              </div>
             </div>
           </div>
 
