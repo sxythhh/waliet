@@ -103,8 +103,8 @@ const AdminDialogContent = React.forwardRef<
             "absolute right-4 top-4 z-10",
             "rounded-full p-1.5",
             "text-muted-foreground hover:text-foreground",
-            BACKGROUNDS.hover,
-            TRANSITIONS.fast,
+            "hover:bg-muted/30 dark:hover:bg-muted/20",
+            "transition-all duration-200",
             "focus:outline-none focus:ring-0"
           )}
         >
@@ -275,9 +275,9 @@ export function AdminConfirmDialog({
             onClick={handleCancel}
             disabled={loading}
             className={cn(
-              "h-9 px-4 rounded-md text-sm font-medium",
-              BACKGROUNDS.hover,
-              TRANSITIONS.fast,
+              "h-10 px-4 rounded-lg text-sm font-medium font-inter tracking-[-0.5px]",
+              "hover:bg-muted/30 dark:hover:bg-muted/20",
+              "transition-all duration-200",
               "disabled:opacity-50"
             )}
           >
@@ -288,12 +288,12 @@ export function AdminConfirmDialog({
             onClick={handleConfirm}
             disabled={loading}
             className={cn(
-              "h-9 px-4 rounded-md text-sm font-medium",
-              TRANSITIONS.fast,
+              "h-10 px-4 rounded-lg text-sm font-medium font-inter tracking-[-0.5px]",
+              "transition-all duration-200",
               "disabled:opacity-50",
               variant === "destructive"
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-foreground text-background hover:bg-foreground/90"
+                ? "bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 border-t border-primary/70"
             )}
           >
             {loading ? (

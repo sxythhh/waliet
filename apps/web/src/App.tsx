@@ -43,6 +43,7 @@ const DiscordBotOAuthCallback = lazy(() => import("./components/DiscordBotOAuthC
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const GoogleCalendarOAuthCallback = lazy(() => import("./components/GoogleCalendarOAuthCallback").then(m => ({ default: m.GoogleCalendarOAuthCallback })));
 const GoogleDocsOAuthCallback = lazy(() => import("./components/GoogleDocsOAuthCallback").then(m => ({ default: m.GoogleDocsOAuthCallback })));
+const NotionOAuthCallback = lazy(() => import("./components/NotionOAuthCallback").then(m => ({ default: m.NotionOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -165,6 +166,7 @@ const App = () => (
                   <Route path="/x/callback" element={<XOAuthCallback />} />
                   <Route path="/google/calendar-callback" element={<GoogleCalendarOAuthCallback />} />
                   <Route path="/google/docs-callback" element={<GoogleDocsOAuthCallback />} />
+                  <Route path="/notion/callback" element={<NotionOAuthCallback />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/discover" element={<Discover />} />
                   <Route path="/creator-terms" element={<CreatorTerms />} />

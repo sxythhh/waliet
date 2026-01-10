@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import { WalletDropdown } from "@/components/WalletDropdown";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
+import { BrandUpgradeCTA } from "@/components/brand/BrandUpgradeCTA";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { InviteMemberDialog } from "@/components/brand/InviteMemberDialog";
@@ -199,6 +200,7 @@ export function AppSidebar() {
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
   const [currentBrandColor, setCurrentBrandColor] = useState<string | null>(null);
   const [currentBrandSubscriptionStatus, setCurrentBrandSubscriptionStatus] = useState<string | null>(null);
+  const [currentBrandSubscriptionPlan, setCurrentBrandSubscriptionPlan] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -242,11 +244,12 @@ export function AppSidebar() {
           setCurrentBrandName(brandFromAll.name);
           setCurrentBrandLogo(brandFromAll.logo_url);
           setCurrentBrandColor(brandFromAll.brand_color);
-          // Fetch subscription status
+          // Fetch subscription status and plan
           const {
             data
-          } = await supabase.from("brands").select("subscription_status").eq("id", brandFromAll.id).single();
+          } = await supabase.from("brands").select("subscription_status, subscription_plan").eq("id", brandFromAll.id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
+          setCurrentBrandSubscriptionPlan(data?.subscription_plan || null);
           // Fetch member count
           const {
             count
@@ -259,11 +262,12 @@ export function AppSidebar() {
           setCurrentBrandName(brandFromMembership.brands.name);
           setCurrentBrandLogo(brandFromMembership.brands.logo_url);
           setCurrentBrandColor(brandFromMembership.brands.brand_color);
-          // Fetch subscription status
+          // Fetch subscription status and plan
           const {
             data
-          } = await supabase.from("brands").select("subscription_status").eq("id", brandFromMembership.brand_id).single();
+          } = await supabase.from("brands").select("subscription_status, subscription_plan").eq("id", brandFromMembership.brand_id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
+          setCurrentBrandSubscriptionPlan(data?.subscription_plan || null);
           // Fetch member count
           const {
             count
@@ -275,6 +279,7 @@ export function AppSidebar() {
         }
       } else {
         setCurrentBrandSubscriptionStatus(null);
+        setCurrentBrandSubscriptionPlan(null);
         setCurrentBrandMemberCount(0);
       }
     };
@@ -795,12 +800,14 @@ export function AppSidebar() {
 
         {/* Joined Campaigns Section - Hidden, campaigns shown on home page instead */}
 
-        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && <div className="px-2 py-1">
-            <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-lg font-inter text-[14px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
-              <img src={nutFillIcon} alt="" className="h-4 w-4" />
-              Upgrade Plan
-            </button>
-          </div>}
+        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && currentBrandId && (
+            <BrandUpgradeCTA
+              brandId={currentBrandId}
+              subscriptionPlan={currentBrandSubscriptionPlan}
+              onUpgrade={() => setSubscriptionGateOpen(true)}
+              variant="sidebar"
+            />
+          )}
 
 
         {/* User Profile Section */}

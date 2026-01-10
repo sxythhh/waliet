@@ -1,46 +1,39 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Search, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageLoading } from "@/components/ui/loading-bar";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ghostLogoBlue from "@/assets/ghost-logo-blue.png";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-// Material Icons
-import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
-import PeopleOutlined from "@mui/icons-material/PeopleOutlined";
-import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
-import CampaignOutlined from "@mui/icons-material/CampaignOutlined";
-import AccountBalanceWalletOutlined from "@mui/icons-material/AccountBalanceWalletOutlined";
-import ShareOutlined from "@mui/icons-material/ShareOutlined";
-import ArticleOutlined from "@mui/icons-material/ArticleOutlined";
-import MailOutlined from "@mui/icons-material/MailOutlined";
-import SupportAgentOutlined from "@mui/icons-material/SupportAgentOutlined";
-import AdminPanelSettingsOutlined from "@mui/icons-material/AdminPanelSettingsOutlined";
-import BuildOutlined from "@mui/icons-material/BuildOutlined";
-import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
-import ReceiptLongOutlined from "@mui/icons-material/ReceiptLongOutlined";
+// Material Fill Icons (consolidated 8 pages)
+import Dashboard from "@mui/icons-material/Dashboard";
+import TrendingUp from "@mui/icons-material/TrendingUp";
+import Storefront from "@mui/icons-material/Storefront";
+import People from "@mui/icons-material/People";
+import Savings from "@mui/icons-material/Savings";
+import SupportAgent from "@mui/icons-material/SupportAgent";
+import Security from "@mui/icons-material/Security";
+import Settings from "@mui/icons-material/Settings";
+import Search from "@mui/icons-material/Search";
+import Logout from "@mui/icons-material/Logout";
 
-// Lazy load tab content
-const OverviewContent = lazy(() => import("./admin/Overview"));
-const UsersContent = lazy(() => import("./admin/Users"));
+// Lazy load consolidated tab content
+const DashboardContent = lazy(() => import("./admin/Dashboard"));
+const AnalyticsContent = lazy(() => import("./admin/Analytics"));
 const BrandsContent = lazy(() => import("./admin/Brands"));
+const UsersContent = lazy(() => import("./admin/Users"));
 const FinanceContent = lazy(() => import("./admin/Finance"));
-const ReferralsContent = lazy(() => import("./admin/Referrals"));
-const ResourcesContent = lazy(() => import("./admin/Resources"));
-const TicketsContent = lazy(() => import("./admin/Tickets"));
-const PermissionsContent = lazy(() => import("./admin/Permissions"));
-const CampaignsContent = lazy(() => import("./admin/Campaigns"));
-const EmailsContent = lazy(() => import("./admin/Emails"));
-const ToolsContent = lazy(() => import("./admin/Tools"));
-const TaxFormsContent = lazy(() => import("./admin/TaxForms"));
+const SupportContent = lazy(() => import("./admin/Tickets")); // Renamed
+const SecurityContent = lazy(() => import("./admin/Security"));
+const SettingsContent = lazy(() => import("./admin/Settings"));
 
 function TabLoader() {
   return (
@@ -61,20 +54,16 @@ function TabLoader() {
   );
 }
 
-// Sidebar navigation items with Material icons
+// Sidebar navigation items with Material Fill icons (consolidated 8 pages)
 const navItems = [
-  { id: "overview", label: "Overview", icon: DashboardOutlined },
-  { id: "users", label: "Users", icon: PeopleOutlined },
-  { id: "brands", label: "Brands", icon: BusinessOutlined },
-  { id: "campaigns", label: "Campaigns", icon: CampaignOutlined },
-  { id: "finance", label: "Finance", icon: AccountBalanceWalletOutlined },
-  // { id: "taxforms", label: "Tax Forms", icon: ReceiptLongOutlined }, // TEMPORARILY HIDDEN
-  { id: "referrals", label: "Referrals", icon: ShareOutlined },
-  { id: "content", label: "Content", icon: ArticleOutlined },
-  { id: "emails", label: "Emails", icon: MailOutlined },
-  { id: "tickets", label: "Tickets", icon: SupportAgentOutlined },
-  { id: "permissions", label: "Permissions", icon: AdminPanelSettingsOutlined },
-  { id: "tools", label: "Tools", icon: BuildOutlined },
+  { id: "dashboard", label: "Dashboard", icon: Dashboard },
+  { id: "analytics", label: "Analytics", icon: TrendingUp },
+  { id: "brands", label: "Brands", icon: Storefront },
+  { id: "users", label: "Users", icon: People },
+  { id: "finance", label: "Finance", icon: Savings },
+  { id: "support", label: "Support", icon: SupportAgent },
+  { id: "security", label: "Security", icon: Security },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 // Sidebar navigation component
@@ -105,8 +94,8 @@ function AdminNav({
           onClick={onSearchOpen}
           className="w-full flex items-center gap-2 h-9 px-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-lg transition-colors text-left"
         >
-          <SearchOutlined sx={{ fontSize: 16 }} className="text-white/30" />
-          <span className="text-[13px] text-white/30 flex-1">Search</span>
+          <Search sx={{ fontSize: 16 }} className="text-white/30" />
+          <span className="text-[13px] text-white/30 flex-1 font-inter tracking-[-0.3px]">Search</span>
           <kbd className="text-[11px] text-white/20 font-medium">⌘K</kbd>
         </button>
       </div>
@@ -144,9 +133,9 @@ function AdminNav({
       <div className="p-3 border-t border-white/5">
         <button
           onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium font-inter tracking-[-0.3px] text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
-          <LogoutOutlined sx={{ fontSize: 18 }} />
+          <Logout sx={{ fontSize: 18 }} />
           <span>Sign Out</span>
         </button>
       </div>
@@ -154,27 +143,25 @@ function AdminNav({
   );
 }
 
-// Content renderer based on active tab
+// Content renderer based on active tab (consolidated 8 pages)
 function AdminContent({ activeTab }: { activeTab: string }) {
   const content = {
-    overview: <OverviewContent />,
-    users: <UsersContent />,
+    dashboard: <DashboardContent />,
+    analytics: <AnalyticsContent />,
     brands: <BrandsContent />,
-    campaigns: <CampaignsContent />,
+    users: <UsersContent />,
     finance: <FinanceContent />,
-    referrals: <ReferralsContent />,
-    content: <ResourcesContent />,
-    emails: <EmailsContent />,
-    tickets: <TicketsContent />,
-    permissions: <PermissionsContent />,
-    tools: <ToolsContent />,
-    taxforms: <TaxFormsContent />,
+    support: <SupportContent />,
+    security: <SecurityContent />,
+    settings: <SettingsContent />,
   };
 
   return (
-    <Suspense fallback={<TabLoader />}>
-      {content[activeTab as keyof typeof content] || <OverviewContent />}
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<TabLoader />}>
+        {content[activeTab as keyof typeof content] || <DashboardContent />}
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -186,7 +173,7 @@ export default function Admin() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  const activeTab = searchParams.get("tab") || "overview";
+  const activeTab = searchParams.get("tab") || "dashboard";
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -277,7 +264,7 @@ export default function Admin() {
             className="h-9 w-9"
             onClick={() => setSearchOpen(true)}
           >
-            <Search className="h-5 w-5" />
+            <Search sx={{ fontSize: 20 }} />
           </Button>
         </header>
 

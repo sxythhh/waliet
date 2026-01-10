@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { CampaignCard } from '../components/CampaignCard';
+import { colors } from '../theme/colors';
 import type { Campaign } from '@virality/shared-types';
 
 const PLATFORMS = ['all', 'tiktok', 'instagram', 'youtube'] as const;
@@ -90,11 +91,11 @@ export function CampaignsScreen() {
       <View style={styles.searchContainer}>
         <LiquidGlassView style={StyleSheet.absoluteFill} effect="regular" />
         <View style={styles.searchContent}>
-          <Icon name="magnify" size={20} color="#666" style={styles.searchIcon} />
+          <Icon name="magnify" size={20} color={colors.mutedForeground} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search campaigns..."
-            placeholderTextColor="#666"
+            placeholderTextColor={colors.mutedForeground}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -102,7 +103,7 @@ export function CampaignsScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-              <Icon name="close-circle" size={18} color="#666" />
+              <Icon name="close-circle" size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
         </View>
@@ -122,7 +123,7 @@ export function CampaignsScreen() {
             <Icon
               name={platformIcons[platform]}
               size={16}
-              color={selectedPlatform === platform ? '#fff' : '#888'}
+              color={selectedPlatform === platform ? colors.foreground : colors.mutedForeground}
               style={styles.filterIcon}
             />
             <Text
@@ -139,7 +140,7 @@ export function CampaignsScreen() {
 
       {/* Results count */}
       <View style={styles.resultRow}>
-        <Icon name="fire" size={16} color="#f59e0b" />
+        <Icon name="fire" size={16} color={colors.warning} />
         <Text style={styles.resultCount}>
           {filteredCampaigns?.length || 0} campaign{filteredCampaigns?.length !== 1 ? 's' : ''} available
         </Text>
@@ -152,7 +153,7 @@ export function CampaignsScreen() {
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Discover</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading campaigns...</Text>
         </View>
       </SafeAreaView>
@@ -164,10 +165,10 @@ export function CampaignsScreen() {
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Discover</Text>
         <View style={styles.errorContainer}>
-          <Icon name="alert-circle-outline" size={48} color="#ef4444" />
+          <Icon name="alert-circle-outline" size={48} color={colors.destructive} />
           <Text style={styles.errorText}>Error loading campaigns</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Icon name="refresh" size={18} color="#fff" style={styles.retryIcon} />
+            <Icon name="refresh" size={18} color={colors.foreground} style={styles.retryIcon} />
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -191,13 +192,13 @@ export function CampaignsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            tintColor="#6366f1"
-            colors={['#6366f1']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="magnify-close" size={48} color="#666" />
+            <Icon name="magnify-close" size={48} color={colors.mutedForeground} />
             <Text style={styles.emptyText}>No campaigns found</Text>
             <Text style={styles.emptySubtext}>
               {searchQuery || selectedPlatform !== 'all'
@@ -214,15 +215,16 @@ export function CampaignsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    letterSpacing: -0.5,
   },
   header: {
     paddingBottom: 16,
@@ -232,13 +234,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: colors.border,
   },
   searchContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.muted,
   },
   searchIcon: {
     marginRight: 8,
@@ -246,7 +248,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 48,
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 16,
   },
   clearButton: {
@@ -263,24 +265,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.muted,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: colors.border,
   },
   filterChipActive: {
-    backgroundColor: '#6366f1',
-    borderColor: '#6366f1',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterIcon: {
     marginRight: 6,
   },
   filterChipText: {
-    color: '#888',
+    color: colors.mutedForeground,
     fontSize: 14,
     fontWeight: '500',
   },
   filterChipTextActive: {
-    color: '#fff',
+    color: colors.foreground,
   },
   resultRow: {
     flexDirection: 'row',
@@ -288,7 +290,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   resultCount: {
-    color: '#666',
+    color: colors.mutedForeground,
     fontSize: 13,
     marginLeft: 6,
   },
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#888',
+    color: colors.mutedForeground,
     fontSize: 14,
     marginTop: 12,
   },
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   errorText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 18,
     fontWeight: '600',
     marginTop: 16,
@@ -325,14 +327,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   retryIcon: {
     marginRight: 8,
   },
   retryButtonText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -341,14 +343,14 @@ const styles = StyleSheet.create({
     paddingTop: 48,
   },
   emptyText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 18,
     fontWeight: '600',
     marginTop: 16,
     marginBottom: 4,
   },
   emptySubtext: {
-    color: '#888',
+    color: colors.mutedForeground,
     fontSize: 14,
     textAlign: 'center',
   },

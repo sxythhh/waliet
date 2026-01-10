@@ -421,26 +421,6 @@ export function InsightsMetricsGrid() {
           </div>
         </AdminCard>
       </div>
-
-      {/* Fraud Response Rate */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <AdminMiniStatCard
-          label="Total Flagged"
-          value={metrics.fraudResponse.totalFlagged.toLocaleString()}
-        />
-        <AdminMiniStatCard
-          label="Evidence Submitted"
-          value={metrics.fraudResponse.evidenceSubmitted.toLocaleString()}
-        />
-        <AdminMiniStatCard
-          label="Response Rate"
-          value={`${metrics.fraudResponse.evidenceResponseRate.toFixed(0)}%`}
-        />
-        <AdminMiniStatCard
-          label="Total Likes"
-          value={formatNumber(metrics.videoPerformance.totalLikes)}
-        />
-      </div>
     </div>
   );
 }

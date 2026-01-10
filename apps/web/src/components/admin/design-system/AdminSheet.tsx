@@ -107,8 +107,8 @@ const AdminSheetContent = React.forwardRef<
               "absolute right-4 top-4 z-10",
               "rounded-full p-1.5",
               "text-muted-foreground hover:text-foreground",
-              BACKGROUNDS.hover,
-              TRANSITIONS.fast,
+              "hover:bg-muted/30 dark:hover:bg-muted/20",
+              "transition-all duration-200",
               "focus:outline-none focus:ring-0"
             )}
           >

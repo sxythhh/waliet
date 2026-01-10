@@ -24,28 +24,28 @@ export function AdminMetric({
       onClick={onClick}
       className={cn(
         "rounded-xl p-5",
-        "bg-muted/30",
-        "border border-border",
-        onClick && "cursor-pointer hover:bg-muted/50",
+        "bg-card dark:bg-[#0e0e0e]",
+        "border border-border/50",
+        onClick && "cursor-pointer hover:border-border transition-all duration-200",
         className
       )}
     >
-      <p className="text-xs text-muted-foreground font-inter font-medium tracking-[-0.2px] mb-3">
+      <p className="text-xs text-muted-foreground font-inter font-medium tracking-[-0.3px] mb-3">
         {label}
       </p>
 
       <div className="flex items-end justify-between gap-3">
-        <div className="text-2xl font-semibold font-inter tracking-[-0.5px] text-foreground">
+        <div className="text-2xl font-semibold font-inter tracking-[-0.5px] text-foreground tabular-nums">
           {value}
         </div>
 
         {change && (
           <div
             className={cn(
-              "flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium font-inter",
+              "flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold font-inter tracking-[-0.3px]",
               change.isPositive
-                ? "bg-muted text-foreground"
-                : "bg-muted text-foreground"
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-red-500/10 text-red-600 dark:text-red-400"
             )}
           >
             <svg
@@ -67,7 +67,7 @@ export function AdminMetric({
       </div>
 
       {change?.label && (
-        <p className="text-[10px] text-muted-foreground/60 font-inter tracking-[-0.2px] mt-2">
+        <p className="text-[10px] text-muted-foreground/60 font-inter tracking-[-0.3px] mt-2">
           {change.label}
         </p>
       )}
@@ -96,8 +96,8 @@ export function AdminAlertMetric({
       onClick={onClick}
       className={cn(
         "rounded-xl p-5 border",
-        "bg-muted/30 border-border",
-        onClick && "cursor-pointer hover:bg-muted/50",
+        "bg-card dark:bg-[#0e0e0e] border-border/50",
+        onClick && "cursor-pointer hover:border-border transition-all duration-200",
         className
       )}
     >
@@ -105,16 +105,16 @@ export function AdminAlertMetric({
         <div
           className={cn(
             "w-1.5 h-1.5 rounded-full",
-            severity === "critical" && "bg-foreground animate-pulse",
-            severity === "warning" && "bg-muted-foreground",
-            severity === "info" && "bg-muted-foreground/50"
+            severity === "critical" && "bg-red-500 animate-pulse",
+            severity === "warning" && "bg-amber-500",
+            severity === "info" && "bg-blue-500"
           )}
         />
-        <p className="text-xs text-muted-foreground font-inter font-medium tracking-[-0.2px]">
+        <p className="text-xs text-muted-foreground font-inter font-medium tracking-[-0.3px]">
           {label}
         </p>
       </div>
-      <div className="text-2xl font-semibold font-inter tracking-[-0.5px] text-foreground">
+      <div className="text-2xl font-semibold font-inter tracking-[-0.5px] text-foreground tabular-nums">
         {value}
       </div>
     </div>

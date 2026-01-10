@@ -1,191 +1,24 @@
 import { useState, useEffect } from "react";
-import {
-  Activity,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Server,
-  Database,
-  Shield,
-  Cloud,
-  Zap,
-  Globe,
-  Clock,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  RefreshCw,
-  ChevronRight,
-  Bell,
-  Settings,
-  DollarSign,
-  Video,
-  Building2,
-  CreditCard
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { format, subMinutes, subHours, subDays, startOfDay, startOfMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-
-// Demo data for system health
-const SERVICES = [
-  {
-    id: "api",
-    name: "API Gateway",
-    status: "operational",
-    latency: 45,
-    uptime: 99.99,
-    icon: Server,
-    lastCheck: subMinutes(new Date(), 1)
-  },
-  {
-    id: "database",
-    name: "PostgreSQL Database",
-    status: "operational",
-    latency: 12,
-    uptime: 99.98,
-    icon: Database,
-    lastCheck: subMinutes(new Date(), 1)
-  },
-  {
-    id: "auth",
-    name: "Authentication",
-    status: "operational",
-    latency: 89,
-    uptime: 99.95,
-    icon: Shield,
-    lastCheck: subMinutes(new Date(), 2)
-  },
-  {
-    id: "storage",
-    name: "File Storage",
-    status: "operational",
-    latency: 156,
-    uptime: 99.97,
-    icon: Cloud,
-    lastCheck: subMinutes(new Date(), 1)
-  },
-  {
-    id: "functions",
-    name: "Edge Functions",
-    status: "degraded",
-    latency: 234,
-    uptime: 99.85,
-    icon: Zap,
-    lastCheck: subMinutes(new Date(), 3)
-  },
-  {
-    id: "cdn",
-    name: "CDN / Assets",
-    status: "operational",
-    latency: 23,
-    uptime: 99.99,
-    icon: Globe,
-    lastCheck: subMinutes(new Date(), 1)
-  },
-];
-
-const RECENT_INCIDENTS = [
-  {
-    id: "1",
-    title: "Edge Functions Latency Increase",
-    status: "investigating",
-    severity: "warning",
-    startedAt: subHours(new Date(), 2),
-    description: "Investigating increased latency in edge function responses"
-  },
-  {
-    id: "2",
-    title: "Database Connection Pool Exhausted",
-    status: "resolved",
-    severity: "critical",
-    startedAt: subDays(new Date(), 1),
-    resolvedAt: subHours(new Date(), 20),
-    description: "Connection pool limit was reached during peak traffic"
-  },
-  {
-    id: "3",
-    title: "Scheduled Maintenance Completed",
-    status: "resolved",
-    severity: "info",
-    startedAt: subDays(new Date(), 3),
-    resolvedAt: subDays(new Date(), 3),
-    description: "Database optimization and index rebuilding"
-  },
-];
-
-const METRICS = [
-  {
-    label: "Uptime (30d)",
-    value: "99.97%",
-    trend: "+0.02%",
-    trendUp: true,
-    icon: Clock
-  },
-  {
-    label: "Avg Response",
-    value: "89ms",
-    trend: "-12ms",
-    trendUp: true,
-    icon: Zap
-  },
-  {
-    label: "Error Rate",
-    value: "0.03%",
-    trend: "+0.01%",
-    trendUp: false,
-    icon: AlertTriangle
-  },
-  {
-    label: "Active Users",
-    value: "1,247",
-    trend: "+156",
-    trendUp: true,
-    icon: Users
-  },
-];
-
-// Generate demo uptime data for the last 90 days
-const generateUptimeData = () => {
-  const data = [];
-  for (let i = 89; i >= 0; i--) {
-    const date = subDays(new Date(), i);
-    const uptime = 99.5 + Math.random() * 0.5; // 99.5% - 100%
-    data.push({ date, uptime, hasIncident: uptime < 99.9 });
-  }
-  return data;
-};
-
-const uptimeData = generateUptimeData();
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case "operational": return "text-emerald-500";
-    case "degraded": return "text-amber-500";
-    case "outage": return "text-rose-500";
-    default: return "text-slate-400";
-  }
-}
-
-function getStatusBg(status: string) {
-  switch (status) {
-    case "operational": return "bg-emerald-500";
-    case "degraded": return "bg-amber-500";
-    case "outage": return "bg-rose-500";
-    default: return "bg-slate-400";
-  }
-}
-
-function getSeverityStyles(severity: string) {
-  switch (severity) {
-    case "critical": return { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" };
-    case "warning": return { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20" };
-    case "info": return { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20" };
-    default: return { bg: "bg-slate-500/10", text: "text-slate-500", border: "border-slate-500/20" };
-  }
-}
+import { cn } from "@/lib/utils";
+import { format, subDays } from "date-fns";
+import { Loader2 } from "lucide-react";
+import {
+  CheckCircle,
+  Warning,
+  Error as ErrorIcon,
+  Storage,
+  Security,
+  Cloud,
+  Bolt,
+  Public,
+  People,
+  Receipt,
+  Videocam,
+  Campaign,
+  Payments,
+  Refresh,
+} from "@mui/icons-material";
 
 interface PlatformMetrics {
   totalUsers: number;
@@ -200,16 +33,32 @@ interface PlatformMetrics {
   payoutVolume: number;
 }
 
+// Service status data
+const SERVICES = [
+  { id: "api", name: "API Gateway", status: "operational", latency: 45, uptime: 99.99 },
+  { id: "database", name: "Database", status: "operational", latency: 12, uptime: 99.98 },
+  { id: "auth", name: "Authentication", status: "operational", latency: 89, uptime: 99.95 },
+  { id: "storage", name: "File Storage", status: "operational", latency: 156, uptime: 99.97 },
+  { id: "functions", name: "Edge Functions", status: "degraded", latency: 234, uptime: 99.85 },
+  { id: "cdn", name: "CDN", status: "operational", latency: 23, uptime: 99.99 },
+];
+
+const SERVICE_ICONS: Record<string, typeof Storage> = {
+  api: Public,
+  database: Storage,
+  auth: Security,
+  storage: Cloud,
+  functions: Bolt,
+  cdn: Public,
+};
+
 export default function SystemHealth() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [platformMetrics, setPlatformMetrics] = useState<PlatformMetrics | null>(null);
-  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchPlatformMetrics = async () => {
     try {
-      setMetricsLoading(true);
-
-      // Fetch all metrics in parallel
       const [
         usersResult,
         activeUsersResult,
@@ -220,32 +69,21 @@ export default function SystemHealth() {
         brandsResult,
         payoutsResult
       ] = await Promise.all([
-        // Total users
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        // Active users (last 7 days)
         supabase.from('profiles')
           .select('id', { count: 'exact', head: true })
           .gte('updated_at', subDays(new Date(), 7).toISOString()),
-        // Transactions count and volume
         supabase.from('wallet_transactions').select('amount'),
-        // Video submissions
         supabase.from('campaign_submissions').select('id', { count: 'exact', head: true }),
-        // Total campaigns
         supabase.from('campaigns').select('id', { count: 'exact', head: true }),
-        // Active campaigns
         supabase.from('campaigns')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'active'),
-        // Total brands
         supabase.from('brands').select('id', { count: 'exact', head: true }),
-        // Payouts
         supabase.from('payout_requests').select('amount, status')
       ]);
 
-      // Calculate transaction volume
       const transactionVolume = transactionsResult.data?.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) || 0;
-
-      // Calculate payout volume (completed payouts)
       const completedPayouts = payoutsResult.data?.filter(p => p.status === 'completed') || [];
       const payoutVolume = completedPayouts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
@@ -264,7 +102,7 @@ export default function SystemHealth() {
     } catch (error) {
       console.error('Error fetching platform metrics:', error);
     } finally {
-      setMetricsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -272,403 +110,243 @@ export default function SystemHealth() {
     fetchPlatformMetrics();
   }, []);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    fetchPlatformMetrics().finally(() => {
-      setTimeout(() => setIsRefreshing(false), 500);
-    });
+    await fetchPlatformMetrics();
+    setIsRefreshing(false);
   };
 
   const operationalCount = SERVICES.filter(s => s.status === "operational").length;
   const overallStatus = operationalCount === SERVICES.length ? "operational" :
                         operationalCount >= SERVICES.length - 1 ? "degraded" : "outage";
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="p-6 space-y-6">
+      {/* Overall Status */}
+      <div className={cn(
+        "rounded-xl p-5 flex items-center justify-between",
+        overallStatus === "operational" && "bg-emerald-500/10 border border-emerald-500/20",
+        overallStatus === "degraded" && "bg-amber-500/10 border border-amber-500/20",
+        overallStatus === "outage" && "bg-red-500/10 border border-red-500/20"
+      )}>
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "w-12 h-12 rounded-xl flex items-center justify-center",
+            overallStatus === "operational" && "bg-emerald-500/20",
+            overallStatus === "degraded" && "bg-amber-500/20",
+            overallStatus === "outage" && "bg-red-500/20"
+          )}>
+            {overallStatus === "operational" && <CheckCircle className="text-emerald-500" sx={{ fontSize: 28 }} />}
+            {overallStatus === "degraded" && <Warning className="text-amber-500" sx={{ fontSize: 28 }} />}
+            {overallStatus === "outage" && <ErrorIcon className="text-red-500" sx={{ fontSize: 28 }} />}
+          </div>
           <div>
-            <h1 className="text-3xl font-bold">System Health</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Monitor platform status and performance
+            <h2 className="text-lg font-semibold font-inter tracking-[-0.5px] text-white">
+              {overallStatus === "operational" ? "All Systems Operational" :
+               overallStatus === "degraded" ? "Partial Degradation" :
+               "System Outage"}
+            </h2>
+            <p className="text-sm text-white/50 font-inter tracking-[-0.3px]">
+              {operationalCount} of {SERVICES.length} services running normally
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Bell className="w-4 h-4" />
-              Alerts
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Configure
-            </Button>
-            <Button
-              size="sm"
-              className="gap-2"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-              Refresh
-            </Button>
-          </div>
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm text-white/70 hover:text-white"
+        >
+          <Refresh className={cn("text-white/50", isRefreshing && "animate-spin")} sx={{ fontSize: 16 }} />
+          Refresh
+        </button>
+      </div>
 
-        {/* Overall Status Banner */}
-        <div className={cn(
-          "relative overflow-hidden rounded-2xl border p-6",
-          overallStatus === "operational" && "bg-emerald-500/5 border-emerald-500/20",
-          overallStatus === "degraded" && "bg-amber-500/5 border-amber-500/20",
-          overallStatus === "outage" && "bg-rose-500/5 border-rose-500/20"
-        )}>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center",
-                overallStatus === "operational" && "bg-emerald-500/10",
-                overallStatus === "degraded" && "bg-amber-500/10",
-                overallStatus === "outage" && "bg-rose-500/10"
-              )}>
-                {overallStatus === "operational" && <CheckCircle2 className="w-7 h-7 text-emerald-500" />}
-                {overallStatus === "degraded" && <AlertTriangle className="w-7 h-7 text-amber-500" />}
-                {overallStatus === "outage" && <XCircle className="w-7 h-7 text-rose-500" />}
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold capitalize">
-                  {overallStatus === "operational" ? "All Systems Operational" :
-                   overallStatus === "degraded" ? "Partial System Degradation" :
-                   "System Outage Detected"}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {operationalCount} of {SERVICES.length} services running normally
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Last updated</p>
-              <p className="text-sm font-medium">{format(new Date(), "MMM d, h:mm a")}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {METRICS.map((metric) => (
-            <div
-              key={metric.label}
-              className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-5 hover:bg-card/80 transition-colors"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <metric.icon className="w-5 h-5 text-primary" />
-                </div>
-                <div className={cn(
-                  "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-                  metric.trendUp ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
-                )}>
-                  {metric.trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {metric.trend}
-                </div>
-              </div>
-              <p className="text-2xl font-bold">{metric.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{metric.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Platform Statistics */}
-        <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="font-semibold">Platform Statistics</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Real-time platform usage and activity metrics
-              </p>
-            </div>
-            {metricsLoading && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                Loading...
-              </div>
-            )}
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {/* Users */}
-            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-blue-500" />
-                <span className="text-xs text-muted-foreground">Total Users</span>
-              </div>
-              <p className="text-xl font-bold text-blue-500">
-                {platformMetrics ? platformMetrics.totalUsers.toLocaleString() : '—'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {platformMetrics ? `${platformMetrics.activeUsers.toLocaleString()} active (7d)` : ''}
-              </p>
-            </div>
-
-            {/* Transactions */}
-            <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs text-muted-foreground">Transactions</span>
-              </div>
-              <p className="text-xl font-bold text-emerald-500">
-                {platformMetrics ? platformMetrics.totalTransactions.toLocaleString() : '—'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {platformMetrics ? `$${platformMetrics.transactionVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} volume` : ''}
-              </p>
-            </div>
-
-            {/* Submissions */}
-            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Video className="w-4 h-4 text-purple-500" />
-                <span className="text-xs text-muted-foreground">Submissions</span>
-              </div>
-              <p className="text-xl font-bold text-purple-500">
-                {platformMetrics ? platformMetrics.totalSubmissions.toLocaleString() : '—'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Total videos submitted
-              </p>
-            </div>
-
-            {/* Campaigns */}
-            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Building2 className="w-4 h-4 text-amber-500" />
-                <span className="text-xs text-muted-foreground">Campaigns</span>
-              </div>
-              <p className="text-xl font-bold text-amber-500">
-                {platformMetrics ? platformMetrics.totalCampaigns.toLocaleString() : '—'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {platformMetrics ? `${platformMetrics.activeCampaigns} active` : ''}
-              </p>
-            </div>
-
-            {/* Payouts */}
-            <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <CreditCard className="w-4 h-4 text-rose-500" />
-                <span className="text-xs text-muted-foreground">Payouts</span>
-              </div>
-              <p className="text-xl font-bold text-rose-500">
-                {platformMetrics ? platformMetrics.totalPayouts.toLocaleString() : '—'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {platformMetrics ? `$${platformMetrics.payoutVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} paid out` : ''}
-              </p>
-            </div>
-          </div>
-
-          {/* Brands count */}
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Registered Brands</span>
-              <span className="font-medium">
-                {platformMetrics ? platformMetrics.totalBrands.toLocaleString() : '—'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Services Status */}
-          <div className="lg:col-span-2 bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-semibold">Service Status</h3>
-              <Badge variant="secondary" className="text-xs">
-                {operationalCount}/{SERVICES.length} Healthy
-              </Badge>
-            </div>
-            <div className="space-y-3">
-              {SERVICES.map((service) => (
-                <div
-                  key={service.id}
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-xl border transition-colors cursor-pointer",
-                    "hover:bg-muted/50",
-                    service.status === "degraded" && "bg-amber-500/5 border-amber-500/20",
-                    service.status === "outage" && "bg-rose-500/5 border-rose-500/20",
-                    service.status === "operational" && "border-border/50"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center",
-                      service.status === "operational" && "bg-slate-500/10",
-                      service.status === "degraded" && "bg-amber-500/10",
-                      service.status === "outage" && "bg-rose-500/10"
-                    )}>
-                      <service.icon className={cn(
-                        "w-5 h-5",
-                        getStatusColor(service.status)
-                      )} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{service.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Checked {format(service.lastCheck, "h:mm a")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{service.latency}ms</p>
-                      <p className="text-xs text-muted-foreground">Latency</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{service.uptime}%</p>
-                      <p className="text-xs text-muted-foreground">Uptime</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className={cn(
-                        "w-2.5 h-2.5 rounded-full",
-                        getStatusBg(service.status),
-                        service.status === "operational" && "animate-pulse"
-                      )} />
-                      <span className={cn(
-                        "text-xs font-medium capitalize",
-                        getStatusColor(service.status)
-                      )}>
-                        {service.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Incidents */}
-          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-semibold">Recent Incidents</h3>
-              <Button variant="ghost" size="sm" className="text-xs gap-1">
-                View All <ChevronRight className="w-3 h-3" />
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {RECENT_INCIDENTS.map((incident) => {
-                const styles = getSeverityStyles(incident.severity);
-                return (
-                  <div
-                    key={incident.id}
-                    className={cn(
-                      "p-4 rounded-xl border cursor-pointer transition-colors hover:bg-muted/50",
-                      styles.border,
-                      styles.bg
-                    )}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge
-                        variant="outline"
-                        className={cn("text-[10px] capitalize", styles.text, styles.border)}
-                      >
-                        {incident.status}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(incident.startedAt, "MMM d, h:mm a")}
-                      </span>
-                    </div>
-                    <h4 className="font-medium text-sm mb-1">{incident.title}</h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {incident.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* 90-Day Uptime Grid */}
-        <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="font-semibold">90-Day Uptime</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Daily uptime percentage for the past 90 days
-              </p>
-            </div>
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-emerald-500" />
-                <span className="text-muted-foreground">&gt;99.9%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-amber-500" />
-                <span className="text-muted-foreground">99-99.9%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-rose-500" />
-                <span className="text-muted-foreground">&lt;99%</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-1 flex-wrap">
-            {uptimeData.map((day, i) => (
+      {/* Services Grid */}
+      <div>
+        <h3 className="text-sm font-medium font-inter tracking-[-0.5px] text-white/50 mb-3">Services</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {SERVICES.map((service) => {
+            const Icon = SERVICE_ICONS[service.id] || Public;
+            return (
               <div
-                key={i}
+                key={service.id}
                 className={cn(
-                  "w-3 h-8 rounded-sm transition-all hover:scale-110 cursor-pointer",
-                  day.uptime >= 99.9 && "bg-emerald-500",
-                  day.uptime >= 99 && day.uptime < 99.9 && "bg-amber-500",
-                  day.uptime < 99 && "bg-rose-500"
+                  "rounded-xl p-4 border transition-colors",
+                  service.status === "operational" && "bg-white/[0.02] border-white/[0.06]",
+                  service.status === "degraded" && "bg-amber-500/5 border-amber-500/20",
+                  service.status === "outage" && "bg-red-500/5 border-red-500/20"
                 )}
-                title={`${format(day.date, "MMM d")}: ${day.uptime.toFixed(2)}%`}
-              />
-            ))}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className={cn(
+                    "w-9 h-9 rounded-lg flex items-center justify-center",
+                    service.status === "operational" && "bg-white/[0.05]",
+                    service.status === "degraded" && "bg-amber-500/10",
+                    service.status === "outage" && "bg-red-500/10"
+                  )}>
+                    <Icon className={cn(
+                      service.status === "operational" && "text-white/40",
+                      service.status === "degraded" && "text-amber-500",
+                      service.status === "outage" && "text-red-500"
+                    )} sx={{ fontSize: 18 }} />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className={cn(
+                      "w-2 h-2 rounded-full",
+                      service.status === "operational" && "bg-emerald-500",
+                      service.status === "degraded" && "bg-amber-500",
+                      service.status === "outage" && "bg-red-500"
+                    )} />
+                    <span className={cn(
+                      "text-[10px] font-medium font-inter capitalize",
+                      service.status === "operational" && "text-emerald-500",
+                      service.status === "degraded" && "text-amber-500",
+                      service.status === "outage" && "text-red-500"
+                    )}>
+                      {service.status}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm font-medium font-inter tracking-[-0.5px] text-white mb-1">
+                  {service.name}
+                </p>
+                <div className="flex items-center gap-3 text-[10px] text-white/40 font-inter">
+                  <span>{service.latency}ms</span>
+                  <span>{service.uptime}% uptime</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Platform Metrics */}
+      <div>
+        <h3 className="text-sm font-medium font-inter tracking-[-0.5px] text-white/50 mb-3">Platform Metrics</h3>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-2">
+              <People className="text-blue-400" sx={{ fontSize: 16 }} />
+              <span className="text-[10px] text-white/40 font-inter">Users</span>
+            </div>
+            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-white">
+              {platformMetrics?.totalUsers.toLocaleString() || '—'}
+            </p>
+            <p className="text-[10px] text-white/30 font-inter mt-1">
+              {platformMetrics?.activeUsers.toLocaleString()} active (7d)
+            </p>
           </div>
-          <div className="flex justify-between mt-3 text-xs text-muted-foreground">
-            <span>90 days ago</span>
-            <span>Today</span>
+
+          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-2">
+              <Receipt className="text-emerald-400" sx={{ fontSize: 16 }} />
+              <span className="text-[10px] text-white/40 font-inter">Transactions</span>
+            </div>
+            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-white">
+              {platformMetrics?.totalTransactions.toLocaleString() || '—'}
+            </p>
+            <p className="text-[10px] text-white/30 font-inter mt-1">
+              ${platformMetrics?.transactionVolume.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'} volume
+            </p>
+          </div>
+
+          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-2">
+              <Videocam className="text-purple-400" sx={{ fontSize: 16 }} />
+              <span className="text-[10px] text-white/40 font-inter">Submissions</span>
+            </div>
+            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-white">
+              {platformMetrics?.totalSubmissions.toLocaleString() || '—'}
+            </p>
+            <p className="text-[10px] text-white/30 font-inter mt-1">
+              Videos submitted
+            </p>
+          </div>
+
+          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-2">
+              <Campaign className="text-amber-400" sx={{ fontSize: 16 }} />
+              <span className="text-[10px] text-white/40 font-inter">Campaigns</span>
+            </div>
+            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-white">
+              {platformMetrics?.totalCampaigns.toLocaleString() || '—'}
+            </p>
+            <p className="text-[10px] text-white/30 font-inter mt-1">
+              {platformMetrics?.activeCampaigns} active
+            </p>
+          </div>
+
+          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-2">
+              <Payments className="text-rose-400" sx={{ fontSize: 16 }} />
+              <span className="text-[10px] text-white/40 font-inter">Payouts</span>
+            </div>
+            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-white">
+              {platformMetrics?.totalPayouts.toLocaleString() || '—'}
+            </p>
+            <p className="text-[10px] text-white/30 font-inter mt-1">
+              ${platformMetrics?.payoutVolume.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'} paid
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Response Time Chart Placeholder */}
-        <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="font-semibold">Response Time Trend</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Average API response time over the last 24 hours
-              </p>
+      {/* 90-Day Uptime */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium font-inter tracking-[-0.5px] text-white/50">90-Day Uptime</h3>
+          <div className="flex items-center gap-4 text-[10px] text-white/40 font-inter">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-sm bg-emerald-500" />
+              <span>&gt;99.9%</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="text-xs h-7">1H</Button>
-              <Button variant="outline" size="sm" className="text-xs h-7 bg-primary/10">24H</Button>
-              <Button variant="outline" size="sm" className="text-xs h-7">7D</Button>
-              <Button variant="outline" size="sm" className="text-xs h-7">30D</Button>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-sm bg-amber-500" />
+              <span>99-99.9%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-sm bg-red-500" />
+              <span>&lt;99%</span>
             </div>
           </div>
-          <div className="h-48 flex items-end gap-1">
-            {Array.from({ length: 48 }, (_, i) => {
-              const height = 30 + Math.random() * 60;
-              const isHigh = height > 70;
+        </div>
+        <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.06]">
+          <div className="flex gap-0.5">
+            {Array.from({ length: 90 }, (_, i) => {
+              const uptime = 99.5 + Math.random() * 0.5;
               return (
                 <div
                   key={i}
                   className={cn(
-                    "flex-1 rounded-t transition-all hover:opacity-80 cursor-pointer",
-                    isHigh ? "bg-amber-500/80" : "bg-primary/60"
+                    "flex-1 h-6 rounded-sm transition-opacity hover:opacity-80",
+                    uptime >= 99.9 && "bg-emerald-500",
+                    uptime >= 99 && uptime < 99.9 && "bg-amber-500",
+                    uptime < 99 && "bg-red-500"
                   )}
-                  style={{ height: `${height}%` }}
-                  title={`${Math.round(40 + height)}ms`}
+                  title={`Day ${90 - i}: ${uptime.toFixed(2)}%`}
                 />
               );
             })}
           </div>
-          <div className="flex justify-between mt-3 text-xs text-muted-foreground">
-            <span>24h ago</span>
-            <span>Now</span>
+          <div className="flex justify-between mt-2 text-[10px] text-white/30 font-inter">
+            <span>90 days ago</span>
+            <span>Today</span>
           </div>
         </div>
+      </div>
+
+      {/* Quick Stats Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-white/[0.06] text-xs text-white/40 font-inter">
+        <span>Last updated: {format(new Date(), "MMM d, h:mm a")}</span>
+        <span>{platformMetrics?.totalBrands || 0} registered brands</span>
       </div>
     </div>
   );

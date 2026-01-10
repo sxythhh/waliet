@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LiquidGlassView } from '@callstack/liquid-glass';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { colors } from '../theme/colors';
 import type { Campaign } from '@virality/shared-types';
 
 const { width } = Dimensions.get('window');
@@ -23,16 +24,16 @@ interface CampaignCardProps {
 // Platform icons with proper Material icons
 const PlatformBadge = ({ platform }: { platform: string }) => {
   const platformConfig: Record<string, { bg: string; icon: string }> = {
-    tiktok: { bg: '#000', icon: 'music-note' },
+    tiktok: { bg: colors.background, icon: 'music-note' },
     instagram: { bg: '#E1306C', icon: 'instagram' },
     youtube: { bg: '#FF0000', icon: 'youtube' },
   };
 
-  const config = platformConfig[platform.toLowerCase()] || { bg: '#666', icon: 'web' };
+  const config = platformConfig[platform.toLowerCase()] || { bg: colors.mutedForeground, icon: 'web' };
 
   return (
     <View style={[styles.platformBadge, { backgroundColor: config.bg }]}>
-      <Icon name={config.icon} size={14} color="#fff" />
+      <Icon name={config.icon} size={14} color={colors.foreground} />
     </View>
   );
 };
@@ -65,7 +66,7 @@ export function CampaignCard({ campaign, onPress }: CampaignCardProps) {
       activeOpacity={0.7}
     >
       {/* Banner/Header */}
-      <View style={[styles.banner, { backgroundColor: campaign.brand_color || '#6366f1' }]}>
+      <View style={[styles.banner, { backgroundColor: campaign.brand_color || colors.primary }]}>
         {campaign.banner_url ? (
           <Image
             source={{ uri: campaign.banner_url }}
@@ -93,7 +94,7 @@ export function CampaignCard({ campaign, onPress }: CampaignCardProps) {
         {/* Brand Info */}
         <View style={styles.brandRow}>
           <View style={styles.brandInfo}>
-            <Icon name="domain" size={14} color="#666" style={styles.brandIcon} />
+            <Icon name="domain" size={14} color={colors.mutedForeground} style={styles.brandIcon} />
             <Text style={styles.brandName} numberOfLines={1}>
               {campaign.brand_name || 'Unknown Brand'}
             </Text>
@@ -116,7 +117,7 @@ export function CampaignCard({ campaign, onPress }: CampaignCardProps) {
           {/* Budget */}
           <View style={styles.budgetContainer}>
             <View style={styles.budgetHeader}>
-              <Icon name="wallet-outline" size={14} color="#888" />
+              <Icon name="wallet-outline" size={14} color={colors.mutedForeground} />
               <Text style={styles.budgetLabel}>Budget</Text>
             </View>
             <View style={styles.budgetBar}>
@@ -133,7 +134,7 @@ export function CampaignCard({ campaign, onPress }: CampaignCardProps) {
           {campaign.rpm_rate !== null && campaign.rpm_rate !== undefined && (
             <View style={styles.rpmContainer}>
               <View style={styles.rpmHeader}>
-                <Icon name="trending-up" size={14} color="#22c55e" />
+                <Icon name="trending-up" size={14} color={colors.success} />
                 <Text style={styles.rpmLabel}>RPM</Text>
               </View>
               <Text style={styles.rpmValue}>${campaign.rpm_rate.toFixed(2)}</Text>
@@ -147,12 +148,12 @@ export function CampaignCard({ campaign, onPress }: CampaignCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 16,
     marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
     width: CARD_WIDTH,
   },
   banner: {
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   statusActiveOverlay: {
-    backgroundColor: 'rgba(34, 197, 94, 0.4)',
+    backgroundColor: colors.successMuted,
   },
   statusEndedOverlay: {
     backgroundColor: 'rgba(107, 114, 128, 0.4)',
@@ -200,11 +201,11 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#fff',
+    backgroundColor: colors.foreground,
     marginRight: 6,
   },
   statusText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 13,
-    color: '#888',
+    color: colors.mutedForeground,
     flex: 1,
   },
   platforms: {
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
     marginBottom: 12,
     lineHeight: 24,
   },
@@ -264,26 +265,26 @@ const styles = StyleSheet.create({
   },
   budgetLabel: {
     fontSize: 11,
-    color: '#888',
+    color: colors.mutedForeground,
     marginLeft: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   budgetBar: {
     height: 4,
-    backgroundColor: '#333',
+    backgroundColor: colors.muted,
     borderRadius: 2,
     marginBottom: 4,
     overflow: 'hidden',
   },
   budgetFill: {
     height: '100%',
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     borderRadius: 2,
   },
   budgetText: {
     fontSize: 12,
-    color: '#888',
+    color: colors.mutedForeground,
   },
   rpmContainer: {
     alignItems: 'flex-end',
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
   },
   rpmLabel: {
     fontSize: 11,
-    color: '#888',
+    color: colors.mutedForeground,
     marginLeft: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -303,6 +304,6 @@ const styles = StyleSheet.create({
   rpmValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#22c55e',
+    color: colors.success,
   },
 });

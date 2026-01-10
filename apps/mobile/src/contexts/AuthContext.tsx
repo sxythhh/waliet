@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import { Linking, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { config } from '../config';
@@ -9,6 +10,9 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithDiscord: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  verifyEmailOTP: (email: string, token: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -17,6 +21,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signInWithDiscord: async () => {},
+  signInWithGoogle: async () => {},
+  signInWithEmail: async () => ({ success: false }),
+  verifyEmailOTP: async () => ({ success: false }),
   signOut: async () => {},
 });
 
@@ -74,6 +81,52 @@ const trackUserSession = async (userId: string, accessToken: string) => {
   }
 };
 
+// Extract tokens from URL hash or query params
+const extractTokensFromUrl = (url: string): { accessToken?: string; refreshToken?: string } => {
+  try {
+    // Try hash fragment first (#access_token=...)
+    const hashIndex = url.indexOf('#');
+    if (hashIndex !== -1) {
+      const fragment = url.substring(hashIndex + 1);
+      const params: Record<string, string> = {};
+      fragment.split('&').forEach((pair) => {
+        const [key, value] = pair.split('=');
+        if (key && value) {
+          params[decodeURIComponent(key)] = decodeURIComponent(value);
+        }
+      });
+      if (params['access_token'] && params['refresh_token']) {
+        return {
+          accessToken: params['access_token'],
+          refreshToken: params['refresh_token'],
+        };
+      }
+    }
+
+    // Try query params (?access_token=...)
+    const queryIndex = url.indexOf('?');
+    if (queryIndex !== -1) {
+      const query = url.substring(queryIndex + 1);
+      const params: Record<string, string> = {};
+      query.split('&').forEach((pair) => {
+        const [key, value] = pair.split('=');
+        if (key && value) {
+          params[decodeURIComponent(key)] = decodeURIComponent(value);
+        }
+      });
+      if (params['access_token'] && params['refresh_token']) {
+        return {
+          accessToken: params['access_token'],
+          refreshToken: params['refresh_token'],
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error extracting tokens from URL:', error);
+  }
+  return {};
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -86,34 +139,93 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const signInWithDiscord = useCallback(async () => {
+  // OAuth sign-in with proper mobile handling
+  const signInWithOAuth = useCallback(async (provider: 'discord' | 'google') => {
     try {
-      // For React Native, we need to use a different OAuth flow
-      // This will be implemented with react-native-url-polyfill and Linking
+      // Create the redirect URL for the mobile app
+      const redirectUrl = 'virality://auth/callback';
+
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
+        provider,
         options: {
           skipBrowserRedirect: true,
-          redirectTo: 'virality://auth/callback',
+          redirectTo: redirectUrl,
         },
       });
 
       if (error) {
-        console.error('Discord sign in error:', error);
-        throw error;
+        console.error(`${provider} sign in error:`, error);
+        Alert.alert('Sign In Error', error.message);
+        return;
       }
 
       if (data.url) {
-        // Open the OAuth URL in the device browser
-        // This requires react-native-inappbrowser-reborn or Linking
-        const { Linking } = require('react-native');
-        await Linking.openURL(data.url);
+        // Open OAuth URL in the system browser
+        // The deep link handler will catch the callback
+        const supported = await Linking.canOpenURL(data.url);
+        if (supported) {
+          await Linking.openURL(data.url);
+        } else {
+          console.error('Cannot open URL:', data.url);
+          Alert.alert('Sign In Error', 'Unable to open browser for authentication.');
+        }
       }
     } catch (error) {
-      console.error('Error signing in with Discord:', error);
-      throw error;
+      console.error(`Error signing in with ${provider}:`, error);
+      Alert.alert('Sign In Error', 'An unexpected error occurred. Please try again.');
     }
   }, []);
+
+  const signInWithDiscord = useCallback(async () => {
+    await signInWithOAuth('discord');
+  }, [signInWithOAuth]);
+
+  const signInWithGoogle = useCallback(async () => {
+    await signInWithOAuth('google');
+  }, [signInWithOAuth]);
+
+  // Email OTP sign-in
+  const signInWithEmail = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to send verification code' };
+    }
+  }, []);
+
+  // Verify email OTP
+  const verifyEmailOTP = useCallback(async (email: string, token: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email',
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.session) {
+        updateAuthState(data.session);
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to verify code' };
+    }
+  }, [updateAuthState]);
 
   const signOut = useCallback(async () => {
     try {
@@ -127,6 +239,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Error signing out:', error);
       throw error;
     }
+  }, []);
+
+  // Handle deep links for OAuth callback
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+
+      if (url.includes('auth/callback') || url.includes('access_token')) {
+        const { accessToken, refreshToken } = extractTokensFromUrl(url);
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            console.error('Error setting session from deep link:', error);
+          }
+        }
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Check for initial URL (app opened from closed state)
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink({ url });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -171,7 +318,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [updateAuthState]);
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signInWithDiscord, signOut }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        loading,
+        signInWithDiscord,
+        signInWithGoogle,
+        signInWithEmail,
+        verifyEmailOTP,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

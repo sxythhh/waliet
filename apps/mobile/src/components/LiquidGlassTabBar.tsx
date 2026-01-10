@@ -10,14 +10,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Match web app's icon style (Material Symbols)
 const TAB_ICONS: Record<string, string> = {
-  Discover: 'compass-outline',
-  MyCampaigns: 'video-outline',
-  Wallet: 'wallet-outline',
-  Profile: 'account-outline',
+  Discover: 'book-open-page-variant-outline', // Maps to web's discover icon (book/map style)
+  MyCampaigns: 'home-outline',                 // Home icon for campaigns
+  Wallet: 'credit-card-outline',               // Credit card for wallet
+  Profile: 'account-circle-outline',           // Profile icon
 };
 
 const TAB_LABELS: Record<string, string> = {
@@ -114,12 +116,12 @@ export function LiquidGlassTabBar({ state, descriptors, navigation }: BottomTabB
                 <Icon
                   name={iconName}
                   size={24}
-                  color={isFocused ? '#fff' : 'rgba(255,255,255,0.5)'}
+                  color={isFocused ? colors.foreground : colors.mutedForeground}
                 />
                 <Text
                   style={[
                     styles.label,
-                    { color: isFocused ? '#fff' : 'rgba(255,255,255,0.5)' },
+                    { color: isFocused ? colors.foreground : colors.mutedForeground },
                   ]}
                   numberOfLines={1}
                 >

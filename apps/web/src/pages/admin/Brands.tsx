@@ -1,47 +1,89 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { BrandPipelineView } from "@/components/admin/BrandPipelineView";
+import { useState, lazy, Suspense } from "react";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
-import { Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { TYPOGRAPHY, PADDING, BORDERS } from "@/components/admin/design-system";
+import { AdminTabs, AdminTabContent } from "@/components/admin/design-system/AdminTabs";
+import { PageLoading } from "@/components/ui/loading-bar";
+import { BrandPipelineView } from "@/components/admin/BrandPipelineView";
+import { BrandTableView } from "@/components/admin/BrandTableView";
+import { Button } from "@/components/ui/button";
+import {
+  Storefront,
+  Campaign,
+  ViewKanban,
+  TableRows,
+} from "@mui/icons-material";
+
+// Lazy load Campaigns content
+const CampaignsContent = lazy(() => import("./Campaigns"));
+
+const tabs = [
+  { id: "brands", label: "Brands", icon: <Storefront sx={{ fontSize: 16 }} /> },
+  { id: "campaigns", label: "Campaigns", icon: <Campaign sx={{ fontSize: 16 }} /> },
+];
 
 export default function AdminBrands() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
+  const [activeTab, setActiveTab] = useState("brands");
+  const [brandsView, setBrandsView] = useState<"pipeline" | "table">("pipeline");
 
   return (
     <AdminPermissionGuard resource="brands">
-      <div className="h-full flex flex-col">
-        {/* Page Header */}
-        <div className={cn("border-b flex-shrink-0", BORDERS.default, PADDING.page)}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-muted/40">
-              <Building2 className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <h1 className={TYPOGRAPHY.pageTitle}>Brands</h1>
-              <p className={cn(TYPOGRAPHY.caption, "mt-0.5")}>
-                Pipeline view of all registered brands
-              </p>
-            </div>
+      <div className="flex flex-col">
+        {/* Tabs & Controls */}
+        <div className="border-b border-border/50 px-6 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <AdminTabs
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              variant="pills"
+              size="sm"
+            />
+            {/* View Toggle - only show on brands tab */}
+            {activeTab === "brands" && (
+              <div className="flex items-center bg-muted/30 rounded-lg p-0.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBrandsView("pipeline")}
+                  className={`h-7 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs rounded-md ${
+                    brandsView === "pipeline"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ViewKanban sx={{ fontSize: 14 }} />
+                  Pipeline
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBrandsView("table")}
+                  className={`h-7 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs rounded-md ${
+                    brandsView === "table"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <TableRows sx={{ fontSize: 14 }} />
+                  Table
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          <BrandPipelineView />
+        {/* Tab Content */}
+        <div className="flex-1">
+          <AdminTabContent tabId="brands" activeTab={activeTab} keepMounted>
+            <div className="p-6">
+              {brandsView === "pipeline" ? <BrandPipelineView /> : <BrandTableView />}
+            </div>
+          </AdminTabContent>
+
+          <AdminTabContent tabId="campaigns" activeTab={activeTab} keepMounted>
+            <Suspense fallback={<PageLoading text="Loading campaigns..." />}>
+              <CampaignsContent />
+            </Suspense>
+          </AdminTabContent>
         </div>
       </div>
     </AdminPermissionGuard>

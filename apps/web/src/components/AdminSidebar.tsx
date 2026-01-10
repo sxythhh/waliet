@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search, FileText, Shield, FileBarChart, UserCog, ClipboardCheck, TrendingUp, Lightbulb, Activity } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,28 +7,37 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 import { useAdminPermissions, type AdminResource } from "@/hooks/useAdminPermissions";
+import {
+  Dashboard,
+  TrendingUp,
+  Storefront,
+  People,
+  Payments,
+  SupportAgent,
+  Security,
+  Settings,
+  Search,
+  Logout,
+  Menu,
+} from "@mui/icons-material";
+import type { SvgIconComponent } from "@mui/icons-material";
 
 interface MenuItem {
   title: string;
-  icon: typeof BarChart3;
+  icon: SvgIconComponent;
   path: string;
-  resource?: AdminResource; // Resource to check permission for
+  resource?: AdminResource;
 }
 
 const menuItems: MenuItem[] = [
-  { title: "Overview", icon: BarChart3, path: "/admin", resource: "dashboard" },
+  { title: "Dashboard", icon: Dashboard, path: "/admin", resource: "dashboard" },
   { title: "Analytics", icon: TrendingUp, path: "/admin/analytics", resource: "dashboard" },
-  { title: "Creator Insights", icon: Lightbulb, path: "/admin/creator-insights", resource: "users" },
-  { title: "Operations", icon: Activity, path: "/admin/operations", resource: "dashboard" },
-  { title: "Brands", icon: Store, path: "/admin/brands", resource: "brands" },
-  { title: "Users", icon: UserCircle, path: "/admin/users", resource: "users" },
-  { title: "Campaign Review", icon: ClipboardCheck, path: "/admin/campaign-review", resource: "brands" },
-  { title: "Security", icon: Shield, path: "/admin/security", resource: "security" },
-  { title: "Reports", icon: FileBarChart, path: "/admin/reports", resource: "reports" },
-  { title: "Resources", icon: FileText, path: "/admin/resources", resource: "resources" },
-  { title: "Payouts", icon: CreditCard, path: "/admin/payouts", resource: "payouts" },
-  { title: "Transactions", icon: Receipt, path: "/admin/transactions", resource: "payouts" }, // Same as payouts
-  { title: "Permissions", icon: UserCog, path: "/admin/permissions", resource: "permissions" },
+  { title: "Brands", icon: Storefront, path: "/admin/brands", resource: "brands" },
+  { title: "Users", icon: People, path: "/admin/users", resource: "users" },
+  { title: "Finance", icon: Payments, path: "/admin/finance", resource: "payouts" },
+  { title: "Support", icon: SupportAgent, path: "/admin/support", resource: "dashboard" },
+  { title: "Security", icon: Security, path: "/admin/security", resource: "security" },
+  { title: "Settings", icon: Settings, path: "/admin/settings", resource: "resources" },
 ];
 
 function SidebarContent({
@@ -70,7 +78,7 @@ function SidebarContent({
           onClick={onSearchOpen}
           className="w-full flex items-center gap-2.5 px-3 py-1.5 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors text-left"
         >
-          <Search className="h-4 w-4 text-muted-foreground" />
+          <Search sx={{ fontSize: 16 }} className="text-muted-foreground" />
           <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px] flex-1">Search...</span>
         </button>
       </div>
@@ -85,13 +93,13 @@ function SidebarContent({
               to={item.path}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 text-sm font-inter tracking-[-0.5px] transition-colors rounded-md",
+                "flex items-center gap-2.5 px-3 py-2 text-sm font-inter tracking-[-0.5px] transition-colors rounded-lg",
                 active
                   ? "bg-white/10 text-white font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon sx={{ fontSize: 18 }} />
               <span>{item.title}</span>
             </NavLink>
           );
@@ -104,7 +112,7 @@ function SidebarContent({
           variant="ghost"
           className="w-full justify-start gap-2.5 px-3 h-9 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
         >
-          <LogOut className="h-4 w-4" />
+          <Logout sx={{ fontSize: 16 }} />
           <span>Sign Out</span>
         </Button>
       </div>
@@ -141,7 +149,7 @@ export function AdminSidebar() {
               size="icon"
               className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
             >
-              <Menu className="h-5 w-5" />
+              <Menu sx={{ fontSize: 20 }} />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0 bg-[#0a0a0a] border-r border-[#141414]">

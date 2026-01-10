@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { colors } from '../theme/colors';
 
 interface PaymentLedgerEntry {
   id: string;
@@ -63,15 +64,15 @@ function formatDate(dateString: string): string {
 function getStatusColor(status: PaymentLedgerEntry['status']): string {
   switch (status) {
     case 'paid':
-      return '#22c55e';
+      return colors.success;
     case 'pending':
-      return '#f59e0b';
+      return colors.warning;
     case 'clearing':
-      return '#6366f1';
+      return colors.primary;
     case 'clawed_back':
-      return '#ef4444';
+      return colors.destructive;
     default:
-      return '#888';
+      return colors.mutedForeground;
   }
 }
 
@@ -184,11 +185,11 @@ export function WalletScreen() {
     return (
       <View style={styles.transactionItem}>
         <View style={styles.transactionLeft}>
-          <View style={[styles.transactionIcon, { backgroundColor: item.source_type === 'campaign' ? '#6366f1' : '#22c55e' }]}>
+          <View style={[styles.transactionIcon, { backgroundColor: item.source_type === 'campaign' ? colors.primary : colors.success }]}>
             <Icon
               name={item.source_type === 'campaign' ? 'video-outline' : 'rocket-launch-outline'}
               size={20}
-              color="#fff"
+              color={colors.foreground}
             />
           </View>
           <View style={styles.transactionInfo}>
@@ -220,7 +221,7 @@ export function WalletScreen() {
         <Text
           style={[
             styles.transactionAmount,
-            { color: isPaid ? '#22c55e' : '#f59e0b' },
+            { color: isPaid ? colors.success : colors.warning },
           ]}
         >
           {isPaid ? '+' : ''}
@@ -246,7 +247,7 @@ export function WalletScreen() {
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Wallet</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -282,7 +283,7 @@ export function WalletScreen() {
             {formatCurrency(summary.available)}
           </Text>
           <TouchableOpacity style={styles.withdrawButton}>
-            <Icon name="bank-transfer-out" size={18} color="#fff" style={styles.withdrawIcon} />
+            <Icon name="bank-transfer-out" size={18} color={colors.foreground} style={styles.withdrawIcon} />
             <Text style={styles.withdrawButtonText}>Request Payout</Text>
           </TouchableOpacity>
         </View>
@@ -292,28 +293,28 @@ export function WalletScreen() {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <View style={styles.statHeader}>
-            <Icon name="clock-outline" size={14} color="#f59e0b" />
+            <Icon name="clock-outline" size={14} color={colors.warning} />
             <Text style={styles.statLabel}>Pending</Text>
           </View>
-          <Text style={[styles.statValue, { color: '#f59e0b' }]}>
+          <Text style={[styles.statValue, { color: colors.warning }]}>
             {formatCurrency(summary.pending)}
           </Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statHeader}>
-            <Icon name="timer-sand" size={14} color="#6366f1" />
+            <Icon name="timer-sand" size={14} color={colors.primary} />
             <Text style={styles.statLabel}>Clearing</Text>
           </View>
-          <Text style={[styles.statValue, { color: '#6366f1' }]}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>
             {formatCurrency(summary.clearing)}
           </Text>
         </View>
         <View style={styles.statCard}>
           <View style={styles.statHeader}>
-            <Icon name="cash-check" size={14} color="#22c55e" />
+            <Icon name="cash-check" size={14} color={colors.success} />
             <Text style={styles.statLabel}>Earned</Text>
           </View>
-          <Text style={[styles.statValue, { color: '#22c55e' }]}>
+          <Text style={[styles.statValue, { color: colors.success }]}>
             {formatCurrency(summary.totalEarned)}
           </Text>
         </View>
@@ -322,7 +323,7 @@ export function WalletScreen() {
       {/* Transactions Header */}
       <View style={styles.transactionsHeader}>
         <View style={styles.sectionTitleRow}>
-          <Icon name="history" size={18} color="#fff" />
+          <Icon name="history" size={18} color={colors.foreground} />
           <Text style={styles.sectionTitle}>Recent Activity</Text>
         </View>
         {entries.length > 0 && (
@@ -346,13 +347,13 @@ export function WalletScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            tintColor="#6366f1"
-            colors={['#6366f1']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyTransactions}>
-            <Icon name="cash-remove" size={48} color="#333" />
+            <Icon name="cash-remove" size={48} color={colors.muted} />
             <Text style={styles.emptyTitle}>No earnings yet</Text>
             <Text style={styles.emptySubtitle}>
               Apply to campaigns and start earning!
@@ -367,15 +368,16 @@ export function WalletScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    letterSpacing: -0.5,
   },
   headerContent: {
     marginBottom: 8,
@@ -392,18 +394,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.destructive,
     fontSize: 16,
     marginBottom: 16,
   },
   retryButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -412,11 +414,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.5)',
+    borderColor: `${colors.primary}80`,
   },
   balanceCardOverlay: {
     padding: 24,
-    backgroundColor: 'rgba(99, 102, 241, 0.4)',
+    backgroundColor: colors.glassBg,
   },
   balanceLabelRow: {
     flexDirection: 'row',
@@ -431,8 +433,9 @@ const styles = StyleSheet.create({
   balanceAmount: {
     fontSize: 42,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
     marginBottom: 16,
+    letterSpacing: -1,
   },
   withdrawButton: {
     flexDirection: 'row',
@@ -446,7 +449,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   withdrawButtonText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -457,11 +460,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   statHeader: {
     flexDirection: 'row',
@@ -471,7 +474,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: '#888',
+    color: colors.mutedForeground,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -493,11 +496,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
   },
   transactionCount: {
     fontSize: 13,
-    color: '#666',
+    color: colors.mutedForeground,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -507,12 +510,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   transactionLeft: {
     flexDirection: 'row',
@@ -523,13 +526,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   transactionIconText: {
-    color: '#888',
+    color: colors.mutedForeground,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -538,7 +541,7 @@ const styles = StyleSheet.create({
   },
   transactionTitle: {
     fontSize: 15,
-    color: '#fff',
+    color: colors.foreground,
     fontWeight: '500',
     marginBottom: 4,
   },
@@ -558,7 +561,7 @@ const styles = StyleSheet.create({
   },
   transactionDate: {
     fontSize: 12,
-    color: '#666',
+    color: colors.mutedForeground,
   },
   transactionAmount: {
     fontSize: 16,
@@ -570,7 +573,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: '#888',
+    color: colors.mutedForeground,
     fontSize: 16,
   },
   emptyTransactions: {
@@ -579,17 +582,17 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     fontSize: 48,
-    color: '#333',
+    color: colors.muted,
     marginBottom: 16,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#888',
+    color: colors.mutedForeground,
   },
 });

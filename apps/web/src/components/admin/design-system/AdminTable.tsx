@@ -330,13 +330,13 @@ export function AdminTable<T>({
             onClick={() => onRowClick?.(row)}
             className={cn(
               "p-4",
-              RADII.lg,
-              "border",
-              TRANSITIONS.fast,
+              "rounded-xl",
+              "border border-border/50",
+              "transition-all duration-200",
               onRowClick && "cursor-pointer",
               isSelected
                 ? "bg-primary/5 border-primary/30 hover:bg-primary/10"
-                : cn(BACKGROUNDS.muted, BORDERS.subtle, "hover:bg-muted/40")
+                : "bg-muted/30 dark:bg-muted/20 hover:bg-muted/40 dark:hover:bg-muted/30"
             )}
           >
             {selectable && (

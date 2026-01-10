@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,17 @@ import {
   ScrollView,
   Linking,
   Switch,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { colors } from '../theme/colors';
 
 interface CreatorStats {
   totalSubmissions: number;
@@ -49,9 +54,190 @@ function formatCurrency(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+// Email OTP Sign In Component
+function EmailSignIn({
+  onBack,
+  signInWithEmail,
+  verifyEmailOTP,
+}: {
+  onBack: () => void;
+  signInWithEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  verifyEmailOTP: (email: string, token: string) => Promise<{ success: boolean; error?: string }>;
+}) {
+  const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  const startResendCooldown = () => {
+    setResendCooldown(60);
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleSendOTP = async () => {
+    if (!email || loading) return;
+
+    setLoading(true);
+    const result = await signInWithEmail(email);
+    setLoading(false);
+
+    if (result.success) {
+      setStep('otp');
+      startResendCooldown();
+      Alert.alert('Code Sent', 'Check your email for a 6-digit verification code.');
+    } else {
+      Alert.alert('Error', result.error || 'Failed to send verification code');
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otpCode.length !== 6 || loading) return;
+
+    setLoading(true);
+    const result = await verifyEmailOTP(email, otpCode);
+    setLoading(false);
+
+    if (!result.success) {
+      Alert.alert('Invalid Code', result.error || 'Please check the code and try again.');
+      setOtpCode('');
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || loading) return;
+
+    setLoading(true);
+    const result = await signInWithEmail(email);
+    setLoading(false);
+
+    if (result.success) {
+      startResendCooldown();
+      Alert.alert('Code Resent', 'Check your email for a new verification code.');
+    } else {
+      Alert.alert('Error', result.error || 'Failed to resend code');
+    }
+  };
+
+  if (step === 'otp') {
+    return (
+      <View style={styles.emailAuthContainer}>
+        <TouchableOpacity onPress={() => setStep('email')} style={styles.backButton}>
+          <Icon name="arrow-left" size={20} color={colors.mutedForeground} />
+          <Text style={styles.backButtonText}>Change email</Text>
+        </TouchableOpacity>
+
+        <View style={styles.emailAuthHeader}>
+          <Text style={styles.emailAuthTitle}>Check your email</Text>
+          <Text style={styles.emailAuthSubtitle}>
+            We sent a 6-digit code to{'\n'}
+            <Text style={styles.emailHighlight}>{email}</Text>
+          </Text>
+        </View>
+
+        <TextInput
+          style={styles.otpInput}
+          value={otpCode}
+          onChangeText={(text) => {
+            setOtpCode(text.replace(/[^0-9]/g, '').slice(0, 6));
+          }}
+          placeholder="000000"
+          placeholderTextColor={colors.mutedForeground}
+          keyboardType="number-pad"
+          maxLength={6}
+          autoFocus
+        />
+
+        <TouchableOpacity
+          style={[styles.emailSubmitButton, otpCode.length !== 6 && styles.emailSubmitButtonDisabled]}
+          onPress={handleVerifyOTP}
+          disabled={otpCode.length !== 6 || loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.foreground} />
+          ) : (
+            <Text style={styles.emailSubmitButtonText}>Verify Code</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleResend}
+          disabled={resendCooldown > 0 || loading}
+          style={styles.resendButton}
+        >
+          <Text style={[styles.resendText, resendCooldown > 0 && styles.resendTextDisabled]}>
+            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Didn't receive the code? Resend"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onBack} style={styles.cancelButton}>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.emailAuthContainer}>
+      <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <Icon name="arrow-left" size={20} color={colors.mutedForeground} />
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
+
+      <View style={styles.emailAuthHeader}>
+        <Text style={styles.emailAuthTitle}>Sign in with Email</Text>
+        <Text style={styles.emailAuthSubtitle}>
+          We'll send you a verification code
+        </Text>
+      </View>
+
+      <TextInput
+        style={styles.emailInput}
+        value={email}
+        onChangeText={setEmail}
+        placeholder="you@example.com"
+        placeholderTextColor={colors.mutedForeground}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoFocus
+      />
+
+      <TouchableOpacity
+        style={[styles.emailSubmitButton, !email && styles.emailSubmitButtonDisabled]}
+        onPress={handleSendOTP}
+        disabled={!email || loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={colors.foreground} />
+        ) : (
+          <Text style={styles.emailSubmitButtonText}>Send Code</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export function ProfileScreen() {
-  const { user, loading, signInWithDiscord, signOut } = useAuth();
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const {
+    user,
+    loading,
+    signInWithDiscord,
+    signInWithGoogle,
+    signInWithEmail,
+    verifyEmailOTP,
+    signOut
+  } = useAuth();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [authMode, setAuthMode] = useState<'options' | 'email'>('options');
 
   // Fetch creator profile
   const { data: profile } = useQuery({
@@ -116,21 +302,85 @@ export function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
+  // Sign-in options view
+  const renderSignInOptions = () => (
+    <View style={styles.profileCard}>
+      <View style={styles.avatar}>
+        <Icon name="account-outline" size={40} color={colors.mutedForeground} />
+      </View>
+      <Text style={styles.signInPrompt}>Sign in to get started</Text>
+      <Text style={styles.signInSubtext}>
+        Join campaigns and start earning
+      </Text>
+
+      <View style={styles.authButtonsContainer}>
+        {/* Discord */}
+        <TouchableOpacity
+          style={[styles.authButton, styles.discordButton]}
+          onPress={signInWithDiscord}
+        >
+          <Icon name="discord" size={22} color={colors.foreground} />
+          <Text style={styles.authButtonText}>Continue with Discord</Text>
+        </TouchableOpacity>
+
+        {/* Google */}
+        <TouchableOpacity
+          style={[styles.authButton, styles.googleButton]}
+          onPress={signInWithGoogle}
+        >
+          <Icon name="google" size={22} color={colors.foreground} />
+          <Text style={styles.authButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Email */}
+        <TouchableOpacity
+          style={[styles.authButton, styles.emailButton]}
+          onPress={() => setAuthMode('email')}
+        >
+          <Icon name="email-outline" size={22} color={colors.foreground} />
+          <Text style={styles.authButtonText}>Continue with Email</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Profile</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.title}>Profile</Text>
 
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          {user ? (
-            <>
+          {/* Profile Card */}
+          {!user ? (
+            authMode === 'email' ? (
+              <View style={styles.profileCard}>
+                <EmailSignIn
+                  onBack={() => setAuthMode('options')}
+                  signInWithEmail={signInWithEmail}
+                  verifyEmailOTP={verifyEmailOTP}
+                />
+              </View>
+            ) : (
+              renderSignInOptions()
+            )
+          ) : (
+            <View style={styles.profileCard}>
               <View style={styles.avatar}>
                 {profile?.avatar_url || user.user_metadata?.avatar_url ? (
                   <Image
@@ -156,178 +406,168 @@ export function ProfileScreen() {
                   <Text style={styles.tierText}>{profile.tier}</Text>
                 </View>
               )}
-            </>
-          ) : (
-            <>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>?</Text>
-              </View>
-              <Text style={styles.signInPrompt}>Sign in to view your profile</Text>
-              <TouchableOpacity style={styles.signInButton} onPress={signInWithDiscord}>
-                <Text style={styles.signInButtonText}>Sign In with Discord</Text>
-              </TouchableOpacity>
-            </>
+            </View>
           )}
-        </View>
 
-        {/* Stats Grid - Only show when signed in */}
-        {user && stats && (
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.totalSubmissions}</Text>
-              <Text style={styles.statLabel}>Submissions</Text>
+          {/* Stats Grid - Only show when signed in */}
+          {user && stats && (
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats.totalSubmissions}</Text>
+                <Text style={styles.statLabel}>Submissions</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: colors.success }]}>
+                  {stats.approvalRate}%
+                </Text>
+                <Text style={styles.statLabel}>Approval Rate</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{formatNumber(stats.totalViews)}</Text>
+                <Text style={styles.statLabel}>Total Views</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: colors.primary }]}>
+                  {formatCurrency(stats.totalEarned)}
+                </Text>
+                <Text style={styles.statLabel}>Earned</Text>
+              </View>
             </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#22c55e' }]}>
-                {stats.approvalRate}%
-              </Text>
-              <Text style={styles.statLabel}>Approval Rate</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{formatNumber(stats.totalViews)}</Text>
-              <Text style={styles.statLabel}>Total Views</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#6366f1' }]}>
-                {formatCurrency(stats.totalEarned)}
-              </Text>
-              <Text style={styles.statLabel}>Earned</Text>
-            </View>
-          </View>
-        )}
+          )}
 
-        {/* Connected Accounts - Only show when signed in */}
-        {user && profile && (
+          {/* Connected Accounts - Only show when signed in */}
+          {user && profile && (
+            <View style={styles.section}>
+              <View style={styles.sectionTitleRow}>
+                <Icon name="link-variant" size={18} color={colors.foreground} />
+                <Text style={styles.sectionTitle}>Connected Accounts</Text>
+              </View>
+              <View style={styles.accountsList}>
+                {profile.tiktok_handle && (
+                  <TouchableOpacity
+                    style={styles.accountItem}
+                    onPress={() => handleOpenLink(`https://tiktok.com/@${profile.tiktok_handle}`)}
+                  >
+                    <View style={[styles.accountIcon, { backgroundColor: colors.background }]}>
+                      <Icon name="music-note" size={18} color={colors.foreground} />
+                    </View>
+                    <View style={styles.accountInfo}>
+                      <Text style={styles.accountName}>TikTok</Text>
+                      <Text style={styles.accountHandle}>@{profile.tiktok_handle}</Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+                {profile.instagram_handle && (
+                  <TouchableOpacity
+                    style={styles.accountItem}
+                    onPress={() => handleOpenLink(`https://instagram.com/${profile.instagram_handle}`)}
+                  >
+                    <View style={[styles.accountIcon, { backgroundColor: '#E1306C' }]}>
+                      <Icon name="instagram" size={18} color={colors.foreground} />
+                    </View>
+                    <View style={styles.accountInfo}>
+                      <Text style={styles.accountName}>Instagram</Text>
+                      <Text style={styles.accountHandle}>@{profile.instagram_handle}</Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+                {profile.youtube_handle && (
+                  <TouchableOpacity
+                    style={styles.accountItem}
+                    onPress={() => handleOpenLink(`https://youtube.com/@${profile.youtube_handle}`)}
+                  >
+                    <View style={[styles.accountIcon, { backgroundColor: '#FF0000' }]}>
+                      <Icon name="youtube" size={18} color={colors.foreground} />
+                    </View>
+                    <View style={styles.accountInfo}>
+                      <Text style={styles.accountName}>YouTube</Text>
+                      <Text style={styles.accountHandle}>@{profile.youtube_handle}</Text>
+                    </View>
+                    <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+                {!profile.tiktok_handle && !profile.instagram_handle && !profile.youtube_handle && (
+                  <TouchableOpacity
+                    style={styles.connectButton}
+                    onPress={() => handleOpenLink('https://virality.so/settings')}
+                  >
+                    <Icon name="plus-circle-outline" size={18} color={colors.primary} style={styles.connectIcon} />
+                    <Text style={styles.connectButtonText}>Connect your social accounts</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Settings */}
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}>
-              <Icon name="link-variant" size={18} color="#fff" />
-              <Text style={styles.sectionTitle}>Connected Accounts</Text>
+              <Icon name="cog-outline" size={18} color={colors.foreground} />
+              <Text style={styles.sectionTitle}>Settings</Text>
             </View>
-            <View style={styles.accountsList}>
-              {profile.tiktok_handle && (
-                <TouchableOpacity
-                  style={styles.accountItem}
-                  onPress={() => handleOpenLink(`https://tiktok.com/@${profile.tiktok_handle}`)}
-                >
-                  <View style={[styles.accountIcon, { backgroundColor: '#000' }]}>
-                    <Icon name="music-note" size={18} color="#fff" />
-                  </View>
-                  <View style={styles.accountInfo}>
-                    <Text style={styles.accountName}>TikTok</Text>
-                    <Text style={styles.accountHandle}>@{profile.tiktok_handle}</Text>
-                  </View>
-                  <Icon name="chevron-right" size={20} color="#666" />
-                </TouchableOpacity>
-              )}
-              {profile.instagram_handle && (
-                <TouchableOpacity
-                  style={styles.accountItem}
-                  onPress={() => handleOpenLink(`https://instagram.com/${profile.instagram_handle}`)}
-                >
-                  <View style={[styles.accountIcon, { backgroundColor: '#E1306C' }]}>
-                    <Icon name="instagram" size={18} color="#fff" />
-                  </View>
-                  <View style={styles.accountInfo}>
-                    <Text style={styles.accountName}>Instagram</Text>
-                    <Text style={styles.accountHandle}>@{profile.instagram_handle}</Text>
-                  </View>
-                  <Icon name="chevron-right" size={20} color="#666" />
-                </TouchableOpacity>
-              )}
-              {profile.youtube_handle && (
-                <TouchableOpacity
-                  style={styles.accountItem}
-                  onPress={() => handleOpenLink(`https://youtube.com/@${profile.youtube_handle}`)}
-                >
-                  <View style={[styles.accountIcon, { backgroundColor: '#FF0000' }]}>
-                    <Icon name="youtube" size={18} color="#fff" />
-                  </View>
-                  <View style={styles.accountInfo}>
-                    <Text style={styles.accountName}>YouTube</Text>
-                    <Text style={styles.accountHandle}>@{profile.youtube_handle}</Text>
-                  </View>
-                  <Icon name="chevron-right" size={20} color="#666" />
-                </TouchableOpacity>
-              )}
-              {!profile.tiktok_handle && !profile.instagram_handle && !profile.youtube_handle && (
-                <TouchableOpacity
-                  style={styles.connectButton}
-                  onPress={() => handleOpenLink('https://virality.so/settings')}
-                >
-                  <Icon name="plus-circle-outline" size={18} color="#6366f1" style={styles.connectIcon} />
-                  <Text style={styles.connectButtonText}>Connect your social accounts</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Settings */}
-        <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Icon name="cog-outline" size={18} color="#fff" />
-            <Text style={styles.sectionTitle}>Settings</Text>
-          </View>
-          <View style={styles.settingsList}>
-            <View style={styles.settingItem}>
-              <Icon name="bell-outline" size={22} color="#888" style={styles.settingIconLeft} />
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingName}>Push Notifications</Text>
-                <Text style={styles.settingDescription}>
-                  Get notified about campaign updates
-                </Text>
+            <View style={styles.settingsList}>
+              <View style={styles.settingItem}>
+                <Icon name="bell-outline" size={22} color={colors.mutedForeground} style={styles.settingIconLeft} />
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingName}>Push Notifications</Text>
+                  <Text style={styles.settingDescription}>
+                    Get notified about campaign updates
+                  </Text>
+                </View>
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  trackColor={{ false: colors.muted, true: colors.primary }}
+                  thumbColor={colors.foreground}
+                />
               </View>
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: '#333', true: '#6366f1' }}
-                thumbColor="#fff"
-              />
             </View>
           </View>
-        </View>
 
-        {/* Menu */}
-        <View style={styles.section}>
-          <View style={styles.menuList}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOpenLink('https://virality.so/help')}
-            >
-              <Icon name="help-circle-outline" size={22} color="#888" style={styles.menuIconLeft} />
-              <Text style={styles.menuItemText}>Help & Support</Text>
-              <Icon name="chevron-right" size={20} color="#666" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOpenLink('https://virality.so/terms')}
-            >
-              <Icon name="file-document-outline" size={22} color="#888" style={styles.menuIconLeft} />
-              <Text style={styles.menuItemText}>Terms of Service</Text>
-              <Icon name="chevron-right" size={20} color="#666" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOpenLink('https://virality.so/privacy')}
-            >
-              <Icon name="shield-lock-outline" size={22} color="#888" style={styles.menuIconLeft} />
-              <Text style={styles.menuItemText}>Privacy Policy</Text>
-              <Icon name="chevron-right" size={20} color="#666" />
-            </TouchableOpacity>
+          {/* Menu */}
+          <View style={styles.section}>
+            <View style={styles.menuList}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOpenLink('https://virality.so/help')}
+              >
+                <Icon name="help-circle-outline" size={22} color={colors.mutedForeground} style={styles.menuIconLeft} />
+                <Text style={styles.menuItemText}>Help & Support</Text>
+                <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOpenLink('https://virality.so/terms')}
+              >
+                <Icon name="file-document-outline" size={22} color={colors.mutedForeground} style={styles.menuIconLeft} />
+                <Text style={styles.menuItemText}>Terms of Service</Text>
+                <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOpenLink('https://virality.so/privacy')}
+              >
+                <Icon name="shield-lock-outline" size={22} color={colors.mutedForeground} style={styles.menuIconLeft} />
+                <Text style={styles.menuItemText}>Privacy Policy</Text>
+                <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {/* Sign Out */}
-        {user && (
-          <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-            <Icon name="logout" size={20} color="#ef4444" style={styles.signOutIcon} />
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
-          </TouchableOpacity>
-        )}
+          {/* Sign Out */}
+          {user && (
+            <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
+              <Icon name="logout" size={20} color={colors.destructive} style={styles.signOutIcon} />
+              <Text style={styles.signOutButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+          )}
 
-        {/* App Version */}
-        <Text style={styles.versionText}>Virality v1.0.0</Text>
-      </ScrollView>
+          {/* App Version */}
+          <Text style={styles.versionText}>Virality v1.0.0</Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -335,7 +575,10 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
+  },
+  keyboardView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -345,13 +588,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    letterSpacing: -0.5,
   },
   profileCard: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -359,13 +603,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   avatar: {
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -378,45 +622,191 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 36,
-    color: '#666',
+    color: colors.mutedForeground,
     fontWeight: '600',
   },
   userName: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
     marginBottom: 2,
   },
   userHandle: {
     fontSize: 15,
-    color: '#888',
+    color: colors.mutedForeground,
     marginBottom: 8,
   },
   tierBadge: {
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
   tierText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
   signInPrompt: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginBottom: 4,
+  },
+  signInSubtext: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    marginBottom: 20,
+  },
+  authButtonsContainer: {
+    width: '100%',
+    gap: 12,
+  },
+  authButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 10,
+  },
+  discordButton: {
+    backgroundColor: '#5865F2',
+  },
+  googleButton: {
+    backgroundColor: colors.muted,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emailButton: {
+    backgroundColor: colors.muted,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  authButtonText: {
+    color: colors.foreground,
     fontSize: 16,
-    color: '#888',
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    color: colors.mutedForeground,
+    fontSize: 13,
+    marginHorizontal: 12,
+  },
+  // Email auth styles
+  emailAuthContainer: {
+    width: '100%',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+  },
+  backButtonText: {
+    color: colors.mutedForeground,
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  emailAuthHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  emailAuthTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginBottom: 8,
+  },
+  emailAuthSubtitle: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
+  emailHighlight: {
+    color: colors.foreground,
+    fontWeight: '500',
+  },
+  emailInput: {
+    backgroundColor: colors.muted,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: colors.foreground,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  otpInput: {
+    backgroundColor: colors.muted,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 24,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    textAlign: 'center',
+    letterSpacing: 8,
+  },
+  emailSubmitButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emailSubmitButtonDisabled: {
+    opacity: 0.5,
+  },
+  emailSubmitButtonText: {
+    color: colors.foreground,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resendButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  resendText: {
+    color: colors.primary,
+    fontSize: 14,
+  },
+  resendTextDisabled: {
+    color: colors.mutedForeground,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  cancelButtonText: {
+    color: colors.mutedForeground,
+    fontSize: 14,
   },
   signInButton: {
-    backgroundColor: '#5865F2',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 12,
   },
   signInButtonText: {
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -429,21 +819,21 @@ const styles = StyleSheet.create({
   },
   statItem: {
     width: '47%',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    color: colors.foreground,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 13,
-    color: '#888',
+    color: colors.mutedForeground,
   },
   section: {
     marginHorizontal: 16,
@@ -458,20 +848,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
   },
   accountsList: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   accountItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a2a2a',
+    borderBottomColor: colors.border,
   },
   accountIcon: {
     width: 36,
@@ -486,12 +876,12 @@ const styles = StyleSheet.create({
   },
   accountName: {
     fontSize: 15,
-    color: '#fff',
+    color: colors.foreground,
     fontWeight: '500',
   },
   accountHandle: {
     fontSize: 13,
-    color: '#888',
+    color: colors.mutedForeground,
   },
   connectButton: {
     flexDirection: 'row',
@@ -503,15 +893,15 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   connectButtonText: {
-    color: '#6366f1',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '500',
   },
   settingsList: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   settingItem: {
     flexDirection: 'row',
@@ -527,58 +917,58 @@ const styles = StyleSheet.create({
   },
   settingName: {
     fontSize: 15,
-    color: '#fff',
+    color: colors.foreground,
     fontWeight: '500',
     marginBottom: 2,
   },
   settingDescription: {
     fontSize: 13,
-    color: '#888',
+    color: colors.mutedForeground,
   },
   menuList: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a2a2a',
+    borderBottomColor: colors.border,
   },
   menuIconLeft: {
     marginRight: 12,
   },
   menuItemText: {
     flex: 1,
-    color: '#fff',
+    color: colors.foreground,
     fontSize: 15,
   },
   signOutButton: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: colors.destructive,
     marginBottom: 16,
   },
   signOutIcon: {
     marginRight: 8,
   },
   signOutButtonText: {
-    color: '#ef4444',
+    color: colors.destructive,
     fontSize: 16,
     fontWeight: '600',
   },
   versionText: {
     textAlign: 'center',
-    color: '#666',
+    color: colors.mutedForeground,
     fontSize: 13,
     marginBottom: 100,
   },

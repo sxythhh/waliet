@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check, Loader2 } from "lucide-react";
+import { ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check, Loader2, TrendingUp, Users, Wallet, CreditCard, Activity } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,7 +124,11 @@ const TIME_OPTIONS = [
   { value: 'ALL', label: 'All Time' },
 ];
 
-export function AnalyticsTab() {
+interface AnalyticsTabProps {
+  onDateRangeChange?: (range: { from: Date; to: Date }) => void;
+}
+
+export function AnalyticsTab({ onDateRangeChange }: AnalyticsTabProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalUsers: 0,
     newUsersCurrentPeriod: 0,
@@ -666,19 +670,33 @@ export function AnalyticsTab() {
     fetchAllData();
   }, [fetchAnalytics, fetchUserGrowthData, fetchCampaignData, fetchWithdrawalData, fetchPayoutStatusData, fetchEarningsVsWithdrawalsData, fetchCreatorFunnelData]);
 
+  // Notify parent of date range changes
+  useEffect(() => {
+    if (onDateRangeChange) {
+      const { start, end } = getDateRange();
+      onDateRangeChange({ from: start, to: end });
+    }
+  }, [timePeriod, customDateRange, getDateRange, onDateRangeChange]);
+
   const PIE_COLORS = [CHART_COLORS.green, CHART_COLORS.orange, CHART_COLORS.red, CHART_COLORS.purple];
 
   const CustomTooltip = ({ active, payload, label, type }: CustomTooltipProps) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
-      <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
-        <p className="text-[11px] text-white/50 font-inter tracking-[-0.5px] mb-2 uppercase">{label}</p>
-        <div className="space-y-1.5">
+      <div
+        className="rounded-lg px-3 py-2.5 shadow-lg"
+        style={{
+          backgroundColor: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+        }}
+      >
+        <p className="text-[11px] text-muted-foreground font-medium tracking-[-0.3px] mb-1.5">{label}</p>
+        <div className="space-y-1">
           {payload.map((entry: TooltipPayloadEntry, index: number) => {
             let displayName: string = entry.name;
             let displayValue: string | number = entry.value;
-            
+
             if (type === 'withdrawal') {
               if (entry.dataKey === 'total') displayName = 'Total Amount';
               if (entry.dataKey === 'count') displayName = 'Requests';
@@ -696,15 +714,15 @@ export function AnalyticsTab() {
             }
 
             return (
-              <div key={index} className="flex items-center justify-between gap-6">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-2 h-2 rounded-full" 
+              <div key={index} className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: entry.color || entry.fill }}
                   />
-                  <span className="text-xs text-white/70 font-inter tracking-[-0.5px]">{displayName}</span>
+                  <span className="text-xs text-muted-foreground tracking-[-0.3px]">{displayName}</span>
                 </div>
-                <span className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">{displayValue}</span>
+                <span className="text-sm font-semibold text-foreground tracking-[-0.3px]">{displayValue}</span>
               </div>
             );
           })}
@@ -718,16 +736,22 @@ export function AnalyticsTab() {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
-        <p className="text-[11px] text-white/50 font-inter tracking-[-0.5px] mb-2 uppercase">{data.name}</p>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-xs text-white/70 font-inter tracking-[-0.5px]">Requests</span>
-            <span className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">{data.value}</span>
+      <div
+        className="rounded-lg px-3 py-2.5 shadow-lg"
+        style={{
+          backgroundColor: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+        }}
+      >
+        <p className="text-[11px] text-muted-foreground font-medium tracking-[-0.3px] mb-1.5">{data.name}</p>
+        <div className="space-y-1">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-muted-foreground tracking-[-0.3px]">Requests</span>
+            <span className="text-sm font-semibold text-foreground tracking-[-0.3px]">{data.value}</span>
           </div>
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-xs text-white/70 font-inter tracking-[-0.5px]">Amount</span>
-            <span className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">${data.amount?.toFixed(2) || '0.00'}</span>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-muted-foreground tracking-[-0.3px]">Amount</span>
+            <span className="text-sm font-semibold text-foreground tracking-[-0.3px]">${data.amount?.toFixed(2) || '0.00'}</span>
           </div>
         </div>
       </div>
@@ -969,11 +993,37 @@ export function AnalyticsTab() {
       </div>
 
       {/* Withdrawals Over Time - Full Width */}
-      <Card className="bg-card/50 border-0">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Withdrawals Over Time</CardTitle>
+      <Card className="border-border">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-emerald-500" />
+              <CardTitle className="text-base font-medium tracking-[-0.5px]">Withdrawals Over Time</CardTitle>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Summary Stats */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground tracking-[-0.3px]">Total Requested</p>
+              <p className="text-lg font-semibold text-emerald-500 tracking-tight">
+                ${withdrawalData.reduce((sum, d) => sum + d.total, 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground tracking-[-0.3px]">Completed</p>
+              <p className="text-lg font-semibold text-blue-500 tracking-tight">
+                ${withdrawalData.reduce((sum, d) => sum + d.completed, 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground tracking-[-0.3px]">Requests</p>
+              <p className="text-lg font-semibold text-foreground tracking-tight">
+                {withdrawalData.reduce((sum, d) => sum + d.count, 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
           <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={withdrawalData}>
@@ -1036,12 +1086,30 @@ export function AnalyticsTab() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* User Growth */}
-        <Card className="bg-card/50 border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">User Growth</CardTitle>
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-purple-500" />
+              <CardTitle className="text-base font-medium tracking-[-0.5px]">User Growth</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-[250px]">
+          <CardContent className="space-y-4">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">This Period</p>
+                <p className="text-lg font-semibold text-purple-500 tracking-tight">
+                  +{analytics.newUsersCurrentPeriod.toLocaleString()}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">Total Users</p>
+                <p className="text-lg font-semibold text-foreground tracking-tight">
+                  {analytics.totalUsers.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="h-[200px]">
               {userGrowthData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={userGrowthData}>
@@ -1079,7 +1147,7 @@ export function AnalyticsTab() {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
                   No user data for this period
                 </div>
               )}
@@ -1088,26 +1156,35 @@ export function AnalyticsTab() {
         </Card>
 
         {/* Creator Funnel Chart */}
-        <Card className="bg-card/50 border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Creator Economy Funnel</CardTitle>
-            <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">Distribution of creators by number of payouts received</p>
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-cyan-500" />
+              <CardTitle className="text-base font-medium tracking-[-0.5px]">Creator Funnel</CardTitle>
+            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.3px]">Creators by number of payouts received</p>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px]">
+            <div className="h-[220px]">
               {creatorFunnelData.length > 0 && creatorFunnelData.some(d => d.value > 0) ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={creatorFunnelData} layout="vertical">
                     <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }} />
                     <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} style={{ opacity: 0.6, fontFamily: 'Inter', letterSpacing: '-0.5px' }} width={90} />
-                    <Tooltip 
+                    <Tooltip
                       cursor={false}
                       content={({ active, payload }) => {
                         if (!active || !payload || !payload.length) return null;
                         return (
-                          <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
-                            <p className="text-xs text-white font-inter font-semibold">{payload[0].payload.name}</p>
-                            <p className="text-sm text-white/70 font-inter">{payload[0].value} creators</p>
+                          <div
+                            className="rounded-lg px-3 py-2 shadow-lg"
+                            style={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                            }}
+                          >
+                            <p className="text-xs text-foreground font-semibold tracking-[-0.3px]">{payload[0].payload.name}</p>
+                            <p className="text-sm text-muted-foreground tracking-[-0.3px]">{payload[0].value} creators</p>
                           </div>
                         );
                       }}
@@ -1120,7 +1197,7 @@ export function AnalyticsTab() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
                   No payout data available
                 </div>
               )}
@@ -1129,12 +1206,30 @@ export function AnalyticsTab() {
         </Card>
 
         {/* Earnings vs Withdrawals */}
-        <Card className="bg-card/50 border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Earnings vs Withdrawals</CardTitle>
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-base font-medium tracking-[-0.5px]">Earnings vs Withdrawals</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-[250px]">
+          <CardContent className="space-y-4">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">Total Earnings</p>
+                <p className="text-lg font-semibold text-blue-500 tracking-tight">
+                  ${analytics.earningsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">Total Withdrawn</p>
+                <p className="text-lg font-semibold text-orange-500 tracking-tight">
+                  ${analytics.withdrawalsCurrentPeriod.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            </div>
+            <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={earningsVsWithdrawalsData}>
                   <defs>
@@ -1185,12 +1280,15 @@ export function AnalyticsTab() {
         </Card>
 
         {/* Payout Status Distribution */}
-        <Card className="bg-card/50 border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">Payout Status Distribution</CardTitle>
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-base font-medium tracking-[-0.5px]">Payout Status</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px] flex items-center">
+            <div className="h-[220px] flex items-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -1213,11 +1311,11 @@ export function AnalyticsTab() {
               <div className="flex flex-col gap-2 ml-4">
                 {payoutStatusData.map((entry, index) => (
                   <div key={entry.name} className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
                       style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}
                     />
-                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">
                       {entry.name}: {entry.value}
                     </span>
                   </div>

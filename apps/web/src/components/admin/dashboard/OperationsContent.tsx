@@ -1,46 +1,38 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminCard, AdminStatCard } from "@/components/admin/design-system/AdminCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { AdminButton } from "@/components/admin/design-system/AdminButton";
+import { AdminBadge } from "@/components/admin/design-system/AdminBadge";
+import { AdminInput, AdminTextarea, AdminSelect } from "@/components/admin/design-system/AdminInput";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AdminDialog,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogBody,
+  AdminDialogFooter,
+  AdminDialogTitle,
+} from "@/components/admin/design-system/AdminDialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Activity,
-  AlertTriangle,
-  Bell,
-  CheckCircle2,
-  Clock,
+  CheckCircle,
+  Error,
+  Warning,
+  Info,
+  Visibility,
+  Close,
+  Add,
+  Refresh,
   CreditCard,
-  Eye,
-  FileWarning,
-  Loader2,
-  Plus,
-  RefreshCw,
-  Server,
+  Notifications,
   Shield,
-  X,
-  XCircle,
-  Zap,
-} from "lucide-react";
+  Bolt,
+  Storage,
+  AccessTime,
+} from "@mui/icons-material";
 import { LoadingState } from "@/components/ui/loading-bar";
-import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface Alert {
   id: string;
@@ -83,87 +75,51 @@ interface TransactionItem {
 
 // System Health Panel
 function SystemHealthPanel() {
-  const [metrics, setMetrics] = useState({
+  const [metrics] = useState({
     database: { status: "healthy", latency: 45 },
     api: { status: "healthy", latency: 120 },
     storage: { status: "healthy", usage: 68 },
     realtime: { status: "healthy", connections: 234 },
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return "text-green-500";
-      case "degraded":
-        return "text-amber-500";
-      case "down":
-        return "text-red-500";
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "healthy":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle sx={{ fontSize: 16 }} className="text-emerald-500" />;
       case "degraded":
-        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+        return <Warning sx={{ fontSize: 16 }} className="text-amber-500" />;
       case "down":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <Error sx={{ fontSize: 16 }} className="text-red-500" />;
       default:
-        return <Activity className="h-4 w-4 text-muted-foreground" />;
+        return <Info sx={{ fontSize: 16 }} className="text-muted-foreground" />;
     }
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Server className="h-4 w-4" />
-          System Health
-        </CardTitle>
+    <Card className="bg-card dark:bg-[#0e0e0e] border-border/50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold font-inter tracking-[-0.5px]"><Storage sx={{ fontSize: 16 }} />System Health</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2">
-            {getStatusIcon(metrics.database.status)}
-            <span className="text-sm">Database</span>
+        {[
+          { label: "Database", status: metrics.database.status, value: `${metrics.database.latency}ms` },
+          { label: "API", status: metrics.api.status, value: `${metrics.api.latency}ms` },
+          { label: "Storage", status: metrics.storage.status, value: `${metrics.storage.usage}% used` },
+          { label: "Realtime", status: metrics.realtime.status, value: `${metrics.realtime.connections} connections` },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 dark:bg-muted/20"
+          >
+            <div className="flex items-center gap-2">
+              {getStatusIcon(item.status)}
+              <span className="text-sm font-inter tracking-[-0.3px]">{item.label}</span>
+            </div>
+            <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+              {item.value}
+            </span>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {metrics.database.latency}ms
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2">
-            {getStatusIcon(metrics.api.status)}
-            <span className="text-sm">API</span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {metrics.api.latency}ms
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2">
-            {getStatusIcon(metrics.storage.status)}
-            <span className="text-sm">Storage</span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {metrics.storage.usage}% used
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-          <div className="flex items-center gap-2">
-            {getStatusIcon(metrics.realtime.status)}
-            <span className="text-sm">Realtime</span>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {metrics.realtime.connections} connections
-          </span>
-        </div>
+        ))}
       </CardContent>
     </Card>
   );
@@ -203,17 +159,12 @@ function PayoutQueuePanel() {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Payout Queue
-          </CardTitle>
-          {payouts.length > 0 && (
-            <Badge variant="secondary">{payouts.length} pending</Badge>
-          )}
-        </div>
+    <Card className="bg-card dark:bg-[#0e0e0e] border-border/50">
+      <CardHeader className="flex items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold font-inter tracking-[-0.5px]"><CreditCard sx={{ fontSize: 16 }} />Payout Queue</CardTitle>
+        {payouts.length > 0 && (
+          <AdminBadge variant="warning">{payouts.length} pending</AdminBadge>
+        )}
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -221,7 +172,7 @@ function PayoutQueuePanel() {
             <LoadingState size="sm" />
           </div>
         ) : payouts.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm font-inter tracking-[-0.3px]">
             No pending payouts
           </div>
         ) : (
@@ -229,24 +180,22 @@ function PayoutQueuePanel() {
             {payouts.map((payout) => (
               <div
                 key={payout.id}
-                className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 dark:bg-muted/20"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <Clock className="h-3 w-3 text-amber-500" />
+                    <AccessTime sx={{ fontSize: 12 }} className="text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium font-inter tracking-[-0.3px]">
                       {(payout.profiles as any)?.username || "Unknown"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(payout.created_at), {
-                        addSuffix: true,
-                      })}
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      {formatDistanceToNow(new Date(payout.created_at), { addSuffix: true })}
                     </p>
                   </div>
                 </div>
-                <span className="font-semibold text-sm">
+                <span className="font-semibold text-sm font-inter tracking-[-0.3px] tabular-nums">
                   ${payout.amount.toFixed(2)}
                 </span>
               </div>
@@ -295,7 +244,7 @@ function TransactionStreamPanel() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "earning":
-        return "text-green-500";
+        return "text-emerald-500";
       case "payout":
         return "text-blue-500";
       case "withdrawal":
@@ -306,17 +255,12 @@ function TransactionStreamPanel() {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Live Transactions
-          </CardTitle>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs text-muted-foreground">Live</span>
-          </div>
+    <Card className="bg-card dark:bg-[#0e0e0e] border-border/50">
+      <CardHeader className="flex items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold font-inter tracking-[-0.5px]"><Bolt sx={{ fontSize: 16 }} />Live Transactions</CardTitle>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Live</span>
         </div>
       </CardHeader>
       <CardContent>
@@ -325,7 +269,7 @@ function TransactionStreamPanel() {
             <LoadingState size="sm" />
           </div>
         ) : transactions.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm font-inter tracking-[-0.3px]">
             No recent transactions
           </div>
         ) : (
@@ -333,21 +277,21 @@ function TransactionStreamPanel() {
             {transactions.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-2 rounded-lg bg-muted/30 animate-fade-in"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 dark:bg-muted/20 animate-fade-in"
               >
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-medium capitalize ${getTypeColor(tx.type)}`}>
+                  <span className={cn("text-xs font-medium capitalize font-inter tracking-[-0.3px]", getTypeColor(tx.type))}>
                     {tx.type}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                     {(tx.profiles as any)?.username || "Unknown"}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium font-inter tracking-[-0.3px] tabular-nums">
                     ${Math.abs(tx.amount).toFixed(2)}
                   </span>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                     {format(new Date(tx.created_at), "HH:mm:ss")}
                   </p>
                 </div>
@@ -411,13 +355,13 @@ function AlertsConsolePanel() {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case "critical":
-        return <XCircle className="h-4 w-4" />;
+        return <Error sx={{ fontSize: 16 }} />;
       case "error":
-        return <AlertTriangle className="h-4 w-4" />;
+        return <Warning sx={{ fontSize: 16 }} />;
       case "warning":
-        return <FileWarning className="h-4 w-4" />;
+        return <Warning sx={{ fontSize: 16 }} />;
       default:
-        return <Bell className="h-4 w-4" />;
+        return <Notifications sx={{ fontSize: 16 }} />;
     }
   };
 
@@ -452,17 +396,10 @@ function AlertsConsolePanel() {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Active Alerts
-          </CardTitle>
-          {alerts.length > 0 && (
-            <Badge variant="destructive">{alerts.length}</Badge>
-          )}
-        </div>
+    <Card className="bg-card dark:bg-[#0e0e0e] border-border/50">
+      <CardHeader className="flex items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold font-inter tracking-[-0.5px]"><Notifications sx={{ fontSize: 16 }} />Active Alerts</CardTitle>
+        {alerts.length > 0 && <AdminBadge variant="error">{alerts.length}</AdminBadge>}
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -471,52 +408,48 @@ function AlertsConsolePanel() {
           </div>
         ) : alerts.length === 0 ? (
           <div className="text-center py-8">
-            <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-            <p className="text-muted-foreground text-sm">All clear!</p>
+            <CheckCircle sx={{ fontSize: 32 }} className="text-emerald-500 mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm font-inter tracking-[-0.3px]">All clear!</p>
           </div>
         ) : (
           <div className="space-y-2">
             {alerts.map((alert) => (
               <div
                 key={alert.id}
-                className={`p-3 rounded-lg border ${getSeverityColor(alert.severity)}`}
+                className={cn("p-3 rounded-lg border", getSeverityColor(alert.severity))}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2">
                     {getSeverityIcon(alert.severity)}
                     <div>
-                      <p className="text-sm font-medium">{alert.title}</p>
+                      <p className="text-sm font-medium font-inter tracking-[-0.3px]">{alert.title}</p>
                       {alert.description && (
-                        <p className="text-xs opacity-80 mt-0.5">
+                        <p className="text-xs opacity-80 mt-0.5 font-inter tracking-[-0.3px]">
                           {alert.description}
                         </p>
                       )}
-                      <p className="text-xs opacity-60 mt-1">
-                        {formatDistanceToNow(new Date(alert.created_at), {
-                          addSuffix: true,
-                        })}
+                      <p className="text-xs opacity-60 mt-1 font-inter tracking-[-0.3px]">
+                        {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     {alert.status === "active" && (
-                      <Button
+                      <AdminButton
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2"
                         onClick={() => acknowledgeAlert(alert.id)}
                       >
-                        <Eye className="h-3 w-3" />
-                      </Button>
+                        <Visibility sx={{ fontSize: 14 }} />
+                      </AdminButton>
                     )}
-                    <Button
+                    <AdminButton
                       size="sm"
                       variant="ghost"
-                      className="h-7 px-2"
                       onClick={() => resolveAlert(alert.id)}
                     >
-                      <X className="h-3 w-3" />
-                    </Button>
+                      <Close sx={{ fontSize: 14 }} />
+                    </AdminButton>
                   </div>
                 </div>
               </div>
@@ -605,7 +538,7 @@ function IncidentBoardPanel() {
       case "monitoring":
         return "bg-blue-500/10 text-blue-500";
       case "resolved":
-        return "bg-green-500/10 text-green-500";
+        return "bg-emerald-500/10 text-emerald-500";
       default:
         return "bg-muted text-muted-foreground";
     }
@@ -614,28 +547,23 @@ function IncidentBoardPanel() {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case "critical":
-        return <Badge className="bg-red-500/10 text-red-500 border-0">Critical</Badge>;
+        return <AdminBadge variant="error">Critical</AdminBadge>;
       case "major":
-        return <Badge className="bg-amber-500/10 text-amber-500 border-0">Major</Badge>;
+        return <AdminBadge variant="warning">Major</AdminBadge>;
       default:
-        return <Badge className="bg-blue-500/10 text-blue-500 border-0">Minor</Badge>;
+        return <AdminBadge variant="info">Minor</AdminBadge>;
     }
   };
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Incidents
-            </CardTitle>
-            <Button size="sm" variant="outline" onClick={() => setShowCreateDialog(true)}>
-              <Plus className="h-3 w-3 mr-1" />
-              New
-            </Button>
-          </div>
+      <Card className="bg-card dark:bg-[#0e0e0e] border-border/50">
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold font-inter tracking-[-0.5px]"><Shield sx={{ fontSize: 16 }} />Incidents</CardTitle>
+          <AdminButton size="sm" variant="outline" onClick={() => setShowCreateDialog(true)}>
+            <Add sx={{ fontSize: 14 }} className="mr-1" />
+            New
+          </AdminButton>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -644,48 +572,51 @@ function IncidentBoardPanel() {
             </div>
           ) : incidents.length === 0 ? (
             <div className="text-center py-8">
-              <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <p className="text-muted-foreground text-sm">No active incidents</p>
+              <CheckCircle sx={{ fontSize: 32 }} className="text-emerald-500 mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm font-inter tracking-[-0.3px]">
+                No active incidents
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {incidents.map((incident) => (
-                <div key={incident.id} className="p-3 rounded-lg bg-muted/30">
+                <div key={incident.id} className="p-3 rounded-lg bg-muted/30 dark:bg-muted/20">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <p className="text-sm font-medium">{incident.title}</p>
+                      <p className="text-sm font-medium font-inter tracking-[-0.3px]">
+                        {incident.title}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         {getSeverityBadge(incident.severity)}
-                        <Badge className={`${getStatusColor(incident.status)} border-0`}>
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-xs font-medium font-inter tracking-[-0.3px]",
+                            getStatusColor(incident.status)
+                          )}
+                        >
                           {incident.status}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                   </div>
                   {incident.description && (
-                    <p className="text-xs text-muted-foreground mb-2">
+                    <p className="text-xs text-muted-foreground mb-2 font-inter tracking-[-0.3px]">
                       {incident.description}
                     </p>
                   )}
                   <div className="flex items-center gap-2">
-                    <Select
+                    <AdminSelect
                       value={incident.status}
-                      onValueChange={(value) => updateIncidentStatus(incident.id, value)}
+                      onChange={(e) => updateIncidentStatus(incident.id, e.target.value)}
+                      className="h-7 text-xs w-[120px]"
                     >
-                      <SelectTrigger className="h-7 text-xs w-[120px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="investigating">Investigating</SelectItem>
-                        <SelectItem value="identified">Identified</SelectItem>
-                        <SelectItem value="monitoring">Monitoring</SelectItem>
-                        <SelectItem value="resolved">Resolved</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(incident.created_at), {
-                        addSuffix: true,
-                      })}
+                      <option value="investigating">Investigating</option>
+                      <option value="identified">Identified</option>
+                      <option value="monitoring">Monitoring</option>
+                      <option value="resolved">Resolved</option>
+                    </AdminSelect>
+                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                     </span>
                   </div>
                 </div>
@@ -695,64 +626,52 @@ function IncidentBoardPanel() {
         </CardContent>
       </Card>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Incident</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Input
-                placeholder="Incident title"
-                value={newIncident.title}
-                onChange={(e) =>
-                  setNewIncident({ ...newIncident, title: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Textarea
-                placeholder="Description (optional)"
-                value={newIncident.description}
-                onChange={(e) =>
-                  setNewIncident({ ...newIncident, description: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Select
-                value={newIncident.severity}
-                onValueChange={(value: "minor" | "major" | "critical") =>
-                  setNewIncident({ ...newIncident, severity: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Severity" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="minor">Minor</SelectItem>
-                  <SelectItem value="major">Major</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+      <AdminDialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <AdminDialogContent size="sm">
+          <AdminDialogHeader>
+            <AdminDialogTitle>Create Incident</AdminDialogTitle>
+          </AdminDialogHeader>
+          <AdminDialogBody className="space-y-4">
+            <AdminInput
+              placeholder="Incident title"
+              value={newIncident.title}
+              onChange={(e) => setNewIncident({ ...newIncident, title: e.target.value })}
+            />
+            <AdminTextarea
+              placeholder="Description (optional)"
+              value={newIncident.description}
+              onChange={(e) => setNewIncident({ ...newIncident, description: e.target.value })}
+            />
+            <AdminSelect
+              value={newIncident.severity}
+              onChange={(e) =>
+                setNewIncident({
+                  ...newIncident,
+                  severity: e.target.value as "minor" | "major" | "critical",
+                })
+              }
+            >
+              <option value="minor">Minor</option>
+              <option value="major">Major</option>
+              <option value="critical">Critical</option>
+            </AdminSelect>
+          </AdminDialogBody>
+          <AdminDialogFooter>
+            <AdminButton variant="ghost" onClick={() => setShowCreateDialog(false)}>
               Cancel
-            </Button>
-            <Button onClick={createIncident} disabled={creating || !newIncident.title}>
-              {creating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AdminButton>
+            <AdminButton onClick={createIncident} disabled={creating || !newIncident.title}>
+              {creating ? "Creating..." : "Create"}
+            </AdminButton>
+          </AdminDialogFooter>
+        </AdminDialogContent>
+      </AdminDialog>
     </>
   );
 }
 
-export default function AdminOperationsCenter() {
+// Main Operations Content Component
+export function OperationsContent() {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = () => {
@@ -761,49 +680,47 @@ export default function AdminOperationsCenter() {
   };
 
   return (
-    <AdminPermissionGuard resource="dashboard">
-      <div className="flex flex-col h-full">
-        <div className="border-b p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                <Activity className="h-6 w-6" />
-                Operations Center
-              </h1>
-              <p className="text-muted-foreground">
-                Live monitoring and incident management
-              </p>
-            </div>
-            <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
+    <div className="flex flex-col h-full">
+      <div className="p-6 border-b border-border/50">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
+              Operations Center
+            </h2>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+              Live monitoring and incident management
+            </p>
           </div>
+          <AdminButton variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            <Refresh
+              sx={{ fontSize: 16 }}
+              className={cn("mr-2", refreshing && "animate-spin")}
+            />
+            Refresh
+          </AdminButton>
         </div>
+      </div>
 
-        <div className="flex-1 overflow-auto p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
-              <SystemHealthPanel />
-              <PayoutQueuePanel />
-            </div>
+      <div className="flex-1 overflow-auto p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <SystemHealthPanel />
+            <PayoutQueuePanel />
+          </div>
 
-            {/* Middle Column */}
-            <div className="space-y-6">
-              <TransactionStreamPanel />
-              <IncidentBoardPanel />
-            </div>
+          {/* Middle Column */}
+          <div className="space-y-6">
+            <TransactionStreamPanel />
+            <IncidentBoardPanel />
+          </div>
 
-            {/* Right Column */}
-            <div>
-              <AlertsConsolePanel />
-            </div>
+          {/* Right Column */}
+          <div>
+            <AlertsConsolePanel />
           </div>
         </div>
       </div>
-    </AdminPermissionGuard>
+    </div>
   );
 }

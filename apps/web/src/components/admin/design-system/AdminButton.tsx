@@ -36,17 +36,17 @@ export const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>
     ref
   ) => {
     const variantClasses = {
-      primary: "bg-foreground text-background hover:bg-foreground/90",
-      secondary: "bg-muted/50 text-foreground hover:bg-muted",
-      ghost: "text-foreground hover:bg-muted/50",
-      destructive: "bg-red-600 text-white hover:bg-red-700",
-      outline: "border border-border/60 text-foreground hover:bg-muted/30",
+      primary: "bg-primary text-primary-foreground hover:bg-primary/90 border-t border-primary/70",
+      secondary: "bg-muted/30 dark:bg-muted/20 text-foreground hover:bg-muted/50 dark:hover:bg-muted/30",
+      ghost: "text-foreground hover:bg-muted/30 dark:hover:bg-muted/20",
+      destructive: "bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20",
+      outline: "border border-border/50 text-foreground hover:bg-muted/30 dark:hover:bg-muted/20",
     };
 
     const sizeClasses = {
-      sm: "h-8 px-3 text-xs gap-1.5",
-      default: "h-9 px-4 text-sm gap-2",
-      lg: "h-10 px-5 text-sm gap-2",
+      sm: "h-9 px-3 text-xs gap-1.5",
+      default: "h-10 px-4 text-sm gap-2",
+      lg: "h-11 px-5 text-sm gap-2",
       icon: "h-9 w-9 p-0",
     };
 
@@ -56,9 +56,9 @@ export const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>
         disabled={disabled || loading}
         className={cn(
           "inline-flex items-center justify-center",
-          "font-medium font-inter",
-          RADII.sm,
-          TRANSITIONS.fast,
+          "font-medium font-inter tracking-[-0.5px]",
+          "rounded-lg",
+          "transition-all duration-200",
           "focus:outline-none focus:ring-2 focus:ring-primary/20",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           variantClasses[variant],
@@ -118,16 +118,16 @@ export const AdminIconButton = React.forwardRef<
     ref
   ) => {
     const variantClasses = {
-      primary: "bg-foreground text-background hover:bg-foreground/90",
-      secondary: "bg-muted/50 text-foreground hover:bg-muted",
-      ghost: "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-      destructive: "text-red-500 hover:bg-red-500/10",
+      primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+      secondary: "bg-muted/30 dark:bg-muted/20 text-foreground hover:bg-muted/50 dark:hover:bg-muted/30",
+      ghost: "text-muted-foreground hover:text-foreground hover:bg-muted/30 dark:hover:bg-muted/20",
+      destructive: "text-red-600 dark:text-red-400 hover:bg-red-500/10",
     };
 
     const sizeClasses = {
-      sm: "h-7 w-7",
-      default: "h-8 w-8",
-      lg: "h-9 w-9",
+      sm: "h-8 w-8",
+      default: "h-9 w-9",
+      lg: "h-10 w-10",
     };
 
     return (
@@ -137,8 +137,8 @@ export const AdminIconButton = React.forwardRef<
         aria-label={label}
         className={cn(
           "inline-flex items-center justify-center",
-          RADII.sm,
-          TRANSITIONS.fast,
+          "rounded-lg",
+          "transition-all duration-200",
           "focus:outline-none focus:ring-2 focus:ring-primary/20",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           variantClasses[variant],
@@ -178,7 +178,7 @@ export const AdminButtonGroup = React.forwardRef<
     className={cn(
       "inline-flex",
       attached
-        ? "[&>button]:rounded-none [&>button:first-child]:rounded-l-md [&>button:last-child]:rounded-r-md [&>button:not(:last-child)]:border-r-0"
+        ? "[&>button]:rounded-none [&>button:first-child]:rounded-l-lg [&>button:last-child]:rounded-r-lg [&>button:not(:last-child)]:border-r-0"
         : "gap-2",
       className
     )}
@@ -219,8 +219,8 @@ export const AdminToggleButton = React.forwardRef<
     ref
   ) => {
     const sizeClasses = {
-      sm: "h-8 px-3 text-xs",
-      default: "h-9 px-4 text-sm",
+      sm: "h-9 px-3 text-xs",
+      default: "h-10 px-4 text-sm",
     };
 
     return (
@@ -232,13 +232,13 @@ export const AdminToggleButton = React.forwardRef<
         onClick={() => onPressedChange(!pressed)}
         className={cn(
           "inline-flex items-center justify-center gap-2",
-          "font-medium font-inter",
-          RADII.sm,
-          TRANSITIONS.fast,
+          "font-medium font-inter tracking-[-0.5px]",
+          "rounded-lg",
+          "transition-all duration-200",
           "focus:outline-none focus:ring-2 focus:ring-primary/20",
           pressed
             ? "bg-primary/10 text-primary"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/30 dark:hover:bg-muted/20",
           sizeClasses[size],
           className
         )}

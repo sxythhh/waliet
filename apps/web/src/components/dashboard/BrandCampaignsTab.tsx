@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { CampaignWizard, CampaignType, WizardMode } from "@/components/brand/Cam
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
+import { BrandUpgradeCTA } from "@/components/brand/BrandUpgradeCTA";
 import { CampaignRowCard } from "@/components/brand/CampaignRowCard";
 import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
 import { CreateJobPostDialog } from "@/components/brand/CreateJobPostDialog";
@@ -549,10 +550,16 @@ export function BrandCampaignsTab({
         }} />
           </div>
 
-          {/* Subscription CTA Embed - Only show in dark mode */}
-          <div className="hidden dark:block w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden mt-4">
-            <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
-          </div>
+          {/* Pick Plan Embed - Show when subscription is not active and in dark mode */}
+          {subscriptionStatus !== "active" && resolvedTheme === "dark" && (
+            <div className="mt-4">
+              <iframe
+                src="https://join.virality.gg/pickplan-4"
+                className="w-full h-[450px] sm:h-[250px] border-0 rounded-2xl"
+                title="Pick a Plan"
+              />
+            </div>
+          )}
 
           {/* Combined Campaigns & Boosts Grid */}
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">

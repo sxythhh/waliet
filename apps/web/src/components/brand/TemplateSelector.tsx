@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GoogleDocsImportButton } from "@/components/brand/GoogleDocsImportButton";
+import { NotionImportButton } from "@/components/brand/NotionImportButton";
 interface BlueprintTemplate {
   id: string;
   title: string;
@@ -63,13 +64,15 @@ interface TemplateSelectorProps {
   onSelectTemplate: (template: BlueprintTemplate) => void;
   onStartBlank?: () => void;
   onImportFromGoogleDocs?: (fields: BlueprintImportFields) => void;
+  onImportFromNotion?: (fields: BlueprintImportFields) => void;
 }
 export function TemplateSelector({
   open: controlledOpen,
   onOpenChange,
   onSelectTemplate,
   onStartBlank,
-  onImportFromGoogleDocs
+  onImportFromGoogleDocs,
+  onImportFromNotion
 }: TemplateSelectorProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [templates, setTemplates] = useState<BlueprintTemplate[]>([]);
@@ -139,6 +142,13 @@ export function TemplateSelector({
     setOpen(false);
   };
 
+  const handleNotionImport = (fields: BlueprintImportFields) => {
+    if (onImportFromNotion) {
+      onImportFromNotion(fields);
+    }
+    setOpen(false);
+  };
+
   // If controlled, don't render the trigger button
   if (isControlled) {
     return <Dialog open={open} onOpenChange={setOpen}>
@@ -178,6 +188,17 @@ export function TemplateSelector({
                 <GoogleDocsImportButton
                   variant="card"
                   onImport={handleGoogleDocsImport}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {/* Import from Notion Option */}
+            {onImportFromNotion && (
+              <div className="mb-3">
+                <NotionImportButton
+                  variant="card"
+                  onImport={handleNotionImport}
                   className="w-full"
                 />
               </div>

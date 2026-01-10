@@ -3,7 +3,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "build/**"]
+      "outputs": ["dist/**", ".next/**", "build/**"],
+      "env": [
+        "RAPIDAPI_KEY",
+        "RESEND_API_KEY",
+        "DISCORD_CLIENT_SECRET",
+        "DISCORD_CLIENT_ID"
+      ]
     },
     "dev": {
       "cache": false,

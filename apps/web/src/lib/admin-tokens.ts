@@ -1,8 +1,8 @@
 /**
  * Admin Design System Tokens
  *
- * Centralized design constants for consistent admin UI.
- * Inspired by Salesforce Lightning, Stripe Dashboard, and Linear.
+ * Aligned with Virality Dashboard Design System.
+ * Uses Inter font with tight tracking, rounded-lg defaults, and proper dark mode support.
  */
 
 // =============================================================================
@@ -12,123 +12,130 @@
 export const SPACING = {
   /** 4px - Tight gaps, icon padding */
   xs: "gap-1",
-  /** 8px - Small gaps between related items */
+  /** 8px - Standard spacing (most common) */
   sm: "gap-2",
-  /** 12px - Default gap between list items */
+  /** 12px - Relaxed spacing */
   md: "gap-3",
-  /** 16px - Cell padding, card content */
+  /** 16px - Spacious */
   lg: "gap-4",
-  /** 20px - Section padding */
+  /** 20px - Section spacing */
   xl: "gap-5",
-  /** 24px - Page padding, major sections */
+  /** 24px - Major section separation */
   "2xl": "gap-6",
 } as const;
 
 export const PADDING = {
-  /** Cell/compact padding: 10px vertical, 16px horizontal */
+  /** Cell/compact padding */
   cell: "px-4 py-2.5",
-  /** Card content padding: 16px */
+  /** Card content padding */
   card: "p-4",
-  /** Section padding: 20px */
+  /** Section padding */
   section: "p-5",
-  /** Page padding: 24px */
-  page: "p-6",
-  /** Sheet/dialog header: 20px horizontal, 16px vertical */
+  /** Page padding - responsive */
+  page: "px-4 sm:px-6 md:px-8 py-6",
+  /** Sheet/dialog header */
   sheetHeader: "px-5 py-4",
-  /** Sheet/dialog content: 20px */
+  /** Sheet/dialog content */
   sheetContent: "px-5 py-5",
-  /** Sheet/dialog footer: 20px horizontal, 12px vertical */
+  /** Sheet/dialog footer */
   sheetFooter: "px-5 py-3",
 } as const;
 
 // =============================================================================
-// TYPOGRAPHY
+// TYPOGRAPHY - Using Virality tracking standards
 // =============================================================================
 
 export const TYPOGRAPHY = {
-  /** Page titles - largest, bold */
-  pageTitle: "text-lg font-semibold tracking-tight font-inter",
-  /** Section headers - medium weight, smaller */
-  sectionTitle: "text-sm font-semibold tracking-tight font-inter",
-  /** Form/field labels - uppercase, muted */
-  label: "text-xs font-medium uppercase tracking-wide text-muted-foreground font-inter",
+  /** Page titles - xl with tight tracking */
+  pageTitle: "text-xl font-semibold font-inter tracking-[-0.5px] text-foreground",
+  /** Section headers */
+  sectionTitle: "text-lg font-semibold font-inter tracking-[-0.5px] text-foreground",
+  /** Subsection headers */
+  subsectionTitle: "text-sm font-semibold font-inter tracking-[-0.5px] text-foreground",
+  /** Form/field labels */
+  label: "text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground",
   /** Inline labels - not uppercase */
-  inlineLabel: "text-xs font-medium text-muted-foreground font-inter tracking-tight",
+  inlineLabel: "text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground",
   /** Body text */
-  body: "text-sm font-inter",
+  body: "text-sm font-inter tracking-[-0.3px] text-foreground",
   /** Data values - tabular for alignment */
-  value: "text-sm font-medium tabular-nums font-inter",
+  value: "text-sm font-medium font-inter tracking-[-0.5px] tabular-nums text-foreground",
   /** Large metric values */
-  metric: "text-2xl font-semibold tracking-tight tabular-nums font-inter",
+  metric: "text-2xl font-semibold font-inter tracking-[-0.5px] tabular-nums text-foreground",
   /** Small/secondary text */
-  caption: "text-xs text-muted-foreground font-inter",
+  caption: "text-xs font-inter tracking-[-0.3px] text-muted-foreground",
 } as const;
 
 // =============================================================================
-// BORDERS
+// BORDERS - Using border-border/50 as default
 // =============================================================================
 
 export const BORDERS = {
-  /** Inner dividers - very subtle */
-  subtle: "border-border/20",
-  /** Section borders - visible but soft */
-  default: "border-border/40",
-  /** Component boundaries - clear separation */
-  strong: "border-border/60",
-  /** Full opacity - rare, high emphasis */
+  /** Very subtle dividers */
+  subtle: "border-border/30",
+  /** Default borders */
+  default: "border-border/50",
+  /** Stronger separation */
+  strong: "border-border/70",
+  /** Full opacity */
   solid: "border-border",
 } as const;
 
 // =============================================================================
-// BACKGROUNDS
+// BACKGROUNDS - With dark mode support
 // =============================================================================
 
 export const BACKGROUNDS = {
   /** Page background */
   page: "bg-background",
   /** Card/panel background */
-  card: "bg-card",
+  card: "bg-card dark:bg-[#0e0e0e]",
   /** Input background */
-  input: "bg-muted/40",
+  input: "bg-muted/50 dark:bg-[#0f0f0f]",
   /** Hover state */
-  hover: "hover:bg-muted/30",
+  hover: "hover:bg-muted/30 dark:hover:bg-muted/20",
   /** Active/selected state */
   active: "bg-primary/10",
   /** Muted sections */
-  muted: "bg-muted/20",
+  muted: "bg-muted/30 dark:bg-muted/20",
   /** Footer/header accent */
-  accent: "bg-muted/30",
+  accent: "bg-muted/40 dark:bg-muted/30",
 } as const;
 
 // =============================================================================
-// STATUS COLORS
+// STATUS COLORS - Aligned with Virality patterns
 // =============================================================================
 
 export const STATUS = {
   success: {
     bg: "bg-emerald-500/10",
-    text: "text-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
     border: "border-emerald-500/20",
+    dot: "bg-emerald-500",
   },
   warning: {
     bg: "bg-amber-500/10",
-    text: "text-amber-500",
+    text: "text-amber-600 dark:text-amber-400",
     border: "border-amber-500/20",
+    dot: "bg-amber-500",
   },
   error: {
     bg: "bg-red-500/10",
-    text: "text-red-500",
+    text: "text-red-600 dark:text-red-400",
     border: "border-red-500/20",
+    dot: "bg-red-500",
   },
   info: {
     bg: "bg-blue-500/10",
-    text: "text-blue-500",
+    text: "text-blue-600 dark:text-blue-400",
     border: "border-blue-500/20",
+    dot: "bg-blue-500",
   },
   neutral: {
     bg: "bg-muted",
     text: "text-muted-foreground",
     border: "border-border",
+    dot: "bg-muted-foreground",
   },
 } as const;
 
@@ -137,14 +144,18 @@ export const STATUS = {
 // =============================================================================
 
 export const SIZES = {
-  /** Standard input height - 36px */
-  input: "h-9",
-  /** Button height - 36px */
-  button: "h-9",
-  /** Small button - 32px */
-  buttonSm: "h-8",
-  /** Icon button - 32px */
-  iconButton: "h-8 w-8",
+  /** Standard input height - 40px (touch friendly) */
+  input: "h-10",
+  /** Button height - 40px */
+  button: "h-10",
+  /** Small button - 36px */
+  buttonSm: "h-9",
+  /** Large button - 44px */
+  buttonLg: "h-11",
+  /** Icon button - 36px */
+  iconButton: "h-9 w-9",
+  /** Small icon button - 32px */
+  iconButtonSm: "h-8 w-8",
   /** Avatar small - 32px */
   avatarSm: "h-8 w-8",
   /** Avatar medium - 40px */
@@ -154,16 +165,18 @@ export const SIZES = {
 } as const;
 
 // =============================================================================
-// RADII
+// RADII - Using rounded-lg as default
 // =============================================================================
 
 export const RADII = {
-  /** Small elements - buttons, inputs */
+  /** Small elements */
   sm: "rounded-md",
-  /** Default - cards, panels */
+  /** Default - cards, buttons, inputs */
   default: "rounded-lg",
   /** Large - dialogs, sheets */
   lg: "rounded-xl",
+  /** Extra large */
+  xl: "rounded-2xl",
   /** Full - badges, avatars */
   full: "rounded-full",
 } as const;
@@ -184,16 +197,16 @@ export const SHADOWS = {
 } as const;
 
 // =============================================================================
-// TRANSITIONS
+// TRANSITIONS - Standard 200ms
 // =============================================================================
 
 export const TRANSITIONS = {
   /** Fast micro-interactions */
-  fast: "transition-all duration-100",
+  fast: "transition-all duration-150",
   /** Default transitions */
-  default: "transition-all duration-150",
+  default: "transition-all duration-200",
   /** Smooth animations */
-  smooth: "transition-all duration-200",
+  smooth: "transition-all duration-200 ease-out",
   /** Slow/deliberate */
   slow: "transition-all duration-300",
 } as const;
@@ -204,13 +217,13 @@ export const TRANSITIONS = {
 
 export const TABLE = {
   /** Header cell styles */
-  headerCell: "px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap bg-muted/30",
+  headerCell: "px-4 py-3 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground whitespace-nowrap bg-muted/30 dark:bg-muted/20",
   /** Body cell styles */
-  bodyCell: "px-4 py-2.5 text-sm",
+  bodyCell: "px-4 py-3 text-sm font-inter tracking-[-0.3px]",
   /** Row styles */
-  row: "border-b border-border/30 transition-colors",
+  row: "border-b border-border/30 transition-colors duration-200",
   /** Row hover */
-  rowHover: "hover:bg-muted/30",
+  rowHover: "hover:bg-muted/30 dark:hover:bg-muted/20",
   /** Row selected */
   rowSelected: "bg-primary/5 hover:bg-primary/10",
 } as const;
@@ -234,30 +247,35 @@ export const OVERLAY = {
 export function inputClasses(error?: boolean): string {
   return [
     SIZES.input,
-    RADII.sm,
+    RADII.default,
     BACKGROUNDS.input,
     "border-0",
-    "px-3",
-    "text-sm font-inter",
+    "px-4",
+    "text-sm font-inter tracking-[-0.3px]",
     "placeholder:text-muted-foreground/60",
-    "focus:ring-1",
+    "focus:outline-none focus:ring-1",
     error ? "ring-1 ring-red-500/30 focus:ring-red-500/50" : "focus:ring-primary/30",
-    TRANSITIONS.fast,
+    TRANSITIONS.default,
   ].join(" ");
 }
 
-/** Build button classes for admin */
+/** Build button classes for admin - primary uses Discord Blurple style */
 export function adminButtonClasses(variant: "primary" | "secondary" | "ghost" = "secondary"): string {
-  const base = [SIZES.button, RADII.sm, "text-sm font-medium font-inter", TRANSITIONS.fast].join(" ");
+  const base = [
+    SIZES.button,
+    RADII.default,
+    "text-sm font-medium font-inter tracking-[-0.5px]",
+    TRANSITIONS.default,
+  ].join(" ");
 
   switch (variant) {
     case "primary":
-      return `${base} bg-foreground text-background hover:bg-foreground/90`;
+      return `${base} bg-primary text-primary-foreground hover:bg-primary/90 border-t border-primary/70`;
     case "ghost":
-      return `${base} hover:bg-muted/50`;
+      return `${base} hover:bg-muted/30 dark:hover:bg-muted/20`;
     case "secondary":
     default:
-      return `${base} bg-muted/50 hover:bg-muted`;
+      return `${base} bg-muted/30 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/30`;
   }
 }
 
@@ -268,7 +286,7 @@ export function badgeClasses(status: keyof typeof STATUS = "neutral"): string {
     "inline-flex items-center",
     "px-2 py-0.5",
     RADII.full,
-    "text-xs font-medium font-inter",
+    "text-xs font-medium font-inter tracking-[-0.3px]",
     s.bg,
     s.text,
   ].join(" ");

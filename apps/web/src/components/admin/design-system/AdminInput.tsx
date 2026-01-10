@@ -46,19 +46,19 @@ export const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
           ref={ref}
           className={cn(
             "flex w-full",
-            inputSize === "sm" ? "h-8" : SIZES.input,
-            RADII.sm,
-            BACKGROUNDS.input,
+            inputSize === "sm" ? "h-9" : "h-10",
+            "rounded-lg",
+            "bg-muted/50 dark:bg-[#0f0f0f]",
             "border-0",
-            leftIcon ? "pl-9" : "px-3",
-            rightElement ? "pr-9" : "px-3",
-            "text-sm font-inter",
+            leftIcon ? "pl-9" : "px-4",
+            rightElement ? "pr-9" : "px-4",
+            "text-sm font-inter tracking-[-0.3px]",
             "placeholder:text-muted-foreground/60",
             "focus:outline-none focus:ring-1",
             error
               ? "ring-1 ring-red-500/30 focus:ring-red-500/50"
               : "focus:ring-primary/30",
-            TRANSITIONS.fast,
+            "transition-all duration-200",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             className
           )}
@@ -98,17 +98,17 @@ export const AdminTextarea = React.forwardRef<
         ref={ref}
         className={cn(
           "flex w-full min-h-[80px]",
-          RADII.sm,
-          BACKGROUNDS.input,
+          "rounded-lg",
+          "bg-muted/50 dark:bg-[#0f0f0f]",
           "border-0",
-          "px-3 py-2",
-          "text-sm font-inter",
+          "px-4 py-3",
+          "text-sm font-inter tracking-[-0.3px]",
           "placeholder:text-muted-foreground/60",
           "focus:outline-none focus:ring-1",
           error
             ? "ring-1 ring-red-500/30 focus:ring-red-500/50"
             : "focus:ring-primary/30",
-          TRANSITIONS.fast,
+          "transition-all duration-200",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "resize-none",
           className
@@ -209,17 +209,17 @@ export const AdminSelect = React.forwardRef<HTMLSelectElement, AdminSelectProps>
           ref={ref}
           className={cn(
             "flex w-full",
-            SIZES.input,
-            RADII.sm,
-            BACKGROUNDS.input,
+            "h-10",
+            "rounded-lg",
+            "bg-muted/50 dark:bg-[#0f0f0f]",
             "border-0",
-            "px-3",
-            "text-sm font-inter",
+            "px-4",
+            "text-sm font-inter tracking-[-0.3px]",
             "focus:outline-none focus:ring-1",
             error
               ? "ring-1 ring-red-500/30 focus:ring-red-500/50"
               : "focus:ring-primary/30",
-            TRANSITIONS.fast,
+            "transition-all duration-200",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             "cursor-pointer",
             "appearance-none",
@@ -267,7 +267,7 @@ export const AdminSearchInput = React.forwardRef<
           <button
             type="button"
             onClick={onClear}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-all duration-200"
           >
             <X className="h-4 w-4" />
           </button>

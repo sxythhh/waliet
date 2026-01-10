@@ -36,7 +36,7 @@ export const AdminPageHeader = React.forwardRef<HTMLDivElement, AdminPageHeaderP
         <div className="min-w-0 flex-1">
           <h1 className={TYPOGRAPHY.pageTitle}>{title}</h1>
           {description && (
-            <p className={cn(TYPOGRAPHY.caption, "mt-1")}>{description}</p>
+            <p className={cn(TYPOGRAPHY.caption, "mt-1.5")}>{description}</p>
           )}
         </div>
         {actions && (
@@ -84,7 +84,7 @@ export const AdminSection = React.forwardRef<HTMLDivElement, AdminSectionProps>(
           <div>
             {title && <h2 className={TYPOGRAPHY.sectionTitle}>{title}</h2>}
             {description && (
-              <p className={cn(TYPOGRAPHY.caption, "mt-0.5")}>{description}</p>
+              <p className={cn(TYPOGRAPHY.caption, "mt-1")}>{description}</p>
             )}
           </div>
           {action}
@@ -126,7 +126,7 @@ export const AdminToolbar = React.forwardRef<HTMLDivElement, AdminToolbarProps>(
     <div
       ref={ref}
       className={cn(
-        "px-6 py-3",
+        "px-4 sm:px-6 md:px-8 py-3",
         !noBorder && cn("border-b", BORDERS.default),
         "flex items-center gap-3",
         "flex-shrink-0",
@@ -165,11 +165,13 @@ export const AdminEmptyState = React.forwardRef<HTMLDivElement, AdminEmptyStateP
       {...props}
     >
       {icon && (
-        <div className="mb-4 text-muted-foreground/40">{icon}</div>
+        <div className="w-12 h-12 rounded-full bg-muted/50 dark:bg-muted/30 flex items-center justify-center mb-4">
+          <div className="text-muted-foreground/60">{icon}</div>
+        </div>
       )}
-      <h3 className={cn(TYPOGRAPHY.sectionTitle, "text-foreground")}>{title}</h3>
+      <h3 className="font-inter font-medium tracking-[-0.5px] text-foreground">{title}</h3>
       {description && (
-        <p className={cn(TYPOGRAPHY.caption, "mt-1 max-w-sm")}>{description}</p>
+        <p className={cn(TYPOGRAPHY.caption, "mt-1.5 max-w-sm")}>{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -220,7 +222,7 @@ export const AdminGrid = React.forwardRef<HTMLDivElement, AdminGridProps>(
       1: "grid-cols-1",
       2: "grid-cols-1 sm:grid-cols-2",
       3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-      4: "grid-cols-2 lg:grid-cols-4",
+      4: "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4",
     }[cols];
 
     const gapClass = {

@@ -9,6 +9,7 @@ Read and follow these skills before writing any code:
 - .claude/skills/typescript/SKILL.md
 - .claude/skills/react-web/SKILL.md
 - .claude/skills/supabase/SKILL.md
+- .claude/skills/virality-dashboard/SKILL.md
 
 ## Project Overview
 Virality's web app is the marketplace infrastructure where brands post opportunities (campaigns or boosts) for content campaigns and manage creator/video editor hiring, payments, and performance tracking through our dashboard. It handles the entire workflow from campaign wallet funding to verified view tracking to automated creator payouts, replacing what used to be manual coordination with self-serve platform mechanics.

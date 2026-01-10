@@ -36,6 +36,8 @@ interface AuditLogEntry {
 
 const ACTION_TYPES = [
   { value: "all", label: "All Actions" },
+  { value: "GRANT_ROLE", label: "Role Granted" },
+  { value: "REVOKE_ROLE", label: "Role Revoked" },
   { value: "login", label: "Login" },
   { value: "logout", label: "Logout" },
   { value: "payout_request", label: "Payout Request" },
@@ -51,6 +53,31 @@ const ACTION_TYPES = [
   { value: "admin_action", label: "Admin Action" },
 ];
 
+// Human-readable descriptions for actions
+const ACTION_DESCRIPTIONS: Record<string, (metadata: Record<string, any> | null) => string> = {
+  GRANT_ROLE: (meta) => {
+    const role = meta?.role_granted || 'unknown role';
+    return `Granted ${role} permissions to a user`;
+  },
+  REVOKE_ROLE: (meta) => {
+    const role = meta?.role_revoked || 'unknown role';
+    return `Removed ${role} permissions from a user`;
+  },
+  login: () => "User logged into their account",
+  logout: () => "User logged out of their account",
+  payout_request: (meta) => `Requested a payout of $${meta?.amount || '?'}`,
+  payout_approved: (meta) => `Payout of $${meta?.amount || '?'} was approved`,
+  payout_rejected: (meta) => `Payout request was rejected${meta?.reason ? `: ${meta.reason}` : ''}`,
+  fraud_flag_created: (meta) => `Flagged for potential fraud${meta?.reason ? `: ${meta.reason}` : ''}`,
+  fraud_flag_resolved: (meta) => `Fraud flag resolved${meta?.resolution ? ` - ${meta.resolution}` : ''}`,
+  user_banned: (meta) => `User was banned${meta?.reason ? `: ${meta.reason}` : ''}`,
+  user_unbanned: () => "User ban was lifted",
+  campaign_created: (meta) => `Created campaign "${meta?.campaign_name || 'Unknown'}"`,
+  campaign_updated: (meta) => `Updated campaign "${meta?.campaign_name || 'Unknown'}"`,
+  submission_reviewed: (meta) => `Reviewed submission - ${meta?.decision || 'decision made'}`,
+  admin_action: (meta) => meta?.description || "Administrative action performed",
+};
+
 const ACTOR_TYPES = [
   { value: "all", label: "All Actors" },
   { value: "user", label: "Users" },
@@ -59,6 +86,8 @@ const ACTOR_TYPES = [
 ];
 
 const actionIcons: Record<string, { icon: string; color: string; bg: string }> = {
+  GRANT_ROLE: { icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6", color: "text-green-400", bg: "bg-green-500/10" },
+  REVOKE_ROLE: { icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 11h-6", color: "text-red-400", bg: "bg-red-500/10" },
   login: { icon: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3", color: "text-green-400", bg: "bg-green-500/10" },
   logout: { icon: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", color: "text-gray-400", bg: "bg-gray-500/10" },
   payout_request: { icon: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", color: "text-blue-400", bg: "bg-blue-500/10" },
@@ -93,10 +122,7 @@ export function AuditLog() {
     try {
       let query = supabase
         .from("security_audit_log")
-        .select(`
-          *,
-          actor_profile:profiles!security_audit_log_actor_id_fkey(username, full_name)
-        `)
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -109,8 +135,7 @@ export function AuditLog() {
 
       const { data, error } = await query;
       if (error) {
-        // Table might not exist yet - gracefully handle
-        console.warn("Audit log query failed:", error.message);
+        console.error("Audit log query failed:", error.message, error.details, error.hint);
         setEntries([]);
         return;
       }
@@ -245,12 +270,13 @@ export function AuditLog() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white font-inter tracking-[-0.5px]">
-                        {formatActionType(entry.action_type)}
+                        {ACTION_DESCRIPTIONS[entry.action_type]?.(entry.metadata) || formatActionType(entry.action_type)}
                       </p>
                       <p className="text-xs text-white/40 font-inter tracking-[-0.5px] truncate">
-                        {entry.actor_profile?.username || entry.actor_type}{" "}
-                        <span className="text-white/20">on</span>{" "}
-                        {entry.entity_type} #{entry.entity_id.slice(0, 8)}
+                        {entry.actor_type === 'system' ? 'System' : entry.actor_type === 'user' ? 'User action' : 'Admin action'}
+                        {entry.metadata?.target_user_id && (
+                          <span className="text-white/30"> • Target: {entry.metadata.target_user_id.slice(0, 8)}...</span>
+                        )}
                       </p>
                     </div>
 
@@ -271,43 +297,64 @@ export function AuditLog() {
                   {/* Expanded details */}
                   {isExpanded && (
                     <div className="px-5 py-4 bg-white/[0.01] border-t border-white/[0.04]">
-                      <div className="grid grid-cols-2 gap-4 text-xs">
-                        <div>
-                          <span className="text-white/30">Actor</span>
-                          <p className="text-white font-mono mt-1">
-                            {entry.actor_profile?.username || entry.actor_id || entry.actor_type}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-white/30">Entity ID</span>
-                          <p className="text-white font-mono mt-1 truncate">{entry.entity_id}</p>
-                        </div>
-                        <div>
-                          <span className="text-white/30">IP Address</span>
-                          <p className="text-white font-mono mt-1">{entry.ip_address || "N/A"}</p>
-                        </div>
-                        <div>
-                          <span className="text-white/30">Timestamp</span>
-                          <p className="text-white mt-1">
-                            {format(new Date(entry.created_at), "PPpp")}
-                          </p>
-                        </div>
-                        {entry.user_agent && (
-                          <div className="col-span-2">
-                            <span className="text-white/30">User Agent</span>
-                            <p className="text-white/60 font-mono mt-1 text-[10px] truncate">
-                              {entry.user_agent}
+                      <div className="space-y-4">
+                        {/* Key details in a cleaner format */}
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span className="text-white/30">Performed by</span>
+                            <p className="text-white mt-1">
+                              {entry.actor_type === 'system' ? 'System (automated)' :
+                               entry.actor_type === 'admin' ? 'Administrator' : 'User'}
                             </p>
                           </div>
-                        )}
+                          <div>
+                            <span className="text-white/30">When</span>
+                            <p className="text-white mt-1">
+                              {format(new Date(entry.created_at), "PPpp")}
+                            </p>
+                          </div>
+                          {entry.ip_address && (
+                            <div>
+                              <span className="text-white/30">IP Address</span>
+                              <p className="text-white font-mono mt-1">{entry.ip_address}</p>
+                            </div>
+                          )}
+                          {entry.metadata?.target_user_id && (
+                            <div>
+                              <span className="text-white/30">Target User</span>
+                              <p className="text-white font-mono mt-1 text-[11px]">{entry.metadata.target_user_id}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Formatted metadata details */}
                         {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-                          <div className="col-span-2">
-                            <span className="text-white/30">Metadata</span>
-                            <pre className="text-white/60 font-mono mt-1 text-[10px] bg-black/20 rounded-lg p-3 overflow-x-auto">
-                              {JSON.stringify(entry.metadata, null, 2)}
-                            </pre>
+                          <div>
+                            <span className="text-white/30 text-xs">Details</span>
+                            <div className="mt-2 bg-black/20 rounded-lg p-3 space-y-2">
+                              {Object.entries(entry.metadata)
+                                .filter(([key]) => !['timestamp', 'target_user_id'].includes(key))
+                                .map(([key, value]) => (
+                                  <div key={key} className="flex items-start gap-3 text-xs">
+                                    <span className="text-white/40 min-w-[100px]">
+                                      {key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                                    </span>
+                                    <span className="text-white font-mono">
+                                      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                    </span>
+                                  </div>
+                                ))
+                              }
+                            </div>
                           </div>
                         )}
+
+                        {/* Technical IDs (collapsed) - masked for security */}
+                        <div className="pt-2 border-t border-white/[0.04]">
+                          <p className="text-[10px] text-white/20 font-mono">
+                            Entry: {entry.id.slice(0, 4)}...{entry.id.slice(-4)} • Entity: {entry.entity_type}/****
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}

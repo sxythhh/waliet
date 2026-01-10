@@ -31,6 +31,22 @@ interface Blueprint {
   updated_at: string;
   campaign_id?: string | null;
 }
+
+interface BlueprintTemplate {
+  title?: string;
+  content?: string;
+  platforms?: string[];
+  hooks?: string[];
+  talking_points?: string[];
+  dos_and_donts?: { dos: string[]; donts: string[] };
+  call_to_action?: string;
+  hashtags?: string[];
+  brand_voice?: string;
+  target_personas?: Record<string, unknown>[];
+  assets?: Record<string, unknown>[];
+  example_videos?: string[];
+  content_guidelines?: string;
+}
 interface BlueprintsTabProps {
   brandId: string;
 }
@@ -61,8 +77,8 @@ const getStatusConfig = (status: BlueprintStatus) => {
 export function BlueprintsTab({
   brandId
 }: BlueprintsTabProps) {
-  const { theme } = useTheme();
-  const isDarkMode = theme === "dark" || (theme === "system" && typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
@@ -175,7 +191,7 @@ export function BlueprintsTab({
     setWizardType('boost');
     setWizardOpen(true);
   };
-  const handleSelectTemplate = async (template: any) => {
+  const handleSelectTemplate = async (template: BlueprintTemplate) => {
     const {
       data,
       error
@@ -200,6 +216,46 @@ export function BlueprintsTab({
       toast.error("Failed to create blueprint");
       return;
     }
+    setTemplateSelectorOpen(false);
+    setSearchParams(prev => {
+      prev.set("blueprint", data.id);
+      return prev;
+    });
+  };
+  const handleImportFromExternal = async (fields: {
+    title?: string;
+    content?: string;
+    brand_voice?: string;
+    target_personas?: Record<string, unknown>[];
+    hooks?: string[];
+    talking_points?: string[];
+    dos_and_donts?: { dos: string[]; donts: string[] };
+    call_to_action?: string;
+    hashtags?: string[];
+    platforms?: string[];
+  }) => {
+    const {
+      data,
+      error
+    } = await supabase.from("blueprints").insert({
+      brand_id: brandId,
+      title: fields.title || "Imported Blueprint",
+      content: fields.content,
+      platforms: fields.platforms,
+      hooks: fields.hooks,
+      talking_points: fields.talking_points,
+      dos_and_donts: fields.dos_and_donts,
+      call_to_action: fields.call_to_action,
+      hashtags: fields.hashtags,
+      brand_voice: fields.brand_voice,
+      target_personas: fields.target_personas,
+    }).select().single();
+    if (error) {
+      console.error("Error creating blueprint from import:", error);
+      toast.error("Failed to import blueprint");
+      return;
+    }
+    toast.success("Blueprint imported successfully");
     setTemplateSelectorOpen(false);
     setSearchParams(prev => {
       prev.set("blueprint", data.id);
@@ -373,7 +429,14 @@ export function BlueprintsTab({
         mode="create"
       />}
 
-      <TemplateSelector open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen} onSelectTemplate={handleSelectTemplate} onStartBlank={createBlueprint} />
+      <TemplateSelector
+        open={templateSelectorOpen}
+        onOpenChange={setTemplateSelectorOpen}
+        onSelectTemplate={handleSelectTemplate}
+        onStartBlank={createBlueprint}
+        onImportFromGoogleDocs={handleImportFromExternal}
+        onImportFromNotion={handleImportFromExternal}
+      />
 
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
     </div>;

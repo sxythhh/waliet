@@ -49,7 +49,7 @@ export const AdminBadge = React.forwardRef<HTMLSpanElement, AdminBadgeProps>(
           ref={ref}
           className={cn(
             "inline-flex items-center gap-1.5",
-            "font-medium font-inter",
+            "font-medium font-inter tracking-[-0.3px]",
             sizeClasses[size],
             className
           )}
@@ -75,8 +75,8 @@ export const AdminBadge = React.forwardRef<HTMLSpanElement, AdminBadgeProps>(
         ref={ref}
         className={cn(
           "inline-flex items-center",
-          RADII.full,
-          "font-medium font-inter",
+          "rounded-full",
+          "font-semibold font-inter tracking-[-0.3px]",
           sizeClasses[size],
           outline
             ? cn("border", colors.border, colors.text, "bg-transparent")
@@ -189,8 +189,8 @@ export const AdminCountBadge = React.forwardRef<
       className={cn(
         "inline-flex items-center justify-center",
         "min-w-[18px] h-[18px] px-1.5",
-        RADII.full,
-        "text-[10px] font-semibold font-inter tabular-nums",
+        "rounded-full",
+        "text-[10px] font-semibold font-inter tracking-[-0.3px] tabular-nums",
         colors.bg,
         colors.text,
         className
@@ -240,8 +240,8 @@ export const AdminPlatformBadge = React.forwardRef<
     className={cn(
       "inline-flex items-center",
       "px-2 py-0.5",
-      RADII.full,
-      "text-xs font-medium font-inter",
+      "rounded-full",
+      "text-xs font-medium font-inter tracking-[-0.3px]",
       platformColors[platform],
       className
     )}
