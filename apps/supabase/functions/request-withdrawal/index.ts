@@ -124,7 +124,9 @@ Deno.serve(async (req) => {
     let withholdingRate = 0;
     let withholdingAmount = 0;
 
-    if (taxReq?.required && !isAdmin) {
+    // Only enforce tax form requirement if user has set their tax country
+    // Skip enforcement for 'no_tax_country' reason - allow withdrawals without tax country set
+    if (taxReq?.required && !isAdmin && taxReq?.reason !== 'no_tax_country') {
       // Tax form is required but not submitted - reject withdrawal (admins bypass)
       const formTypeLabel = taxReq.form_type === 'w9' ? 'W-9' : 'W-8BEN';
       return new Response(JSON.stringify({
