@@ -287,9 +287,14 @@ export default function Campaigns() {
 
     setIsUpdating(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: authError } = await supabase.auth.getUser();
+      if (authError || !userData?.user?.id) {
+        toast.error("Authentication error");
+        setIsUpdating(false);
+        return;
+      }
 
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | null> = {
         review_status: reviewAction === "approve" ? "approved" : reviewAction === "reject" ? "rejected" : "changes_requested",
         review_notes: reviewNotes || null,
         reviewed_by: userData?.user?.id,
@@ -955,8 +960,8 @@ export default function Campaigns() {
           preselectedCampaign={{
             id: selectedCampaign.id,
             title: selectedCampaign.title,
-            brand_name: selectedCampaign.brand_name,
-            brand_logo_url: selectedCampaign.brand_logo_url,
+            brand_name: getBrandName(selectedCampaign),
+            brand_logo_url: getBrandLogo(selectedCampaign),
             budget: selectedCampaign.budget || 0,
             budget_used: selectedCampaign.budget_used,
             status: selectedCampaign.status,
@@ -964,7 +969,7 @@ export default function Campaigns() {
           }}
           onSuccess={() => {
             fetchCampaigns();
-            fetchBoosts();
+            fetchStats();
           }}
         />
       )}
