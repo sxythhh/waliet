@@ -50,3 +50,6 @@ apps/supabase/.temp/
 .turbo
 .vercel
 .env*.local
+
+# Package build outputs
+packages/*/dist

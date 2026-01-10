@@ -7,16 +7,20 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=@virality/web",
-    "dev:turbo": "turbo run dev",
-    "dev:web": "npm run dev --workspace=@virality/web",
+    "dev": "turbo run dev --filter=@virality/web",
+    "dev:web": "turbo run dev --filter=@virality/web",
+    "dev:web:only": "npm run dev --workspace=@virality/web",
     "dev:mobile": "turbo run dev --filter=@virality/mobile",
+    "dev:mobile:only": "npm run dev --workspace=@virality/mobile",
+    "dev:all": "turbo run dev",
     "build": "turbo run build",
     "build:web": "turbo run build --filter=@virality/web",
+    "build:packages": "turbo run build --filter=@virality/shared-types --filter=@virality/api-client",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
+    "clean:dist": "rm -rf packages/*/dist apps/*/dist",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {

@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "react-native start",
+    "build": "echo 'Mobile builds handled by native tooling (Xcode/Gradle)'",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "lint": "eslint .",
     "test": "jest",
+    "typecheck": "tsc --noEmit",
     "pod-install": "cd ios && bundle exec pod install",
     "clean": "cd android && ./gradlew clean && cd ../ios && xcodebuild clean"
   },
