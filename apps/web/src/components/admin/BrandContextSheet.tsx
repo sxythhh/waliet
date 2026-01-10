@@ -21,9 +21,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Crown } from "lucide-react";
+import { Crown, ArrowRight } from "lucide-react";
 import { CustomPlanManager } from "./CustomPlanManager";
-import { BrandCRMTab } from "./BrandCRMTab";
+import { BrandCRMOverview } from "./BrandCRMOverview";
 
 interface Brand {
   id: string;
@@ -43,6 +43,7 @@ interface Brand {
   subscription_status: string | null;
   subscription_plan: string | null;
   subscription_expires_at: string | null;
+  close_lead_id?: string | null;
 }
 
 interface BrandStats {
@@ -107,7 +108,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "activity" | "crm" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "activity" | "settings">("overview");
 
   // Subscription editing state
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
@@ -525,7 +526,6 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
               {[
                 { id: "overview", label: "Overview" },
                 { id: "activity", label: "Activity" },
-                { id: "crm", label: "CRM" },
                 { id: "settings", label: "Settings" },
               ].map((tab) => (
                 <button
@@ -626,6 +626,17 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   )}
                 </section>
 
+                {/* Close CRM Data */}
+                <section>
+                  <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
+                    Close CRM
+                  </h3>
+                  <BrandCRMOverview
+                    brandId={brand.id}
+                    closeLeadId={brand.close_lead_id || null}
+                  />
+                </section>
+
                 {/* Campaigns */}
                 <section>
                   <div className="flex items-center justify-between mb-3">
@@ -678,22 +689,14 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                     Actions
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        onClick={() => navigate(`/brand/${brand.slug}`)}
-                        className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-                      >
-                        Dashboard
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => navigate(`/brand/${brand.slug}/analytics`)}
-                        className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-                      >
-                        Analytics
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate(`/dashboard?workspace=${brand.slug}&tab=campaigns`)}
+                      className="w-full h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted justify-start"
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      Switch to Workspace
+                    </Button>
                     <Button
                       variant="ghost"
                       onClick={() => setCustomPlanDialogOpen(true)}
@@ -758,10 +761,6 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   </p>
                 )}
               </section>
-            )}
-
-            {activeTab === "crm" && (
-              <BrandCRMTab brandId={brand.id} brandName={brand.name} />
             )}
 
             {activeTab === "settings" && (

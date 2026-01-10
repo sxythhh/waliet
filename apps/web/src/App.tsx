@@ -265,19 +265,9 @@ const App = () => (
                   <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
                   <Route path="/brand/:brandSlug/join/:token" element={<BrandInvite />} />
                   <Route path="/brand/:brandSlug/onboarding" element={<BrandOnboarding />} />
-                  <Route path="/brand/:slug/analytics" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <BrandLayout><BrandDashboard /></BrandLayout>
-                    </Suspense>
-                  } />
                   <Route path="/brand/:slug/training" element={
                     <Suspense fallback={<PageLoader />}>
                       <BrandLayout><Training /></BrandLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/brand/:slug" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <BrandLayout><BrandDashboard /></BrandLayout>
                     </Suspense>
                   } />
                   <Route path="/portal/:slug" element={<BrandPortal />} />
