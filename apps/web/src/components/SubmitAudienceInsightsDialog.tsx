@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -46,17 +46,29 @@ export function SubmitAudienceInsightsDialog({
   const [previousSubmissions, setPreviousSubmissions] = useState<DemographicSubmission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const { resolvedTheme } = useTheme();
 
-  // Fetch previous submissions when dialog opens
-  useEffect(() => {
-    if (open && socialAccountId) {
-      fetchPreviousSubmissions();
+  // Cleanup progress interval helper
+  const clearProgressInterval = useCallback(() => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
     }
-  }, [open, socialAccountId]);
+  }, []);
 
-  const fetchPreviousSubmissions = async () => {
+  // Clear state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setVideoFile(null);
+      setUploadProgress(0);
+      clearProgressInterval();
+    }
+  }, [open, clearProgressInterval]);
+
+  // Fetch previous submissions
+  const fetchPreviousSubmissions = useCallback(async () => {
     setLoadingSubmissions(true);
     try {
       const { data, error } = await supabase
@@ -73,12 +85,19 @@ export function SubmitAudienceInsightsDialog({
     } finally {
       setLoadingSubmissions(false);
     }
-  };
+  }, [socialAccountId]);
 
-  const getPlatformIcon = (platform: string) => {
+  // Fetch previous submissions when dialog opens
+  useEffect(() => {
+    if (open && socialAccountId) {
+      fetchPreviousSubmissions();
+    }
+  }, [open, socialAccountId, fetchPreviousSubmissions]);
+
+  const getPlatformIcon = (platformName: string) => {
     const iconClass = "h-5 w-5";
     const isDark = resolvedTheme === 'dark';
-    switch (platform.toLowerCase()) {
+    switch (platformName.toLowerCase()) {
       case "tiktok":
         return <img src={isDark ? tiktokLogoWhite : tiktokLogoBlack} alt="TikTok" className={iconClass} />;
       case "instagram":
@@ -103,6 +122,7 @@ export function SubmitAudienceInsightsDialog({
   };
 
   const hasPendingSubmission = previousSubmissions.some(s => s.status === 'pending');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoFile) {
@@ -126,6 +146,7 @@ export function SubmitAudienceInsightsDialog({
           title: "Error",
           description: "You must be logged in to submit audience insights"
         });
+        setUploading(false);
         return;
       }
 
@@ -133,7 +154,7 @@ export function SubmitAudienceInsightsDialog({
       const {
         data: pendingSubmission
       } = await supabase.from('demographic_submissions').select('status').eq('social_account_id', socialAccountId).eq('status', 'pending').limit(1).maybeSingle();
-      
+
       if (pendingSubmission) {
         toast({
           variant: "destructive",
@@ -146,7 +167,8 @@ export function SubmitAudienceInsightsDialog({
 
       // Upload video to R2 via edge function
       setUploadProgress(0);
-      const progressInterval = setInterval(() => {
+      clearProgressInterval();
+      progressIntervalRef.current = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) return prev;
           return prev + Math.random() * 15;
@@ -160,20 +182,40 @@ export function SubmitAudienceInsightsDialog({
       formData.append('socialAccountId', socialAccountId);
 
       // Upload to R2 via edge function
-      const uploadResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-demographics-video`,
-        {
-          method: 'POST',
-          body: formData,
+      let uploadResponse: Response;
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        if (!supabaseUrl) {
+          throw new Error('Application configuration error. Please refresh and try again.');
         }
-      );
 
-      clearInterval(progressInterval);
+        uploadResponse = await fetch(
+          `${supabaseUrl}/functions/v1/upload-demographics-video`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: formData,
+          }
+        );
+      } catch (fetchError: unknown) {
+        clearProgressInterval();
+        setUploadProgress(0);
+        // Handle network errors specifically
+        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
+          throw new Error('Network error. Please check your internet connection and try again.');
+        }
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Failed to connect to upload service';
+        throw new Error(errorMessage);
+      }
+
+      clearProgressInterval();
 
       if (!uploadResponse.ok) {
         setUploadProgress(0);
         const errorData = await uploadResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to upload video');
+        throw new Error(errorData.error || `Upload failed (status ${uploadResponse.status})`);
       }
 
       const uploadResult = await uploadResponse.json();
@@ -247,17 +289,20 @@ export function SubmitAudienceInsightsDialog({
       setVideoFile(null);
       onOpenChange(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit audience insights";
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to submit audience insights"
+        description: errorMessage
       });
     } finally {
       setUploading(false);
       setUploadProgress(0);
+      clearProgressInterval();
     }
   };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -283,6 +328,7 @@ export function SubmitAudienceInsightsDialog({
     }
     setVideoFile(file);
   };
+
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
         {/* Header */}
