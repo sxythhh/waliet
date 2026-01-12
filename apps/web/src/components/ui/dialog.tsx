@@ -29,7 +29,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const dialogContentVariants = cva(
   [
     "fixed z-50 grid w-[calc(100%-2rem)]",
-    "bg-background",
+    "bg-background outline-none",
     "p-6 shadow-2xl shadow-black/40",
     "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
     "max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl",

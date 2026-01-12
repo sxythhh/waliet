@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Wallet, ArrowRight, UserCircle } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 
 interface BrandToPersonalTransferDialogProps {
   open: boolean;
@@ -95,55 +95,41 @@ export function BrandToPersonalTransferDialog({
         <div className="px-6 pb-6 space-y-5">
           {/* Brand Wallet Balance */}
           <div className="p-4 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p 
-                  className="text-xs text-muted-foreground tracking-[-0.3px]"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  {brandName} Balance
-                </p>
-                <p 
-                  className="text-xl font-semibold text-foreground tracking-[-0.5px]"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  {formatCurrency(viralityBalance)}
-                </p>
-              </div>
-            </div>
+            <p
+              className="text-xs text-muted-foreground tracking-[-0.3px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              {brandName} Balance
+            </p>
+            <p
+              className="text-xl font-semibold text-foreground tracking-[-0.5px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              {formatCurrency(viralityBalance)}
+            </p>
           </div>
 
           {/* Transfer Arrow */}
           <div className="flex items-center justify-center">
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              <ArrowDown className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
 
           {/* Personal Wallet */}
           <div className="p-4 bg-muted/50 rounded-lg border border-dashed border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <UserCircle className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <p 
-                  className="text-xs text-muted-foreground tracking-[-0.3px]"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  Transfer to
-                </p>
-                <p 
-                  className="text-base font-medium text-foreground tracking-[-0.5px]"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  Your Personal Wallet
-                </p>
-              </div>
-            </div>
+            <p
+              className="text-xs text-muted-foreground tracking-[-0.3px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Transfer to
+            </p>
+            <p
+              className="text-base font-medium text-foreground tracking-[-0.5px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Your Personal Wallet
+            </p>
           </div>
 
           {/* Amount Input */}
@@ -217,7 +203,7 @@ export function BrandToPersonalTransferDialog({
             <Button
               onClick={handleTransfer}
               disabled={loading || !isValidAmount}
-              className="flex-1 h-11 bg-foreground text-background hover:bg-foreground/90 font-medium tracking-[-0.5px]"
+              className="flex-1 h-11 bg-blue-500 text-white hover:bg-blue-600 font-medium tracking-[-0.5px]"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               {loading ? 'Transferring...' : `Transfer ${formatCurrency(transferAmount)}`}

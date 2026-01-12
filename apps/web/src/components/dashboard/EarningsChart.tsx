@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, startOfWeek, startOfMonth, eachWeekOfInterval, eachDayOfInterval, eachMonthOfInterval, subMonths, subDays, subYears } from "date-fns";
 
@@ -23,11 +22,13 @@ interface EarningsChartProps {
   showPeriodSelector?: boolean;
 }
 
-const chartConfig = {
-  earnings: {
-    label: "Earnings",
-    color: "hsl(217.2 91.2% 59.8%)", // blue-500
-  },
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 };
 
 const periodLabels: Record<EarningsChartPeriod, string> = {
@@ -208,6 +209,12 @@ export function EarningsChart({
     </Select>
   );
 
+  // Check if there are any earning transactions at all (regardless of period)
+  const hasAnyEarnings = transactions.some(
+    t => (t.type === 'earning' || t.type === 'boost_earning' || t.type === 'referral' || t.type === 'team_earning' || t.type === 'affiliate_earning')
+      && t.status === 'completed'
+  );
+
   if (!chartData.length || chartData.every(d => d.earnings === 0)) {
     return (
       <div className={className}>
@@ -216,8 +223,16 @@ export function EarningsChart({
             <PeriodSelector />
           </div>
         )}
-        <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm font-inter tracking-[-0.3px]">
-          No earnings data for this period
+        <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground text-sm font-inter tracking-[-0.3px] gap-2">
+          <span>No earnings data for this period</span>
+          {hasAnyEarnings && period !== "ALL" && (
+            <button
+              onClick={() => handlePeriodChange("ALL")}
+              className="text-xs text-primary hover:underline"
+            >
+              View all time
+            </button>
+          )}
         </div>
       </div>
     );
@@ -230,61 +245,106 @@ export function EarningsChart({
           <PeriodSelector />
         </div>
       )}
-      <ChartContainer config={chartConfig} className="h-[200px] w-full">
-        <AreaChart
-          data={chartData}
-          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-        >
-          <defs>
-            <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(217.2 91.2% 59.8%)" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="hsl(217.2 91.2% 59.8%)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke="hsl(var(--border))"
-            strokeOpacity={0.5}
-          />
-          <XAxis
-            dataKey="week"
-            tickLine={false}
-            axisLine={false}
-            tick={false}
-          />
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            tick={{ fontSize: 11 }}
-            tickMargin={8}
-            tickFormatter={(value) => `$${value}`}
-            width={50}
-          />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                labelFormatter={(label) => label}
-                formatter={(value, name) => (
-                  <div className="flex items-center justify-between gap-8">
-                    <span className="text-muted-foreground">Total</span>
-                    <span className="font-semibold text-blue-500">${Number(value).toFixed(2)}</span>
+      <div className="h-[200px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(217.2 91.2% 59.8%)" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="hsl(217.2 91.2% 59.8%)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="0"
+              vertical={false}
+              horizontal={false}
+              stroke="hsl(var(--border))"
+              strokeOpacity={0.4}
+            />
+            <XAxis
+              dataKey="week"
+              tickLine={false}
+              axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.3 }}
+              tick={{
+                fontSize: 11,
+                fill: 'hsl(var(--muted-foreground))',
+                fontFamily: 'Inter',
+              }}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tick={{
+                fontSize: 11,
+                fill: 'hsl(var(--muted-foreground))',
+                fontFamily: 'Inter',
+              }}
+              tickMargin={8}
+              tickFormatter={(value) => `$${value}`}
+              width={50}
+            />
+            <Tooltip
+              animationDuration={100}
+              animationEasing="ease-out"
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const data = payload[0]?.payload;
+                return (
+                  <div className="bg-background rounded-lg dark:shadow-lg min-w-[140px] border border-border overflow-hidden">
+                    <div className="px-2.5 py-1.5 border-b border-border">
+                      <p className="text-xs font-medium font-inter text-foreground tracking-[-0.5px]">
+                        {data?.week}
+                      </p>
+                    </div>
+                    <div className="px-2.5 py-2 space-y-1">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-[2px] flex-shrink-0 bg-blue-500" />
+                          <span className="text-xs font-inter text-muted-foreground tracking-[-0.5px]">
+                            Total
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold font-inter text-foreground tracking-[-0.5px]">
+                          {formatCurrency(data?.earnings || 0)}
+                        </span>
+                      </div>
+                      {data?.weeklyEarnings > 0 && (
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-xs font-inter text-muted-foreground tracking-[-0.5px]">
+                            This period
+                          </span>
+                          <span className="text-xs font-medium font-inter text-green-500 tracking-[-0.5px]">
+                            +{formatCurrency(data?.weeklyEarnings || 0)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              />
-            }
-          />
-          <Area
-            type="monotone"
-            dataKey="earnings"
-            stroke="hsl(217.2 91.2% 59.8%)"
-            strokeWidth={2}
-            fill="url(#earningsGradient)"
-            dot={false}
-            activeDot={{ r: 4, strokeWidth: 0, fill: "hsl(217.2 91.2% 59.8%)" }}
-          />
-        </AreaChart>
-      </ChartContainer>
+                );
+              }}
+              cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
+              wrapperStyle={{ transition: 'transform 150ms ease-out, opacity 150ms ease-out', zIndex: 50 }}
+            />
+            <Area
+              type="monotone"
+              dataKey="earnings"
+              stroke="hsl(217.2 91.2% 59.8%)"
+              strokeWidth={2}
+              fill="url(#earningsGradient)"
+              dot={false}
+              activeDot={{
+                r: 3.3,
+                fill: 'hsl(217.2 91.2% 59.8%)',
+                stroke: 'hsl(217.2 91.2% 59.8%)',
+                strokeWidth: 0
+              }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

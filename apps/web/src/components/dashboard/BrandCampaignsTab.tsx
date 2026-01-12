@@ -12,15 +12,14 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { BrandUpgradeCTA } from "@/components/brand/BrandUpgradeCTA";
 import { CampaignRowCard } from "@/components/brand/CampaignRowCard";
+import { ShareCampaignDialog } from "@/components/brand/ShareCampaignDialog";
 import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
 import { CreateJobPostDialog } from "@/components/brand/CreateJobPostDialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
 import { BrandOnboardingSteps } from "@/components/brand/BrandOnboardingSteps";
-import schoolIcon from "@/assets/school-icon-grey.svg";
-import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
-import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
@@ -67,10 +66,12 @@ interface BountyCampaign {
 interface BrandCampaignsTabProps {
   brandId: string;
   brandName: string;
+  brandSlug: string;
 }
 export function BrandCampaignsTab({
   brandId,
-  brandName
+  brandName,
+  brandSlug,
 }: BrandCampaignsTabProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -102,6 +103,8 @@ export function BrandCampaignsTab({
     id: string;
     type: 'campaign' | 'boost';
   } | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareData, setShareData] = useState<{ id: string; type: 'campaign' | 'boost'; title: string; slug: string; bannerUrl: string | null } | null>(null);
   const {
     isAdmin,
     loading: adminLoading
@@ -564,7 +567,7 @@ export function BrandCampaignsTab({
           {/* Combined Campaigns & Boosts Grid */}
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Programs</h2>
+                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Campaigns</h2>
                 <div className="flex items-center gap-0 border-b border-border">
                   {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-inter tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                       {filter}
@@ -596,6 +599,9 @@ export function BrandCampaignsTab({
                   type: 'campaign'
                 });
                 setAllocateBudgetOpen(true);
+              }} onShare={() => {
+                setShareData({ id: campaign.id, type: 'campaign', title: campaign.title, slug: campaign.slug, bannerUrl: campaign.banner_url });
+                setShareDialogOpen(true);
               }} />;
             } else {
               const bounty = item as BountyCampaign & {
@@ -614,7 +620,10 @@ export function BrandCampaignsTab({
                   type: 'boost'
                 });
                 setAllocateBudgetOpen(true);
-              }} />;
+              }} onShare={bounty.slug ? () => {
+                setShareData({ id: bounty.id, type: 'boost', title: bounty.title, slug: bounty.slug!, bannerUrl: bounty.banner_url });
+                setShareDialogOpen(true);
+              } : undefined} />;
             }
           })}
               </div>
@@ -665,8 +674,8 @@ export function BrandCampaignsTab({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogCancel className="border-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 border-t border-red-400">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -681,5 +690,22 @@ export function BrandCampaignsTab({
       setAllocateBudgetOpen(open);
       if (!open) setSelectedCampaignForFunding(null);
     }} brandId={brandId} onSuccess={fetchBrandData} preselectedCampaignId={selectedCampaignForFunding?.id} preselectedType={selectedCampaignForFunding?.type} />
+
+      {/* Share Dialog */}
+      {shareData && (
+        <ShareCampaignDialog
+          open={shareDialogOpen}
+          onOpenChange={(open) => {
+            setShareDialogOpen(open);
+            if (!open) setShareData(null);
+          }}
+          title={shareData.title}
+          type={shareData.type}
+          bannerUrl={shareData.bannerUrl}
+          brandColor={brandColor || null}
+          brandSlug={brandSlug}
+          slug={shareData.slug}
+        />
+      )}
     </div>;
 }

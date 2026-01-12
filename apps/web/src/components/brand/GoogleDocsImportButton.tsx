@@ -11,6 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Loader2, ChevronRight, Unlink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import gDocsLogo from "@/assets/GDocsLogo.png";
 
 interface GoogleDocument {
   id: string;
@@ -229,10 +230,35 @@ export function GoogleDocsImportButton({
       });
 
       if (error) {
+        // Check if it's a connection error (401 status or NOT_CONNECTED code)
+        if (error.message?.includes("401") || error.message?.includes("not connected")) {
+          setIsConnected(false);
+          setDocumentsOpen(false);
+          toast({
+            variant: "destructive",
+            title: "Connection Required",
+            description: "Your Google Docs connection has expired. Please reconnect.",
+          });
+          // Automatically trigger reconnect flow
+          setTimeout(() => handleConnect(), 500);
+          return;
+        }
         throw new Error(error.message || "Failed to fetch documents");
       }
 
       if (data?.error) {
+        // Check for NOT_CONNECTED code
+        if (data?.code === "NOT_CONNECTED") {
+          setIsConnected(false);
+          setDocumentsOpen(false);
+          toast({
+            variant: "destructive",
+            title: "Connection Required",
+            description: data.error,
+          });
+          setTimeout(() => handleConnect(), 500);
+          return;
+        }
         throw new Error(data.error);
       }
 
@@ -363,10 +389,10 @@ export function GoogleDocsImportButton({
           disabled={loading || isConnected === null}
           className={cn("gap-2", className)}
         >
-          {loading || isConnected === null ? (
+          {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <FileText className="h-4 w-4" />
+            <img src={gDocsLogo} alt="Google Docs" className="h-4 w-4" />
           )}
           Import from Google Docs
         </Button>
@@ -453,25 +479,28 @@ export function GoogleDocsImportButton({
         onClick={handleClick}
         disabled={loading || isConnected === null}
         className={cn(
-          "flex flex-col items-center gap-3 p-6 rounded-xl border border-dashed border-border",
-          "hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer",
+          "group flex items-center gap-4 p-4 rounded-xl border border-border/40 bg-card/20",
+          "hover:bg-muted/40 hover:border-border/60 transition-all text-left w-full",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className
         )}
       >
-        <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-          {loading || isConnected === null ? (
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-500/10 shrink-0">
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           ) : (
-            <FileText className="h-6 w-6 text-blue-500" />
+            <img src={gDocsLogo} alt="Google Docs" className="h-5 w-5" />
           )}
         </div>
-        <div className="text-center">
-          <div className="font-medium">Import from Google Docs</div>
-          <div className="text-sm text-muted-foreground mt-1">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-[14px] text-foreground font-inter tracking-[-0.3px]">
+            Import from Google Docs
+          </h3>
+          <p className="text-[13px] text-muted-foreground font-inter tracking-[-0.2px] mt-0.5">
             Use an existing brand guidelines document
-          </div>
+          </p>
         </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
       </button>
 
       <Dialog open={documentsOpen} onOpenChange={setDocumentsOpen}>
