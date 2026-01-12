@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy, Tag, DollarSign } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, GripVertical, Settings, Star, Copy, Tag, DollarSign, RotateCcw } from "lucide-react";
+import { Icon } from "@iconify/react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -27,7 +29,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
-import { CreatorDiscoveryWizard } from "@/components/brand/CreatorDiscoveryWizard";
+import { FindCreatorsPopup } from "@/components/brand/FindCreatorsPopup";
 import { ManualPayCreatorDialog } from "@/components/brand/ManualPayCreatorDialog";
 import { BulkPitchDialog } from "@/components/brand/BulkPitchDialog";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
@@ -247,6 +249,10 @@ const ALL_COLUMNS = [{
   label: 'Socials',
   required: false
 }, {
+  id: 'contact',
+  label: 'Contact',
+  required: false
+}, {
   id: 'views',
   label: 'Views',
   required: false
@@ -337,6 +343,7 @@ export function CreatorDatabaseTab({
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverSearch, setDiscoverSearch] = useState("");
   const [debouncedDiscoverSearch, setDebouncedDiscoverSearch] = useState("");
+  // Applied filter state (what's actually filtering the data)
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [followerFilter, setFollowerFilter] = useState<string>('any');
   const [countryFilter, setCountryFilter] = useState<string>('all');
@@ -344,6 +351,30 @@ export function CreatorDatabaseTab({
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [demographicScoreFilter, setDemographicScoreFilter] = useState<string>('all');
   const [reliabilityScoreFilter, setReliabilityScoreFilter] = useState<string>('all');
+
+  // Filter panel UI state
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
+  // Pending filter state (what user is configuring before Apply)
+  const [pendingCampaignFilter, setPendingCampaignFilter] = useState<string>('all');
+  const [pendingPlatformFilter, setPendingPlatformFilter] = useState<string>('all');
+  const [pendingStatusFilter, setPendingStatusFilter] = useState<string>('all');
+  const [pendingSourceFilter, setPendingSourceFilter] = useState<string>('all');
+  const [pendingDemographicScoreFilter, setPendingDemographicScoreFilter] = useState<string>('all');
+  const [pendingReliabilityScoreFilter, setPendingReliabilityScoreFilter] = useState<string>('all');
+  const [pendingTagFilters, setPendingTagFilters] = useState<string[]>([]);
+
+  // Track last applied filters for undo
+  const [lastAppliedFilters, setLastAppliedFilters] = useState<{
+    campaign: string;
+    platform: string;
+    status: string;
+    source: string;
+    demographic: string;
+    reliability: string;
+    tags: string[];
+  } | null>(null);
+
   const [showFilters, setShowFilters] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -365,7 +396,7 @@ export function CreatorDatabaseTab({
   const [creatorTagsMap, setCreatorTagsMap] = useState<Map<string, string[]>>(new Map());
 
   // Column configuration state
-  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(new Set(['creator', 'source', 'socials', 'views', 'earnings', 'joined']));
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(new Set(['creator', 'source', 'socials', 'contact', 'views', 'earnings', 'joined']));
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(ALL_COLUMNS.map(c => c.id));
 
   // Sorting state
@@ -431,6 +462,29 @@ export function CreatorDatabaseTab({
   };
 
   // Debounce discover search
+  // localStorage key for filter persistence
+  const FILTERS_STORAGE_KEY = `crm-filters-${brandId}`;
+
+  // Load saved filters from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedFilters = localStorage.getItem(FILTERS_STORAGE_KEY);
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        if (parsed.campaign) setSelectedCampaignFilter(parsed.campaign);
+        if (parsed.platform) setPlatformFilter(parsed.platform);
+        if (parsed.status) setStatusFilter(parsed.status);
+        if (parsed.source) setSourceFilter(parsed.source);
+        if (parsed.demographic) setDemographicScoreFilter(parsed.demographic);
+        if (parsed.reliability) setReliabilityScoreFilter(parsed.reliability);
+        if (parsed.tags) setSelectedTagFilters(parsed.tags);
+      }
+    } catch (e) {
+      // If parsing fails, just use defaults
+      console.error('Failed to load saved filters:', e);
+    }
+  }, [brandId]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedDiscoverSearch(discoverSearch);
@@ -822,6 +876,151 @@ export function CreatorDatabaseTab({
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, selectedTagFilters, sortBy, sortOrder, itemsPerPage]);
+
+  // Sync pending filters when panel opens
+  useEffect(() => {
+    if (filtersExpanded) {
+      setPendingCampaignFilter(selectedCampaignFilter);
+      setPendingPlatformFilter(platformFilter);
+      setPendingStatusFilter(statusFilter);
+      setPendingSourceFilter(sourceFilter);
+      setPendingDemographicScoreFilter(demographicScoreFilter);
+      setPendingReliabilityScoreFilter(reliabilityScoreFilter);
+      setPendingTagFilters([...selectedTagFilters]);
+    }
+  }, [filtersExpanded]);
+
+  // Apply pending filters
+  const applyFilters = () => {
+    // Store current filters for undo
+    setLastAppliedFilters({
+      campaign: selectedCampaignFilter,
+      platform: platformFilter,
+      status: statusFilter,
+      source: sourceFilter,
+      demographic: demographicScoreFilter,
+      reliability: reliabilityScoreFilter,
+      tags: [...selectedTagFilters],
+    });
+
+    // Apply pending to actual
+    setSelectedCampaignFilter(pendingCampaignFilter);
+    setPlatformFilter(pendingPlatformFilter);
+    setStatusFilter(pendingStatusFilter);
+    setSourceFilter(pendingSourceFilter);
+    setDemographicScoreFilter(pendingDemographicScoreFilter);
+    setReliabilityScoreFilter(pendingReliabilityScoreFilter);
+    setSelectedTagFilters([...pendingTagFilters]);
+
+    // Save to localStorage for persistence
+    try {
+      const filtersToSave = {
+        campaign: pendingCampaignFilter,
+        platform: pendingPlatformFilter,
+        status: pendingStatusFilter,
+        source: pendingSourceFilter,
+        demographic: pendingDemographicScoreFilter,
+        reliability: pendingReliabilityScoreFilter,
+        tags: pendingTagFilters,
+      };
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filtersToSave));
+    } catch (e) {
+      console.error('Failed to save filters:', e);
+    }
+
+    setFiltersExpanded(false);
+  };
+
+  // Reset all filters with undo toast
+  const resetAllFilters = () => {
+    // Store for undo
+    const previousFilters = {
+      campaign: selectedCampaignFilter,
+      platform: platformFilter,
+      status: statusFilter,
+      source: sourceFilter,
+      demographic: demographicScoreFilter,
+      reliability: reliabilityScoreFilter,
+      tags: [...selectedTagFilters],
+    };
+
+    // Reset applied filters
+    setSelectedCampaignFilter('all');
+    setPlatformFilter('all');
+    setStatusFilter('all');
+    setSourceFilter('all');
+    setDemographicScoreFilter('all');
+    setReliabilityScoreFilter('all');
+    setSelectedTagFilters([]);
+
+    // Reset pending filters
+    setPendingCampaignFilter('all');
+    setPendingPlatformFilter('all');
+    setPendingStatusFilter('all');
+    setPendingSourceFilter('all');
+    setPendingDemographicScoreFilter('all');
+    setPendingReliabilityScoreFilter('all');
+    setPendingTagFilters([]);
+
+    // Clear localStorage
+    try {
+      localStorage.removeItem(FILTERS_STORAGE_KEY);
+    } catch (e) {
+      console.error('Failed to clear saved filters:', e);
+    }
+
+    // Show undo toast
+    toast('Filters cleared', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          setSelectedCampaignFilter(previousFilters.campaign);
+          setPlatformFilter(previousFilters.platform);
+          setStatusFilter(previousFilters.status);
+          setSourceFilter(previousFilters.source);
+          setDemographicScoreFilter(previousFilters.demographic);
+          setReliabilityScoreFilter(previousFilters.reliability);
+          setSelectedTagFilters(previousFilters.tags);
+          setPendingCampaignFilter(previousFilters.campaign);
+          setPendingPlatformFilter(previousFilters.platform);
+          setPendingStatusFilter(previousFilters.status);
+          setPendingSourceFilter(previousFilters.source);
+          setPendingDemographicScoreFilter(previousFilters.demographic);
+          setPendingReliabilityScoreFilter(previousFilters.reliability);
+          setPendingTagFilters(previousFilters.tags);
+          // Restore localStorage on undo
+          try {
+            localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(previousFilters));
+          } catch (e) {
+            console.error('Failed to restore saved filters:', e);
+          }
+        },
+      },
+      duration: 5000,
+    });
+  };
+
+  // Count active filters
+  const activeFilterCount = [
+    selectedCampaignFilter !== 'all',
+    platformFilter !== 'all',
+    statusFilter !== 'all',
+    sourceFilter !== 'all',
+    demographicScoreFilter !== 'all',
+    reliabilityScoreFilter !== 'all',
+    selectedTagFilters.length > 0
+  ].filter(Boolean).length;
+
+  // Check if pending filters differ from applied
+  const hasPendingChanges =
+    pendingCampaignFilter !== selectedCampaignFilter ||
+    pendingPlatformFilter !== platformFilter ||
+    pendingStatusFilter !== statusFilter ||
+    pendingSourceFilter !== sourceFilter ||
+    pendingDemographicScoreFilter !== demographicScoreFilter ||
+    pendingReliabilityScoreFilter !== reliabilityScoreFilter ||
+    JSON.stringify(pendingTagFilters.sort()) !== JSON.stringify([...selectedTagFilters].sort());
+
   const handleExportCSV = () => {
     // Export ALL rows that match the current filters/sort (not just the current page)
     const exportCreators = filteredAndSortedCreators;
@@ -1145,181 +1344,41 @@ export function CreatorDatabaseTab({
   };
   return <div className="h-full flex flex-col pb-20 md:pb-0">
       {/* Header */}
-      <div className="border-b border-border px-[7px] py-[5px]">
+      <div className="bg-white dark:bg-transparent border-b border-border px-[7px] py-[5px]">
         {/* Filters & Actions - Single Row */}
         <div className="flex items-center gap-2 flex-wrap">
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 hover:text-muted-foreground dark:hover:text-foreground ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filters
-                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0) && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-[10px] text-white flex items-center justify-center font-medium">
-                    {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all', demographicScoreFilter !== 'all', reliabilityScoreFilter !== 'all', selectedTagFilters.length > 0].filter(Boolean).length}
-                  </span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[280px] p-3 bg-background border border-border shadow-lg z-50" align="start">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Filters</span>
-                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0) && <button onClick={() => {
-                  setSelectedCampaignFilter('all');
-                  setPlatformFilter('all');
-                  setStatusFilter('all');
-                  setSourceFilter('all');
-                  setDemographicScoreFilter('all');
-                  setReliabilityScoreFilter('all');
-                  setSelectedTagFilters([]);
-                }} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      Clear all
-                    </button>}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Campaign</Label>
-                  <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
-                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
-                      <SelectValue placeholder="All campaigns" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="all">All campaigns</SelectItem>
-                      {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Platform</Label>
-                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
-                      <SelectValue placeholder="All platforms" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="all">All platforms</SelectItem>
-                      <SelectItem value="tiktok">TikTok</SelectItem>
-                      <SelectItem value="youtube">YouTube</SelectItem>
-                      <SelectItem value="instagram">Instagram</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Status</Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
-                      <SelectValue placeholder="All status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="all">All status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Source</Label>
-                  <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
-                      <SelectValue placeholder="All sources" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="all">All sources</SelectItem>
-                      <SelectItem value="campaign">Campaign</SelectItem>
-                      <SelectItem value="boost">Boost</SelectItem>
-                      <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="import">Import</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Audience Quality</Label>
-                  <Select value={demographicScoreFilter} onValueChange={setDemographicScoreFilter}>
-                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
-                      <SelectValue placeholder="All scores" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="all">All scores</SelectItem>
-                      <SelectItem value="high">High (70+)</SelectItem>
-                      <SelectItem value="medium">Medium (40-69)</SelectItem>
-                      <SelectItem value="low">Low (&lt;40)</SelectItem>
-                      <SelectItem value="unrated">Unrated</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Reliability</Label>
-                  <Select value={reliabilityScoreFilter} onValueChange={setReliabilityScoreFilter}>
-                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
-                      <SelectValue placeholder="All scores" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="all">All scores</SelectItem>
-                      <SelectItem value="high">Reliable (80+)</SelectItem>
-                      <SelectItem value="medium">Average (50-79)</SelectItem>
-                      <SelectItem value="low">At Risk (&lt;50)</SelectItem>
-                      <SelectItem value="new">New (No data)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Tag Filter */}
-                {availableTags.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Tag className="h-3 w-3" />
-                      Tags
-                    </Label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {availableTags.map(tag => (
-                        <button
-                          key={tag}
-                          onClick={() => {
-                            if (selectedTagFilters.includes(tag)) {
-                              setSelectedTagFilters(selectedTagFilters.filter(t => t !== tag));
-                            } else {
-                              setSelectedTagFilters([...selectedTagFilters, tag]);
-                            }
-                          }}
-                          className={`px-2 py-1 text-xs rounded-md transition-colors font-inter tracking-[-0.3px] ${
-                            selectedTagFilters.includes(tag)
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                    {selectedTagFilters.length > 0 && (
-                      <button
-                        onClick={() => setSelectedTagFilters([])}
-                        className="text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]"
-                      >
-                        Clear tags
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs rounded-md inline-flex items-center transition-colors border border-border dark:border-transparent ${
+              activeFilterCount > 0
+                ? 'bg-muted/50 text-foreground'
+                : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            }`}
+          >
+            <Icon icon="material-symbols:filter-alt" className="h-3.5 w-3.5" />
+            <span className="font-medium">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-[10px] text-white flex items-center justify-center font-medium">
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform duration-200 ${filtersExpanded ? 'rotate-180' : ''}`} />
+          </button>
 
           <div className="flex items-center gap-1.5 ml-auto">
             <Button size="sm" onClick={() => setDiscoveryWizardOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-primary/70 bg-primary hover:bg-primary/90">
               <Plus className="h-3.5 w-3.5" />
               Find Creators
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleExportCSV} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground">
+            <Button variant="ghost" size="sm" onClick={handleExportCSV} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground border border-border dark:border-transparent">
               <Download className="h-3.5 w-3.5" />
               Export
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground">
+                <Button variant="ghost" size="sm" className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground border border-border dark:border-transparent">
                   <Settings className="h-3.5 w-3.5" />
                   Edit
                 </Button>
@@ -1345,6 +1404,201 @@ export function CreatorDatabaseTab({
             </Popover>
           </div>
         </div>
+
+        {/* Inline Collapsible Filter Panel */}
+        <div
+          className="grid transition-all duration-300 ease-out"
+          style={{ gridTemplateRows: filtersExpanded ? '1fr' : '0fr' }}
+        >
+          <div className="overflow-hidden">
+            <div className="px-4 py-3">
+              <div className="space-y-4">
+              {/* Filter Groups */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Selection Group */}
+                <div className="space-y-2">
+                  <span className="text-xs font-medium text-foreground font-inter">Selection</span>
+                  <div className="space-y-2">
+                    {/* Campaign Filter */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Program</label>
+                      <Select value={pendingCampaignFilter} onValueChange={setPendingCampaignFilter}>
+                        <SelectTrigger className="h-8 text-xs bg-background border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="All programs" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All programs</SelectItem>
+                          {campaigns.map(campaign => (
+                            <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Platform Filter */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Platform</label>
+                      <Select value={pendingPlatformFilter} onValueChange={setPendingPlatformFilter}>
+                        <SelectTrigger className="h-8 text-xs bg-background border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="All platforms" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All platforms</SelectItem>
+                          <SelectItem value="tiktok">TikTok</SelectItem>
+                          <SelectItem value="instagram">Instagram</SelectItem>
+                          <SelectItem value="youtube">YouTube</SelectItem>
+                          <SelectItem value="twitter">Twitter/X</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Source & Status Group */}
+                <div className="space-y-2">
+                  <span className="text-xs font-medium text-foreground font-inter">Source & Status</span>
+                  <div className="space-y-2">
+                    {/* Source Filter */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Source</label>
+                      <Select value={pendingSourceFilter} onValueChange={setPendingSourceFilter}>
+                        <SelectTrigger className="h-8 text-xs bg-background border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="All sources" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All sources</SelectItem>
+                          <SelectItem value="organic">Organic</SelectItem>
+                          <SelectItem value="campaign">Campaign</SelectItem>
+                          <SelectItem value="boost">Boost</SelectItem>
+                          <SelectItem value="manual">Manual</SelectItem>
+                          <SelectItem value="import">Import</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Status Filter */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Status</label>
+                      <Select value={pendingStatusFilter} onValueChange={setPendingStatusFilter}>
+                        <SelectTrigger className="h-8 text-xs bg-background border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="All statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All statuses</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="external">External</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scores Group */}
+                <div className="space-y-2">
+                  <span className="text-xs font-medium text-foreground font-inter">Scores</span>
+                  <div className="space-y-2">
+                    {/* Demographic Score Filter */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Audience Quality</label>
+                      <Select value={pendingDemographicScoreFilter} onValueChange={setPendingDemographicScoreFilter}>
+                        <SelectTrigger className="h-8 text-xs bg-background border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="Any score" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any score</SelectItem>
+                          <SelectItem value="90+">90+ (Excellent)</SelectItem>
+                          <SelectItem value="70+">70+ (Good)</SelectItem>
+                          <SelectItem value="50+">50+ (Average)</SelectItem>
+                          <SelectItem value="<50">&lt;50 (Below avg)</SelectItem>
+                          <SelectItem value="none">Not scored</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Reliability Score Filter */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Reliability</label>
+                      <Select value={pendingReliabilityScoreFilter} onValueChange={setPendingReliabilityScoreFilter}>
+                        <SelectTrigger className="h-8 text-xs bg-background border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="Any reliability" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any reliability</SelectItem>
+                          <SelectItem value="90+">90+ (Excellent)</SelectItem>
+                          <SelectItem value="70+">70+ (Good)</SelectItem>
+                          <SelectItem value="50+">50+ (Average)</SelectItem>
+                          <SelectItem value="<50">&lt;50 (Below avg)</SelectItem>
+                          <SelectItem value="none">Not scored</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tags Group */}
+                <div className="space-y-2">
+                  <span className="text-xs font-medium text-foreground font-inter">Tags</span>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">Filter by tags</label>
+                    <div className="flex flex-wrap gap-1.5 min-h-[32px] p-1.5 bg-background border border-border/50 rounded-md">
+                      {availableTags.length === 0 ? (
+                        <span className="text-xs text-muted-foreground/60 font-inter tracking-[-0.3px] px-1 py-0.5">No tags yet</span>
+                      ) : (
+                        availableTags.map(tag => (
+                          <button
+                            key={tag}
+                            onClick={() => {
+                              setPendingTagFilters(prev =>
+                                prev.includes(tag)
+                                  ? prev.filter(t => t !== tag)
+                                  : [...prev, tag]
+                              );
+                            }}
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-medium font-inter tracking-[-0.3px] transition-colors ${
+                              pendingTagFilters.includes(tag)
+                                ? 'bg-primary text-white'
+                                : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Row */}
+              <div className="flex items-center justify-between pt-3">
+                <button
+                  onClick={resetAllFilters}
+                  disabled={activeFilterCount === 0 && !hasPendingChanges}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reset filters
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setFiltersExpanded(false)}
+                    className="h-7 px-3 text-xs font-medium text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <Button
+                    size="sm"
+                    onClick={applyFilters}
+                    disabled={!hasPendingChanges}
+                    className="h-7 px-3 text-xs font-inter tracking-[-0.3px] border-t border-primary/70 bg-primary hover:bg-primary/90 disabled:opacity-40"
+                  >
+                    <Check className="h-3 w-3 mr-1" />
+                    Apply
+                  </Button>
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -1355,7 +1609,7 @@ export function CreatorDatabaseTab({
             <TooltipProvider delayDuration={100}>
               <Table className="min-w-[800px]">
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-                  <TableRow className="hover:bg-transparent border-0">
+                  <TableRow className="hover:bg-transparent border-b border-border/40">
                     <TableHead className="w-[32px] h-11">
                       <Checkbox
                         checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
@@ -1453,8 +1707,8 @@ export function CreatorDatabaseTab({
                     filteredCreators.map(creator => (
                       <TableRow
                         key={creator.id}
-                        className={`hover:bg-muted/20 border-0 group cursor-pointer ${
-                          selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''
+                        className={`bg-white hover:bg-muted/30 dark:bg-transparent dark:hover:bg-muted/20 border-b border-border/30 group cursor-pointer ${
+                          selectedCreatorPanel?.id === creator.id ? 'bg-muted/30 dark:bg-muted/30' : ''
                         }`}
                         onClick={() =>
                           setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)
@@ -1477,7 +1731,7 @@ export function CreatorDatabaseTab({
                                   <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                       <AvatarImage src={creator.avatar_url || undefined} />
-                                      <AvatarFallback className="bg-muted/60 text-[11px] font-medium">
+                                      <AvatarFallback className="bg-slate-200 dark:bg-muted/60 text-slate-600 dark:text-foreground text-[11px] font-medium">
                                         {(creator.full_name || creator.username || creator.external_name)
                                           ?.charAt(0)
                                           .toUpperCase() || 'C'}
@@ -1540,7 +1794,7 @@ export function CreatorDatabaseTab({
                                             }
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center justify-center h-7 w-7 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors"
+                                            className="flex items-center justify-center h-7 w-7 rounded-md bg-white dark:bg-muted/40 hover:bg-slate-100 dark:hover:bg-muted/70 border border-border/30 transition-colors"
                                           >
                                             <img
                                               src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok}
@@ -1551,7 +1805,7 @@ export function CreatorDatabaseTab({
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
                                           <p className="font-medium">@{account.username}</p>
-                                          {account.follower_count && (
+                                          {account.follower_count != null && Number(account.follower_count) > 0 && (
                                             <p className="text-muted-foreground">
                                               {formatNumber(account.follower_count)} followers
                                             </p>
@@ -1563,6 +1817,85 @@ export function CreatorDatabaseTab({
                                       <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
                                         +{creator.social_accounts.length - 4}
                                       </span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              );
+                            case 'contact':
+                              return (
+                                <TableCell key={colId} className="py-3">
+                                  <div className="flex items-center gap-1.5">
+                                    {/* Message - always visible (Material Icon: Forum filled) */}
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            onStartConversation?.(creator.id);
+                                          }}
+                                          className="flex items-center justify-center h-7 w-7 rounded-md bg-white dark:bg-muted/40 hover:bg-slate-100 dark:hover:bg-muted/70 border border-border/30 transition-colors text-muted-foreground hover:text-foreground"
+                                        >
+                                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+                                          </svg>
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                        <p>Send message</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                    {/* Email - visible if has email (Material Icon: Mail filled) */}
+                                    {(creator.email || creator.external_email) && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <a
+                                            href={`mailto:${creator.email || creator.external_email}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center justify-center h-7 w-7 rounded-md bg-white dark:bg-muted/40 hover:bg-slate-100 dark:hover:bg-muted/70 border border-border/30 transition-colors text-muted-foreground hover:text-foreground"
+                                          >
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                                            </svg>
+                                          </a>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                          <p>{creator.email || creator.external_email}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {/* Phone - visible if has phone number (Material Icon: Phone filled) */}
+                                    {creator.phone_number && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <a
+                                            href={`tel:${creator.phone_number}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center justify-center h-7 w-7 rounded-md bg-white dark:bg-muted/40 hover:bg-slate-100 dark:hover:bg-muted/70 border border-border/30 transition-colors text-muted-foreground hover:text-foreground"
+                                          >
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                              <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                                            </svg>
+                                          </a>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                          <p>{creator.phone_number}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {/* Discord - visible if has discord */}
+                                    {creator.discord_username && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center justify-center h-7 w-7 rounded-md bg-white dark:bg-muted/40 hover:bg-slate-100 dark:hover:bg-muted/70 border border-border/30 transition-colors text-muted-foreground hover:text-foreground cursor-default">
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                                            </svg>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                          <p>{creator.discord_username}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
                                     )}
                                   </div>
                                 </TableCell>
@@ -1677,64 +2010,58 @@ export function CreatorDatabaseTab({
           {/* Backdrop */}
           <div className="fixed inset-0 bg-black/20 z-40 animate-fade-in" onClick={() => setSelectedCreatorPanel(null)} />
           {/* Panel */}
-          <div className="fixed top-0 right-0 h-full w-80 border-l border-border/50 bg-background flex flex-col z-50 shadow-2xl animate-slide-in-right">
-          <div className="p-4 border-b border-border/50 flex items-center justify-between">
-            <h3 className="font-instrument text-sm font-medium tracking-tight">Creator Details</h3>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => {
+          <div className="fixed top-0 right-0 h-full w-[420px] border-l border-border/50 bg-background flex flex-col z-50 shadow-2xl animate-slide-in-right">
+          <div className="px-4 py-2.5 border-b border-border/50 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <Avatar className="h-8 w-8 flex-shrink-0">
+                <AvatarImage src={selectedCreatorPanel.avatar_url || undefined} />
+                <AvatarFallback className="bg-slate-200 dark:bg-muted/60 text-slate-600 dark:text-foreground text-xs font-medium">
+                  {(selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name)?.charAt(0).toUpperCase() || 'C'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1 -space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-medium text-sm font-inter tracking-[-0.5px] truncate leading-tight">
+                    {selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name}
+                  </p>
+                  {selectedCreatorPanel.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                      External
+                    </span>}
+                </div>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate leading-tight">
+                  {selectedCreatorPanel.is_external ? selectedCreatorPanel.external_handle ? `@${selectedCreatorPanel.external_handle}` : selectedCreatorPanel.external_email || 'No handle' : `@${selectedCreatorPanel.username}`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button className="h-7 w-7 rounded-sm hover:bg-muted/50 flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none" onClick={() => {
               const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
               if (currentIndex > 0) {
                 setSelectedCreatorPanel(filteredCreators[currentIndex - 1]);
               }
             }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) <= 0} aria-label="Previous creator">
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => {
+                <ChevronUp className="h-4 w-4 text-foreground" />
+              </button>
+              <button className="h-7 w-7 rounded-sm hover:bg-muted/50 flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none" onClick={() => {
               const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
               if (currentIndex < filteredCreators.length - 1) {
                 setSelectedCreatorPanel(filteredCreators[currentIndex + 1]);
               }
             }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) >= filteredCreators.length - 1} aria-label="Next creator">
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => setSelectedCreatorPanel(null)} aria-label="Close panel">
-                <X className="h-4 w-4" />
-              </Button>
+                <ChevronDown className="h-4 w-4 text-foreground" />
+              </button>
+              <button className="h-7 w-7 rounded-sm hover:bg-muted/50 flex items-center justify-center" onClick={() => setSelectedCreatorPanel(null)} aria-label="Close panel">
+                <X className="h-4 w-4 text-foreground" />
+              </button>
             </div>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
-              {/* Profile Header */}
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={selectedCreatorPanel.avatar_url || undefined} />
-                  <AvatarFallback className="bg-muted/60 text-sm font-medium">
-                    {(selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name)?.charAt(0).toUpperCase() || 'C'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
-                      {selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name}
-                    </p>
-                    {selectedCreatorPanel.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded flex-shrink-0">
-                        External
-                      </span>}
-                  </div>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    {selectedCreatorPanel.is_external ? selectedCreatorPanel.external_handle ? `@${selectedCreatorPanel.external_handle}` : selectedCreatorPanel.external_email || 'No handle' : `@${selectedCreatorPanel.username}`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats */}
-              
-
               {/* Details */}
-              <div className="space-y-3">
-                {/* Source */}
-                <div>
-                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Source</p>
+              <div className="space-y-4">
+                {/* Source - Full width */}
+                <div className="p-3 bg-muted/30 dark:bg-muted/20 rounded-lg border border-border/50 dark:border-transparent">
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1.5">Source</p>
                   <div className="flex items-center gap-2">
                     <span className={`text-[11px] font-geist tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}`}>
                       {getSourceLabel(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}
@@ -1744,57 +2071,61 @@ export function CreatorDatabaseTab({
                       </span>}
                   </div>
                 </div>
-                {selectedCreatorPanel.first_interaction_at && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">First Interaction</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.first_interaction_at), 'MMM d, yyyy')}</p>
-                  </div>}
-                {selectedCreatorPanel.email && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Email</p>
-                    <button onClick={() => {
-                  navigator.clipboard.writeText(selectedCreatorPanel.email || '');
-                  toast.success('Email copied to clipboard');
-                }} className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer">
-                      <span>{selectedCreatorPanel.email}</span>
-                      <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
-                    </button>
-                  </div>}
-                {selectedCreatorPanel.phone_number && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Phone Number</p>
-                    <button onClick={() => {
-                  navigator.clipboard.writeText(selectedCreatorPanel.phone_number || '');
-                  toast.success('Phone number copied to clipboard');
-                }} className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer">
-                      <span>{selectedCreatorPanel.phone_number}</span>
-                      <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
-                    </button>
-                  </div>}
-                {selectedCreatorPanel.discord_username && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Discord Username</p>
-                    <div className="flex items-center gap-1.5">
-                      <img alt="Discord" className="h-3.5 w-3.5 dark:hidden" src={discordIconDark} />
-                      <img alt="Discord" className="h-3.5 w-3.5 hidden dark:block" src="/lovable-uploads/de420cc8-50b3-487b-acbf-885797de1c29.webp" />
-                      <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
-                    </div>
-                  </div>}
-                {(selectedCreatorPanel.city || selectedCreatorPanel.country) && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Location</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">
-                      {[selectedCreatorPanel.city, selectedCreatorPanel.country].filter(Boolean).join(', ')}
-                    </p>
-                  </div>}
-                {selectedCreatorPanel.date_joined && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Joined Platform</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.date_joined), 'MMM d, yyyy')}</p>
-                  </div>}
+
+                {/* Contact Info - 2 column grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {selectedCreatorPanel.email && <div>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Email</p>
+                      <button onClick={() => {
+                    navigator.clipboard.writeText(selectedCreatorPanel.email || '');
+                    toast.success('Email copied to clipboard');
+                  }} className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer">
+                        <span className="truncate">{selectedCreatorPanel.email}</span>
+                        <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground flex-shrink-0" />
+                      </button>
+                    </div>}
+                  {selectedCreatorPanel.phone_number && <div>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Phone</p>
+                      <button onClick={() => {
+                    navigator.clipboard.writeText(selectedCreatorPanel.phone_number || '');
+                    toast.success('Phone number copied to clipboard');
+                  }} className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer">
+                        <span>{selectedCreatorPanel.phone_number}</span>
+                        <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground flex-shrink-0" />
+                      </button>
+                    </div>}
+                  {selectedCreatorPanel.discord_username && <div>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Discord</p>
+                      <div className="flex items-center gap-1.5">
+                        <img alt="Discord" className="h-3.5 w-3.5 dark:hidden" src={discordIconDark} />
+                        <img alt="Discord" className="h-3.5 w-3.5 hidden dark:block" src="/lovable-uploads/de420cc8-50b3-487b-acbf-885797de1c29.webp" />
+                        <p className="text-xs font-inter tracking-[-0.5px] truncate">{selectedCreatorPanel.discord_username}</p>
+                      </div>
+                    </div>}
+                  {(selectedCreatorPanel.city || selectedCreatorPanel.country) && <div>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Location</p>
+                      <p className="text-xs font-inter tracking-[-0.5px]">
+                        {[selectedCreatorPanel.city, selectedCreatorPanel.country].filter(Boolean).join(', ')}
+                      </p>
+                    </div>}
+                  {selectedCreatorPanel.first_interaction_at && <div>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">First Interaction</p>
+                      <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.first_interaction_at), 'MMM d, yyyy')}</p>
+                    </div>}
+                  {selectedCreatorPanel.date_joined && <div>
+                      <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Joined Platform</p>
+                      <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.date_joined), 'MMM d, yyyy')}</p>
+                    </div>}
+                </div>
               </div>
 
               {/* Social Accounts */}
               {selectedCreatorPanel.social_accounts.length > 0 && <div>
                   <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-2">Social Accounts</p>
-                  <div className="space-y-2">
-                    {selectedCreatorPanel.social_accounts.map((account, idx) => <a key={idx} href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-2 p-2 rounded-lg transition-colors bg-[#1f1f1f]/0">
-                        <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
-                        <span className="text-xs font-inter tracking-[-0.5px] flex-1">{account.username}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedCreatorPanel.social_accounts.map((account, idx) => <a key={idx} href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex items-center gap-2.5 p-2.5 rounded-lg transition-colors bg-muted/30 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/30 border border-border/50 dark:border-transparent">
+                        <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-5 w-5" />
+                        <span className="text-xs font-medium font-inter tracking-[-0.5px] truncate">{account.username}</span>
                       </a>)}
                   </div>
                 </div>}
@@ -1824,61 +2155,63 @@ export function CreatorDatabaseTab({
           </ScrollArea>
 
           {/* Action Buttons */}
-          <div className="p-4 border-t border-border/50 flex flex-col gap-2">
-            {/* Primary Actions Row */}
+          <div className="p-4 border-t border-border/50 flex flex-col gap-3">
+            {/* Primary Actions */}
             {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-2">
+                {/* Message - Full width primary */}
                 <button
-                  className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-foreground text-background rounded-lg hover:bg-foreground/90 transition-colors flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-foreground text-background rounded-lg hover:bg-foreground/90 transition-colors flex items-center justify-center gap-1.5"
                   onClick={e => {
                     e.stopPropagation();
                     handleSendMessage(selectedCreatorPanel);
                   }}
                 >
-                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span className="material-symbols-rounded text-[16px]">mail</span>
                   Message
                 </button>
-                <button
-                  className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setCreatorToPay({
-                      id: selectedCreatorPanel.id,
-                      username: selectedCreatorPanel.username,
-                      full_name: selectedCreatorPanel.full_name,
-                      avatar_url: selectedCreatorPanel.avatar_url
-                    });
-                    setManualPayDialogOpen(true);
-                  }}
-                >
-                  <DollarSign className="h-3.5 w-3.5" />
-                  Pay
-                </button>
+                {/* Pay & Review side by side */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setCreatorToPay({
+                        id: selectedCreatorPanel.id,
+                        username: selectedCreatorPanel.username,
+                        full_name: selectedCreatorPanel.full_name,
+                        avatar_url: selectedCreatorPanel.avatar_url
+                      });
+                      setManualPayDialogOpen(true);
+                    }}
+                  >
+                    <span className="material-symbols-rounded text-[16px]">approval_delegation</span>
+                    Pay
+                  </button>
+                  <button
+                    className="py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/50 text-foreground rounded-lg hover:bg-muted transition-colors flex items-center justify-center gap-1.5 border border-border/50 dark:border-transparent"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setTestimonialCreator(selectedCreatorPanel);
+                      setTestimonialDialogOpen(true);
+                    }}
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                    Review
+                  </button>
+                </div>
               </div>
-            )}
-            {/* Secondary Actions */}
-            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
-              <button
-                className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] border border-border/60 text-foreground rounded-lg hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
-                onClick={e => {
-                  e.stopPropagation();
-                  setTestimonialCreator(selectedCreatorPanel);
-                  setTestimonialDialogOpen(true);
-                }}
-              >
-                <Star className="h-3.5 w-3.5" />
-                Review
-              </button>
             )}
             {/* Remove Button */}
             <button
-              className="w-full py-2 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-2 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
               onClick={e => {
                 e.stopPropagation();
                 initiateRemoveCreator(selectedCreatorPanel);
               }}
               disabled={selectedCreatorPanel.campaigns.length > 0}
             >
+              <span className="material-symbols-rounded text-[16px]">person_remove</span>
               Remove from database
             </button>
           </div>
@@ -2067,7 +2400,7 @@ export function CreatorDatabaseTab({
                       {discoverableCreators.slice(0, 10).map(creator => <div key={creator.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors group">
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={creator.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs font-medium bg-muted/60">
+                            <AvatarFallback className="text-xs font-medium bg-slate-200 dark:bg-muted/60 text-slate-600 dark:text-foreground">
                               {creator.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -2237,8 +2570,8 @@ export function CreatorDatabaseTab({
     }} />}
 
 
-      {/* Creator Discovery Wizard */}
-      <CreatorDiscoveryWizard
+      {/* Find Creators Popup */}
+      <FindCreatorsPopup
         open={discoveryWizardOpen}
         onOpenChange={setDiscoveryWizardOpen}
         brandId={brandId}
