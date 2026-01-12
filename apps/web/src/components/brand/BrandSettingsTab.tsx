@@ -10,10 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInHours } from "date-fns";
 import { DiscordServerSettings } from "./DiscordServerSettings";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BrandSettingsTabProps {
   brandId: string;
@@ -107,9 +110,16 @@ const DEFAULT_SETTINGS: BrandSettings = {
 
 export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsTabProps) {
   console.log('[BrandSettingsTab] Rendered with brandId:', brandId, 'subscriptionStatus:', subscriptionStatus);
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState<BrandSettings>(DEFAULT_SETTINGS);
   const [savingSettings, setSavingSettings] = useState(false);
+
+  // Payout settings state
+  const [payoutHoldingDays, setPayoutHoldingDays] = useState(0);
+  const [payoutMinimumAmount, setPayoutMinimumAmount] = useState(0);
+  const [payoutSettingsUpdatedAt, setPayoutSettingsUpdatedAt] = useState<string | null>(null);
+  const [savingPayoutSettings, setSavingPayoutSettings] = useState(false);
 
   // Milestones state
   const [milestones, setMilestones] = useState<MilestoneConfig[]>([]);
@@ -140,7 +150,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
     setIsLoading(true);
     try {
       const [brandResult, milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
-        supabase.from("brands").select("settings").eq("id", brandId).single(),
+        supabase.from("brands").select("settings, owner_id").eq("id", brandId).single(),
         (supabase.from("milestone_configs" as "brands").select("*").eq("brand_id", brandId).order("threshold")),
         (supabase.from("creator_tiers" as "brands").select("*").eq("brand_id", brandId).order("tier_order")),
         (supabase.from("creator_strikes" as "brands").select("*, creator:creator_id(username, full_name, avatar_url)").eq("brand_id", brandId).order("created_at", { ascending: false }).limit(10)),
@@ -150,6 +160,21 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       // Parse brand settings from JSONB column
       if (brandResult.data?.settings && typeof brandResult.data.settings === 'object' && !Array.isArray(brandResult.data.settings)) {
         setSettings({ ...DEFAULT_SETTINGS, ...(brandResult.data.settings as unknown as BrandSettings) });
+      }
+
+      // Fetch payout settings from brand owner's profile
+      if (brandResult.data?.owner_id) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("payout_holding_days, payout_minimum_amount, payout_settings_updated_at")
+          .eq("id", brandResult.data.owner_id)
+          .single();
+
+        if (profileData) {
+          setPayoutHoldingDays(profileData.payout_holding_days || 0);
+          setPayoutMinimumAmount(profileData.payout_minimum_amount || 0);
+          setPayoutSettingsUpdatedAt(profileData.payout_settings_updated_at || null);
+        }
       }
 
       setMilestones((milestonesResult.data || []) as MilestoneConfig[]);
@@ -193,6 +218,49 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
 
   const updateSetting = <K extends keyof BrandSettings>(key: K, value: BrandSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Check if payout settings are rate limited (once per day)
+  const isPayoutSettingsRateLimited = payoutSettingsUpdatedAt
+    ? differenceInHours(new Date(), new Date(payoutSettingsUpdatedAt)) < 24
+    : false;
+
+  const hoursUntilPayoutSettingsUnlock = payoutSettingsUpdatedAt
+    ? Math.max(0, 24 - differenceInHours(new Date(), new Date(payoutSettingsUpdatedAt)))
+    : 0;
+
+  const handleSavePayoutSettings = async () => {
+    if (!user) return;
+
+    if (isPayoutSettingsRateLimited) {
+      toast.error(`Payout settings can only be changed once per day. Try again in ${hoursUntilPayoutSettingsUnlock} hours.`);
+      return;
+    }
+
+    setSavingPayoutSettings(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await supabase.functions.invoke("update-payout-settings", {
+        body: {
+          entity_type: "brand",
+          entity_id: user.id,
+          holding_days: payoutHoldingDays,
+          minimum_amount: payoutMinimumAmount,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      setPayoutSettingsUpdatedAt(new Date().toISOString());
+      toast.success("Payout settings saved");
+    } catch (error: unknown) {
+      console.error("Error saving payout settings:", error);
+      toast.error("Failed to save payout settings");
+    } finally {
+      setSavingPayoutSettings(false);
+    }
   };
 
   // Milestone handlers
@@ -382,6 +450,7 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
         subscriptionStatus={subscriptionStatus}
       />
 
+
       {/* Application Settings */}
       <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
         <div className="md:pt-1">
@@ -442,75 +511,82 @@ export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsT
       <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
         <div className="md:pt-1">
           <h2 className="text-sm font-medium tracking-[-0.3px]">Payouts</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Configure payout timing and review periods</p>
-        </div>
-
-        <div className="rounded-lg border border-border/50 dark:border-white/[0.06] overflow-hidden">
-          <div className="px-4 py-3 bg-card/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium tracking-[-0.3px]">Clearing Period</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Time to review submissions before payouts are released</p>
-              </div>
-              <Select
-                value={settings.payout_clearing_days.toString()}
-                onValueChange={(v) => updateSetting("payout_clearing_days", parseInt(v, 10))}
-              >
-                <SelectTrigger className="w-28 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 days</SelectItem>
-                  <SelectItem value="5">5 days</SelectItem>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="14">14 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Notification Settings */}
-      <section className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8">
-        <div className="md:pt-1">
-          <h2 className="text-sm font-medium tracking-[-0.3px]">Notifications</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Choose when to receive email notifications</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Configure payout timing and thresholds for boosts</p>
         </div>
 
         <div className="rounded-lg border border-border/50 dark:border-white/[0.06] divide-y divide-border/50 dark:divide-white/[0.06] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
-            <div>
-              <p className="text-sm font-medium tracking-[-0.3px]">New Application</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Email when a creator applies to your campaign</p>
+          {/* Holding Period */}
+          <div className="px-4 py-4 bg-card/50">
+            <p className="text-sm font-medium tracking-[-0.3px] mb-1">Holding Period</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              How long to hold funds after video approval before creators can withdraw.
+            </p>
+            <div className="flex items-center gap-4">
+              <Slider
+                value={[payoutHoldingDays]}
+                onValueChange={([v]) => setPayoutHoldingDays(v)}
+                min={0}
+                max={30}
+                step={1}
+                className="flex-1"
+                disabled={isPayoutSettingsRateLimited}
+              />
+              <span className="text-sm font-medium tabular-nums w-16 text-right">
+                {payoutHoldingDays} {payoutHoldingDays === 1 ? "day" : "days"}
+              </span>
             </div>
-            <Switch
-              checked={settings.email_on_new_application}
-              onCheckedChange={(checked) => updateSetting("email_on_new_application", checked)}
-            />
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
-            <div>
-              <p className="text-sm font-medium tracking-[-0.3px]">Content Submission</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Email when a creator submits new content</p>
+          {/* Minimum Payout */}
+          <div className="px-4 py-4 bg-card/50">
+            <p className="text-sm font-medium tracking-[-0.3px] mb-1">Minimum Payout</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Minimum amount required before funds are released. Both conditions must be met.
+            </p>
+            <div className="flex items-center gap-4">
+              <Slider
+                value={[payoutMinimumAmount]}
+                onValueChange={([v]) => setPayoutMinimumAmount(v)}
+                min={0}
+                max={50}
+                step={5}
+                className="flex-1"
+                disabled={isPayoutSettingsRateLimited}
+              />
+              <span className="text-sm font-medium tabular-nums w-16 text-right">
+                ${payoutMinimumAmount}
+              </span>
             </div>
-            <Switch
-              checked={settings.email_on_submission}
-              onCheckedChange={(checked) => updateSetting("email_on_submission", checked)}
-            />
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3 bg-card/50">
-            <div>
-              <p className="text-sm font-medium tracking-[-0.3px]">Payout Request</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Email when a creator requests a payout</p>
-            </div>
-            <Switch
-              checked={settings.email_on_payout_request}
-              onCheckedChange={(checked) => updateSetting("email_on_payout_request", checked)}
-            />
+          {/* Save Button */}
+          <div className="px-4 py-3 bg-muted/20 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {payoutSettingsUpdatedAt
+                ? `Last updated ${formatDistanceToNow(new Date(payoutSettingsUpdatedAt), { addSuffix: true })}`
+                : "Not yet configured"}
+            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      size="sm"
+                      onClick={handleSavePayoutSettings}
+                      disabled={savingPayoutSettings || isPayoutSettingsRateLimited}
+                      className="font-inter tracking-[-0.5px]"
+                    >
+                      {savingPayoutSettings ? "Saving..." : "Save Payout Settings"}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {isPayoutSettingsRateLimited && (
+                  <TooltipContent>
+                    <p>Settings can only be changed once per day. Try again in {hoursUntilPayoutSettingsUnlock}h.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </section>

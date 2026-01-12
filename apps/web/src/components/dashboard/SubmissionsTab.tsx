@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SlidersHorizontal, ChevronDown, ChevronLeft, Check, Clock, X, ExternalLink, Video } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, ChevronLeft, Check, Clock, X, ExternalLink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format, addDays } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
@@ -24,8 +24,6 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import dualScreenIconWhite from "@/assets/dual-screen-icon-white.svg";
 import dualScreenIconBlack from "@/assets/dual-screen-icon-black.svg";
-import emptySubmissionsGhost from "@/assets/empty-submissions-ghost.png";
-import emptySubmissionsGhostLight from "@/assets/empty-state-light.png";
 interface Submission {
   id: string;
   video_url: string;
@@ -52,6 +50,12 @@ interface Submission {
   shares?: number | null;
   video_upload_date?: string | null;
   video_author_username?: string | null;
+  // Google Drive submission details
+  gdrive_url?: string | null;
+  gdrive_thumbnail_url?: string | null;
+  gdrive_file_name?: string | null;
+  caption?: string | null;
+  is_gdrive_submission?: boolean;
   program: {
     id: string;
     title: string;
@@ -62,6 +66,7 @@ interface Submission {
     post_rate?: number | null;
     monthly_retainer?: number;
     videos_per_month?: number;
+    content_distribution?: string | null;
   };
 }
 interface SubmissionsTabProps {
@@ -198,11 +203,12 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
         brand_logo_url: string | null;
         monthly_retainer: number;
         videos_per_month: number;
+        content_distribution: string | null;
       }> = {};
       if (boostIds.length > 0) {
         const {
           data: boosts
-        } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month, brands(name, logo_url)').in('id', boostIds);
+        } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month, content_distribution, brands(name, logo_url)').in('id', boostIds);
         if (boosts) {
           boosts.forEach((b: any) => {
             boostMap[b.id] = {
@@ -211,7 +217,8 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
               brand_name: b.brands?.name || '',
               brand_logo_url: b.brands?.logo_url || null,
               monthly_retainer: b.monthly_retainer || 0,
-              videos_per_month: b.videos_per_month || 1
+              videos_per_month: b.videos_per_month || 1,
+              content_distribution: b.content_distribution || null
             };
           });
         }
@@ -243,6 +250,11 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
             }
           }
         }
+        // Check if this is a Google Drive submission (poster boost)
+        const isGdriveSubmission = !!video.gdrive_url;
+        const boostProgram = isBoost ? boostMap[video.source_id] : null;
+        const isPosterBoost = boostProgram?.content_distribution === 'brand_accounts';
+
         return {
           id: video.id,
           video_url: video.video_url,
@@ -269,11 +281,20 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
           shares: video.shares,
           video_upload_date: video.video_upload_date,
           video_author_username: video.video_author_username,
-          program: program || {
-            id: video.source_id,
-            title: 'Unknown',
-            brand_name: '',
-            brand_logo_url: null
+          // Google Drive submission details
+          gdrive_url: video.gdrive_url,
+          gdrive_thumbnail_url: video.gdrive_thumbnail_url,
+          gdrive_file_name: video.gdrive_file_name,
+          caption: video.caption,
+          is_gdrive_submission: isGdriveSubmission && isPosterBoost,
+          program: {
+            ...(program || {
+              id: video.source_id,
+              title: 'Unknown',
+              brand_name: '',
+              brand_logo_url: null
+            }),
+            content_distribution: boostProgram?.content_distribution || null
           }
         };
       }).filter(s => s.program);
@@ -523,9 +544,8 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-background border-border dark:border-[#141414]" style={{
-          fontFamily: 'Inter',
-          letterSpacing: 'normal'
+          <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-background border-border dark:border-[#141414] font-inter" style={{
+          letterSpacing: '-0.5px'
         }}>
             <div className="relative">
               {/* Main Menu */}
@@ -538,28 +558,34 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
                 <div className="space-y-1">
                   {/* Status Filter */}
                   <button onClick={() => setFilterSubmenu('status')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                    <span className="text-sm">Status</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm font-medium">Status</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       {statusFilter !== 'all' && <span className="text-xs text-muted-foreground capitalize">{statusFilter}</span>}
-                      <ChevronDown className="h-4 w-4 -rotate-90" />
+                      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
                     </div>
                   </button>
 
                   {/* Type Filter */}
                   <button onClick={() => setFilterSubmenu('type')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                    <span className="text-sm">Type</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm font-medium">Type</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       {typeFilter !== 'all' && <span className="text-xs text-muted-foreground capitalize">{typeFilter}</span>}
-                      <ChevronDown className="h-4 w-4 -rotate-90" />
+                      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
                     </div>
                   </button>
 
                   {/* Program Filter */}
                   <button onClick={() => setFilterSubmenu('program')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                    <span className="text-sm">Program</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm font-medium">Program</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       {programFilter !== 'all' && <span className="text-xs text-muted-foreground truncate max-w-[80px]">{uniquePrograms.find(p => p.id === programFilter)?.title}</span>}
-                      <ChevronDown className="h-4 w-4 -rotate-90" />
+                      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
                     </div>
                   </button>
                 </div>
@@ -578,7 +604,7 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
               <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'status' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0'}`}>
                 <button onClick={() => setFilterSubmenu('main')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                   <ChevronLeft className="h-4 w-4" />
-                  <span>Status</span>
+                  <span className="font-medium">Status</span>
                 </button>
                 <div className="space-y-1">
                   {[{
@@ -607,7 +633,7 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
               <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'type' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0'}`}>
                 <button onClick={() => setFilterSubmenu('main')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                   <ChevronLeft className="h-4 w-4" />
-                  <span>Type</span>
+                  <span className="font-medium">Type</span>
                 </button>
                 <div className="space-y-1">
                   {[{
@@ -633,7 +659,7 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
               <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'program' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0'}`}>
                 <button onClick={() => setFilterSubmenu('main')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                   <ChevronLeft className="h-4 w-4" />
-                  <span>Program</span>
+                  <span className="font-medium">Program</span>
                 </button>
                 <div className="space-y-1 max-h-[200px] overflow-y-auto">
                   <button onClick={() => {
@@ -668,26 +694,10 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
 
       {/* Submissions Table */}
       <div className="pb-6 px-0">
-        {submissions.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
-            <img
-              src={resolvedTheme === 'light' ? emptySubmissionsGhostLight : emptySubmissionsGhost}
-              alt="No submissions"
-              className="w-24 h-24 opacity-60"
-            />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>
-                No submissions yet
-              </p>
-              <p className="text-xs text-muted-foreground/60" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>
-                Submit videos to campaigns to see them here
-              </p>
-            </div>
+        {submissions.length === 0 ? <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+              No submissions yet
+            </p>
           </div> : <>
             <div className="overflow-x-auto border border-border rounded-xl">
               <Table>
@@ -714,25 +724,37 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
                 const clearingEndsAt = ledgerEntry?.clearingEndsAt;
                 const isRpm = submission.program.payment_model !== 'pay_per_post' && submission.type === 'campaign';
                 const canRequestPayout = payoutStatus === 'accruing' && (submission.estimated_payout || 0) >= 1;
+                // Get display values for this submission
+                const displayTitle = submission.is_gdrive_submission
+                  ? (submission.gdrive_file_name || 'Untitled Video')
+                  : (submission.video_title || 'Untitled Video');
+                const isPosterBoostSubmission = submission.is_gdrive_submission;
+
                 return <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-border dark:border-[#141414]">
                         {/* Video Thumbnail & Title */}
                         <TableCell className="py-3">
-                          <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
-                            
+                          <a href={submission.gdrive_url || submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
                             <div className="min-w-0 max-w-[200px]">
                               <p style={{
                           fontFamily: 'Inter',
                           letterSpacing: '-0.3px'
                         }} className="text-sm truncate group-hover:underline transition-colors font-normal">
-                                {submission.video_title || 'Untitled Video'}
+                                {displayTitle}
                               </p>
-                              
-                              <div className="flex items-center gap-1.5 mt-1">
-                                {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-3.5 h-3.5" />}
-                                <span className="text-xs text-muted-foreground truncate">
-                                  {submission.video_author_username || '—'}
-                                </span>
-                              </div>
+
+                              {/* Caption preview for poster boost submissions */}
+                              {isPosterBoostSubmission && submission.caption ? (
+                                <p className="text-xs text-muted-foreground truncate mt-0.5 max-w-[180px]">
+                                  {submission.caption.slice(0, 40)}{submission.caption.length > 40 ? '...' : ''}
+                                </p>
+                              ) : (
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-3.5 h-3.5" />}
+                                  <span className="text-xs text-muted-foreground truncate">
+                                    {submission.video_author_username || '—'}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </a>
                         </TableCell>
@@ -800,6 +822,11 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
                         
                         {/* Views */}
                         <TableCell className="py-3 text-right">
+                          {isPosterBoostSubmission && !submission.views ? (
+                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                              Awaiting post
+                            </span>
+                          ) : (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -832,8 +859,9 @@ export function SubmissionsTab({ campaignId, boostId, compact = false }: Submiss
                                 </TooltipContent>}
                             </Tooltip>
                           </TooltipProvider>
+                          )}
                         </TableCell>
-                        
+
                         {/* Submitted */}
                         <TableCell className="py-3">
                           <TooltipProvider>

@@ -381,21 +381,20 @@ export function FindCreatorsPopup({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col bg-card dark:bg-[#0e0e0e] border-border dark:border-[#1a1a1a]">
-        <DialogHeader>
-          <DialogTitle className="font-inter tracking-[-0.5px]">
-            {viewMode === "invite" ? "Invite Creator" : "Find Creators"}
-          </DialogTitle>
-          <DialogDescription className="font-inter tracking-[-0.3px]">
-            {viewMode === "invite"
-              ? "Send an invite to join your creator network"
-              : "Search existing creators or invite new ones via email"
-            }
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col bg-card dark:bg-[#080808] border-border dark:border-[#1a1a1a]">
+        {viewMode === "invite" && (
+          <DialogHeader>
+            <DialogTitle className="font-inter tracking-[-0.5px]">
+              Invite Creator
+            </DialogTitle>
+            <DialogDescription className="font-inter tracking-[-0.3px]">
+              Send an invite to join your creator network
+            </DialogDescription>
+          </DialogHeader>
+        )}
 
         {viewMode === "search" ? (
-          <>
+          <div className="flex flex-col flex-1 pt-2">
             {/* Smart Search Input */}
             <div className="relative">
               <div className="relative">
@@ -431,8 +430,8 @@ export function FindCreatorsPopup({
             {/* Results */}
             <ScrollArea className="flex-1 -mx-6 px-6">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Icon icon="material-symbols:progress-activity" className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="flex items-center justify-center py-8">
+                  <Icon icon="material-symbols:progress-activity" className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : searchResults.length > 0 ? (
                 <div className="space-y-2 py-2">
@@ -449,60 +448,27 @@ export function FindCreatorsPopup({
                       </Avatar>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
-                            {creator.full_name || creator.username}
-                          </span>
-                        </div>
+                        <span className="font-medium text-sm font-inter tracking-[-0.5px] truncate block">
+                          {creator.full_name || creator.username}
+                        </span>
                         <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                           @{creator.username}
                         </p>
-                        {creator.social_accounts.length > 0 && (
-                          <div className="flex items-center gap-2 mt-1">
-                            {creator.social_accounts.slice(0, 3).map((social) => {
-                              const logo = getPlatformLogo(social.platform);
-                              if (!logo) return null;
-                              return (
-                                <div
-                                  key={social.platform}
-                                  className="flex items-center gap-1"
-                                >
-                                  <img
-                                    src={logo}
-                                    alt={social.platform}
-                                    className="w-3.5 h-3.5"
-                                  />
-                                  {social.follower_count != null && social.follower_count > 0 && (
-                                    <span className="text-[10px] text-muted-foreground">
-                                      {formatFollowerCount(social.follower_count)}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="h-8 w-8 p-0 border-border/50"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-muted/50"
                           onClick={() => window.open(`/@${creator.username}`, "_blank")}
                         >
-                          <Icon icon="material-symbols:open-in-new-rounded" className="h-3.5 w-3.5" />
+                          <Icon icon="material-symbols:open-in-new-rounded" className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
                         {existingCreatorIds.has(creator.id) ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs gap-1.5 px-3 border-green-500/30 text-green-600 dark:text-green-400"
-                            disabled
-                          >
-                            <Icon icon="material-symbols:check-rounded" className="h-3.5 w-3.5" />
-                            Added
-                          </Button>
+                          <div className="h-8 w-8 flex items-center justify-center">
+                            <Icon icon="material-symbols:check-rounded" className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         ) : (
                           <Button
                             size="sm"
@@ -525,33 +491,21 @@ export function FindCreatorsPopup({
                   ))}
                 </div>
               ) : inputValue.length >= 2 && inputType !== "email" ? (
-                <div className="text-center py-12">
-                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <Icon icon="material-symbols:person-outline-rounded" className="h-6 w-6 text-muted-foreground/60" />
+                <div className="text-center py-8">
+                  <div className="w-11 h-11 rounded-full bg-muted/40 flex items-center justify-center mx-auto mb-3">
+                    <Icon icon="material-symbols:person-outline-rounded" className="h-5 w-5 text-muted-foreground/60" />
                   </div>
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
                     No creators found for "{inputValue}"
                   </p>
                   <p className="text-xs text-muted-foreground/70 font-inter tracking-[-0.3px] mt-1">
-                    Try a different search or invite them via email
+                    Try a different search or enter an email to invite
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 gap-2"
-                    onClick={() => {
-                      setInputValue("");
-                      setViewMode("invite");
-                    }}
-                  >
-                    <Icon icon="material-symbols:mail-outline-rounded" className="h-3.5 w-3.5" />
-                    Invite via email
-                  </Button>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <Icon icon="material-symbols:search-rounded" className="h-6 w-6 text-muted-foreground/60" />
+                <div className="text-center py-8">
+                  <div className="w-11 h-11 rounded-full bg-muted/40 flex items-center justify-center mx-auto mb-3">
+                    <Icon icon="material-symbols:search-rounded" className="h-5 w-5 text-muted-foreground/60" />
                   </div>
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
                     Search for creators by name or @handle
@@ -559,29 +513,21 @@ export function FindCreatorsPopup({
                   <p className="text-xs text-muted-foreground/70 font-inter tracking-[-0.3px] mt-1">
                     Or enter an email address to send an invite
                   </p>
+
+                  {/* Invite Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-5 gap-2 h-9 text-xs font-inter tracking-[-0.3px] rounded-lg border border-border/60 hover:bg-muted/50 hover:text-foreground"
+                    onClick={() => setViewMode("invite")}
+                  >
+                    <Icon icon="material-symbols:person-add-outline-rounded" className="h-3.5 w-3.5" />
+                    Invite via email
+                  </Button>
                 </div>
               )}
             </ScrollArea>
-
-            {/* Quick Invite Button */}
-            <div className="pt-2 border-t border-border/50">
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 h-11 text-sm font-inter tracking-[-0.3px] hover:bg-muted/30"
-                onClick={() => setViewMode("invite")}
-              >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Icon icon="material-symbols:person-add-outline-rounded" className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-left">
-                  <span className="block font-medium">Invite a new creator</span>
-                  <span className="text-xs text-muted-foreground">
-                    Send an email invite to join your network
-                  </span>
-                </div>
-              </Button>
-            </div>
-          </>
+          </div>
         ) : (
           /* Invite Form */
           <div className="space-y-4 py-2">

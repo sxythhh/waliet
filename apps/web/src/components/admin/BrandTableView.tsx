@@ -1,5 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useMemo, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,37 +17,23 @@ import {
   ChevronUp,
   ChevronDown,
   ExternalLink,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandContextSheet } from "./BrandContextSheet";
+import { BrandWithCRM } from "@/hooks/useBrandsWithCRM";
+import { CloseStatusBadge, FromCloseBadge } from "./CloseStatusBadge";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-  brand_type: string | null;
-  is_active: boolean;
-  is_verified: boolean;
-  created_at: string;
-  renewal_date: string | null;
-  logo_url: string | null;
-  description: string | null;
-  home_url: string | null;
-  account_url: string | null;
-  assets_url: string | null;
-  show_account_tab: boolean;
-  subscription_status: string | null;
-  subscription_plan: string | null;
-  subscription_expires_at: string | null;
-}
-
-// Column configuration
+// Column configuration - added CRM columns
 const ALL_COLUMNS = [
   { id: "brand", label: "Brand", required: true },
-  { id: "status", label: "Status", required: false },
+  { id: "close_status", label: "Close Status", required: false },
+  { id: "pipeline_value", label: "Pipeline", required: false },
+  { id: "last_activity", label: "Last Activity", required: false },
+  { id: "status", label: "Subscription", required: false },
   { id: "plan", label: "Plan", required: false },
   { id: "type", label: "Type", required: false },
   { id: "created", label: "Created", required: false },
@@ -57,6 +42,18 @@ const ALL_COLUMNS = [
 ] as const;
 
 type ColumnId = typeof ALL_COLUMNS[number]["id"];
+type SortColumn = "created" | "name" | "pipeline" | "last_activity" | null;
+
+// Format currency
+function formatCurrency(amount: number): string {
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(1)}M`;
+  }
+  if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(1)}K`;
+  }
+  return `$${amount.toFixed(0)}`;
+}
 
 // Sortable column item for drag-and-drop reordering
 interface SortableColumnItemProps {
@@ -143,7 +140,6 @@ function getStatusBadge(status: string | null, isActive: boolean) {
       </Badge>
     );
   }
-  // Check for new brands
   if (!status) {
     return (
       <Badge className="bg-blue-500/20 text-blue-500 border-0 font-inter tracking-[-0.3px] text-[10px]">
@@ -158,23 +154,26 @@ function getStatusBadge(status: string | null, isActive: boolean) {
   );
 }
 
-export function BrandTableView() {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+interface BrandTableViewProps {
+  brands: BrandWithCRM[];
+  isLoading: boolean;
+}
+
+export function BrandTableView({ brands, isLoading }: BrandTableViewProps) {
+  const [selectedBrand, setSelectedBrand] = useState<BrandWithCRM | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Column configuration state
+  // Column configuration state - updated defaults to include CRM columns
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(
-    new Set(["brand", "status", "plan", "type", "created", "renewal"])
+    new Set(["brand", "close_status", "pipeline_value", "last_activity", "status", "created"])
   );
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(
     ALL_COLUMNS.map((c) => c.id)
   );
 
   // Sorting state
-  const [sortBy, setSortBy] = useState<"created" | "name" | null>("created");
+  const [sortBy, setSortBy] = useState<SortColumn>("created");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // DnD sensors for column reordering
@@ -217,50 +216,12 @@ export function BrandTableView() {
     return columnOrder.filter((id) => visibleColumns.has(id));
   }, [columnOrder, visibleColumns]);
 
-  useEffect(() => {
-    fetchBrands();
-  }, []);
-
-  const fetchBrands = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("brands")
-        .select(`
-          id,
-          name,
-          slug,
-          brand_type,
-          is_active,
-          is_verified,
-          created_at,
-          renewal_date,
-          logo_url,
-          description,
-          home_url,
-          account_url,
-          assets_url,
-          show_account_tab,
-          subscription_status,
-          subscription_plan,
-          subscription_expires_at
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setBrands(data || []);
-    } catch (error) {
-      console.error("Error fetching brands:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBrandClick = (brand: Brand) => {
+  const handleBrandClick = (brand: BrandWithCRM) => {
     setSelectedBrand(brand);
     setSheetOpen(true);
   };
 
-  const handleSort = (column: "created" | "name") => {
+  const handleSort = (column: SortColumn) => {
     if (sortBy === column) {
       if (sortOrder === "desc") {
         setSortOrder("asc");
@@ -282,7 +243,8 @@ export function BrandTableView() {
         return (
           brand.name.toLowerCase().includes(query) ||
           brand.slug.toLowerCase().includes(query) ||
-          brand.description?.toLowerCase().includes(query)
+          brand.description?.toLowerCase().includes(query) ||
+          brand.close_status_label?.toLowerCase().includes(query)
         );
       }
       return true;
@@ -292,10 +254,15 @@ export function BrandTableView() {
       result = [...result].sort((a, b) => {
         let comparison = 0;
         if (sortBy === "created") {
-          comparison =
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         } else if (sortBy === "name") {
           comparison = a.name.localeCompare(b.name);
+        } else if (sortBy === "pipeline") {
+          comparison = (a.weighted_pipeline_value || 0) - (b.weighted_pipeline_value || 0);
+        } else if (sortBy === "last_activity") {
+          const aTime = a.last_activity_at ? new Date(a.last_activity_at).getTime() : 0;
+          const bTime = b.last_activity_at ? new Date(b.last_activity_at).getTime() : 0;
+          comparison = aTime - bTime;
         }
         return sortOrder === "asc" ? comparison : -comparison;
       });
@@ -304,7 +271,7 @@ export function BrandTableView() {
     return result;
   }, [brands, searchQuery, sortBy, sortOrder]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -320,7 +287,7 @@ export function BrandTableView() {
         </div>
         <h3 className="text-lg font-semibold mb-1">No brands yet</h3>
         <p className="text-sm text-muted-foreground">
-          Create your first brand to get started
+          Create your first brand or sync from Close to get started
         </p>
       </div>
     );
@@ -407,15 +374,9 @@ export function BrandTableView() {
                       onClick={() => handleSort("name")}
                     >
                       <div className="flex items-center gap-1">
-                        <span className="font-inter tracking-[-0.5px] text-xs font-medium">
-                          Brand
-                        </span>
+                        <span className="font-inter tracking-[-0.5px] text-xs font-medium">Brand</span>
                         {sortBy === "name" && (
-                          sortOrder === "desc" ? (
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          ) : (
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          )
+                          sortOrder === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />
                         )}
                       </div>
                     </TableHead>
@@ -429,15 +390,41 @@ export function BrandTableView() {
                       onClick={() => handleSort("created")}
                     >
                       <div className="flex items-center gap-1">
-                        <span className="font-inter tracking-[-0.5px] text-xs font-medium">
-                          Created
-                        </span>
+                        <span className="font-inter tracking-[-0.5px] text-xs font-medium">Created</span>
                         {sortBy === "created" && (
-                          sortOrder === "desc" ? (
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          ) : (
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          )
+                          sortOrder === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                    </TableHead>
+                  );
+                }
+                if (colId === "pipeline_value") {
+                  return (
+                    <TableHead
+                      key={colId}
+                      className="h-11 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleSort("pipeline")}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span className="font-inter tracking-[-0.5px] text-xs font-medium">Pipeline</span>
+                        {sortBy === "pipeline" && (
+                          sortOrder === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                    </TableHead>
+                  );
+                }
+                if (colId === "last_activity") {
+                  return (
+                    <TableHead
+                      key={colId}
+                      className="h-11 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleSort("last_activity")}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span className="font-inter tracking-[-0.5px] text-xs font-medium">Last Activity</span>
+                        {sortBy === "last_activity" && (
+                          sortOrder === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />
                         )}
                       </div>
                     </TableHead>
@@ -446,9 +433,7 @@ export function BrandTableView() {
                 const col = ALL_COLUMNS.find((c) => c.id === colId);
                 return (
                   <TableHead key={colId} className="h-11">
-                    <span className="font-inter tracking-[-0.5px] text-xs font-medium">
-                      {col?.label}
-                    </span>
+                    <span className="font-inter tracking-[-0.5px] text-xs font-medium">{col?.label}</span>
                   </TableHead>
                 );
               })}
@@ -457,13 +442,8 @@ export function BrandTableView() {
           <TableBody>
             {filteredBrands.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={orderedVisibleColumns.length}
-                  className="h-24 text-center"
-                >
-                  <p className="text-sm text-muted-foreground">
-                    No brands found
-                  </p>
+                <TableCell colSpan={orderedVisibleColumns.length} className="h-24 text-center">
+                  <p className="text-sm text-muted-foreground">No brands found</p>
                 </TableCell>
               </TableRow>
             ) : (
@@ -475,29 +455,29 @@ export function BrandTableView() {
                 >
                   {orderedVisibleColumns.map((colId) => {
                     if (colId === "brand") {
+                      const isFromClose = brand.source === "close" || !!brand.close_lead_id;
                       return (
                         <TableCell key={colId} className="py-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-9 w-9 rounded-lg">
-                              <AvatarImage
-                                src={brand.logo_url || ""}
-                                alt={brand.name}
-                                className="object-cover"
-                              />
+                              <AvatarImage src={brand.logo_url || ""} alt={brand.name} className="object-cover" />
                               <AvatarFallback className="rounded-lg bg-muted text-xs font-medium">
                                 {brand.name.slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
+                            <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-sm font-medium font-inter tracking-[-0.3px]">
+                                <span className="text-sm font-medium font-inter tracking-[-0.3px] truncate">
                                   {brand.name}
                                 </span>
                                 {brand.is_verified && (
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                                 )}
+                                {isFromClose && (
+                                  <FromCloseBadge className="text-[9px] px-1 py-0 shrink-0" />
+                                )}
                               </div>
-                              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] truncate">
                                 {brand.slug}
                               </p>
                             </div>
@@ -505,13 +485,47 @@ export function BrandTableView() {
                         </TableCell>
                       );
                     }
+                    if (colId === "close_status") {
+                      return (
+                        <TableCell key={colId}>
+                          <CloseStatusBadge
+                            statusLabel={brand.close_status_label}
+                            statusId={brand.close_status_id}
+                          />
+                        </TableCell>
+                      );
+                    }
+                    if (colId === "pipeline_value") {
+                      return (
+                        <TableCell key={colId}>
+                          {brand.weighted_pipeline_value > 0 ? (
+                            <div className="flex items-center gap-1 text-sm font-inter tracking-[-0.3px]">
+                              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                              {formatCurrency(brand.weighted_pipeline_value)}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      );
+                    }
+                    if (colId === "last_activity") {
+                      return (
+                        <TableCell key={colId}>
+                          {brand.last_activity_at ? (
+                            <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                              {formatDistanceToNow(new Date(brand.last_activity_at), { addSuffix: true })}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      );
+                    }
                     if (colId === "status") {
                       return (
                         <TableCell key={colId}>
-                          {getStatusBadge(
-                            brand.subscription_status,
-                            brand.is_active
-                          )}
+                          {getStatusBadge(brand.subscription_status, brand.is_active)}
                         </TableCell>
                       );
                     }
@@ -546,9 +560,7 @@ export function BrandTableView() {
                       return (
                         <TableCell key={colId}>
                           <span className="text-sm font-inter tracking-[-0.3px] text-muted-foreground">
-                            {brand.renewal_date
-                              ? format(new Date(brand.renewal_date), "MMM d, yyyy")
-                              : "-"}
+                            {brand.renewal_date ? format(new Date(brand.renewal_date), "MMM d, yyyy") : "-"}
                           </span>
                         </TableCell>
                       );
@@ -556,9 +568,9 @@ export function BrandTableView() {
                     if (colId === "website") {
                       return (
                         <TableCell key={colId}>
-                          {brand.home_url ? (
+                          {brand.website_url ? (
                             <a
-                              href={brand.home_url}
+                              href={brand.website_url}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -592,7 +604,7 @@ export function BrandTableView() {
         brand={selectedBrand}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        onBrandUpdated={fetchBrands}
+        onBrandUpdated={() => {}}
       />
     </>
   );

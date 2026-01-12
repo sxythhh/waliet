@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Check, ArrowLeft, Loader2, Link2, ExternalLink, AlertCircle } from "lucide-react";
+import { Copy, Check, ArrowLeft, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -32,7 +32,6 @@ interface VerificationStepProps {
   handleCopyCode: () => void;
   handleBack: () => void;
   handleCheckVerification: () => void;
-  handleSwitchToManual: () => void;
 }
 function VerificationStep({
   username,
@@ -46,7 +45,6 @@ function VerificationStep({
   handleCopyCode,
   handleBack,
   handleCheckVerification,
-  handleSwitchToManual
 }: VerificationStepProps) {
   const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
   const TOTAL_TIME = 600;
@@ -147,11 +145,6 @@ function VerificationStep({
           </p>
         </div>
 
-        {/* Manual connection option */}
-        <button onClick={handleSwitchToManual} className="text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5 w-full">
-          <Link2 className="h-3.5 w-3.5" />
-          Can't verify? Connect manually
-        </button>
       </div>
 
       {/* Sticky footer buttons */}
@@ -178,7 +171,7 @@ interface AddSocialAccountDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
-type Step = "input" | "verification" | "manual";
+type Step = "input" | "verification";
 
 // Generate a random verification code
 const generateVerificationCode = (): string => {
@@ -190,84 +183,6 @@ const generateVerificationCode = (): string => {
   return code;
 };
 
-// URL validation patterns for each platform
-const platformUrlPatterns: Record<Platform, RegExp> = {
-  tiktok: /^https?:\/\/(www\.)?tiktok\.com\/@[\w.-]+\/?$/i,
-  instagram: /^https?:\/\/(www\.)?instagram\.com\/[\w.-]+\/?$/i,
-  youtube: /^https?:\/\/(www\.)?youtube\.com\/(channel\/[\w-]+|@[\w.-]+|c\/[\w.-]+)\/?$/i,
-  twitter: /^https?:\/\/(www\.)?(twitter|x)\.com\/[\w]+\/?$/i
-};
-
-// Get expected URL format for each platform
-const getExpectedUrlFormat = (platform: Platform): string => {
-  switch (platform) {
-    case "tiktok":
-      return "https://tiktok.com/@username";
-    case "instagram":
-      return "https://instagram.com/username";
-    case "youtube":
-      return "https://youtube.com/@handle or https://youtube.com/channel/ID";
-    case "twitter":
-      return "https://x.com/username";
-  }
-};
-
-// Validate URL matches platform and contains username
-const validateProfileUrl = (url: string, platform: Platform, username: string): {
-  valid: boolean;
-  error?: string;
-} => {
-  const trimmedUrl = url.trim();
-  if (!trimmedUrl) {
-    return {
-      valid: false,
-      error: "Please enter a profile URL"
-    };
-  }
-
-  // Check if URL starts with http/https
-  if (!trimmedUrl.match(/^https?:\/\//i)) {
-    return {
-      valid: false,
-      error: "URL must start with https://"
-    };
-  }
-
-  // Check if URL matches platform pattern
-  if (!platformUrlPatterns[platform].test(trimmedUrl)) {
-    return {
-      valid: false,
-      error: `Invalid ${platform === "twitter" ? "X" : platform.charAt(0).toUpperCase() + platform.slice(1)} URL. Expected format: ${getExpectedUrlFormat(platform)}`
-    };
-  }
-
-  // Check if URL contains the username (case-insensitive)
-  const normalizedUrl = trimmedUrl.toLowerCase();
-  const normalizedUsername = username.toLowerCase();
-
-  // For YouTube, the username might be a channel ID which could be different
-  if (platform === "youtube") {
-    // If it's a channel URL with @handle, check for username
-    if (normalizedUrl.includes("/@") && !normalizedUrl.includes(`/@${normalizedUsername}`)) {
-      return {
-        valid: false,
-        error: "URL must contain your username/handle"
-      };
-    }
-    // Channel IDs are fine as-is
-  } else {
-    // For other platforms, ensure URL contains the username
-    if (!normalizedUrl.includes(normalizedUsername)) {
-      return {
-        valid: false,
-        error: "URL must match the username you entered"
-      };
-    }
-  }
-  return {
-    valid: true
-  };
-};
 export function AddSocialAccountDialog({
   open,
   onOpenChange,
@@ -280,9 +195,6 @@ export function AddSocialAccountDialog({
   const [isChecking, setIsChecking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
-  const [profileUrl, setProfileUrl] = useState("");
-  const [urlError, setUrlError] = useState<string | null>(null);
-  const [isSavingManual, setIsSavingManual] = useState(false);
   const {
     toast
   } = useToast();
@@ -299,9 +211,6 @@ export function AddSocialAccountDialog({
       setIsChecking(false);
       setCopied(false);
       setCooldownRemaining(0);
-      setProfileUrl("");
-      setUrlError(null);
-      setIsSavingManual(false);
     }
   }, [open]);
 
@@ -320,12 +229,6 @@ export function AddSocialAccountDialog({
     }
   }, [step, verificationCode]);
 
-  // Pre-fill URL when switching to manual step
-  useEffect(() => {
-    if (step === "manual" && !profileUrl) {
-      setProfileUrl(getAccountLink(selectedPlatform, username));
-    }
-  }, [step, selectedPlatform, username, profileUrl]);
   const getPlatformLabel = (platform: Platform) => {
     switch (platform) {
       case "tiktok":
@@ -518,74 +421,6 @@ export function AddSocialAccountDialog({
       setIsContinuing(false);
     }
   };
-  const handleSwitchToManual = () => {
-    setStep("manual");
-    setUrlError(null);
-  };
-  const handleUrlChange = (value: string) => {
-    setProfileUrl(value);
-    // Clear error when user starts typing
-    if (urlError) {
-      setUrlError(null);
-    }
-  };
-  const handleSaveManualAccount = async () => {
-    // Validate URL
-    const validation = validateProfileUrl(profileUrl, selectedPlatform, username);
-    if (!validation.valid) {
-      setUrlError(validation.error || "Invalid URL");
-      return;
-    }
-    setIsSavingManual(true);
-    try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      // Double-check account doesn't already exist
-      const {
-        data: existingAccount
-      } = await supabase.from("social_accounts").select("id").eq("platform", selectedPlatform).eq("username", username.toLowerCase()).maybeSingle();
-      if (existingAccount) {
-        toast({
-          variant: "destructive",
-          title: "Account Already Connected",
-          description: "This social account is already connected to another user."
-        });
-        return;
-      }
-      const {
-        error: insertError
-      } = await supabase.from("social_accounts").insert({
-        user_id: user.id,
-        platform: selectedPlatform,
-        username: username,
-        account_link: profileUrl.trim(),
-        is_verified: false,
-        follower_count: null,
-        bio: null,
-        avatar_url: null
-      });
-      if (insertError) throw insertError;
-      toast({
-        title: "Account Connected",
-        description: `@${username} has been connected (unverified).`
-      });
-      onSuccess();
-      onOpenChange(false);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to connect account"
-      });
-    } finally {
-      setIsSavingManual(false);
-    }
-  };
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
         {step === "input" ? <div className="flex flex-col max-h-[85vh]">
@@ -662,8 +497,34 @@ export function AddSocialAccountDialog({
                     placeholder={getPlaceholderText(selectedPlatform)}
                     value={username}
                     onChange={e => {
-                      const value = e.target.value;
-                      const sanitized = value.replace(/@/g, "").trim();
+                      let value = e.target.value.trim();
+
+                      // Extract username from URLs
+                      if (value.includes('youtube.com')) {
+                        // YouTube channel URL: /channel/UC...
+                        const channelMatch = value.match(/youtube\.com\/channel\/(UC[a-zA-Z0-9_-]+)/);
+                        if (channelMatch) {
+                          value = channelMatch[1];
+                        } else {
+                          // YouTube handle URL: /@username or /username
+                          const handleMatch = value.match(/youtube\.com\/@?([a-zA-Z0-9_.-]+)/);
+                          if (handleMatch) {
+                            value = handleMatch[1];
+                          }
+                        }
+                      } else if (value.includes('tiktok.com')) {
+                        const match = value.match(/tiktok\.com\/@?([a-zA-Z0-9_.-]+)/);
+                        if (match) value = match[1];
+                      } else if (value.includes('instagram.com')) {
+                        const match = value.match(/instagram\.com\/([a-zA-Z0-9_.-]+)/);
+                        if (match) value = match[1];
+                      } else if (value.includes('x.com') || value.includes('twitter.com')) {
+                        const match = value.match(/(?:x|twitter)\.com\/([a-zA-Z0-9_]+)/);
+                        if (match) value = match[1];
+                      }
+
+                      // Remove @ symbol
+                      const sanitized = value.replace(/@/g, "");
                       setUsername(sanitized);
                     }}
                     className={`h-11 bg-muted/50 dark:bg-muted/30 border-2 border-transparent rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-0 focus-visible:border-primary ${showAtSymbol ? 'pl-10' : 'pl-4'}`}
@@ -694,68 +555,7 @@ export function AddSocialAccountDialog({
                 {isContinuing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
               </Button>
             </div>
-          </div> : step === "verification" ? <VerificationStep username={username} platform={selectedPlatform} verificationCode={verificationCode} copied={copied} isChecking={isChecking} cooldownRemaining={cooldownRemaining} getPlatformIcon={getPlatformIcon} getPlatformLabel={getPlatformLabel} handleCopyCode={handleCopyCode} handleBack={handleBack} handleCheckVerification={handleCheckVerification} handleSwitchToManual={handleSwitchToManual} /> :
-      // Manual URL connection step
-      <div className="flex flex-col max-h-[85vh]">
-            {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto px-6 pt-6 pb-4">
-              {/* Header */}
-              <div className="pb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-                    {getPlatformIcon(selectedPlatform, "h-5 w-5")}
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">
-                      @{username}
-                    </h2>
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                      Connect manually
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* URL Input */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="profileUrl" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
-                    Profile URL
-                  </Label>
-                  <Input id="profileUrl" type="url" placeholder={getExpectedUrlFormat(selectedPlatform)} value={profileUrl} onChange={e => handleUrlChange(e.target.value)} className={`h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${urlError ? 'ring-2 ring-destructive' : ''}`} />
-                  {urlError && <p className="text-[11px] text-destructive font-inter tracking-[-0.5px]">
-                      {urlError}
-                    </p>}
-                  <p className="text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px]">
-                    Enter the full URL to your {getPlatformLabel(selectedPlatform)} profile
-                  </p>
-                </div>
-
-                {/* Warning notice */}
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
-                  <p className="text-[11px] text-amber-600 dark:text-amber-400 font-inter tracking-[-0.5px]">
-                    Unverified accounts may have limited features and lower priority in campaigns.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Sticky Footer */}
-            <div className="flex-shrink-0 px-6 py-4 border-t border-border/50 bg-background">
-              <div className="flex flex-col-reverse sm:flex-row gap-2">
-                <Button variant="ghost" onClick={handleBack} className="w-full sm:w-auto h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
-                  <ArrowLeft className="h-4 w-4 mr-1.5" />
-                  Back
-                </Button>
-                <Button onClick={handleSaveManualAccount} disabled={isSavingManual || !profileUrl.trim()} className="w-full sm:w-auto sm:flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
-                  {isSavingManual ? <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                      Connecting...
-                    </> : "Connect (Unverified)"}
-                </Button>
-              </div>
-            </div>
-          </div>}
+          </div> : step === "verification" ? <VerificationStep username={username} platform={selectedPlatform} verificationCode={verificationCode} copied={copied} isChecking={isChecking} cooldownRemaining={cooldownRemaining} getPlatformIcon={getPlatformIcon} getPlatformLabel={getPlatformLabel} handleCopyCode={handleCopyCode} handleBack={handleBack} handleCheckVerification={handleCheckVerification} /> : null}
       </DialogContent>
     </Dialog>;
 }

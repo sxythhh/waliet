@@ -17,15 +17,15 @@ interface DashboardHeaderProps {
   onEditBudget?: () => void;
 }
 
-export function DashboardHeader({ 
-  campaign, 
-  creatorCount, 
-  isAdmin, 
-  onEditBudget 
+export function DashboardHeader({
+  campaign,
+  creatorCount,
+  isAdmin,
+  onEditBudget
 }: DashboardHeaderProps) {
   const budgetRemaining = (campaign.budget || 0) - (campaign.budget_used || 0);
-  const budgetPercentUsed = campaign.budget > 0 
-    ? ((campaign.budget_used || 0) / campaign.budget) * 100 
+  const budgetPercentUsed = campaign.budget > 0
+    ? ((campaign.budget_used || 0) / campaign.budget) * 100
     : 0;
 
   return (
@@ -63,7 +63,7 @@ export function DashboardHeader({
             </p>
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-primary rounded-full transition-all"
                   style={{ width: `${Math.min(budgetPercentUsed, 100)}%` }}
                 />

@@ -117,6 +117,22 @@ interface FilterState {
 const USERS_PER_PAGE = 50;
 const BATCH_SIZE = 1000;
 
+// Optimized column selection - only fetch columns we actually use
+// This reduces query time significantly vs SELECT *
+const PROFILE_COLUMNS = `
+  id,
+  username,
+  full_name,
+  avatar_url,
+  discord_id,
+  discord_username,
+  discord_avatar,
+  phone_number,
+  created_at,
+  email,
+  trust_score
+`;
+
 // Platform icon helper
 const getPlatformIcon = (platform: string) => {
   switch (platform?.toLowerCase()) {
@@ -320,7 +336,7 @@ export default function UsersContent() {
   // Paginated fetch for simple filters (fast)
   const fetchPaginatedUsers = async () => {
     let query = supabase.from("profiles").select(`
-      *,
+      ${PROFILE_COLUMNS},
       wallets (balance, total_earned, total_withdrawn),
       social_accounts (id, platform, username, follower_count, demographic_submissions (status))
     `, { count: "exact" });
@@ -364,7 +380,7 @@ export default function UsersContent() {
     // Fetch in batches to bypass 1000 limit
     while (true) {
       let query = supabase.from("profiles").select(`
-        *,
+        ${PROFILE_COLUMNS},
         wallets (balance, total_earned, total_withdrawn),
         social_accounts (id, platform, username, follower_count, demographic_submissions (status))
       `, { count: "exact" });

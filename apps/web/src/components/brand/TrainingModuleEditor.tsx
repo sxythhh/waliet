@@ -22,6 +22,10 @@ import {
   X,
   Check,
   Pencil,
+  BookOpen,
+  ChevronUp,
+  ChevronDown,
+  GraduationCap,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -292,100 +296,134 @@ export function TrainingModuleEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium">Training Modules</h3>
-          <p className="text-xs text-muted-foreground">
-            Add training content creators must complete before submitting
-          </p>
-        </div>
-        <Button onClick={handleAddModule} size="sm">
-          <Plus className="h-4 w-4 mr-1" />
-          Add Module
-        </Button>
-      </div>
-
       {modules.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <FileText className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground text-center">
-              No training modules yet.
-              <br />
-              Add modules to help creators understand your brand.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-12 border border-dashed border-border rounded-xl bg-muted/20">
+          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
+            <GraduationCap className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground mb-1 font-inter tracking-[-0.5px]">
+            No training modules yet
+          </h3>
+          <p className="text-sm text-muted-foreground text-center max-w-xs mb-4 font-inter tracking-[-0.3px]">
+            Add training content to help creators understand your brand and requirements
+          </p>
+          <Button onClick={handleAddModule} size="sm" className="font-inter tracking-[-0.5px]">
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add First Module
+          </Button>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {modules
             .sort((a, b) => a.order_index - b.order_index)
             .map((module, index) => (
-              <Card key={module.id} className="group">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col gap-0.5">
-                      <button
-                        type="button"
-                        className="p-0.5 hover:bg-muted rounded disabled:opacity-30"
-                        onClick={() => moveModule(index, "up")}
-                        disabled={index === 0}
-                      >
-                        <GripVertical className="h-3 w-3 rotate-90" />
-                      </button>
-                      <button
-                        type="button"
-                        className="p-0.5 hover:bg-muted rounded disabled:opacity-30"
-                        onClick={() => moveModule(index, "down")}
-                        disabled={index === modules.length - 1}
-                      >
-                        <GripVertical className="h-3 w-3 -rotate-90" />
-                      </button>
+              <div
+                key={module.id}
+                className="group relative flex items-stretch gap-3 p-4 bg-card border border-border rounded-xl hover:border-border/80 transition-all"
+              >
+                {/* Module Number Badge */}
+                <div className="flex flex-col items-center gap-1.5 pt-0.5">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold ${
+                    module.required
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {index + 1}
+                  </div>
+                  {/* Reorder buttons */}
+                  <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      className="p-0.5 hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      onClick={() => moveModule(index, "up")}
+                      disabled={index === 0}
+                    >
+                      <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-0.5 hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      onClick={() => moveModule(index, "down")}
+                      disabled={index === modules.length - 1}
+                    >
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Module Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px] line-clamp-1">
+                        {module.title}
+                      </h4>
+                      {module.required && (
+                        <span className="text-[10px] font-semibold uppercase bg-primary/10 text-primary px-1.5 py-0.5 rounded-full tracking-wide">
+                          Required
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate">{module.title}</span>
-                        {module.required && (
-                          <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                            Required
-                          </span>
-                        )}
-                        {module.video_url && (
-                          <Video className="h-3.5 w-3.5 text-muted-foreground" />
-                        )}
-                        {module.quiz && module.quiz.length > 0 && (
-                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {module.content.slice(0, 100)}
-                        {module.content.length > 100 ? "..." : ""}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7 hover:bg-muted"
                         onClick={() => handleEditModule(module)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-destructive"
+                        className="h-7 w-7 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                         onClick={() => handleDeleteModule(module.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Content preview */}
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2 font-inter tracking-[-0.3px]">
+                    {module.content}
+                  </p>
+
+                  {/* Module features */}
+                  <div className="flex items-center gap-3">
+                    {module.video_url && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Video className="h-3.5 w-3.5" />
+                        <span className="font-inter tracking-[-0.3px]">Video</span>
+                      </div>
+                    )}
+                    {module.quiz && module.quiz.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <HelpCircle className="h-3.5 w-3.5" />
+                        <span className="font-inter tracking-[-0.3px]">{module.quiz.length} quiz question{module.quiz.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                    {!module.video_url && (!module.quiz || module.quiz.length === 0) && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span className="font-inter tracking-[-0.3px]">Text content</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))}
+
+          {/* Add Module Button */}
+          <button
+            onClick={handleAddModule}
+            className="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/30 transition-all font-inter tracking-[-0.3px]"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="text-sm font-medium">Add Module</span>
+          </button>
         </div>
       )}
 

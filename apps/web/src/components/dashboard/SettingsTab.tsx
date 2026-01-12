@@ -35,6 +35,7 @@ import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable"
 import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { TaxFormNotificationBanner } from "@/components/tax";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import noAccountsIcon from "@/assets/no-accounts-icon.svg";
 import noAccountsIconBlack from "@/assets/no-accounts-icon-black.svg";
 interface Profile {
@@ -120,10 +121,12 @@ interface Campaign {
 }
 export function SettingsTab() {
   const navigate = useNavigate();
+  const { isAdmin } = useAdminCheck();
   const {
     resolvedTheme
   } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [resettingOnboarding, setResettingOnboarding] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -737,6 +740,35 @@ export function SettingsTab() {
       setSavingPreferences(false);
     }
   };
+
+  // Admin function to reset onboarding for testing
+  const handleResetOnboarding = async () => {
+    if (!profile) return;
+    setResettingOnboarding(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ onboarding_completed: false })
+        .eq("id", profile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Onboarding reset",
+        description: "Refresh the page to see the onboarding flow.",
+      });
+    } catch (error) {
+      console.error("Error resetting onboarding:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to reset onboarding status",
+      });
+    } finally {
+      setResettingOnboarding(false);
+    }
+  };
+
   if (loading || !profile) {
     return null;
   }
@@ -761,7 +793,7 @@ export function SettingsTab() {
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
-            <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="font-inter font-medium tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7] rounded-xl">
+            <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="font-inter font-medium tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7] rounded-md">
               <Plus className="mr-2 h-4 w-4" />
               Add Account
             </Button>
@@ -936,6 +968,35 @@ export function SettingsTab() {
           <AccountDeletionDialog />
         </div>
       </SettingsCard>
+
+      {/* Admin Developer Tools - Only visible to admins */}
+      {isAdmin && (
+        <SettingsCard
+          title="Developer Tools"
+          description="Admin-only tools for testing and debugging"
+          footerHint="These tools are only visible to admins."
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+              <div className="space-y-1">
+                <p className="text-sm font-medium tracking-[-0.5px]">Reset Onboarding Flow</p>
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">
+                  Resets your onboarding status to test the onboarding flow. Refresh the page after clicking.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetOnboarding}
+                disabled={resettingOnboarding}
+                className="shrink-0"
+              >
+                {resettingOnboarding ? "Resetting..." : "Reset Onboarding"}
+              </Button>
+            </div>
+          </div>
+        </SettingsCard>
+      )}
 
       {/* Portfolio Section - Hidden for now */}
       {/* {profile && (

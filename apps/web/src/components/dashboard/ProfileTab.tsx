@@ -51,7 +51,6 @@ import { PortfolioBuilder } from "@/components/portfolio/builder";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 interface UserProfile {
   username?: string;
@@ -299,7 +298,6 @@ export function ProfileTab() {
   const [socialAccountsCount, setSocialAccountsCount] = useState(0);
   const [hasDemographicsApproved, setHasDemographicsApproved] = useState(false);
   const [joinedCampaignsCount, setJoinedCampaignsCount] = useState(0);
-  const [profileActiveTab, setProfileActiveTab] = useState("portfolio");
   const [editProfileDialogOpen, setEditProfileDialogOpen] = useState(false);
   const [addSocialDialogOpen, setAddSocialDialogOpen] = useState(false);
   const [showEditingToolsDialog, setShowEditingToolsDialog] = useState(false);
@@ -1713,7 +1711,12 @@ export function ProfileTab() {
         </div>
       )}
 
-      {/* Tabs Section - Hidden for now */}
+      {/* Portfolio Builder Section - Hidden for now */}
+      {false && onboardingProfile && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+          <PortfolioBuilder />
+        </div>
+      )}
 
       {/* Edit Profile Dialog */}
       <EditProfileDialog

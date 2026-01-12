@@ -1,8 +1,9 @@
-import { Wallet, Clock, CheckCircle, ArrowRight, Zap, Info } from "lucide-react";
+import { Wallet, Clock, CheckCircle, ArrowRight, Zap, Info, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClearingCountdown } from "./ClearingCountdown";
+import { HeldEarningsCountdown } from "./HeldEarningsCountdown";
 
 interface PayoutStatusCardsProps {
   accruing: {
@@ -12,6 +13,12 @@ interface PayoutStatusCardsProps {
     boostCount?: number;
     campaignAmount?: number;
     campaignCount?: number;
+  };
+  held?: {
+    amount: number;
+    videoCount: number;
+    releaseAt?: string;
+    minimumRequired?: number;
   };
   clearing: {
     amount: number;
@@ -30,6 +37,7 @@ interface PayoutStatusCardsProps {
 
 export function PayoutStatusCards({
   accruing,
+  held,
   clearing,
   paid,
   onRequestPayout,
@@ -39,8 +47,16 @@ export function PayoutStatusCards({
   const canRequest = accruing.amount >= minPayout;
   const progressToMin = Math.min(100, (accruing.amount / minPayout) * 100);
 
+  // Calculate progress toward minimum for held earnings
+  const heldProgressToMin = held?.minimumRequired && held.minimumRequired > 0
+    ? Math.min(100, (held.amount / held.minimumRequired) * 100)
+    : 100;
+
+  // Show held card if there are any held earnings
+  const showHeldCard = held && held.amount > 0;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className={`grid grid-cols-1 gap-4 ${showHeldCard ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
       {/* Accruing Card */}
       <Card className="p-4 bg-card border border-border/50 hover:border-border transition-colors">
         <div className="flex items-start justify-between mb-3">
@@ -113,6 +129,66 @@ export function PayoutStatusCards({
           {canRequest && !isRequesting && <ArrowRight className="h-3.5 w-3.5 ml-2" />}
         </Button>
       </Card>
+
+      {/* Held Card */}
+      {showHeldCard && held && (
+        <Card className="p-4 bg-card border border-border/50 hover:border-border transition-colors">
+          <div className="flex items-start justify-between mb-3">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Lock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                Held
+              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-sm">Earnings are held by the brand before release. Once the holding period ends and any minimum threshold is met, funds move to Ready.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
+            ${held.amount.toFixed(2)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 font-inter">
+            {held.videoCount} video{held.videoCount !== 1 ? 's' : ''} • Holding period
+          </p>
+
+          {/* Countdown to release */}
+          {held.releaseAt && (
+            <div className="mt-4 space-y-1.5">
+              <HeldEarningsCountdown releaseAt={held.releaseAt} />
+            </div>
+          )}
+
+          {/* Progress to minimum */}
+          {held.minimumRequired && held.minimumRequired > 0 && held.amount < held.minimumRequired && (
+            <div className="mt-3 space-y-1">
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 transition-all duration-300"
+                  style={{ width: `${heldProgressToMin}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                ${(held.minimumRequired - held.amount).toFixed(2)} more to reach ${held.minimumRequired} minimum
+              </p>
+            </div>
+          )}
+
+          {!held.releaseAt && (!held.minimumRequired || held.amount >= held.minimumRequired) && (
+            <p className="text-[10px] text-green-600 dark:text-green-400 mt-4 font-inter font-medium">
+              ✓ Will release when processed
+            </p>
+          )}
+        </Card>
+      )}
 
       {/* Clearing Card */}
       <Card className="p-4 bg-card border border-border/50 hover:border-border transition-colors">

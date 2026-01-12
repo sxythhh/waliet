@@ -3,8 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -13,23 +11,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import {
-  Briefcase,
-  Zap,
-  DollarSign,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Mail,
-  Check,
-  X,
-  Loader2,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { Mail, Loader2 } from "lucide-react";
+import { format } from "date-fns";
 
 interface Pitch {
   id: string;
@@ -64,11 +48,10 @@ interface Pitch {
 }
 
 export function ReceivedPitchesWidget() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedPitch, setSelectedPitch] = useState<Pitch | null>(null);
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
-  const [responseAction, setResponseAction] = useState<"accept" | "reject">("accept");
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
 
   const { data: pitches, isLoading } = useQuery({
@@ -114,7 +97,6 @@ export function ReceivedPitchesWidget() {
         if (!user) return;
 
         if (selectedPitch.campaign_id) {
-          // Add to campaign
           await supabase.from("campaign_submissions").insert({
             campaign_id: selectedPitch.campaign_id,
             creator_id: user.id,
@@ -122,7 +104,6 @@ export function ReceivedPitchesWidget() {
             submitted_at: new Date().toISOString(),
           });
         } else if (selectedPitch.boost_id) {
-          // Add to boost
           await supabase.from("bounty_applications").insert({
             bounty_campaign_id: selectedPitch.boost_id,
             user_id: user.id,
@@ -144,6 +125,7 @@ export function ReceivedPitchesWidget() {
         }
       );
       setResponseDialogOpen(false);
+      setDetailsDialogOpen(false);
       setSelectedPitch(null);
       setResponseMessage("");
     },
@@ -153,188 +135,179 @@ export function ReceivedPitchesWidget() {
   });
 
   const pendingPitches = pitches?.filter((p) => p.status === "pending") || [];
-  const otherPitches = pitches?.filter((p) => p.status !== "pending") || [];
 
-  const handleResponse = (pitch: Pitch, action: "accept" | "reject") => {
+  const handleAccept = (pitch: Pitch) => {
     setSelectedPitch(pitch);
-    setResponseAction(action);
-    if (action === "accept") {
-      respondToPitch.mutate({ pitchId: pitch.id, status: "accepted" });
-    } else {
-      setResponseDialogOpen(true);
-    }
+    respondToPitch.mutate({ pitchId: pitch.id, status: "accepted" });
+  };
+
+  const handleDecline = (pitch: Pitch) => {
+    setSelectedPitch(pitch);
+    setResponseDialogOpen(true);
+  };
+
+  const handleLearnMore = (pitch: Pitch) => {
+    setSelectedPitch(pitch);
+    setDetailsDialogOpen(true);
   };
 
   if (isLoading) {
     return null;
   }
 
-  if (!pitches || pitches.length === 0) {
+  if (!pendingPitches || pendingPitches.length === 0) {
     return null;
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="h-3.5 w-3.5" />;
-      case "accepted":
-        return <CheckCircle2 className="h-3.5 w-3.5" />;
-      case "rejected":
-        return <XCircle className="h-3.5 w-3.5" />;
-      case "expired":
-        return <AlertCircle className="h-3.5 w-3.5" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-primary/10 text-primary border-primary/20";
-      case "accepted":
-        return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-      case "rejected":
-        return "bg-rose-500/10 text-rose-500 border-rose-500/20";
-      case "expired":
-        return "bg-muted text-muted-foreground border-muted";
-      default:
-        return "";
-    }
-  };
-
   return (
     <>
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Mail className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Brand Invitations</h3>
-          {pendingPitches.length > 0 && (
-            <Badge className="bg-primary text-primary-foreground text-xs">
-              {pendingPitches.length} new
-            </Badge>
-          )}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {pitches.map((pitch) => {
-            const opportunityTitle = pitch.campaign?.title || pitch.boost?.title || "General opportunity";
-            const opportunityType = pitch.campaign_id ? "campaign" : pitch.boost_id ? "boost" : null;
-            const isPending = pitch.status === "pending";
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {pendingPitches.map((pitch) => {
+            const invitedDate = format(new Date(pitch.created_at), "MMMM d");
+            const isLoading = respondToPitch.isPending && selectedPitch?.id === pitch.id;
 
             return (
-              <Card
+              <div
                 key={pitch.id}
-                className={cn(
-                  "p-4 transition-all hover:bg-muted/30 group",
-                  isPending && "border-primary/40 bg-primary/5"
-                )}
+                className="rounded-xl border border-border bg-card p-5 space-y-4"
               >
+                {/* Invited badge */}
+                <div className="flex items-center gap-1.5">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    <Mail className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Invited {invitedDate}</span>
+                  </div>
+                </div>
+
+                {/* Brand info */}
                 <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10 rounded-lg">
+                  <Avatar className="h-10 w-10 border border-border">
                     <AvatarImage src={pitch.brand?.logo_url || ""} />
-                    <AvatarFallback className="rounded-lg text-xs bg-muted">
+                    <AvatarFallback className="text-sm font-medium bg-muted">
                       {pitch.brand?.name?.charAt(0).toUpperCase() || "B"}
                     </AvatarFallback>
                   </Avatar>
-
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className="text-sm font-medium truncate cursor-pointer hover:underline"
-                        onClick={() => navigate(`/b/${pitch.brand?.slug}`)}
-                      >
-                        {pitch.brand?.name}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[10px] px-1.5 py-0 flex items-center gap-1",
-                          getStatusColor(pitch.status)
-                        )}
-                      >
-                        {getStatusIcon(pitch.status)}
-                        {pitch.status}
-                      </Badge>
-                    </div>
-
-                    {/* Subject */}
-                    {pitch.subject && (
-                      <p className="text-xs font-medium text-foreground mt-0.5 line-clamp-1">
-                        {pitch.subject}
-                      </p>
-                    )}
-
-                    {/* Opportunity */}
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {opportunityType === "campaign" && (
-                        <Briefcase className="h-3 w-3 text-muted-foreground" />
-                      )}
-                      {opportunityType === "boost" && (
-                        <Zap className="h-3 w-3 text-amber-500" />
-                      )}
-                      <span className="text-xs text-muted-foreground truncate">
-                        {opportunityTitle}
-                      </span>
-                      {pitch.proposed_rate && (
-                        <>
-                          <span className="text-muted-foreground">·</span>
-                          <DollarSign className="h-3 w-3 text-emerald-500" />
-                          <span className="text-xs text-emerald-500 font-medium">
-                            ${pitch.proposed_rate}
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Message preview */}
-                    <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-                      {pitch.message}
+                    <h4 className="text-sm font-semibold text-foreground">
+                      {pitch.brand?.name}
+                    </h4>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+                      {pitch.message || pitch.subject || "You've been invited to collaborate"}
                     </p>
-
-                    {/* Actions for pending */}
-                    {isPending && (
-                      <div className="flex items-center gap-2 mt-3">
-                        <Button
-                          size="sm"
-                          onClick={() => handleResponse(pitch, "accept")}
-                          disabled={respondToPitch.isPending && selectedPitch?.id === pitch.id}
-                          className="h-7 text-xs gap-1 flex-1"
-                        >
-                          {respondToPitch.isPending && selectedPitch?.id === pitch.id && responseAction === "accept" ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-                          Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleResponse(pitch, "reject")}
-                          disabled={respondToPitch.isPending}
-                          className="h-7 text-xs gap-1 flex-1 text-rose-500 border-rose-500/30 hover:bg-rose-500/10"
-                        >
-                          <X className="h-3 w-3" />
-                          Decline
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Timestamp */}
-                    {!isPending && (
-                      <p className="text-[10px] text-muted-foreground mt-1.5">
-                        {pitch.responded_at
-                          ? `Responded ${formatDistanceToNow(new Date(pitch.responded_at), { addSuffix: true })}`
-                          : `Received ${formatDistanceToNow(new Date(pitch.created_at), { addSuffix: true })}`}
-                      </p>
-                    )}
                   </div>
                 </div>
-              </Card>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleLearnMore(pitch)}
+                    className="flex-1 h-9 text-sm font-medium"
+                  >
+                    Learn more
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleAccept(pitch)}
+                    disabled={isLoading}
+                    className="flex-1 h-9 text-sm font-medium bg-foreground text-background hover:bg-foreground/90"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Accept invite"
+                    )}
+                  </Button>
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
+
+      {/* Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invitation Details</DialogTitle>
+          </DialogHeader>
+          {selectedPitch && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12 border border-border">
+                  <AvatarImage src={selectedPitch.brand?.logo_url || ""} />
+                  <AvatarFallback className="text-base font-medium bg-muted">
+                    {selectedPitch.brand?.name?.charAt(0).toUpperCase() || "B"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="font-semibold text-foreground">
+                    {selectedPitch.brand?.name}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Invited {format(new Date(selectedPitch.created_at), "MMMM d, yyyy")}
+                  </p>
+                </div>
+              </div>
+
+              {(selectedPitch.campaign || selectedPitch.boost) && (
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {selectedPitch.campaign ? "Campaign" : "Boost"}
+                  </p>
+                  <p className="text-sm font-medium">
+                    {selectedPitch.campaign?.title || selectedPitch.boost?.title}
+                  </p>
+                  {selectedPitch.proposed_rate && (
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">
+                      ${selectedPitch.proposed_rate} offered
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {selectedPitch.subject && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Subject</p>
+                  <p className="text-sm font-medium">{selectedPitch.subject}</p>
+                </div>
+              )}
+
+              {selectedPitch.message && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Message</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">
+                    {selectedPitch.message}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleDecline(selectedPitch)}
+                  className="flex-1"
+                >
+                  Decline
+                </Button>
+                <Button
+                  onClick={() => handleAccept(selectedPitch)}
+                  disabled={respondToPitch.isPending}
+                  className="flex-1 bg-foreground text-background hover:bg-foreground/90"
+                >
+                  {respondToPitch.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Accept invite"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Decline Dialog */}
       <Dialog open={responseDialogOpen} onOpenChange={setResponseDialogOpen}>
@@ -348,9 +321,9 @@ export function ReceivedPitchesWidget() {
           {selectedPitch && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                <Avatar className="h-10 w-10 rounded-lg">
+                <Avatar className="h-10 w-10 border border-border">
                   <AvatarImage src={selectedPitch.brand?.logo_url || ""} />
-                  <AvatarFallback className="rounded-lg">
+                  <AvatarFallback className="text-sm font-medium bg-muted">
                     {selectedPitch.brand?.name?.charAt(0).toUpperCase() || "B"}
                   </AvatarFallback>
                 </Avatar>
@@ -388,7 +361,8 @@ export function ReceivedPitchesWidget() {
                     })
                   }
                   disabled={respondToPitch.isPending}
-                  className="flex-1 bg-rose-600 hover:bg-rose-700"
+                  variant="destructive"
+                  className="flex-1"
                 >
                   {respondToPitch.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />

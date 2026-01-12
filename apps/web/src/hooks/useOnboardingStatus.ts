@@ -106,7 +106,7 @@ export function useOnboardingStatus(): OnboardingStatus {
     isLoading,
     completedCount,
     totalCount,
-    shouldShowOnboarding: !isLoading && !onboardingCompleted && completedCount === 0,
+    shouldShowOnboarding: !isLoading && !onboardingCompleted,
     markOnboardingComplete
   };
 }

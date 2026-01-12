@@ -117,6 +117,29 @@ Either party may terminate this Agreement with 30 days written notice.
 {{additional_terms}}
 
 By signing below, both parties agree to the terms and conditions outlined in this Agreement.`;
+// Helper function to expand template variables
+function expandTemplateContent(
+  templateContent: string,
+  variables: {
+    brand_name: string;
+    creator_name: string;
+    monthly_rate: number;
+    videos_per_month: number;
+    start_date: string;
+    duration_months: number;
+    additional_terms?: string;
+  }
+): string {
+  return templateContent
+    .replace(/\{\{brand_name\}\}/g, variables.brand_name)
+    .replace(/\{\{creator_name\}\}/g, variables.creator_name)
+    .replace(/\{\{monthly_rate\}\}/g, variables.monthly_rate.toString())
+    .replace(/\{\{videos_per_month\}\}/g, variables.videos_per_month.toString())
+    .replace(/\{\{start_date\}\}/g, variables.start_date)
+    .replace(/\{\{duration_months\}\}/g, variables.duration_months.toString())
+    .replace(/\{\{additional_terms\}\}/g, variables.additional_terms || '');
+}
+
 export function CreatorContractsTab({
   brandId
 }: CreatorContractsTabProps) {
@@ -124,6 +147,7 @@ export function CreatorContractsTab({
   const [boosts, setBoosts] = useState<Boost[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [brandName, setBrandName] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -195,6 +219,16 @@ export function CreatorContractsTab({
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      // Fetch brand name
+      const { data: brandData } = await supabase
+        .from('brands')
+        .select('name')
+        .eq('id', brandId)
+        .single();
+      if (brandData) {
+        setBrandName(brandData.name);
+      }
+
       // Fetch boosts/job posts
       const {
         data: boostsData
@@ -301,6 +335,25 @@ export function CreatorContractsTab({
     const startDate = new Date(newContract.start_date);
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + parseInt(newContract.duration_months, 10));
+
+    // Calculate final values
+    const monthlyRate = parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || template?.default_monthly_rate || 0;
+    const videosPerMonth = parseInt(newContract.videos_per_month, 10) || boost?.videos_per_month || template?.default_videos_per_month || 1;
+    const durationMonths = parseInt(newContract.duration_months, 10);
+
+    // Get template content and expand variables
+    const templateContent = template?.content || DEFAULT_TEMPLATE_CONTENT;
+    const creatorName = newContract.creator_email.split('@')[0]; // Use email prefix as placeholder
+    const expandedContent = expandTemplateContent(templateContent, {
+      brand_name: brandName || 'Brand',
+      creator_name: creatorName,
+      monthly_rate: monthlyRate,
+      videos_per_month: videosPerMonth,
+      start_date: format(startDate, 'MMMM d, yyyy'),
+      duration_months: durationMonths,
+      additional_terms: newContract.custom_terms || undefined,
+    });
+
     try {
       const {
         error
@@ -310,12 +363,12 @@ export function CreatorContractsTab({
         boost_id: newContract.boost_id || null,
         creator_email: newContract.creator_email,
         title: boost ? `${boost.title} - Creator Agreement` : template ? template.name : 'Creator Agreement',
-        monthly_rate: parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || template?.default_monthly_rate || 0,
-        videos_per_month: parseInt(newContract.videos_per_month, 10) || boost?.videos_per_month || template?.default_videos_per_month || 1,
+        monthly_rate: monthlyRate,
+        videos_per_month: videosPerMonth,
         start_date: newContract.start_date,
         end_date: endDate.toISOString().split('T')[0],
-        duration_months: parseInt(newContract.duration_months, 10),
-        custom_terms: newContract.custom_terms,
+        duration_months: durationMonths,
+        custom_terms: expandedContent,
         status: 'sent'
       });
       if (error) throw error;
@@ -506,15 +559,15 @@ export function CreatorContractsTab({
                     <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 p-1.5 bg-[#0a0a0a] border border-white/[0.06]">
+                <DropdownMenuContent align="end" className="w-64 p-1.5 bg-white dark:bg-[#0a0a0a] border border-border dark:border-white/[0.06]">
                   <button
                     onClick={() => setCreateDialogOpen(true)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/[0.03] transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-left"
                   >
-                    <DescriptionOutlinedIcon className="h-[18px] w-[18px] text-white/60" />
+                    <DescriptionOutlinedIcon className="h-[18px] w-[18px] text-foreground/60 dark:text-white/60" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium font-inter tracking-[-0.3px] text-white/90">New Contract</p>
-                      <p className="text-[11px] text-white/40 font-inter tracking-[-0.3px]">
+                      <p className="text-[13px] font-medium font-inter tracking-[-0.3px] text-foreground/90 dark:text-white/90">New Contract</p>
+                      <p className="text-[11px] text-muted-foreground dark:text-white/40 font-inter tracking-[-0.3px]">
                         Send an agreement to a creator
                       </p>
                     </div>
@@ -524,12 +577,12 @@ export function CreatorContractsTab({
                       resetTemplateForm();
                       setTemplateDialogOpen(true);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/[0.03] transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-left"
                   >
-                    <ContentCopyOutlinedIcon className="h-[18px] w-[18px] text-white/60" />
+                    <ContentCopyOutlinedIcon className="h-[18px] w-[18px] text-foreground/60 dark:text-white/60" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium font-inter tracking-[-0.3px] text-white/90">New Template</p>
-                      <p className="text-[11px] text-white/40 font-inter tracking-[-0.3px]">
+                      <p className="text-[13px] font-medium font-inter tracking-[-0.3px] text-foreground/90 dark:text-white/90">New Template</p>
+                      <p className="text-[11px] text-muted-foreground dark:text-white/40 font-inter tracking-[-0.3px]">
                         Create a reusable template
                       </p>
                     </div>
@@ -592,15 +645,7 @@ export function CreatorContractsTab({
 
           {/* Contracts List */}
           <div className="space-y-3">
-            {filteredContracts.length === 0 ? <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[#1a1a1a] flex items-center justify-center mb-4">
-                  <DescriptionOutlinedIcon className="text-white/50" style={{ fontSize: 28 }} />
-                </div>
-                <p className="text-base font-medium font-inter tracking-[-0.5px] mb-1">No contracts yet</p>
-                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] max-w-xs">
-                  Create your first contract to start managing creator agreements
-                </p>
-              </div> : filteredContracts.map(contract => {
+            {filteredContracts.map(contract => {
             const StatusIcon = statusConfig[contract.status].icon;
             return <div key={contract.id} className="group flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:bg-muted/20 transition-all cursor-pointer" onClick={() => handleViewContract(contract)}>
                     <Avatar className="h-10 w-10 shrink-0">

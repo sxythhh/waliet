@@ -1367,6 +1367,17 @@ export function CreatorDatabaseTab({
             <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform duration-200 ${filtersExpanded ? 'rotate-180' : ''}`} />
           </button>
 
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-xs">
+            <Icon icon="material-symbols:search" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search creators..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 pr-3 text-[11px] bg-muted/30 border border-border dark:border-transparent rounded-md font-inter tracking-[-0.5px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
+
           <div className="flex items-center gap-1.5 ml-auto">
             <Button size="sm" onClick={() => setDiscoveryWizardOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-primary/70 bg-primary hover:bg-primary/90">
               <Plus className="h-3.5 w-3.5" />

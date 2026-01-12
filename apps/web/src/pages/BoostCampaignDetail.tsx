@@ -9,9 +9,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { ArrowLeft, Users, DollarSign, Video, Calendar, Clock, Check, X, ExternalLink, TrendingUp, Target, Crown, CalendarDays } from "lucide-react";
+import { ArrowLeft, Users, DollarSign, Video, Calendar, Clock, Check, X, ExternalLink, TrendingUp, Target, Crown, CalendarDays, Settings } from "lucide-react";
 import { CreatorTiersOverview } from "@/components/brand/CreatorTiersOverview";
 import { DeliverableCalendar } from "@/components/brand/DeliverableCalendar";
+import { BoostPayoutSettings } from "@/components/brand/BoostPayoutSettings";
+import { BoostApplicationSettings } from "@/components/brand/BoostApplicationSettings";
 import { formatDistanceToNow } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
@@ -319,6 +321,10 @@ export default function BoostCampaignDetail() {
               <CalendarDays className="h-3.5 w-3.5" />
               Deliverables
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5">
+              <Settings className="h-3.5 w-3.5" />
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           {/* Applications Tab */}
@@ -504,6 +510,12 @@ export default function BoostCampaignDetail() {
           {/* Deliverables Tab */}
           <TabsContent value="deliverables">
             <DeliverableCalendar boostId={campaign.id} />
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-8">
+            <BoostApplicationSettings boostId={campaign.id} />
+            <BoostPayoutSettings boostId={campaign.id} />
           </TabsContent>
         </Tabs>
       </div>

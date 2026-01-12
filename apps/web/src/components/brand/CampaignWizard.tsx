@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Check, Lock, FileText, Plus, X, HelpCircle, Trash2 } from "lucide-react";
+import { CalendarIcon, Check, Lock, FileText, Plus, X, HelpCircle, ImagePlus, ClipboardCheck } from "lucide-react";
 import { ViewBonusesConfig } from "./ViewBonusesConfig";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,10 +20,12 @@ import { ApplicationQuestionsEditor } from "./ApplicationQuestionsEditor";
 import { ApplicationQuestion } from "@/types/applicationQuestions";
 import { useBrandUsage } from "@/hooks/useBrandUsage";
 import { DiscordRoleSelector } from "./DiscordRoleSelector";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-white.png";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 
 // Types
 export type CampaignType = 'cpm' | 'boost';
@@ -144,9 +147,9 @@ const POSITION_TYPES = [
 ];
 
 const PLATFORM_OPTIONS = [
-  { id: 'tiktok', label: 'TikTok', icon: tiktokLogo },
-  { id: 'instagram', label: 'Instagram', icon: instagramLogo },
-  { id: 'youtube', label: 'YouTube', icon: youtubeLogo },
+  { id: 'tiktok', label: 'TikTok', icon: tiktokLogoWhite, iconLight: tiktokLogoBlack },
+  { id: 'instagram', label: 'Instagram', icon: instagramLogoWhite, iconLight: instagramLogoBlack },
+  { id: 'youtube', label: 'YouTube', icon: youtubeLogoWhite, iconLight: youtubeLogoBlack },
   { id: 'x', label: 'X (Twitter)', icon: null },
 ];
 
@@ -188,7 +191,6 @@ export function CampaignWizard({
   boostId,
   initialType,
   initialBlueprintId,
-  onDelete
 }: CampaignWizardProps) {
   // Determine if we're in edit or clone mode
   const isEditMode = mode === 'edit';
@@ -200,7 +202,6 @@ export function CampaignWizard({
   // Step management - skip step 1 when type is pre-selected or in edit mode
   const [currentStep, setCurrentStep] = useState(skipTypeStep ? 2 : 1);
   const [creating, setCreating] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Usage limits
   const { canCreateCampaign, canCreateBoost } = useBrandUsage(brandId, subscriptionPlan);
@@ -226,7 +227,7 @@ export function CampaignWizard({
     // Shared fields
     title: "",
     description: "",
-    content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts",
+    content_distribution: "creators_own_page" as "creators_own_page" | "brand_accounts",
     is_private: false,
     payout_type: "on_platform" as "on_platform" | "off_platform",
     shortimize_collection_name: "",
@@ -260,6 +261,7 @@ export function CampaignWizard({
     access_code: "",
     hashtags: [] as string[],
     require_audience_insights: false,
+    require_phone_number: false,
     min_insights_score: 60,
   });
 
@@ -267,8 +269,6 @@ export function CampaignWizard({
   const [platformRates, setPlatformRates] = useState<Record<string, PlatformRate>>({});
 
   // Tag inputs
-  const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState("");
   const [skillInput, setSkillInput] = useState("");
   const [hashtagInput, setHashtagInput] = useState("");
@@ -340,7 +340,9 @@ export function CampaignWizard({
       return;
     }
 
-    // Edit or Clone mode - load existing data
+    // Edit or Clone mode - set correct starting step and load existing data
+    setCurrentStep(skipTypeStep ? 2 : 1);
+
     const loadExistingData = async () => {
       setLoadingData(true);
       try {
@@ -410,10 +412,10 @@ export function CampaignWizard({
       access_code: data.access_code || "",
       hashtags: data.hashtags || [],
       require_audience_insights: data.require_audience_insights || false,
+      require_phone_number: data.require_phone_number || false,
       min_insights_score: data.min_insights_score || 60,
     }));
 
-    setTags(data.tags || []);
     setBannerPreview(data.banner_url || null);
     setSelectedBlueprintId(data.blueprint_id || "");
 
@@ -457,7 +459,6 @@ export function CampaignWizard({
       skills: data.skills || [],
     }));
 
-    setTags(data.tags || []);
     setBannerPreview(data.banner_url || null);
     setSelectedBlueprintId(data.blueprint_id || "");
   };
@@ -541,25 +542,31 @@ export function CampaignWizard({
           toast.error("Please fill in all required fields");
           return;
         }
-        const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-        const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
-        const totalBudgetNeeded = monthlyRetainer * maxCreators;
-        if (totalBudgetNeeded > availableBalance) {
-          toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', { minimumFractionDigits: 2 })}) exceeds available balance`);
-          return;
+        // Only validate budget against balance when creating (not editing) and paying on-platform
+        if (!isEditMode && formData.payout_type === "on_platform") {
+          const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
+          const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
+          const totalBudgetNeeded = monthlyRetainer * maxCreators;
+          if (totalBudgetNeeded > availableBalance) {
+            toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', { minimumFractionDigits: 2 })}) exceeds available balance`);
+            return;
+          }
         }
       } else {
         // CPM campaign validation
-        if (!formData.is_infinite_budget && (!formData.budget || parseFloat(formData.budget) <= 0)) {
-          toast.error("Please enter a valid budget");
-          return;
+        // Only validate budget when creating (not editing) and paying on-platform
+        if (!isEditMode) {
+          if (!formData.is_infinite_budget && (!formData.budget || parseFloat(formData.budget) <= 0)) {
+            toast.error("Please enter a valid budget");
+            return;
+          }
+          if (!formData.is_infinite_budget && formData.payout_type === "on_platform" && parseFloat(formData.budget) > availableBalance) {
+            toast.error("Budget exceeds available balance");
+            return;
+          }
         }
         if (!formData.rpm_rate || parseFloat(formData.rpm_rate) <= 0) {
           toast.error("Please enter a valid CPM rate");
-          return;
-        }
-        if (!formData.is_infinite_budget && parseFloat(formData.budget) > availableBalance) {
-          toast.error("Budget exceeds available balance");
           return;
         }
       }
@@ -660,7 +667,6 @@ export function CampaignWizard({
         slug: isEditMode ? undefined : uniqueSlug,
         shortimize_collection_name: formData.shortimize_collection_name || null,
         view_bonuses_enabled: formData.view_bonuses_enabled,
-        tags: tags.length > 0 ? tags : null,
         discord_guild_id: brandDiscordGuildId || null,
         discord_role_id: formData.discord_role_id || null,
         experience_level: formData.experience_level || 'any',
@@ -792,13 +798,13 @@ export function CampaignWizard({
         access_code: formData.is_private ? formData.access_code : null,
         requires_application: formData.requires_application,
         hashtags: formData.hashtags.length > 0 ? formData.hashtags : null,
-        tags: tags.length > 0 ? tags : null,
         blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
         shortimize_collection_name: formData.shortimize_collection_name || null,
         discord_guild_id: brandDiscordGuildId || null,
         discord_role_id: formData.discord_role_id || null,
         require_audience_insights: formData.require_audience_insights,
         min_insights_score: formData.require_audience_insights ? formData.min_insights_score : null,
+        require_phone_number: formData.require_phone_number,
         payout_type: formData.payout_type
       };
 
@@ -840,35 +846,6 @@ export function CampaignWizard({
     }
   };
 
-  const handleDelete = async () => {
-    if (!isEditMode) return;
-
-    try {
-      if (isBoost && boostId) {
-        const { error } = await supabase
-          .from('bounty_campaigns')
-          .delete()
-          .eq('id', boostId);
-        if (error) throw error;
-        toast.success("Boost deleted");
-      } else if (campaignId) {
-        const { error } = await supabase
-          .from('campaigns')
-          .delete()
-          .eq('id', campaignId);
-        if (error) throw error;
-        toast.success("Campaign deleted");
-      }
-
-      onDelete?.();
-      onOpenChange(false);
-      resetForm();
-    } catch (error: any) {
-      console.error("Error deleting:", error);
-      toast.error(error.message || "Failed to delete");
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       campaignType: initialType || 'boost',
@@ -904,11 +881,10 @@ export function CampaignWizard({
       access_code: "",
       hashtags: [],
       require_audience_insights: false,
+      require_phone_number: false,
       min_insights_score: 60,
     });
 
-    setTagInput("");
-    setTags([]);
     setCategoryInput("");
     setSkillInput("");
     setHashtagInput("");
@@ -934,6 +910,14 @@ export function CampaignWizard({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[540px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
+          {/* Hidden file input for banner upload */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+          />
           {/* Stepper Header */}
           <div className="px-6 pt-6 pb-4 border-b border-border/50">
             <div className="flex items-center justify-center gap-0">
@@ -1100,9 +1084,9 @@ export function CampaignWizard({
                       </div>
                     )}
 
-                    {/* Content Distribution */}
+                    {/* Content Distribution - Who Posts the Video */}
                     <div className="space-y-2 pt-2">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Where will content be posted?</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Who will post the videos?</Label>
                       <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
                         <button
                           type="button"
@@ -1114,21 +1098,26 @@ export function CampaignWizard({
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                         >
-                          Creator's Page
+                          Creator
                         </button>
                         <button
                           type="button"
-                          onClick={() => setFormData({...formData, content_distribution: "branded_accounts"})}
+                          onClick={() => setFormData({...formData, content_distribution: "brand_accounts"})}
                           className={cn(
                             "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
-                            formData.content_distribution === "branded_accounts"
+                            formData.content_distribution === "brand_accounts"
                               ? "bg-primary text-primary-foreground"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                         >
-                          Brand's Channels
+                          Brand
                         </button>
                       </div>
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                        {formData.content_distribution === "brand_accounts"
+                          ? "Creators submit raw videos. You post them on your brand channels."
+                          : "Creators post videos on their own accounts. You track performance."}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1161,24 +1150,6 @@ export function CampaignWizard({
                           </div>
 
                           <div className="p-4 space-y-4">
-                            {/* Payment Amount */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                                Payment per {formData.payment_schedule === 'weekly' ? 'week' : formData.payment_schedule === 'biweekly' ? '2 weeks' : 'month'}
-                              </Label>
-                              <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium font-geist">$</span>
-                                <Input
-                                  type="number"
-                                  min="10"
-                                  value={formData.monthly_retainer}
-                                  onChange={e => setFormData({...formData, monthly_retainer: e.target.value})}
-                                  placeholder="500"
-                                  className="pl-9 h-12 border border-border/50 text-xl font-semibold font-geist tracking-[-0.5px]"
-                                />
-                              </div>
-                            </div>
-
                             {/* Schedule Selector */}
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Pay frequency</Label>
@@ -1194,22 +1165,31 @@ export function CampaignWizard({
                               </Select>
                             </div>
 
+                            {/* Payment Amount */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                                  Payment per {formData.payment_schedule === 'weekly' ? 'week' : formData.payment_schedule === 'biweekly' ? '2 weeks' : 'month'}
+                                </Label>
+                                <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                                  Balance: <span className="text-foreground font-medium">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </span>
+                              </div>
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium font-geist">$</span>
+                                <Input
+                                  type="number"
+                                  min="10"
+                                  value={formData.monthly_retainer}
+                                  onChange={e => setFormData({...formData, monthly_retainer: e.target.value})}
+                                  className="pl-9 h-12 border border-border/50 !bg-transparent text-xl font-semibold font-geist tracking-[-0.5px]"
+                                />
+                              </div>
+                            </div>
+
                             {/* Payout Type */}
                             <div className="space-y-2">
-                              <div className="flex items-center gap-1.5">
-                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Payment method</Label>
-                                <Popover>
-                                  <PopoverTrigger>
-                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-72 text-xs" side="top">
-                                    <p className="font-medium mb-1">On Platform</p>
-                                    <p className="text-muted-foreground mb-2">Creator earnings are added to their Virality wallet.</p>
-                                    <p className="font-medium mb-1">Off Platform</p>
-                                    <p className="text-muted-foreground">You pay creators directly outside Virality.</p>
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Payment method</Label>
                               <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
                                 <button
                                   type="button"
@@ -1243,6 +1223,42 @@ export function CampaignWizard({
                               )}
                             </div>
 
+                            {/* Who Posts the Video */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Who will post the videos?</Label>
+                              <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({...formData, content_distribution: "creators_own_page"})}
+                                  className={cn(
+                                    "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                                    formData.content_distribution === "creators_own_page"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                  )}
+                                >
+                                  Creator
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({...formData, content_distribution: "brand_accounts"})}
+                                  className={cn(
+                                    "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                                    formData.content_distribution === "brand_accounts"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                  )}
+                                >
+                                  Brand
+                                </button>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">
+                                {formData.content_distribution === "brand_accounts"
+                                  ? "Creators submit raw videos via Google Drive. You post them on your brand channels."
+                                  : "Creators post videos on their own accounts. You track performance."}
+                              </p>
+                            </div>
+
                             {/* Videos & Creators Row */}
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-2">
@@ -1253,7 +1269,7 @@ export function CampaignWizard({
                                   value={formData.videos_per_month}
                                   onChange={e => setFormData({...formData, videos_per_month: e.target.value})}
                                   placeholder="4"
-                                  className="h-10 bg-background border border-border/50 font-geist tracking-[-0.3px]"
+                                  className="h-10 !bg-transparent border border-border/50 font-geist tracking-[-0.3px]"
                                 />
                               </div>
                               <div className="space-y-2">
@@ -1264,109 +1280,79 @@ export function CampaignWizard({
                                   value={formData.max_accepted_creators}
                                   onChange={e => setFormData({...formData, max_accepted_creators: e.target.value})}
                                   placeholder="5"
-                                  className="h-10 bg-background border border-border/50 font-geist tracking-[-0.3px]"
+                                  className="h-10 !bg-transparent border border-border/50 font-geist tracking-[-0.3px]"
                                 />
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Budget Summary Card */}
+                        {/* View Bonuses Card */}
                         <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
                           <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
-                            <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Budget Summary</h3>
+                            <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">View Bonuses</h3>
                           </div>
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center justify-between py-2">
-                              <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video rate</span>
-                              <span className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">
-                                ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month, 10) > 0
-                                  ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month, 10)).toFixed(2)
-                                  : '0.00'}
-                              </span>
-                            </div>
-                            <div className="h-px bg-border/50" />
-                            {(() => {
-                              const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-                              const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
-                              const totalBudget = monthlyRetainer * maxCreators;
-                              const exceedsBalance = totalBudget > availableBalance;
-
-                              return (
-                                <div className={`flex items-center justify-between py-2 px-3 -mx-3 rounded-lg ${exceedsBalance ? 'bg-destructive/10' : ''}`}>
-                                  <div>
-                                    <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Total budget</span>
-                                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
-                                      ${monthlyRetainer.toFixed(0)} x {maxCreators} creator{maxCreators !== 1 ? 's' : ''}
-                                    </p>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className={`text-xl font-bold font-inter tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
-                                      ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                    </span>
-                                    {exceedsBalance && (
-                                      <p className="text-xs text-destructive font-medium">Exceeds balance</p>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })()}
+                          <div className="p-4">
+                            <ViewBonusesConfig
+                              tiers={formData.view_bonus_tiers}
+                              onTiersChange={(newTiers) => setFormData({
+                                ...formData,
+                                view_bonus_tiers: newTiers,
+                                view_bonuses_enabled: newTiers.length > 0
+                              })}
+                            />
                           </div>
                         </div>
-
-                        {/* View Bonuses */}
-                        <ViewBonusesConfig
-                          tiers={formData.view_bonus_tiers}
-                          onTiersChange={(newTiers) => setFormData({
-                            ...formData,
-                            view_bonus_tiers: newTiers,
-                            view_bonuses_enabled: newTiers.length > 0
-                          })}
-                        />
                       </>
                     ) : (
                       // CPM Campaign Compensation
                       <>
-                        {/* Budget Card */}
-                        <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
-                          <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
-                            <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Budget</h3>
-                          </div>
-                          <div className="p-4 space-y-4">
-                            {/* Infinite Budget Toggle */}
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <Label className="text-sm font-inter tracking-[-0.3px]">Unlimited Budget</Label>
-                                <p className="text-xs text-muted-foreground">No spending cap on this campaign</p>
-                              </div>
-                              <Switch
-                                checked={formData.is_infinite_budget}
-                                onCheckedChange={(checked) => setFormData({...formData, is_infinite_budget: checked})}
-                              />
+                        {/* Budget Card - only show in create/clone mode, not edit mode */}
+                        {!isEditMode && (
+                          <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                            <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
+                              <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Budget</h3>
                             </div>
-
-                            {/* Budget Amount */}
-                            {!formData.is_infinite_budget && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Budget</Label>
-                                <div className="relative">
-                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium">$</span>
-                                  <Input
-                                    type="number"
-                                    min="100"
-                                    value={formData.budget}
-                                    onChange={e => setFormData({...formData, budget: e.target.value})}
-                                    placeholder="1000"
-                                    className="pl-9 h-12 border border-border/50 text-xl font-semibold font-geist"
-                                  />
+                            <div className="p-4 space-y-4">
+                              {/* Infinite Budget Toggle */}
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <Label className="text-sm font-inter tracking-[-0.3px]">Unlimited Budget</Label>
+                                  <p className="text-xs text-muted-foreground">No spending cap on this campaign</p>
                                 </div>
-                                {parseFloat(formData.budget) > availableBalance && (
-                                  <p className="text-xs text-destructive">Exceeds available balance (${availableBalance.toFixed(2)})</p>
-                                )}
+                                <Switch
+                                  checked={formData.is_infinite_budget}
+                                  onCheckedChange={(checked) => setFormData({...formData, is_infinite_budget: checked})}
+                                />
                               </div>
-                            )}
+
+                              {/* Budget Amount */}
+                              {!formData.is_infinite_budget && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Budget</Label>
+                                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                                      Balance: <span className="text-foreground font-medium">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </span>
+                                  </div>
+                                  <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium">$</span>
+                                    <Input
+                                      type="number"
+                                      min="100"
+                                      value={formData.budget}
+                                      onChange={e => setFormData({...formData, budget: e.target.value})}
+                                      className="pl-9 h-12 border border-border/50 !bg-transparent text-xl font-semibold font-geist"
+                                    />
+                                  </div>
+                                  {formData.payout_type === "on_platform" && parseFloat(formData.budget) > availableBalance && (
+                                    <p className="text-xs text-destructive">Exceeds available balance (${availableBalance.toFixed(2)})</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
 
                         {/* Payment Model Card */}
                         <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
@@ -1375,41 +1361,43 @@ export function CampaignWizard({
                           </div>
                           <div className="p-4 space-y-4">
                             {/* Submission Model */}
-                            <div className="flex gap-2 p-1 bg-muted/30 rounded-lg">
-                              <button
-                                type="button"
-                                onClick={() => setFormData({...formData, payment_model: "pay_per_view"})}
-                                className={cn(
-                                  "flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all font-inter tracking-[-0.3px]",
-                                  formData.payment_model === "pay_per_view"
-                                    ? "bg-background text-foreground shadow-sm"
-                                    : "text-muted-foreground hover:text-foreground"
-                                )}
-                              >
-                                Per Account
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setFormData({...formData, payment_model: "pay_per_post"})}
-                                className={cn(
-                                  "flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all font-inter tracking-[-0.3px]",
-                                  formData.payment_model === "pay_per_post"
-                                    ? "bg-background text-foreground shadow-sm"
-                                    : "text-muted-foreground hover:text-foreground"
-                                )}
-                              >
-                                Per Video
-                              </button>
+                            <div className="space-y-2">
+                              <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({...formData, payment_model: "pay_per_view"})}
+                                  className={cn(
+                                    "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                                    formData.payment_model === "pay_per_view"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                  )}
+                                >
+                                  Per Account
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({...formData, payment_model: "pay_per_post"})}
+                                  className={cn(
+                                    "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                                    formData.payment_model === "pay_per_post"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                  )}
+                                >
+                                  Per Video
+                                </button>
+                              </div>
+                              <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px]">
+                                {formData.payment_model === "pay_per_view"
+                                  ? "Pay creators based on total account views across all their content"
+                                  : "Pay creators based on views for each individual video submitted"}
+                              </p>
                             </div>
-                            <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px]">
-                              {formData.payment_model === "pay_per_view"
-                                ? "Pay creators based on total account views across all their content"
-                                : "Pay creators based on views for each individual video submitted"}
-                            </p>
 
                             {/* Default CPM Rate */}
                             <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Default CPM Rate ($/1K views)</Label>
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Default CPM Rate</Label>
                               <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                                 <Input
@@ -1419,27 +1407,14 @@ export function CampaignWizard({
                                   value={formData.rpm_rate}
                                   onChange={e => setFormData({...formData, rpm_rate: e.target.value})}
                                   placeholder="5"
-                                  className="pl-8 h-10 border border-border/50 font-geist"
+                                  className="pl-8 h-10 border border-border/50 !bg-transparent font-geist"
                                 />
                               </div>
                             </div>
 
                             {/* Payout Type */}
                             <div className="space-y-2">
-                              <div className="flex items-center gap-1.5">
-                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Payment method</Label>
-                                <Popover>
-                                  <PopoverTrigger>
-                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" />
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-72 text-xs" side="top">
-                                    <p className="font-medium mb-1">On Platform</p>
-                                    <p className="text-muted-foreground mb-2">Creator earnings are added to their Virality wallet.</p>
-                                    <p className="font-medium mb-1">Off Platform</p>
-                                    <p className="text-muted-foreground">You pay creators directly outside Virality.</p>
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Payment method</Label>
                               <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
                                 <button
                                   type="button"
@@ -1476,125 +1451,143 @@ export function CampaignWizard({
                         </div>
 
                         {/* Platform Rates */}
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <Label className="text-sm font-inter tracking-[-0.5px]">Platform-Specific Rates</Label>
-                              <p className="text-xs text-muted-foreground mt-0.5">Override default rate per platform</p>
+                              <Label className="text-sm font-medium font-inter tracking-[-0.5px]">Platform Rates</Label>
+                              <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.3px]">Set custom rates for each platform</p>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="gap-1.5 text-muted-foreground hover:text-foreground"
-                              disabled={getAvailablePlatforms().length === 0}
-                              onClick={() => {
-                                const firstAvailable = getAvailablePlatforms()[0];
-                                if (firstAvailable) {
-                                  addPlatformRate(firstAvailable.id, 'cpm', 5);
-                                }
-                              }}
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                              Add Rate
-                            </Button>
+                            {getAvailablePlatforms().length > 0 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                                onClick={() => {
+                                  const firstAvailable = getAvailablePlatforms()[0];
+                                  if (firstAvailable) {
+                                    addPlatformRate(firstAvailable.id, 'cpm', 5);
+                                  }
+                                }}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add Rate
+                              </Button>
+                            )}
                           </div>
 
                           {/* Configured Platform Rates */}
-                          {Object.keys(platformRates).length > 0 && (
-                            <div className="space-y-2">
+                          {Object.keys(platformRates).length > 0 ? (
+                            <div className="grid gap-3">
                               {Object.values(platformRates).map(rate => {
                                 const platformInfo = PLATFORM_OPTIONS.find(p => p.id === rate.platform);
                                 const availableForSwap = PLATFORM_OPTIONS.filter(p =>
                                   (formData.platforms || []).includes(p.id) && (p.id === rate.platform || !platformRates[p.id])
                                 );
                                 return (
-                                  <div key={rate.platform} className="flex items-center gap-2 p-3 rounded-xl bg-muted/30">
-                                    <Select
-                                      value={rate.platform}
-                                      onValueChange={(newPlatform) => {
-                                        if (newPlatform === rate.platform) return;
-                                        setPlatformRates(prev => {
-                                          const { [rate.platform]: removed, ...rest } = prev;
-                                          return {
-                                            ...rest,
-                                            [newPlatform]: { ...removed, platform: newPlatform }
-                                          };
-                                        });
-                                      }}
-                                    >
-                                      <SelectTrigger className="h-8 w-[120px] text-xs bg-background">
-                                        <SelectValue>
-                                          <div className="flex items-center gap-2">
-                                            {platformInfo?.icon ? (
-                                              <img src={platformInfo.icon} alt={platformInfo.label} className="h-4 w-4" />
-                                            ) : (
-                                              <span className="h-4 w-4 flex items-center justify-center text-xs font-bold">X</span>
-                                            )}
-                                            <span>{platformInfo?.label}</span>
-                                          </div>
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {availableForSwap.map(p => (
-                                          <SelectItem key={p.id} value={p.id}>
-                                            <div className="flex items-center gap-2">
-                                              {p.icon ? (
-                                                <img src={p.icon} alt={p.label} className="h-4 w-4" />
-                                              ) : (
-                                                <span className="h-4 w-4 flex items-center justify-center text-xs font-bold">X</span>
-                                              )}
-                                              {p.label}
-                                            </div>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <Select
-                                      value={rate.type}
-                                      onValueChange={(value: 'cpm' | 'per_post') => {
-                                        setPlatformRates(prev => ({
-                                          ...prev,
-                                          [rate.platform]: {
-                                            ...prev[rate.platform],
-                                            type: value,
-                                            ...(value === 'cpm' ? { cpm_rate: prev[rate.platform].cpm_rate || 5, post_rate: undefined } : { post_rate: prev[rate.platform].post_rate || 10, cpm_rate: undefined })
-                                          }
-                                        }));
-                                      }}
-                                    >
-                                      <SelectTrigger className="h-8 w-[100px] text-xs bg-background">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="cpm">Per 1k views</SelectItem>
-                                        <SelectItem value="per_post">Per post</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <div className="relative flex-1 min-w-[80px]">
-                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
-                                      <Input
-                                        type="number"
-                                        value={rate.type === 'cpm' ? rate.cpm_rate || '' : rate.post_rate || ''}
-                                        onChange={e => {
-                                          const value = parseFloat(e.target.value) || 0;
+                                  <div key={rate.platform} className="group relative flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-muted/40 to-muted/20 border border-border/50 hover:border-border transition-all duration-200">
+                                    {/* Platform Icon & Selector */}
+                                    <div className="flex items-center gap-3 min-w-[140px]">
+                                      <div className="w-9 h-9 rounded-lg bg-background/80 flex items-center justify-center border border-border/50">
+                                        {platformInfo?.icon ? (
+                                          <>
+                                            <img src={platformInfo.iconLight} alt={platformInfo.label} className="h-4 w-4 dark:hidden" />
+                                            <img src={platformInfo.icon} alt={platformInfo.label} className="h-4 w-4 hidden dark:block" />
+                                          </>
+                                        ) : (
+                                          <span className="text-xs font-bold text-muted-foreground">X</span>
+                                        )}
+                                      </div>
+                                      <Select
+                                        value={rate.platform}
+                                        onValueChange={(newPlatform) => {
+                                          if (newPlatform === rate.platform) return;
+                                          setPlatformRates(prev => {
+                                            const { [rate.platform]: removed, ...rest } = prev;
+                                            return {
+                                              ...rest,
+                                              [newPlatform]: { ...removed, platform: newPlatform }
+                                            };
+                                          });
+                                        }}
+                                      >
+                                        <SelectTrigger className="h-9 w-[100px] text-xs bg-background/80 border-border/50 font-medium font-inter tracking-[-0.5px]">
+                                          <SelectValue>{platformInfo?.label}</SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {availableForSwap.map(p => (
+                                            <SelectItem key={p.id} value={p.id}>
+                                              <div className="flex items-center gap-2">
+                                                {p.icon && p.iconLight ? (
+                                                  <>
+                                                  <img src={p.iconLight} alt={p.label} className="h-4 w-4 dark:hidden" />
+                                                  <img src={p.icon} alt={p.label} className="h-4 w-4 hidden dark:block" />
+                                                </>
+                                                ) : (
+                                                  <span className="h-4 w-4 flex items-center justify-center text-xs font-bold">X</span>
+                                                )}
+                                                {p.label}
+                                              </div>
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="h-8 w-px bg-border/50" />
+
+                                    {/* Rate Configuration */}
+                                    <div className="flex items-center gap-3 flex-1">
+                                      <Select
+                                        value={rate.type}
+                                        onValueChange={(value: 'cpm' | 'per_post') => {
                                           setPlatformRates(prev => ({
                                             ...prev,
                                             [rate.platform]: {
                                               ...prev[rate.platform],
-                                              ...(rate.type === 'cpm' ? { cpm_rate: value } : { post_rate: value })
+                                              type: value,
+                                              ...(value === 'cpm' ? { cpm_rate: prev[rate.platform].cpm_rate || 5, post_rate: undefined } : { post_rate: prev[rate.platform].post_rate || 10, cpm_rate: undefined })
                                             }
                                           }));
                                         }}
-                                        className="h-8 pl-5 text-xs bg-background"
-                                        placeholder={rate.type === 'cpm' ? '5' : '10'}
-                                      />
+                                      >
+                                        <SelectTrigger className="h-9 w-[120px] text-xs bg-background/80 border-border/50 font-inter tracking-[-0.3px]">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="cpm">Per 1k views</SelectItem>
+                                          <SelectItem value="per_post">Per post</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+
+                                      <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">$</span>
+                                        <Input
+                                          type="number"
+                                          value={rate.type === 'cpm' ? rate.cpm_rate || '' : rate.post_rate || ''}
+                                          onChange={e => {
+                                            const value = parseFloat(e.target.value) || 0;
+                                            setPlatformRates(prev => ({
+                                              ...prev,
+                                              [rate.platform]: {
+                                                ...prev[rate.platform],
+                                                ...(rate.type === 'cpm' ? { cpm_rate: value } : { post_rate: value })
+                                              }
+                                            }));
+                                          }}
+                                          className="h-9 w-24 pl-7 text-sm font-medium bg-background/80 border-border/50 font-inter tracking-[-0.5px]"
+                                          placeholder={rate.type === 'cpm' ? '5' : '10'}
+                                        />
+                                      </div>
                                     </div>
+
+                                    {/* Remove Button */}
                                     <Button
                                       type="button"
                                       variant="ghost"
                                       size="sm"
-                                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 rounded-lg"
                                       onClick={() => removePlatformRate(rate.platform)}
                                     >
                                       <X className="h-4 w-4" />
@@ -1603,37 +1596,26 @@ export function CampaignWizard({
                                 );
                               })}
                             </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-dashed border-border/50 bg-muted/10">
+                              <div className="flex -space-x-2 mb-3">
+                                {PLATFORM_OPTIONS.slice(0, 3).map((p, i) => (
+                                  <div key={p.id} className="w-8 h-8 rounded-full bg-muted/80 dark:bg-muted flex items-center justify-center border border-border/30" style={{ zIndex: 3 - i }}>
+                                    {p.icon && p.iconLight ? (
+                                      <img src={p.icon} alt={p.label} className="h-4 w-4 brightness-0 opacity-40 dark:brightness-100 dark:opacity-50" />
+                                    ) : (
+                                      <span className="text-xs font-bold text-muted-foreground">X</span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">No custom rates configured</p>
+                              <p className="text-xs text-muted-foreground/60 font-inter tracking-[-0.3px] mt-0.5">Using default RPM for all platforms</p>
+                            </div>
                           )}
                         </div>
                       </>
                     )}
-
-                    {/* Shared: Blueprint Selection */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
-                      <Select value={selectedBlueprintId} onValueChange={setSelectedBlueprintId}>
-                        <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]">
-                          <SelectValue placeholder="Select a blueprint" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No blueprint</SelectItem>
-                          {blueprints.map(bp => (
-                            <SelectItem key={bp.id} value={bp.id}>{bp.title}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Shortimize Collection */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Video Tracking Collection</Label>
-                      <Input
-                        value={formData.shortimize_collection_name}
-                        onChange={e => setFormData({...formData, shortimize_collection_name: e.target.value})}
-                        placeholder="e.g., Campaign Videos"
-                        className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]"
-                      />
-                    </div>
 
                     {/* Discord Integration */}
                     {brandDiscordGuildId && (
@@ -1653,186 +1635,169 @@ export function CampaignWizard({
                       </div>
                     )}
 
-                    {/* Private Toggle */}
-                    <div
-                      className="flex items-center gap-3 cursor-pointer group"
-                      onClick={() => setFormData({...formData, is_private: !formData.is_private})}
-                    >
-                      <div className={cn(
-                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
-                        formData.is_private
-                          ? "bg-primary border-primary"
-                          : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
-                      )}>
-                        {formData.is_private && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
-                      </div>
-                      <Label className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                        Make this {isBoost ? 'boost' : 'campaign'} private
-                      </Label>
-                    </div>
-
-                    {/* Access Code for private CPM campaigns */}
-                    {isCPMCampaign && formData.is_private && (
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Access Code</Label>
-                        <Input
-                          value={formData.access_code}
-                          onChange={e => setFormData({...formData, access_code: e.target.value})}
-                          placeholder="Enter access code (min 6 characters)"
-                          className="h-11 bg-muted/30 border-0"
-                        />
-                      </div>
-                    )}
-
-                    {/* Date Range (Boost only) */}
-                    {isBoost && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Start Date</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50", !formData.start_date && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                <span className="text-sm">
-                                  {formData.start_date ? format(formData.start_date, "MMM d, yyyy") : "Optional"}
-                                </span>
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar mode="single" selected={formData.start_date} onSelect={date => setFormData({...formData, start_date: date})} initialFocus />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">End Date</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50", !formData.end_date && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                <span className="text-sm">
-                                  {formData.end_date ? format(formData.end_date, "MMM d, yyyy") : "Optional"}
-                                </span>
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar mode="single" selected={formData.end_date} onSelect={date => setFormData({...formData, end_date: date})} disabled={date => formData.start_date ? date < formData.start_date : false} initialFocus />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
                 {/* Step 3: Targeting */}
                 {currentStep === 3 && (
                   <div className="space-y-6">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">
-                        {isBoost ? 'Target your ideal creators' : 'Campaign targeting'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
-                        {isBoost ? 'Define the type of creators you\'re looking for' : 'Select platforms and configure targeting'}
-                      </p>
-                    </div>
-
                     {isCPMCampaign ? (
                       // CPM Campaign Targeting
-                      <>
-                        {/* Platform Selection */}
-                        <div className="space-y-3">
-                          <Label className="text-xs text-foreground font-inter tracking-[-0.3px]">Platforms</Label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {PLATFORM_OPTIONS.map(platform => (
-                              <button
-                                key={platform.id}
-                                type="button"
-                                onClick={() => {
-                                  const newPlatforms = formData.allowed_platforms.includes(platform.id)
-                                    ? formData.allowed_platforms.filter(p => p !== platform.id)
-                                    : [...formData.allowed_platforms, platform.id];
-                                  setFormData({...formData, allowed_platforms: newPlatforms});
-                                }}
-                                className={cn(
-                                  "p-3 rounded-lg border-2 flex items-center gap-2 transition-all",
-                                  formData.allowed_platforms.includes(platform.id)
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border/50 hover:border-border"
-                                )}
-                              >
-                                {platform.icon ? (
-                                  <img src={platform.icon} alt={platform.label} className="h-5 w-5" />
-                                ) : (
-                                  <span className="h-5 w-5 flex items-center justify-center text-sm font-bold">X</span>
-                                )}
-                                <span className="text-sm font-medium">{platform.label}</span>
-                                {formData.allowed_platforms.includes(platform.id) && (
-                                  <Check className="h-4 w-4 text-primary ml-auto" />
-                                )}
-                              </button>
-                            ))}
+                      <div className="space-y-4">
+                        {/* Platforms Card */}
+                        <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                          <div className="px-4 py-3 border-b border-border/30">
+                            <h4 className="text-sm font-medium font-inter tracking-[-0.5px]">Platforms</h4>
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">Select where creators can post</p>
                           </div>
-                        </div>
-
-                        {/* Category/Niche */}
-                        <div className="space-y-2">
-                          <Label className="text-xs text-foreground font-inter tracking-[-0.3px]">Niche / Category</Label>
-                          <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
-                            <SelectTrigger className="h-11 bg-muted/30 border-0">
-                              <SelectValue placeholder="Select a niche" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {CAMPAIGN_NICHES.map(niche => (
-                                <SelectItem key={niche.id} value={niche.id}>{niche.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Requires Application Toggle */}
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                          <div>
-                            <Label className="text-sm font-inter tracking-[-0.3px]">Require Application</Label>
-                            <p className="text-xs text-muted-foreground">Creators must apply to join</p>
-                          </div>
-                          <Switch
-                            checked={formData.requires_application}
-                            onCheckedChange={(checked) => setFormData({...formData, requires_application: checked})}
-                          />
-                        </div>
-
-                        {/* Audience Insights Requirement */}
-                        <div className="space-y-3 p-3 rounded-lg bg-muted/30">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label className="text-sm font-inter tracking-[-0.3px]">Require Audience Insights</Label>
-                              <p className="text-xs text-muted-foreground">Only verified creators can apply</p>
+                          <div className="p-4">
+                            <div className="grid grid-cols-2 gap-2">
+                              {PLATFORM_OPTIONS.map(platform => {
+                                const isSelected = formData.allowed_platforms.includes(platform.id);
+                                return (
+                                  <button
+                                    key={platform.id}
+                                    type="button"
+                                    onClick={() => {
+                                      const newPlatforms = isSelected
+                                        ? formData.allowed_platforms.filter(p => p !== platform.id)
+                                        : [...formData.allowed_platforms, platform.id];
+                                      setFormData({...formData, allowed_platforms: newPlatforms});
+                                    }}
+                                    className={cn(
+                                      "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all font-inter tracking-[-0.3px]",
+                                      isSelected
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted/50 dark:bg-muted/30 text-foreground hover:bg-muted"
+                                    )}
+                                  >
+                                    <div className={cn(
+                                      "w-6 h-6 rounded-md flex items-center justify-center",
+                                      isSelected ? "bg-white/20" : "bg-background"
+                                    )}>
+                                      {platform.icon && platform.iconLight ? (
+                                        <>
+                                        <img src={platform.iconLight} alt={platform.label} className="h-4 w-4 dark:hidden" />
+                                        <img src={platform.icon} alt={platform.label} className="h-4 w-4 hidden dark:block" />
+                                      </>
+                                      ) : (
+                                        <span className="text-xs font-bold">X</span>
+                                      )}
+                                    </div>
+                                    <span className="flex-1 text-left">{platform.label}</span>
+                                    {isSelected && <Check className="h-4 w-4" />}
+                                  </button>
+                                );
+                              })}
                             </div>
-                            <Switch
-                              checked={formData.require_audience_insights}
-                              onCheckedChange={(checked) => setFormData({...formData, require_audience_insights: checked})}
-                            />
                           </div>
-                          {formData.require_audience_insights && (
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Minimum Score</Label>
-                              <Select
-                                value={formData.min_insights_score.toString()}
-                                onValueChange={(value) => setFormData({...formData, min_insights_score: parseInt(value)})}
-                              >
-                                <SelectTrigger className="h-10 bg-background border border-border/50">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="40">40% (Low)</SelectItem>
-                                  <SelectItem value="60">60% (Medium)</SelectItem>
-                                  <SelectItem value="80">80% (High)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
                         </div>
-                      </>
+
+                        {/* Category Card */}
+                        <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                          <div className="px-4 py-3 border-b border-border/30">
+                            <h4 className="text-sm font-medium font-inter tracking-[-0.5px]">Niche / Category</h4>
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">Target specific content categories</p>
+                          </div>
+                          <div className="p-4">
+                            <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                              <SelectTrigger className="h-11 bg-muted/30 dark:bg-muted/20 border-0 font-inter tracking-[-0.3px]">
+                                <SelectValue placeholder="Select a niche" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {CAMPAIGN_NICHES.map(niche => (
+                                  <SelectItem key={niche.id} value={niche.id}>{niche.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Requirements Card */}
+                        <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                          <div className="px-4 py-3 border-b border-border/30">
+                            <h4 className="text-sm font-medium font-inter tracking-[-0.5px]">Requirements</h4>
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">Set creator eligibility criteria</p>
+                          </div>
+                          <div className="divide-y divide-border/30">
+                            {/* Requires Application Toggle */}
+                            <div className="flex items-center justify-between px-4 py-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                                  <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium font-inter tracking-[-0.3px]">Require Application</p>
+                                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Creators must apply to join</p>
+                                </div>
+                              </div>
+                              <Switch
+                                checked={formData.requires_application}
+                                onCheckedChange={(checked) => setFormData({...formData, requires_application: checked})}
+                              />
+                            </div>
+
+                            {/* Audience Insights Requirement */}
+                            <div className="px-4 py-3.5 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                                    {/* Google Material "insights" icon */}
+                                    <svg className="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M21 8c-1.45 0-2.26 1.44-1.93 2.51l-3.55 3.56c-.3-.09-.74-.09-1.04 0l-2.55-2.55C12.27 10.45 11.46 9 10 9c-1.45 0-2.27 1.44-1.93 2.52l-4.56 4.55C2.44 15.74 1 16.55 1 18c0 1.1.9 2 2 2 1.45 0 2.26-1.44 1.93-2.51l4.55-4.56c.3.09.74.09 1.04 0l2.55 2.55C12.73 16.55 13.54 18 15 18c1.45 0 2.27-1.44 1.93-2.52l3.56-3.55c1.07.33 2.51-.48 2.51-1.93 0-1.1-.9-2-2-2z"/>
+                                      <path d="M15 9l.94-2.07L18 6l-2.06-.93L15 3l-.92 2.07L12 6l2.08.93z"/>
+                                      <path d="M3.5 11L4 9l2-.5L4 8l-.5-2L3 8l-2 .5L3 9z"/>
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium font-inter tracking-[-0.3px]">Require Audience Insights</p>
+                                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Only verified creators can apply</p>
+                                  </div>
+                                </div>
+                                <Switch
+                                  checked={formData.require_audience_insights}
+                                  onCheckedChange={(checked) => setFormData({...formData, require_audience_insights: checked})}
+                                />
+                              </div>
+                              {formData.require_audience_insights && (
+                                <div className="pl-11 space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Minimum Score</Label>
+                                  <Select
+                                    value={formData.min_insights_score.toString()}
+                                    onValueChange={(value) => setFormData({...formData, min_insights_score: parseInt(value)})}
+                                  >
+                                    <SelectTrigger className="h-10 bg-muted/30 dark:bg-muted/20 border-0 font-inter tracking-[-0.3px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="40">40% (Low)</SelectItem>
+                                      <SelectItem value="60">60% (Medium)</SelectItem>
+                                      <SelectItem value="80">80% (High)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Require Phone Number */}
+                            <div className="flex items-center justify-between px-4 py-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                                  <Icon icon="material-symbols:phone-enabled-outline" className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium font-inter tracking-[-0.3px]">Require Phone Number</p>
+                                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Creators must have a verified phone</p>
+                                </div>
+                              </div>
+                              <Switch
+                                checked={formData.require_phone_number}
+                                onCheckedChange={(checked) => setFormData({...formData, require_phone_number: checked})}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       // Boost Targeting
                       <>
@@ -2008,13 +1973,6 @@ export function CampaignWizard({
                 {/* Step 4: Details */}
                 {currentStep === 4 && (
                   <div className="space-y-6">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">Add the details</h3>
-                      <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
-                        Give your {isBoost ? 'boost' : 'campaign'} a name and description
-                      </p>
-                    </div>
-
                     {/* Title */}
                     <div className="space-y-1.5">
                       <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Title</Label>
@@ -2037,19 +1995,63 @@ export function CampaignWizard({
                       />
                     </div>
 
-                    {/* Application Questions */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                        <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Application Questions</Label>
-                        <span className="text-xs text-muted-foreground">(Optional)</span>
-                      </div>
-                      <ApplicationQuestionsEditor
-                        questions={formData.application_questions}
-                        onChange={(questions) => setFormData({...formData, application_questions: questions})}
-                        maxQuestions={10}
-                      />
+                    {/* Banner Image */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Banner Image</Label>
+                      {bannerPreview ? (
+                        <div className="relative rounded-xl overflow-hidden border border-border/50">
+                          <img
+                            src={bannerPreview}
+                            alt="Banner preview"
+                            className="w-full h-32 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="h-8"
+                            >
+                              Change
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={removeBanner}
+                              className="h-8"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full h-32 rounded-xl border-2 border-dashed border-border/50 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-colors flex flex-col items-center justify-center gap-2"
+                        >
+                          <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Click to upload banner</span>
+                        </button>
+                      )}
                     </div>
+
+                    {/* Application Questions - Only show when requires_application is enabled */}
+                    {formData.requires_application && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Application Questions</Label>
+                          <span className="text-xs text-muted-foreground">(Optional)</span>
+                        </div>
+                        <ApplicationQuestionsEditor
+                          questions={formData.application_questions}
+                          onChange={(questions) => setFormData({...formData, application_questions: questions})}
+                          maxQuestions={10}
+                        />
+                      </div>
+                    )}
 
                     {/* Hashtags (CPM only) */}
                     {isCPMCampaign && (
@@ -2108,177 +2110,232 @@ export function CampaignWizard({
                       </div>
                     )}
 
-                    {/* Tags */}
-                    <div className="space-y-3">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Tags</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const trimmed = tagInput.trim();
-                              if (trimmed && !tags.includes(trimmed)) {
-                                setTags([...tags, trimmed]);
-                                setTagInput("");
-                              }
-                            }
-                          }}
-                          placeholder="Add a tag and press Enter"
-                          className="h-10 bg-muted/30 border-0 flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-10 px-3"
-                          disabled={!tagInput.trim()}
-                          onClick={() => {
-                            const trimmed = tagInput.trim();
-                            if (trimmed && !tags.includes(trimmed)) {
-                              setTags([...tags, trimmed]);
-                              setTagInput("");
-                            }
-                          }}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="pl-2 pr-1 py-1 gap-1 text-xs">
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => setTags(tags.filter((_, i) => i !== index))}
-                                className="ml-1 hover:bg-muted rounded-full p-0.5"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
 
                 {/* Step 5: Review */}
                 {currentStep === 5 && (
-                  <div className="space-y-6">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold font-geist tracking-[-0.5px]">
-                        Review your {isBoost ? 'boost' : 'campaign'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
-                        Make sure everything looks good before {isEditMode ? 'saving' : 'creating'}
-                      </p>
-                    </div>
+                  <div className="space-y-4">
+                    {/* Preview Card - Different styles for Campaign vs Boost */}
+                    {isBoost ? (
+                      /* Boost Card Style */
+                      <div className="rounded-xl border border-border/60 bg-transparent overflow-hidden">
+                        <div className="p-4 space-y-3">
+                          <h3 className="text-[15px] font-semibold leading-tight line-clamp-2 text-foreground tracking-[-0.3px]">
+                            {formData.title || 'Untitled'}
+                          </h3>
+                          {formData.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 font-inter tracking-[-0.3px]">
+                              {formData.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span className="font-inter tracking-[-0.5px]">
+                              <span className="text-foreground font-medium">${formData.monthly_retainer || '0'}</span>/mo
+                            </span>
+                            <span className="text-border">·</span>
+                            <span className="font-inter tracking-[-0.5px]">
+                              <span className="text-foreground font-medium">{formData.videos_per_month || '0'}</span> videos
+                            </span>
+                            <span className="text-border">·</span>
+                            <span className="font-inter tracking-[-0.5px]">
+                              <span className="text-foreground font-medium">
+                                ${(parseInt(formData.videos_per_month, 10) || 0) > 0
+                                  ? ((parseFloat(formData.monthly_retainer) || 0) / (parseInt(formData.videos_per_month, 10) || 1)).toFixed(0)
+                                  : '0'}
+                              </span>/video
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
+                            <span className="text-xs text-muted-foreground">
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">{formData.max_accepted_creators || '0'}</span> spots available
+                            </span>
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 bg-muted/40 dark:bg-[#0f0f0f] border-t border-border/40 flex items-center gap-2">
+                          {brandLogoUrl ? (
+                            <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 bg-background">
+                              <img src={brandLogoUrl} alt={brandName} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-semibold text-primary">
+                                {brandName?.charAt(0) || "B"}
+                              </span>
+                            </div>
+                          )}
+                          <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground truncate">
+                            {brandName}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Campaign Card Style - Matching CampaignCard component */
+                      <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
+                        {/* Banner */}
+                        <div className="relative w-full aspect-[21/9]">
+                          {bannerPreview ? (
+                            <img
+                              src={bannerPreview}
+                              alt={formData.title}
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="absolute inset-0 w-full h-full flex items-center justify-center"
+                              style={{ backgroundColor: '#1a1a1a' }}
+                            >
+                              {brandLogoUrl && (
+                                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg">
+                                  <img
+                                    src={brandLogoUrl}
+                                    alt={brandName}
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
-                    {/* Title Preview */}
-                    {formData.title && (
-                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                        <p className="text-xs text-muted-foreground mb-1">Title</p>
-                        <p className="text-lg font-semibold font-geist tracking-[-0.5px]">{formData.title}</p>
-                        {formData.description && (
-                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{formData.description}</p>
-                        )}
+                        {/* Content */}
+                        <div className="p-3 space-y-2.5 font-inter" style={{ letterSpacing: '-0.5px' }}>
+                          {/* Title with Status */}
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-sm text-foreground leading-tight line-clamp-2 flex-1">
+                              {formData.title || 'Untitled'}
+                            </h3>
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium shrink-0 bg-muted text-muted-foreground">
+                              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                              Draft
+                            </div>
+                          </div>
+
+                          {/* Brand Info */}
+                          <div className="flex items-center gap-1.5">
+                            {brandLogoUrl && (
+                              <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                <img
+                                  src={brandLogoUrl}
+                                  alt={brandName}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                            <span className="text-xs text-muted-foreground truncate">
+                              {brandName}
+                            </span>
+                          </div>
+
+                          {/* Budget Progress */}
+                          <div className="pt-1">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] text-muted-foreground font-medium">
+                                {formData.is_infinite_budget ? (
+                                  <span className="text-emerald-600 dark:text-emerald-400">∞ Unlimited</span>
+                                ) : (
+                                  <>
+                                    <span className="text-foreground font-semibold">$0</span>
+                                    <span className="text-muted-foreground"> / ${parseFloat(formData.budget) || 0}</span>
+                                  </>
+                                )}
+                              </span>
+                            </div>
+                            {!formData.is_infinite_budget && (
+                              <Progress value={0} className="h-1.5 rounded-full" />
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
 
-                    {/* Summary Card */}
+                    {/* Budget Summary */}
                     <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
-                      <div className="px-4 py-3 bg-muted/30 border-b border-border/50 flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">Summary</span>
+                      <div className="px-4 py-3 border-b border-border/30">
+                        <h4 className="text-sm font-medium font-inter tracking-[-0.5px]">Budget Summary</h4>
                       </div>
-                      <div className="p-4">
+                      <div className="p-4 space-y-3">
                         {isBoost ? (
-                          // Boost Summary
                           <>
-                            <div className="grid grid-cols-3 gap-3 mb-4">
-                              <div className="p-3 rounded-lg bg-muted/30">
-                                <p className="text-xs text-muted-foreground">Retainer</p>
-                                <p className="text-sm font-semibold font-geist">${formData.monthly_retainer || '0'}/mo</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-muted/30">
-                                <p className="text-xs text-muted-foreground">Videos</p>
-                                <p className="text-sm font-semibold font-geist">{formData.videos_per_month || '0'}/mo</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-muted/30">
-                                <p className="text-xs text-muted-foreground">Creators</p>
-                                <p className="text-sm font-semibold font-geist">{formData.max_accepted_creators || '0'} max</p>
-                              </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground font-inter tracking-[-0.3px]">Payment per creator</span>
+                              <span className="font-medium font-geist tracking-[-0.3px]">${parseFloat(formData.monthly_retainer) || 0}/{formData.payment_schedule === 'monthly' ? 'mo' : formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'bi_weekly' ? '2wk' : 'mo'}</span>
                             </div>
-                            <div className="h-px bg-border/50 my-3" />
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Per video rate</span>
-                                <span className="text-sm font-semibold">
-                                  ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month, 10) > 0
-                                    ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month, 10)).toFixed(2)
-                                    : '0.00'}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Total monthly budget</span>
-                                <span className="text-base font-bold text-primary">
-                                  ${((parseFloat(formData.monthly_retainer) || 0) * (parseInt(formData.max_accepted_creators, 10) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground font-inter tracking-[-0.3px]">Max creators</span>
+                              <span className="font-medium font-geist tracking-[-0.3px]">{parseInt(formData.max_accepted_creators, 10) || 0}</span>
+                            </div>
+                            <div className="h-px bg-border/50" />
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-foreground font-medium font-inter tracking-[-0.3px]">Total budget needed</span>
+                              <span className="font-bold font-geist tracking-[-0.3px] text-primary">
+                                ${((parseFloat(formData.monthly_retainer) || 0) * (parseInt(formData.max_accepted_creators, 10) || 0)).toLocaleString('en-US', { minimumFractionDigits: 0 })}/{formData.payment_schedule === 'monthly' ? 'mo' : formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'bi_weekly' ? '2wk' : 'mo'}
+                              </span>
                             </div>
                           </>
                         ) : (
-                          // CPM Campaign Summary
                           <>
-                            <div className="grid grid-cols-3 gap-3 mb-4">
-                              <div className="p-3 rounded-lg bg-muted/30">
-                                <p className="text-xs text-muted-foreground">Budget</p>
-                                <p className="text-sm font-semibold font-geist">
-                                  {formData.is_infinite_budget ? 'Unlimited' : `$${formData.budget || '0'}`}
-                                </p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-muted/30">
-                                <p className="text-xs text-muted-foreground">CPM Rate</p>
-                                <p className="text-sm font-semibold font-geist">${formData.rpm_rate || '0'}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-muted/30">
-                                <p className="text-xs text-muted-foreground">Platforms</p>
-                                <p className="text-sm font-semibold font-geist">{formData.allowed_platforms.length}</p>
-                              </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground font-inter tracking-[-0.3px]">Campaign budget</span>
+                              <span className="font-medium font-geist tracking-[-0.3px]">{formData.is_infinite_budget ? 'Unlimited' : `$${parseFloat(formData.budget) || 0}`}</span>
                             </div>
-                            <div className="h-px bg-border/50 my-3" />
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Payment Model</span>
-                                <span className="text-sm font-medium capitalize">
-                                  {formData.payment_model === 'pay_per_view' ? 'Per Account' : 'Per Video'}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Payment Method</span>
-                                <span className="text-sm font-medium capitalize">
-                                  {formData.payout_type === 'on_platform' ? 'On Platform' : 'Off Platform'}
-                                </span>
-                              </div>
-                              {!formData.is_infinite_budget && parseFloat(formData.budget) > 0 && parseFloat(formData.rpm_rate) > 0 && (
-                                <>
-                                  <div className="h-px bg-border/50 my-3" />
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">Estimated views</span>
-                                    <span className="text-base font-bold text-primary tabular-nums">
-                                      {Math.round((parseFloat(formData.budget) / parseFloat(formData.rpm_rate)) * 1000).toLocaleString('en-US')}
-                                    </span>
-                                  </div>
-                                </>
-                              )}
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground font-inter tracking-[-0.3px]">CPM rate</span>
+                              <span className="font-medium font-geist tracking-[-0.3px]">${formData.rpm_rate || 0}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground font-inter tracking-[-0.3px]">Platforms</span>
+                              <span className="font-medium font-geist tracking-[-0.3px]">{formData.allowed_platforms.join(', ') || 'None'}</span>
                             </div>
                           </>
                         )}
                       </div>
                     </div>
+
+                    {/* Schedule (Boost only) */}
+                    {isBoost && (
+                      <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-border/30">
+                          <h4 className="text-sm font-medium font-inter tracking-[-0.5px]">Schedule</h4>
+                        </div>
+                        <div className="p-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Start Date</Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50", !formData.start_date && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    <span className="text-sm">
+                                      {formData.start_date ? format(formData.start_date, "MMM d, yyyy") : "Optional"}
+                                    </span>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar mode="single" selected={formData.start_date} onSelect={date => setFormData({...formData, start_date: date})} initialFocus />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">End Date</Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50", !formData.end_date && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    <span className="text-sm">
+                                      {formData.end_date ? format(formData.end_date, "MMM d, yyyy") : "Optional"}
+                                    </span>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar mode="single" selected={formData.end_date} onSelect={date => setFormData({...formData, end_date: date})} disabled={date => formData.start_date ? date < formData.start_date : false} initialFocus />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
@@ -2301,18 +2358,6 @@ export function CampaignWizard({
                 </Button>
               )}
 
-              {isEditMode && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeleteDialogOpen(true)}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -2330,23 +2375,6 @@ export function CampaignWizard({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete {isBoost ? 'Boost' : 'Campaign'}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your {isBoost ? 'boost' : 'campaign'} and all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

@@ -11,24 +11,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronRight } from "lucide-react";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
-import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import PauseCircleRoundedIcon from "@mui/icons-material/PauseCircleRounded";
-import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import { Icon } from "@iconify/react";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
-import animatedImagesIcon from "@/assets/animated-images-icon.svg";
-import copyIconBlack from "@/assets/copy-icon-black.svg";
-import copyIconWhite from "@/assets/copy-icon-white.svg";
 import clippingIconWhite from "@/assets/clipping-icon-white.svg";
 import clippingIconDark from "@/assets/clipping-icon-dark.svg";
 import boostIconWhite from "@/assets/boost-icon-white.svg";
 import boostIconDark from "@/assets/boost-icon-dark.svg";
 import { useTheme } from "@/components/ThemeProvider";
-import { useToast } from "@/hooks/use-toast";
 interface CampaignMember {
   id: string;
   avatar_url?: string | null;
@@ -60,6 +51,7 @@ interface CampaignRowCardProps {
   onPause?: () => void;
   onDelete?: () => void;
   onTopUp?: () => void;
+  onShare?: () => void;
 }
 export function CampaignRowCard({
   title,
@@ -83,11 +75,9 @@ export function CampaignRowCard({
   onDuplicate,
   onPause,
   onDelete,
-  onTopUp
+  onTopUp,
+  onShare
 }: CampaignRowCardProps) {
-  const {
-    toast
-  } = useToast();
   const {
     resolvedTheme
   } = useTheme();
@@ -191,7 +181,7 @@ export function CampaignRowCard({
                 </span>}
 
               {/* Members inline */}
-              {visibleMembers.length > 0 && <div className="flex items-center">
+              {visibleMembers.length > 0 ? <div className="flex items-center">
                   <div className="flex -space-x-1.5">
                     {visibleMembers.map((member, index) => <div key={member.id} className="w-5 h-5 rounded-full border-0 bg-muted flex items-center justify-center overflow-hidden" style={{
                   zIndex: 3 - index
@@ -202,12 +192,12 @@ export function CampaignRowCard({
                       </div>)}
                   </div>
                   {remainingCount > 0 && <span className="ml-1.5 text-xs text-muted-foreground">+{remainingCount} more</span>}
-                </div>}
+                </div> : <span className="text-xs text-muted-foreground/60">No members yet</span>}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="hidden sm:flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+          <div className="hidden sm:flex sm:flex-col items-center sm:items-end justify-end gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
 
             {pendingReviewCount > 0 && <button onClick={e => {
             e.stopPropagation();
@@ -232,21 +222,8 @@ export function CampaignRowCard({
                   </Button>}
               </div>
 
-              {/* Copy link + Three-dot menu - visible on hover */}
+              {/* Three-dot menu - visible on hover */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {slug && <Button size="sm" variant="outline" className="h-7 w-7 p-0 border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515] text-foreground hover:text-foreground" onClick={e => {
-                  e.stopPropagation();
-                  const url = type === "campaign" ? `${window.location.origin}/c/${slug}` : `${window.location.origin}/boost/${slug}`;
-                  navigator.clipboard.writeText(url);
-                  toast({
-                    title: "Link copied",
-                    description: "URL copied to clipboard"
-                  });
-                }}>
-                  <img src={copyIconBlack} alt="" className="w-3.5 h-3.5 dark:hidden" />
-                  <img src={copyIconWhite} alt="" className="w-3.5 h-3.5 hidden dark:block" />
-                </Button>}
-
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -259,48 +236,36 @@ export function CampaignRowCard({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-36 bg-popover dark:bg-[#0a0a0a] border-border dark:border-[#1a1a1a]" onClick={e => e.stopPropagation()}>
-                    {slug && (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          const url = type === "campaign"
-                            ? `${window.location.origin}/c/${slug}`
-                            : `${window.location.origin}/boost/${slug}`;
-                          navigator.clipboard.writeText(url);
-                          toast({
-                            title: "Link copied",
-                            description: "URL copied to clipboard"
-                          });
-                        }}
-                        className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item"
-                      >
-                        <LinkRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
-                        Copy link
+                    {onShare && slug && (
+                      <DropdownMenuItem onClick={onShare} className="cursor-pointer text-xs py-1.5 gap-2 focus:bg-muted dark:focus:bg-[#151515]">
+                        <Icon icon="material-symbols:reply-rounded" className="w-4 h-4 -scale-x-100" />
+                        Share
                       </DropdownMenuItem>
                     )}
                     {onEdit && (
-                      <DropdownMenuItem onClick={onEdit} className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item">
-                        <EditRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                      <DropdownMenuItem onClick={onEdit} className="cursor-pointer text-xs py-1.5 gap-2 focus:bg-muted dark:focus:bg-[#151515]">
+                        <Icon icon="material-symbols:edit-outline" className="w-4 h-4" />
                         Edit
                       </DropdownMenuItem>
                     )}
                     {onDuplicate && (
-                      <DropdownMenuItem onClick={onDuplicate} className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item">
-                        <ContentCopyRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                      <DropdownMenuItem onClick={onDuplicate} className="cursor-pointer text-xs py-1.5 gap-2 focus:bg-muted dark:focus:bg-[#151515]">
+                        <Icon icon="material-symbols:content-copy-outline" className="w-4 h-4" />
                         Duplicate
                       </DropdownMenuItem>
                     )}
                     {onPause && (
                       <>
                         <DropdownMenuSeparator className="bg-border dark:bg-[#1a1a1a]" />
-                        <DropdownMenuItem onClick={onPause} className="cursor-pointer text-xs py-1.5 gap-1.5 focus:bg-muted dark:focus:bg-[#151515] group/item">
+                        <DropdownMenuItem onClick={onPause} className="cursor-pointer text-xs py-1.5 gap-2 focus:bg-muted dark:focus:bg-[#151515]">
                           {status === "paused" ? (
                             <>
-                              <PlayCircleRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                              <Icon icon="material-symbols:play-circle-outline" className="w-4 h-4" />
                               Resume
                             </>
                           ) : (
                             <>
-                              <PauseCircleRoundedIcon className="w-2 h-2 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                              <Icon icon="material-symbols:pause-circle-outline" className="w-4 h-4" />
                               Pause
                             </>
                           )}
@@ -312,9 +277,9 @@ export function CampaignRowCard({
                         <DropdownMenuSeparator className="bg-border dark:bg-[#1a1a1a]" />
                         <DropdownMenuItem
                           onClick={onDelete}
-                          className="cursor-pointer text-xs py-1.5 gap-1.5 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
+                          className="cursor-pointer text-xs py-1.5 gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
                         >
-                          <DeleteRoundedIcon className="w-2 h-2" />
+                          <Icon icon="material-symbols:delete-outline" className="w-4 h-4" />
                           Delete
                         </DropdownMenuItem>
                       </>

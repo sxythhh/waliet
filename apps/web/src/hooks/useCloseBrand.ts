@@ -73,6 +73,24 @@ export function useCloseLeadStatuses() {
   });
 }
 
+// Cached version for Pipeline/Table views (longer stale time)
+export function useCloseLeadStatusesCached() {
+  return useQuery({
+    queryKey: ["close-lead-statuses-cached"],
+    queryFn: async (): Promise<CloseLeadStatus[]> => {
+      const { data, error } = await supabase.functions.invoke("close-sync", {
+        body: { action: "get_lead_statuses" },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+      return data.statuses || [];
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+  });
+}
+
 // Sync brand to Close CRM
 export function useSyncBrandToClose() {
   const queryClient = useQueryClient();

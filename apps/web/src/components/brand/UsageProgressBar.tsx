@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { isUnlimited as checkUnlimited } from "@/utils/subscriptionLimits";
 
 interface UsageProgressBarProps {
   used: number;
@@ -8,7 +9,7 @@ interface UsageProgressBarProps {
 }
 
 export function UsageProgressBar({ used, limit, label, className }: UsageProgressBarProps) {
-  const isUnlimited = !Number.isFinite(limit);
+  const isUnlimited = checkUnlimited(limit);
   const percentage = isUnlimited ? 0 : Math.min((used / limit) * 100, 100);
   const isNearLimit = percentage >= 80;
   const isAtLimit = percentage >= 100;

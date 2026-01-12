@@ -748,11 +748,6 @@ export default function FinanceOverviewContent() {
                 subtext={`${stats.transactionCount} transactions`}
               />
               <StatCard
-                label="Pending Payouts"
-                value={`$${stats.totalPendingAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                subtext={`${stats.pendingPayoutsCount} requests`}
-              />
-              <StatCard
                 label="Processed"
                 value={`$${stats.totalProcessed.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                 subtext={`${stats.completedPayoutsCount} completed`}
@@ -774,81 +769,6 @@ export default function FinanceOverviewContent() {
 
         {/* Pending Crypto Approvals */}
         <PayoutApprovals />
-
-        {/* Pending Payouts Queue */}
-        {pendingPayouts.length > 0 && (
-          <div className="px-6 py-4">
-            <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/30">
-                <div>
-                  <h3 className="text-sm font-semibold tracking-tight">Pending Payouts</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{pendingPayouts.length} requests • ${stats.totalPendingAmount.toFixed(2)} total</p>
-                </div>
-                <button
-                  onClick={() => setPayoutQueueExpanded(!payoutQueueExpanded)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {payoutQueueExpanded ? "Hide" : "Show"}
-                </button>
-              </div>
-
-              {payoutQueueExpanded && (
-                <div className="p-3 space-y-2">
-                  {pendingPayouts.slice(0, 6).map(request => (
-                    <div
-                      key={request.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer border border-transparent hover:border-border/30"
-                      onClick={() => { setSelectedPayout(request); setContextType('payout'); setContextOpen(true); }}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={request.profiles?.avatar_url || ''} />
-                          <AvatarFallback className="text-xs">{(request.profiles?.username || '?')[0].toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate font-inter tracking-[-0.3px]">{request.profiles?.username}</p>
-                          <p className="text-xs text-muted-foreground font-inter">${Number(request.amount).toFixed(2)} • {request.payout_method}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                        {request.payout_method === 'crypto' ? (
-                          <button
-                            onClick={() => openCryptoPayoutDialog(request)}
-                            className="text-xs text-amber-500 hover:text-amber-400 transition-colors font-inter"
-                          >
-                            Send
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleCompletePayout(request)}
-                            disabled={processingPayout === request.id}
-                            className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors font-inter disabled:opacity-50"
-                          >
-                            {processingPayout === request.id ? "..." : "Complete"}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => { setSelectedPayout(request); setPayoutAction('reject'); setActionDialogOpen(true); }}
-                          className="text-xs text-muted-foreground hover:text-rose-500 transition-colors font-inter"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {pendingPayouts.length > 6 && (
-                    <button
-                      onClick={() => { setViewMode('payouts'); setPayoutStatusFilter('pending'); }}
-                      className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter"
-                    >
-                      View all {pendingPayouts.length} pending payouts
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Filters */}
         <div className="px-6 py-4">
@@ -939,12 +859,19 @@ export default function FinanceOverviewContent() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-border/30 hover:bg-transparent bg-muted/30">
-                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">User</TableHead>
-                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
-                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
-                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Amount</TableHead>
-                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                        <TableHead className="h-11 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold normal-case tracking-tight text-muted-foreground">User</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold normal-case tracking-tight text-muted-foreground">Date</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold normal-case tracking-tight text-muted-foreground">Type</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold normal-case tracking-tight text-muted-foreground text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span>Amount</span>
+                            <span className="text-[10px] font-normal text-muted-foreground/70">
+                              (${combinedItems.reduce((sum, item) => sum + Number(item.data.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                            </span>
+                          </div>
+                        </TableHead>
+                        <TableHead className="h-11 text-xs font-semibold normal-case tracking-tight text-muted-foreground">Status</TableHead>
+                        <TableHead className="h-11 text-xs font-semibold normal-case tracking-tight text-muted-foreground text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

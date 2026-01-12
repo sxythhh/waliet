@@ -133,21 +133,12 @@ export function DiscordRoleSelector({
         </Button>
       </div>
 
-      {hasUnassignableRoles && (
-        <Alert className="py-2 border-amber-500/50 bg-amber-500/10">
-          <AlertCircle className="h-3 w-3 text-amber-500" />
-          <AlertDescription className="text-[10px] text-amber-600 dark:text-amber-400 font-inter tracking-[-0.5px]">
-            Some roles cannot be assigned because the bot's role is below them in Discord. Move the bot's role higher in server settings.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <Select
         value={selectedRoleId || "none"}
         onValueChange={(value) => onRoleChange(value === "none" ? "" : value)}
         disabled={disabled || isLoading}
       >
-        <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] text-sm">
+        <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-0 font-inter tracking-[-0.5px] text-sm">
           <SelectValue placeholder="Select a role to assign..." />
         </SelectTrigger>
         <SelectContent>

@@ -13,6 +13,7 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AnnouncementPopup } from "@/components/onboarding";
+import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
   const navigate = useNavigate();
@@ -146,14 +148,21 @@ export default function Dashboard() {
   useEffect(() => {
     if (authLoading || oauthCompleting) return;
 
-    if (!session) {
-      navigate("/auth", { replace: true });
-      return;
-    }
+    const initializeDashboard = async () => {
+      // Double-check session directly to avoid race conditions with context state
+      if (!session) {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!currentSession) {
+          navigate("/auth", { replace: true });
+          return;
+        }
+        // If we found a session, the context will update and this effect will re-run
+        // with the correct session value
+        return;
+      }
 
-    setUserId(session.user.id);
+      setUserId(session.user.id);
 
-    const loadProfile = async () => {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -161,6 +170,11 @@ export default function Dashboard() {
         .single();
 
       setProfile(profileData);
+
+      // Check if onboarding needs to be shown (for existing users with reset onboarding)
+      if (profileData && profileData.onboarding_completed === false) {
+        setShowOnboarding(true);
+      }
 
       // Check if user selected brand during onboarding
       const pendingBrand = sessionStorage.getItem("pendingBrandCreation");
@@ -170,7 +184,7 @@ export default function Dashboard() {
       }
     };
 
-    loadProfile();
+    initializeDashboard();
   }, [authLoading, oauthCompleting, session, navigate, searchParams]);
 
   // Fetch brand data when workspace changes
@@ -295,7 +309,7 @@ export default function Dashboard() {
       // Brand mode tabs
       switch (currentTab) {
         case "campaigns":
-          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
+          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} brandSlug={currentBrand.slug} />;
         case "analytics":
           return <BrandCampaignDetailView brandId={currentBrand.id} />;
         case "blueprints":
@@ -319,7 +333,7 @@ export default function Dashboard() {
         case "settings":
           return <UserSettingsTab />;
         default:
-          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
+          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} brandSlug={currentBrand.slug} />;
       }
     }
 
@@ -341,6 +355,15 @@ export default function Dashboard() {
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }
   };
+  // Don't render until auth is resolved to prevent flash of unauthenticated state
+  if (authLoading || oauthCompleting) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return <div className="flex h-screen w-full bg-white dark:bg-background">
       <SEOHead title="Dashboard" description="Your Virality creator dashboard" noIndex={true} />
       <AppSidebar />
@@ -369,6 +392,9 @@ export default function Dashboard() {
 
       {/* Creator Chat Widget */}
       {isCreatorMode && <UnifiedMessagesWidget />}
+
+      {/* Onboarding Dialog - for existing users with reset onboarding */}
+      {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
 
     </div>;
 }

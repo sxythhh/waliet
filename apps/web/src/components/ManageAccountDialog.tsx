@@ -4,10 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ChevronDown } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -99,6 +101,12 @@ export function ManageAccountDialog({
   const [loading, setLoading] = useState(false);
   const [linkingCampaignId, setLinkingCampaignId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Collapsible section states
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(true);
+  const [connectedOpen, setConnectedOpen] = useState(true);
+  const [availableOpen, setAvailableOpen] = useState(true);
 
   const fetchCampaigns = async () => {
     if (!account) return;
@@ -291,6 +299,45 @@ export function ManageAccountDialog({
     }
   }, [open]);
 
+  // Reusable collapsible section component
+  const CollapsibleSection = ({
+    title,
+    count,
+    open,
+    onOpenChange,
+    children,
+    rightElement
+  }: {
+    title: string;
+    count?: number;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    children: React.ReactNode;
+    rightElement?: React.ReactNode;
+  }) => (
+    <Collapsible open={open} onOpenChange={onOpenChange}>
+      <CollapsibleTrigger className="flex items-center justify-between w-full py-2 group">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
+            {title}
+          </span>
+          {count !== undefined && count > 0 && (
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+              {count}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {rightElement}
+          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -342,10 +389,7 @@ export function ManageAccountDialog({
             </div>
 
             {/* Settings Section */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Settings</p>
-
-              {/* Visibility Toggle */}
+            <CollapsibleSection title="Settings" open={settingsOpen} onOpenChange={setSettingsOpen}>
               <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/50 dark:bg-muted/30">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium font-inter tracking-[-0.3px]">Show on public profile</p>
@@ -358,19 +402,19 @@ export function ManageAccountDialog({
                   onCheckedChange={handleToggleVisibility}
                 />
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Audience Insights Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Audience Insights</p>
-                {lastSubmissionDate && (
-                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                    Last: {format(new Date(lastSubmissionDate), "MMM d")}
-                  </span>
-                )}
-              </div>
-
+            <CollapsibleSection
+              title="Audience Insights"
+              open={insightsOpen}
+              onOpenChange={setInsightsOpen}
+              rightElement={lastSubmissionDate ? (
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                  Last: {format(new Date(lastSubmissionDate), "MMM d")}
+                </span>
+              ) : undefined}
+            >
               {demographicStatus === 'approved' && daysUntilNext !== null ? (
                 <div className="p-3.5 rounded-xl bg-muted/50 dark:bg-muted/30 text-center">
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
@@ -395,11 +439,15 @@ export function ManageAccountDialog({
                   {demographicStatus === 'rejected' ? 'Resubmit Insights' : 'Submit Insights'}
                 </button>
               )}
-            </div>
+            </CollapsibleSection>
 
             {/* Connected Campaigns */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Connected Campaigns</p>
+            <CollapsibleSection
+              title="Connected Campaigns"
+              count={connectedCampaigns.length}
+              open={connectedOpen}
+              onOpenChange={setConnectedOpen}
+            >
               {loading ? (
                 <div className="p-4 text-center">
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Loading...</p>
@@ -437,12 +485,16 @@ export function ManageAccountDialog({
                   ))}
                 </div>
               )}
-            </div>
+            </CollapsibleSection>
 
             {/* Available Campaigns */}
             {availableCampaigns.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px] uppercase">Available to Link</p>
+              <CollapsibleSection
+                title="Available to Link"
+                count={availableCampaigns.length}
+                open={availableOpen}
+                onOpenChange={setAvailableOpen}
+              >
                 <div className="space-y-1.5">
                   {availableCampaigns.map(campaign => (
                     <div key={campaign.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 dark:bg-muted/30">
@@ -471,7 +523,7 @@ export function ManageAccountDialog({
                     </div>
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
             )}
           </div>
 

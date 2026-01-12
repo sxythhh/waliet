@@ -1,114 +1,219 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import {
   CheckCircle2,
   Building2,
-  Loader2
+  Loader2,
+  DollarSign,
+  GripVertical,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandContextSheet } from "./BrandContextSheet";
+import { BrandWithCRM } from "@/hooks/useBrandsWithCRM";
+import { useCloseLeadStatusesCached, useUpdateCloseStatus, useSyncBrandToClose } from "@/hooks/useCloseBrand";
+import { getStatusColor } from "./CloseStatusBadge";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+} from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
-interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-  brand_type: string | null;
-  is_active: boolean;
-  is_verified: boolean;
-  created_at: string;
-  renewal_date: string | null;
-  logo_url: string | null;
-  description: string | null;
-  home_url: string | null;
-  account_url: string | null;
-  assets_url: string | null;
-  show_account_tab: boolean;
-  subscription_status: string | null;
-  subscription_plan: string | null;
-  subscription_expires_at: string | null;
-}
-
-interface PipelineStage {
-  id: string;
+interface PipelineColumn {
+  id: string | null;
   label: string;
   color: string;
 }
 
-const PIPELINE_STAGES: PipelineStage[] = [
-  { id: "new", label: "New", color: "bg-blue-500" },
-  { id: "active", label: "Active", color: "bg-emerald-500" },
-  { id: "past_due", label: "Past Due", color: "bg-amber-500" },
-  { id: "cancelled", label: "Cancelled", color: "bg-red-500" },
-  { id: "inactive", label: "Inactive", color: "bg-zinc-400" },
-];
-
-function getStageForBrand(brand: Brand): string {
-  if (!brand.subscription_status || brand.subscription_status === "inactive") {
-    // Check if it's a new brand (created within last 7 days with no subscription)
-    const createdDate = new Date(brand.created_at);
-    const daysSinceCreation = (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceCreation < 7 && !brand.subscription_status) {
-      return "new";
-    }
-    return "inactive";
+// Format currency
+function formatCurrency(amount: number): string {
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(1)}M`;
   }
-  return brand.subscription_status;
+  if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(1)}K`;
+  }
+  return `$${amount.toFixed(0)}`;
 }
 
-export function BrandPipelineView() {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+// Initial visible count per column (for performance)
+const INITIAL_VISIBLE_COUNT = 20;
+
+interface BrandPipelineViewProps {
+  brands: BrandWithCRM[];
+  isLoading: boolean;
+}
+
+export function BrandPipelineView({ brands, isLoading }: BrandPipelineViewProps) {
+  const queryClient = useQueryClient();
+  const { data: closeStatuses = [], isLoading: statusesLoading } = useCloseLeadStatusesCached();
+  const [selectedBrand, setSelectedBrand] = useState<BrandWithCRM | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeDragBrand, setActiveDragBrand] = useState<BrandWithCRM | null>(null);
 
-  useEffect(() => {
-    fetchBrands();
-  }, []);
+  // Track expanded columns (show all brands)
+  const [expandedColumns, setExpandedColumns] = useState<Set<string | null>>(new Set());
 
-  const fetchBrands = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('brands')
-        .select(`
-          id,
-          name,
-          slug,
-          brand_type,
-          is_active,
-          is_verified,
-          created_at,
-          renewal_date,
-          logo_url,
-          description,
-          home_url,
-          account_url,
-          assets_url,
-          show_account_tab,
-          subscription_status,
-          subscription_plan,
-          subscription_expires_at
-        `)
-        .order('created_at', { ascending: false });
+  const updateStatus = useUpdateCloseStatus();
+  const syncToClose = useSyncBrandToClose();
 
-      if (error) throw error;
-      setBrands(data || []);
-    } catch (error) {
-      console.error('Error fetching brands:', error);
-    } finally {
-      setLoading(false);
+  // Configure drag sensors - require 8px movement to start drag (prevents accidental drags)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  // Build dynamic columns from Close statuses
+  const columns = useMemo((): PipelineColumn[] => {
+    // Start with "Unlinked" column for brands not in Close
+    const cols: PipelineColumn[] = [
+      { id: null, label: "Unlinked", color: "#6b7280" },
+    ];
+
+    // Add Close statuses
+    for (const status of closeStatuses) {
+      cols.push({
+        id: status.id,
+        label: status.label,
+        color: getStatusColor(status.label),
+      });
     }
-  };
 
-  const handleBrandClick = (brand: Brand) => {
+    return cols;
+  }, [closeStatuses]);
+
+  // Group brands by column
+  const brandsByColumn = useMemo(() => {
+    const map = new Map<string | null, BrandWithCRM[]>();
+
+    // Initialize all columns with empty arrays
+    for (const col of columns) {
+      map.set(col.id, []);
+    }
+
+    // Assign brands to columns
+    for (const brand of brands) {
+      const columnId = brand.close_status_id;
+      const existing = map.get(columnId);
+      if (existing) {
+        existing.push(brand);
+      } else if (columnId === null) {
+        // Brand without Close status goes to Unlinked
+        map.get(null)?.push(brand);
+      } else {
+        // Brand with unknown status (status might not be in our list yet)
+        // Add to a dynamic column or to Unlinked
+        map.get(null)?.push(brand);
+      }
+    }
+
+    return map;
+  }, [brands, columns]);
+
+  // Calculate pipeline totals by column
+  const columnTotals = useMemo(() => {
+    const totals = new Map<string | null, number>();
+    for (const col of columns) {
+      const colBrands = brandsByColumn.get(col.id) || [];
+      const total = colBrands.reduce((sum, b) => sum + (b.weighted_pipeline_value || 0), 0);
+      totals.set(col.id, total);
+    }
+    return totals;
+  }, [columns, brandsByColumn]);
+
+  // Memoized callbacks
+  const handleBrandClick = useCallback((brand: BrandWithCRM) => {
     setSelectedBrand(brand);
     setSheetOpen(true);
-  };
+  }, []);
 
-  const getBrandsByStage = (stageId: string) => {
-    return brands.filter(brand => getStageForBrand(brand) === stageId);
-  };
+  const handleExpandColumn = useCallback((columnId: string | null) => {
+    setExpandedColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(columnId)) {
+        next.delete(columnId);
+      } else {
+        next.add(columnId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const brandId = event.active.id as string;
+    const brand = brands.find((b) => b.id === brandId);
+    setActiveDragBrand(brand || null);
+  }, [brands]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDragBrand(null);
+
+    const { active, over } = event;
+    if (!over) return;
+
+    const brandId = active.id as string;
+    const newStatusId = over.id as string | null;
+    const brand = brands.find((b) => b.id === brandId);
+
+    if (!brand) return;
+
+    // Don't do anything if dropped on the same column
+    const currentStatusId = brand.close_status_id;
+    if (currentStatusId === newStatusId) return;
+
+    // Handle dragging to "Unlinked" column - not supported
+    if (newStatusId === "unlinked") {
+      return;
+    }
+
+    // Handle dragging from "Unlinked" to a status column
+    if (!brand.close_lead_id && newStatusId) {
+      // Need to create a Close lead first, then update status
+      syncToClose.mutate(
+        { brandId, action: "create" },
+        {
+          onSuccess: () => {
+            // After creating lead, update its status
+            updateStatus.mutate(
+              { brandId, statusId: newStatusId },
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries({ queryKey: ["brands-with-crm"] });
+                },
+              }
+            );
+          },
+        }
+      );
+      return;
+    }
+
+    // Handle dragging between status columns
+    if (brand.close_lead_id && newStatusId) {
+      updateStatus.mutate(
+        { brandId, statusId: newStatusId },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["brands-with-crm"] });
+          },
+        }
+      );
+    }
+  }, [brands, syncToClose, updateStatus, queryClient]);
+
+  const loading = isLoading || statusesLoading;
 
   if (loading) {
     return (
@@ -126,7 +231,7 @@ export function BrandPipelineView() {
         </div>
         <h3 className="text-lg font-semibold mb-1">No brands yet</h3>
         <p className="text-sm text-muted-foreground">
-          Create your first brand to get started
+          Create your first brand or sync from Close to get started
         </p>
       </div>
     );
@@ -134,89 +239,279 @@ export function BrandPipelineView() {
 
   return (
     <>
-      {/* Pipeline Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 min-h-[500px]">
-        {PIPELINE_STAGES.map((stage) => {
-          const stageBrands = getBrandsByStage(stage.id);
-          return (
-            <div key={stage.id} className="flex flex-col">
-              {/* Column Header */}
-              <div className="flex items-center justify-between px-1 py-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className={cn("w-2 h-2 rounded-full", stage.color)} />
-                  <span className="text-sm font-medium">{stage.label}</span>
-                </div>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {stageBrands.length}
-                </span>
-              </div>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        {/* Pipeline Columns - horizontal scroll on mobile */}
+        <div className="overflow-x-auto pb-4">
+          <div className="grid gap-4 min-h-[500px]" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(250px, 1fr))` }}>
+            {columns.map((column) => {
+              const colBrands = brandsByColumn.get(column.id) || [];
+              const colTotal = columnTotals.get(column.id) || 0;
+              const isExpanded = expandedColumns.has(column.id);
 
-              {/* Column Content */}
-              <div className="flex-1 space-y-2">
-                {stageBrands.length === 0 ? (
-                  <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border border-dashed border-border/50 rounded-lg">
-                    No brands
-                  </div>
-                ) : (
-                  stageBrands.map((brand) => (
-                    <BrandCard
-                      key={brand.id}
-                      brand={brand}
-                      onClick={() => handleBrandClick(brand)}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              return (
+                <DroppableColumn
+                  key={column.id ?? "unlinked"}
+                  columnId={column.id}
+                  label={column.label}
+                  color={column.color}
+                  brands={colBrands}
+                  total={colTotal}
+                  onBrandClick={handleBrandClick}
+                  isExpanded={isExpanded}
+                  onToggleExpand={handleExpandColumn}
+                  initialVisibleCount={INITIAL_VISIBLE_COUNT}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Drag Overlay - shows the brand card while dragging */}
+        <DragOverlay dropAnimation={null}>
+          {activeDragBrand ? (
+            <BrandCardOverlay brand={activeDragBrand} />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Brand Context Sheet */}
       <BrandContextSheet
         brand={selectedBrand}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        onBrandUpdated={fetchBrands}
+        onBrandUpdated={() => {}}
       />
     </>
   );
 }
 
-interface BrandCardProps {
-  brand: Brand;
-  onClick: () => void;
+// Droppable Column Component
+interface DroppableColumnProps {
+  columnId: string | null;
+  label: string;
+  color: string;
+  brands: BrandWithCRM[];
+  total: number;
+  onBrandClick: (brand: BrandWithCRM) => void;
+  isExpanded: boolean;
+  onToggleExpand: (columnId: string | null) => void;
+  initialVisibleCount: number;
 }
 
-function BrandCard({ brand, onClick }: BrandCardProps) {
+const DroppableColumn = memo(function DroppableColumn({
+  columnId,
+  label,
+  color,
+  brands,
+  total,
+  onBrandClick,
+  isExpanded,
+  onToggleExpand,
+  initialVisibleCount,
+}: DroppableColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnId ?? "unlinked",
+  });
+
+  // Limit visible brands for performance
+  const visibleBrands = isExpanded ? brands : brands.slice(0, initialVisibleCount);
+  const hiddenCount = brands.length - visibleBrands.length;
+
+  const handleToggle = useCallback(() => {
+    onToggleExpand(columnId);
+  }, [onToggleExpand, columnId]);
+
+  return (
+    <div ref={setNodeRef} className="flex flex-col">
+      {/* Column Header */}
+      <div className="flex items-center justify-between px-1 py-2 mb-2">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <span className="text-sm font-medium font-inter tracking-[-0.5px]">{label}</span>
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px] tabular-nums">
+            ({brands.length})
+          </span>
+        </div>
+        {total > 0 && (
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px] flex items-center gap-0.5">
+            <DollarSign className="h-3 w-3" />
+            {formatCurrency(total)}
+          </span>
+        )}
+      </div>
+
+      {/* Column Content - droppable area */}
+      <div
+        className={cn(
+          "flex-1 space-y-2 rounded-lg p-2 -m-2",
+          isOver && "bg-primary/5 border-2 border-dashed border-primary/30"
+        )}
+      >
+        {brands.length === 0 ? (
+          <div className={cn(
+            "flex items-center justify-center h-20 text-xs text-muted-foreground font-inter tracking-[-0.3px] border border-dashed rounded-lg",
+            isOver ? "border-primary/30 bg-primary/5" : "border-border/50"
+          )}>
+            {isOver ? "Drop here" : "No brands"}
+          </div>
+        ) : (
+          <>
+            {visibleBrands.map((brand) => (
+              <DraggableBrandCard
+                key={brand.id}
+                brand={brand}
+                onClick={onBrandClick}
+              />
+            ))}
+            {/* Show more button */}
+            {hiddenCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggle}
+                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] border border-dashed border-border/50 hover:border-border"
+              >
+                <ChevronDown className="h-3 w-3 mr-1" />
+                Show {hiddenCount} more
+              </Button>
+            )}
+            {isExpanded && brands.length > initialVisibleCount && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggle}
+                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]"
+              >
+                Show less
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// Draggable Brand Card Wrapper - Memoized
+interface DraggableBrandCardProps {
+  brand: BrandWithCRM;
+  onClick: (brand: BrandWithCRM) => void;
+}
+
+const DraggableBrandCard = memo(function DraggableBrandCard({ brand, onClick }: DraggableBrandCardProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: brand.id,
+  });
+
+  const handleClick = useCallback(() => {
+    onClick(brand);
+  }, [onClick, brand]);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+    >
+      <BrandCard
+        brand={brand}
+        onClick={handleClick}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+});
+
+// Brand Card Component - Memoized
+interface BrandCardProps {
+  brand: BrandWithCRM;
+  onClick?: () => void;
+  isDragging?: boolean;
+  dragHandleProps?: Record<string, unknown>;
+}
+
+const BrandCard = memo(function BrandCard({ brand, onClick, isDragging, dragHandleProps }: BrandCardProps) {
   return (
     <div
       onClick={onClick}
-      className="group flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors bg-card hover:bg-muted/50 border border-border/50"
+      className={cn(
+        "group flex items-center gap-3 p-2.5 rounded-lg cursor-pointer bg-card border border-border/50",
+        isDragging
+          ? "shadow-lg ring-2 ring-primary/20"
+          : "hover:bg-muted/50"
+      )}
     >
+      {/* Drag Handle */}
+      <div
+        {...dragHandleProps}
+        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-muted/50 text-muted-foreground/50 hover:text-muted-foreground"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
+
       {/* Logo */}
       <Avatar className="h-9 w-9 rounded-lg">
-        <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
-        <AvatarFallback className="rounded-lg bg-muted text-xs font-medium">
+        <AvatarImage src={brand.logo_url || ""} alt={brand.name} className="object-cover" />
+        <AvatarFallback className="rounded-lg bg-muted text-xs font-medium font-inter">
           {brand.name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium truncate">{brand.name}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{brand.name}</span>
           {brand.is_verified && (
             <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">
-          {brand.subscription_plan ? (
-            <span className="capitalize">{brand.subscription_plan}</span>
+        <div className="flex items-center gap-2">
+          {brand.weighted_pipeline_value > 0 ? (
+            <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+              {formatCurrency(brand.weighted_pipeline_value)} pipeline
+            </span>
+          ) : brand.subscription_plan ? (
+            <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px] capitalize">
+              {brand.subscription_plan}
+            </span>
           ) : (
-            formatDistanceToNow(new Date(brand.created_at), { addSuffix: true })
+            <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+              {formatDistanceToNow(new Date(brand.created_at), { addSuffix: true })}
+            </span>
           )}
-        </p>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Lightweight overlay for drag (no hooks, just display)
+function BrandCardOverlay({ brand }: { brand: BrandWithCRM }) {
+  return (
+    <div className="flex items-center gap-3 p-2.5 rounded-lg cursor-grabbing bg-card border border-border shadow-lg ring-2 ring-primary/20">
+      <div className="shrink-0 p-0.5 -ml-1 text-muted-foreground">
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <Avatar className="h-9 w-9 rounded-lg">
+        <AvatarImage src={brand.logo_url || ""} alt={brand.name} className="object-cover" />
+        <AvatarFallback className="rounded-lg bg-muted text-xs font-medium font-inter">
+          {brand.name.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{brand.name}</span>
+          {brand.is_verified && (
+            <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+          )}
+        </div>
       </div>
     </div>
   );

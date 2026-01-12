@@ -102,7 +102,7 @@ interface BrandCampaignDetailViewProps {
   boostId?: string;
   onBack?: () => void;
 }
-type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "management" | "messages" | "broadcasts";
+type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "messages" | "broadcasts";
 type EntitySelection = "all" | {
   type: "campaign";
   id: string;
@@ -128,6 +128,7 @@ export function BrandCampaignDetailView({
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [hasDubIntegration, setHasDubIntegration] = useState(false);
+  const [userRole, setUserRole] = useState<"owner" | "admin" | "poster" | "member">("member");
   useEffect(() => {
     const subtab = searchParams.get("subtab");
     if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts" || subtab === "links" || subtab === "messages" || subtab === "broadcasts" || subtab === "settings" || subtab === "rules") {
@@ -173,6 +174,42 @@ export function BrandCampaignDetailView({
       setHasDubIntegration(!!data?.dub_api_key);
     };
     checkDubIntegration();
+  }, [entityBrandId, brandId]);
+
+  // Fetch user's role in the brand
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const checkBrandId = entityBrandId || brandId;
+      if (!checkBrandId) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check if owner
+      const { data: brand } = await supabase
+        .from("brands")
+        .select("owner_id")
+        .eq("id", checkBrandId)
+        .single();
+
+      if (brand?.owner_id === user.id) {
+        setUserRole("owner");
+        return;
+      }
+
+      // Check brand_members role
+      const { data: member } = await supabase
+        .from("brand_members")
+        .select("role")
+        .eq("brand_id", checkBrandId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (member?.role) {
+        setUserRole(member.role as "admin" | "poster" | "member");
+      }
+    };
+    fetchUserRole();
   }, [entityBrandId, brandId]);
   const fetchAllCampaignsAndBoosts = async () => {
     if (!brandId) return;
@@ -305,11 +342,11 @@ export function BrandCampaignDetailView({
     label: "Home"
   }];
 
-  // Videos tab (not in all mode)
+  // Submissions tab (not in all mode)
   if (!isAllMode) {
     detailTabs.push({
       id: "videos",
-      label: "Videos"
+      label: "Submissions"
     });
   }
 
@@ -397,7 +434,7 @@ export function BrandCampaignDetailView({
                 </DropdownMenuItem>
 
                 {(campaigns.length > 0 || boosts.length > 0) && (
-                  <div className="h-px bg-white/5 my-1.5 mx-2" />
+                  <div className="h-px bg-border my-1.5 mx-2" />
                 )}
 
                 {/* Campaigns & Boosts list */}
@@ -441,21 +478,23 @@ export function BrandCampaignDetailView({
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Timeframe selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-border dark:border-transparent">
-                  <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
-                  <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50 bg-white dark:bg-[#080808] border-border dark:border-[#1f1f1f]">
-                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} onClick={() => setTimeframe(option)}>
-                    {TIMEFRAME_LABELS[option]}
-                  </DropdownMenuItem>)}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Timeframe selector - only visible on Home tab */}
+            {activeDetailTab === "home" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-border dark:border-transparent">
+                    <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
+                    <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="z-50 bg-white dark:bg-[#080808] border-border dark:border-[#1f1f1f]">
+                  {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} onClick={() => setTimeframe(option)}>
+                      {TIMEFRAME_LABELS[option]}
+                    </DropdownMenuItem>)}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Edit button - only when specific entity selected */}
             {!isAllMode && <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-border dark:border-transparent" onClick={() => setEditDialogOpen(true)}>
@@ -506,7 +545,7 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
+          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} brandId={boost.brand_id} userRole={userRole} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
           ...campaign,
           hashtags: campaign.hashtags || []
         }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : activeDetailTab === "settings" ? isAllMode && brandId ? <BrandSettingsTab brandId={brandId} /> : null : null}

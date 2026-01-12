@@ -185,7 +185,7 @@ export function CampaignApplicationsView({
           submitted_at: app.applied_at,
           applied_at: app.applied_at,
           reviewed_at: app.reviewed_at,
-          application_answers: null,
+          application_answers: app.application_answers as { question: string; answer: string }[] | null,
           application_text: app.application_text,
           is_boost: true
         }));
@@ -645,7 +645,7 @@ export function CampaignApplicationsView({
               addSuffix: true
             });
             const capitalizedTime = timeAgo.charAt(0).toUpperCase() + timeAgo.slice(1);
-            return <button key={app.id} onClick={() => handleSelectApp(app.id)} className={`group w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted md:bg-muted" : "md:hover:bg-muted/50"}`}>
+            return <button key={app.id} onClick={() => handleSelectApp(app.id)} className={`group w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted/50" : "md:hover:bg-muted/30"}`}>
                     <div className="flex items-center gap-3">
                       {/* Avatar with checkbox overlay for pending applications */}
                       <div className="relative flex-shrink-0">
@@ -670,18 +670,12 @@ export function CampaignApplicationsView({
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2">
-                          <p
-                            className="font-medium tracking-[-0.5px] truncate hover:underline cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/@${app.profile?.username}`);
-                            }}
-                          >
+                          <p className="font-medium tracking-[-0.5px] truncate flex-1 min-w-0">
                             {app.profile?.full_name || app.profile?.username || "Unknown"}
                           </p>
-                          {app.status !== 'pending' && getStatusBadge(app.status)}
+                          {app.status !== 'pending' && <div className="flex-shrink-0">{getStatusBadge(app.status)}</div>}
                         </div>
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                           {capitalizedTime}
@@ -730,16 +724,9 @@ export function CampaignApplicationsView({
                     </Avatar>
                     <div className="space-y-0.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <a 
-                          href={`/@${selectedApp.profile?.username}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/@${selectedApp.profile?.username}`);
-                          }}
-                          className="text-base font-semibold tracking-[-0.5px] truncate hover:underline cursor-pointer"
-                        >
+                        <span className="text-base font-semibold tracking-[-0.5px] truncate">
                           {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
-                        </a>
+                        </span>
                         {getStatusBadge(selectedApp.status)}
                       </div>
                       <p className="text-sm text-muted-foreground tracking-[-0.3px] truncate">
@@ -748,26 +735,6 @@ export function CampaignApplicationsView({
                       </p>
                     </div>
                   </div>
-                  {/* Request Insights Button */}
-                  {selectedApp.profile && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 hidden sm:flex"
-                      onClick={() => {
-                        setInsightsCreator({
-                          id: selectedApp.profile!.id,
-                          username: selectedApp.profile!.username,
-                          full_name: selectedApp.profile!.full_name,
-                          avatar_url: selectedApp.profile!.avatar_url
-                        });
-                        setInsightsDialogOpen(true);
-                      }}
-                    >
-                      <BarChart3 className="h-3.5 w-3.5" />
-                      Request Insights
-                    </Button>
-                  )}
                 </div>
 
                 {/* Connected Account */}
@@ -815,20 +782,20 @@ export function CampaignApplicationsView({
             <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
                 <div className="flex flex-col sm:flex-row gap-2">
                   {/* Message Button - Always visible */}
-                  <Button
+                  <button
                     onClick={() => selectedApp.profile?.id && handleMessage(selectedApp.profile.id)}
                     disabled={!selectedApp.profile?.id}
-                    className="flex-1 h-11 font-medium tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90 order-1"
+                    className="flex-1 h-11 font-medium tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors order-1"
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
+                    <span className="material-symbols-rounded text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>mail</span>
                     Message
-                  </Button>
+                  </button>
                   {selectedApp.status === 'pending' ? (
                     <>
-                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
-                        <X className="h-4 w-4 mr-2" />
+                      <button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] rounded-lg text-red-400 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed order-2">
+                        <span className="material-symbols-rounded text-[18px]">close</span>
                         Reject
-                      </Button>
+                      </button>
                       <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id || !canHireCreator} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
                         <Check className="h-4 w-4 mr-2" />
                         Accept
@@ -836,10 +803,10 @@ export function CampaignApplicationsView({
                     </>
                   ) : selectedApp.status === 'waitlisted' ? (
                     <>
-                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
-                        <X className="h-4 w-4 mr-2" />
+                      <button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] rounded-lg text-red-400 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed order-2">
+                        <span className="material-symbols-rounded text-[18px]">close</span>
                         Reject
-                      </Button>
+                      </button>
                       <Button onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')} disabled={processing === selectedApp.id || !canHireCreator} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
                         <Check className="h-4 w-4 mr-2" />
                         Promote to Accepted
@@ -860,47 +827,41 @@ export function CampaignApplicationsView({
 
     {/* Bulk Action Bar */}
     {selectedApps.size > 0 && (
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-background/95 backdrop-blur-xl border border-border rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
-        <span className="text-sm font-medium tracking-[-0.3px]">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-card border border-border rounded-xl shadow-xl px-4 py-2.5 flex items-center gap-2">
+        <span className="text-sm font-medium tracking-[-0.3px] text-foreground px-1">
           {selectedApps.size} selected
         </span>
-        <div className="w-px h-6 bg-border" />
-        <Button
-          size="sm"
-          variant="ghost"
+        <div className="w-px h-5 bg-border" />
+        <button
           onClick={() => setSelectedApps(new Set())}
-          className="h-8 px-3 text-xs"
+          className="h-9 px-3 text-sm font-medium tracking-[-0.3px] rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
           Clear
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => setBulkActionDialog({ type: 'accept', open: true })}
-          disabled={bulkProcessing}
-          className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          <Check className="h-3.5 w-3.5 mr-1.5" />
-          Accept All
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
+        </button>
+        <button
           onClick={() => setBulkActionDialog({ type: 'reject', open: true })}
           disabled={bulkProcessing}
-          className="h-8 px-3 text-xs text-red-500 border-red-500/30 hover:bg-red-500/10"
+          className="h-9 px-4 text-sm font-medium tracking-[-0.3px] rounded-lg text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <X className="h-3.5 w-3.5 mr-1.5" />
+          <X className="h-4 w-4" />
           Reject All
+        </button>
+        <Button
+          onClick={() => setBulkActionDialog({ type: 'accept', open: true })}
+          disabled={bulkProcessing}
+          className="h-9 px-4 text-sm font-medium tracking-[-0.3px] bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
+          <Check className="h-4 w-4 mr-2" />
+          Accept All
         </Button>
         {isBoost && (
           <Button
-            size="sm"
             variant="outline"
             onClick={() => setBulkActionDialog({ type: 'waitlist', open: true })}
             disabled={bulkProcessing}
-            className="h-8 px-3 text-xs"
+            className="h-9 px-4 text-sm font-medium tracking-[-0.3px]"
           >
-            Add to Waitlist
+            Waitlist
           </Button>
         )}
       </div>

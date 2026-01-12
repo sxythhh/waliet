@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { WalletDropdown } from "@/components/WalletDropdown";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
@@ -61,7 +61,8 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
@@ -203,6 +204,8 @@ export function AppSidebar() {
   const [currentBrandSubscriptionPlan, setCurrentBrandSubscriptionPlan] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+  const hasAutoCollapsed = useRef(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<"feature" | "bug">("feature");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -218,6 +221,21 @@ export function AppSidebar() {
   
   // Determine if we're in light mode
   const isLightMode = theme === "light" || (theme === "system" && !window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  // Auto-collapse sidebar on campaign/boost detail pages on desktop
+  // Auto-expand when navigating away (reverse animation)
+  const isDetailPage = location.pathname.startsWith('/dashboard/campaign/') || location.pathname.startsWith('/dashboard/boost/');
+  useEffect(() => {
+    if (!isMobile && isDetailPage && !hasAutoCollapsed.current) {
+      setIsCollapsed(true);
+      hasAutoCollapsed.current = true;
+    }
+    // Auto-expand when navigating away from detail pages (if it was auto-collapsed)
+    if (!isDetailPage && hasAutoCollapsed.current) {
+      setIsCollapsed(false);
+      hasAutoCollapsed.current = false;
+    }
+  }, [isMobile, isDetailPage]);
 
   // Get current brand ID for subscription dialog
   const currentBrandId = !isCreatorMode && workspace ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '' : '';
@@ -390,7 +408,9 @@ export function AppSidebar() {
     }
     // Save workspace preference to localStorage
     localStorage.setItem("lastWorkspace", newWorkspace);
-    setSearchParams(newParams);
+    // Always navigate to /dashboard when switching workspaces
+    // This ensures we leave detail pages (campaign/boost) properly
+    navigate(`/dashboard?${newParams.toString()}`);
     setWorkspaceOpen(false);
   };
   const handleSignOut = async () => {
@@ -418,8 +438,8 @@ export function AppSidebar() {
       </div>;
   };
   return <>
-      {/* Mobile Header - Top */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4">
+      {/* Mobile Header - Top (hidden on campaign/boost detail pages) */}
+      <header className={`md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4 ${isDetailPage ? 'hidden' : ''}`}>
         {!isCreatorMode && currentBrandName ? (
           <Link to={`/dashboard?workspace=${workspace}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {currentBrandLogo ? (
@@ -435,10 +455,10 @@ export function AppSidebar() {
             <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground uppercase truncate max-w-[120px]">{currentBrandName}</span>
           </Link>
         ) : (
-          <Link to="/" className="flex items-center gap-0 hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-0">
             <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
             <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
-          </Link>
+          </div>
         )}
         <div className="flex items-center gap-2">
           {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
@@ -576,16 +596,13 @@ export function AppSidebar() {
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border transition-all duration-200`}>
         {/* Logo */}
-        <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-[14px] pl-[17px]'} py-[8px]`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-[14px] pl-[17px]'} py-[8px]`}>
           <Link to="/" className={`flex items-center gap-0 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center' : ''}`}>
             <OptimizedImage src={ghostLogoBlue} alt="Logo" className={`h-6 w-6 rounded-none object-cover ${isCollapsed ? 'mr-0' : 'mr-[2px]'}`} />
             {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">
                 VIRALITY
               </span>}
           </Link>
-          {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-muted transition-colors group">
-              <PanelLeftClose className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </button>}
         </div>
 
         {/* Workspace Toggle */}
@@ -702,11 +719,7 @@ export function AppSidebar() {
                 </div>
               </PopoverContent>
             </Popover>
-          </div> : <div className="px-2 py-2 flex justify-center">
-            <button onClick={() => setIsCollapsed(false)} className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors">
-              <PanelLeft className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </div>}
+          </div> : null}
 
         {/* Main Navigation */}
         <TooltipProvider delayDuration={0}>

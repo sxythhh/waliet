@@ -12,6 +12,7 @@ interface BoostQuickActionsCardProps {
   onSubmitVideo: () => void;
   onLeaveBoost?: () => void;
   canSubmit?: boolean;
+  compact?: boolean;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export function BoostQuickActionsCard({
   onSubmitVideo,
   onLeaveBoost,
   canSubmit = true,
+  compact = false,
   className
 }: BoostQuickActionsCardProps) {
   const navigate = useNavigate();
@@ -92,7 +94,9 @@ export function BoostQuickActionsCard({
             key={action.id}
             onClick={action.onClick}
             disabled={action.disabled}
-            className={`group relative flex items-center gap-3 p-3 rounded-lg w-full text-left transition-all duration-200 ${
+            className={`group relative flex items-center gap-3 ${
+              compact ? "p-2" : "p-3"
+            } rounded-lg w-full text-left transition-all duration-200 ${
               action.disabled
                 ? "opacity-50 cursor-not-allowed bg-muted/20 dark:bg-muted/30"
                 : isDanger
@@ -100,27 +104,29 @@ export function BoostQuickActionsCard({
                   : "bg-white border border-border dark:border-0 dark:bg-muted/50 hover:bg-muted/30 dark:hover:bg-muted/70"
             }`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${
+            <div className={`${compact ? "w-6 h-6" : "w-8 h-8"} rounded-md flex items-center justify-center flex-shrink-0 ${
               isDanger ? "bg-destructive/10" : "bg-muted dark:bg-muted/80"
             }`}>
               <Icon
                 icon={action.icon}
-                className={`w-4 h-4 ${isDanger ? "text-destructive" : "text-foreground"}`}
+                className={`${compact ? "w-3 h-3" : "w-4 h-4"} ${isDanger ? "text-destructive" : "text-foreground"}`}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <span className={`text-xs font-semibold font-inter tracking-[-0.3px] block ${
+              <span className={`${compact ? "text-[11px]" : "text-xs"} font-semibold font-inter tracking-[-0.3px] block ${
                 isDanger ? "text-destructive" : "text-foreground"
               }`}>
                 {action.label}
               </span>
-              <span className={`text-[10px] font-inter tracking-[-0.2px] block truncate ${
-                isDanger ? "text-destructive/70" : "text-muted-foreground"
-              }`}>
-                {action.description}
-              </span>
+              {!compact && (
+                <span className={`text-[10px] font-inter tracking-[-0.2px] block truncate ${
+                  isDanger ? "text-destructive/70" : "text-muted-foreground"
+                }`}>
+                  {action.description}
+                </span>
+              )}
             </div>
-            <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-0.5 transition-all ${
+            <ChevronRight className={`${compact ? "w-3 h-3" : "w-3.5 h-3.5"} flex-shrink-0 group-hover:translate-x-0.5 transition-all ${
               isDanger ? "text-destructive/50" : "text-muted-foreground"
             }`} />
           </button>

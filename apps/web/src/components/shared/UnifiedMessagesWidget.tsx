@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { MessageInput } from "@/components/brand/MessageInput";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/components/ThemeProvider";
 import mailIconLight from "@/assets/mail-icon.svg";
 
@@ -173,8 +173,10 @@ function getTicketStatusColor(status: string) {
 
 export function UnifiedMessagesWidget() {
   const { resolvedTheme } = useTheme();
+  const location = useLocation();
   const mailIcon = mailIconLight;
   const [isOpen, setIsOpen] = useState(false);
+  const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -253,6 +255,38 @@ export function UnifiedMessagesWidget() {
       fetchTickets();
     }
   }, [userId, isOpen]);
+
+  // Handle opening widget from navigation state (e.g., "Message Brand" button)
+  useEffect(() => {
+    const state = location.state as { conversationId?: string } | null;
+    if (state?.conversationId) {
+      setPendingConversationId(state.conversationId);
+      setIsOpen(true);
+      // Clear the state to prevent re-opening on navigation
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Select the pending conversation once conversations are loaded
+  useEffect(() => {
+    if (pendingConversationId && conversations.length > 0) {
+      const targetConvo = conversations.find(c => c.id === pendingConversationId);
+      if (targetConvo) {
+        const thread: UnifiedThread = {
+          id: targetConvo.id,
+          type: "conversation",
+          title: targetConvo.brand?.name || "Brand",
+          subtitle: targetConvo.last_message || "Start a conversation",
+          avatar_url: targetConvo.brand?.logo_url,
+          last_message_at: targetConvo.last_message_at || new Date().toISOString(),
+          unread_count: targetConvo.unread_count || 0,
+          data: targetConvo
+        };
+        setActiveThread(thread);
+      }
+      setPendingConversationId(null);
+    }
+  }, [pendingConversationId, conversations]);
 
   useEffect(() => {
     if (activeThread) {

@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Ban, LogIn } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -96,6 +97,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   const [showBalanceAdjust, setShowBalanceAdjust] = useState(false);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustAction, setAdjustAction] = useState<"add" | "remove">("add");
+  const [adjustReason, setAdjustReason] = useState("");
   const [isAdjusting, setIsAdjusting] = useState(false);
 
   // Trust score state
@@ -125,6 +127,10 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   // Impersonation state
   const [isImpersonating, setIsImpersonating] = useState(false);
 
+  // Manage social account dialog state
+  const [managingAccount, setManagingAccount] = useState<SocialAccount | null>(null);
+  const [manageAccountDialogOpen, setManageAccountDialogOpen] = useState(false);
+
   useEffect(() => {
     if (user && open) {
       fetchUserData(user.id);
@@ -132,6 +138,8 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
       setTrustScore(user.trust_score ?? 0);
       setActiveTab("overview");
       setShowBalanceAdjust(false);
+      setAdjustAmount("");
+      setAdjustReason("");
       setShowLinkAccount(false);
       setLinkUsername("");
       setLinkAccountUrl("");
@@ -301,6 +309,11 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
       return;
     }
 
+    if (!adjustReason.trim()) {
+      toast.error("Please provide a reason for this adjustment");
+      return;
+    }
+
     const currentBalance = user.wallets?.balance || 0;
     if (adjustAction === "remove" && numAmount > currentBalance) {
       toast.error("Cannot remove more than current balance");
@@ -309,35 +322,34 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
 
     setIsAdjusting(true);
     try {
-      const { error } = await supabase
-        .from("wallet_transactions")
-        .insert({
-          user_id: user.id,
-          type: adjustAction === "add" ? "admin_credit" : "admin_debit",
-          amount: numAmount,
-          status: "completed",
-          description: `Admin ${adjustAction === "add" ? "credit" : "debit"}`
-        });
+      // Get current admin user for audit logging
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+
+      // Use atomic RPC function for balance adjustment
+      const { data, error } = await supabase.rpc("admin_adjust_user_balance", {
+        p_user_id: user.id,
+        p_amount: numAmount,
+        p_action: adjustAction,
+        p_reason: adjustReason.trim(),
+        p_admin_id: adminUser?.id,
+      });
 
       if (error) throw error;
 
-      const newBalance = adjustAction === "add"
-        ? currentBalance + numAmount
-        : currentBalance - numAmount;
+      // Check if RPC returned an error in the response
+      if (data && !data.success) {
+        throw new Error(data.error || "Failed to adjust balance");
+      }
 
-      await supabase
-        .from("wallets")
-        .update({ balance: newBalance })
-        .eq("user_id", user.id);
-
-      toast.success(`$${numAmount.toFixed(2)} ${adjustAction === "add" ? "added" : "removed"}`);
+      toast.success(`$${numAmount.toFixed(2)} ${adjustAction === "add" ? "added to" : "removed from"} balance`);
       setAdjustAmount("");
+      setAdjustReason("");
       setShowBalanceAdjust(false);
       fetchUserData(user.id);
       onUserUpdated?.();
     } catch (error) {
       console.error("Error adjusting balance:", error);
-      toast.error("Failed to adjust balance");
+      toast.error(error instanceof Error ? error.message : "Failed to adjust balance");
     } finally {
       setIsAdjusting(false);
     }
@@ -428,6 +440,37 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied");
+  };
+
+  // Helper to compute demographic info for ManageAccountDialog
+  const getDemographicInfo = (account: SocialAccount) => {
+    const submissions = account.demographic_submissions || [];
+    const sortedSubmissions = [...submissions].sort((a, b) =>
+      new Date(b.status === 'approved' ? b.tier1_percentage : 0).getTime() -
+      new Date(a.status === 'approved' ? a.tier1_percentage : 0).getTime()
+    );
+
+    const latestApproved = submissions.find(s => s.status === 'approved');
+    const latestPending = submissions.find(s => s.status === 'pending');
+    const latestRejected = submissions.find(s => s.status === 'rejected');
+
+    let demographicStatus: 'approved' | 'pending' | 'rejected' | null = null;
+    if (latestApproved) demographicStatus = 'approved';
+    else if (latestPending) demographicStatus = 'pending';
+    else if (latestRejected) demographicStatus = 'rejected';
+
+    // For admin panel, we don't restrict resubmission timing
+    return {
+      demographicStatus,
+      daysUntilNext: null,
+      lastSubmissionDate: null,
+      nextSubmissionDate: null,
+    };
+  };
+
+  const handleOpenManageAccount = (account: SocialAccount) => {
+    setManagingAccount(account);
+    setManageAccountDialogOpen(true);
   };
 
   const handleOpenIpBanDialog = async () => {
@@ -677,6 +720,12 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                     className="pl-7 h-10 font-inter tracking-[-0.5px] bg-muted border-0"
                   />
                 </div>
+                <Textarea
+                  value={adjustReason}
+                  onChange={(e) => setAdjustReason(e.target.value)}
+                  placeholder="Reason for adjustment (required)"
+                  className="h-16 resize-none font-inter tracking-[-0.5px] text-sm bg-muted border-0"
+                />
                 {adjustAmount && parseFloat(adjustAmount) > 0 && (
                   <div className="flex items-center justify-between text-sm font-inter tracking-[-0.5px]">
                     <span className="text-muted-foreground">New balance</span>
@@ -687,7 +736,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 )}
                 <Button
                   onClick={handleBalanceAdjust}
-                  disabled={isAdjusting || !adjustAmount}
+                  disabled={isAdjusting || !adjustAmount || !adjustReason.trim()}
                   className="w-full h-10 font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90"
                 >
                   {isAdjusting ? "Processing..." : `${adjustAction === "add" ? "Add" : "Remove"} Funds`}
@@ -865,17 +914,15 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                                 {demo?.tier1_percentage ? ` · ${demo.tier1_percentage}% T1` : ''}
                               </p>
                             </div>
-                            {account.account_link && (
-                              <a
-                                href={account.account_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
-                              >
-                                View
-                              </a>
-                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenManageAccount(account);
+                              }}
+                              className="text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
+                            >
+                              View
+                            </button>
                           </div>
                         );
                       })}
@@ -960,7 +1007,10 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 ) : transactions.length > 0 ? (
                   <div className="space-y-0">
                     {transactions.map((tx) => {
-                      const isCredit = ["earning", "campaign_payout", "bonus", "admin_credit", "refund", "transfer_received", "referral_bonus"].includes(tx.type);
+                      // For balance_correction, check the amount sign since it can be positive or negative
+                      const isCredit = tx.type === "balance_correction"
+                        ? tx.amount >= 0
+                        : ["earning", "campaign_payout", "bonus", "admin_credit", "refund", "transfer_received", "referral_bonus"].includes(tx.type);
                       return (
                         <div
                           key={tx.id}
@@ -1356,7 +1406,38 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                     </div>
                   )}
 
-                  {selectedTransaction.description && (
+                  {/* Balance Correction Details */}
+                  {selectedTransaction.type === 'balance_correction' && selectedTransaction.metadata && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Correction Type</span>
+                        <span className={cn(
+                          "text-sm font-inter tracking-[-0.5px] capitalize",
+                          selectedTransaction.metadata.correction_type === "add" ? "text-emerald-500" : "text-red-500"
+                        )}>
+                          {selectedTransaction.metadata.correction_type === "add" ? "Credit" : "Debit"}
+                        </span>
+                      </div>
+                      {selectedTransaction.metadata.previous_balance !== undefined && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Previous Balance</span>
+                          <span className="text-sm font-inter tracking-[-0.5px]">
+                            ${selectedTransaction.metadata.previous_balance?.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {selectedTransaction.metadata.reason && (
+                        <div>
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Reason</span>
+                          <p className="text-sm font-inter tracking-[-0.5px] mt-1 bg-muted/50 p-2 rounded-md">
+                            {selectedTransaction.metadata.reason}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {selectedTransaction.description && selectedTransaction.type !== 'balance_correction' && (
                     <div>
                       <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Description</span>
                       <p className="text-sm font-inter tracking-[-0.5px] mt-1">
@@ -1436,6 +1517,41 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
         </ScrollArea>
       </SheetContent>
     </Sheet>
+
+    {/* Manage Social Account Dialog */}
+    {managingAccount && (
+      <ManageAccountDialog
+        open={manageAccountDialogOpen}
+        onOpenChange={(open) => {
+          setManageAccountDialogOpen(open);
+          if (!open) setManagingAccount(null);
+        }}
+        account={{
+          id: managingAccount.id,
+          username: managingAccount.username,
+          platform: managingAccount.platform,
+          account_link: managingAccount.account_link,
+          follower_count: managingAccount.follower_count,
+          is_verified: false, // Admin doesn't track this currently
+          hidden_from_public: false,
+        }}
+        demographicStatus={getDemographicInfo(managingAccount).demographicStatus}
+        daysUntilNext={getDemographicInfo(managingAccount).daysUntilNext}
+        lastSubmissionDate={getDemographicInfo(managingAccount).lastSubmissionDate}
+        nextSubmissionDate={getDemographicInfo(managingAccount).nextSubmissionDate}
+        onUpdate={() => {
+          if (user) fetchUserData(user.id);
+        }}
+        onSubmitDemographics={() => {
+          // Admin doesn't submit demographics, just close
+          toast.success("Demographics submission is managed by the creator");
+        }}
+        onReconnect={() => {
+          // Admin can't reconnect, just show info
+          toast.success("Account reconnection is managed by the creator");
+        }}
+      />
+    )}
 
     {/* IP Ban Dialog */}
     <AlertDialog open={showIpBanDialog} onOpenChange={setShowIpBanDialog}>

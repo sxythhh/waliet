@@ -80,6 +80,7 @@ interface BountyCampaign {
   blueprint_id?: string | null;
   slug?: string | null;
   tags?: string[] | null;
+  content_distribution?: string | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -156,6 +157,8 @@ export function DiscoverTab({
   const [bookmarkedCampaignIds, setBookmarkedCampaignIds] = useState<string[]>([]);
   const [bookmarkedBountyIds, setBookmarkedBountyIds] = useState<string[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
+  const [joinedCampaignIds, setJoinedCampaignIds] = useState<string[]>([]);
+  const [joinedBoostIds, setJoinedBoostIds] = useState<string[]>([]);
   const [internalSearchOverlayOpen, setInternalSearchOverlayOpen] = useState(false);
 
   // Use external state if provided, otherwise use internal state
@@ -348,29 +351,21 @@ export function DiscoverTab({
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
 
-    // Get current user
-    const {
-      data: {
-        user
-      }
-    } = await supabase.auth.getUser();
-    let joinedCampaignIds: string[] = [];
-    let appliedBountyIds: string[] = [];
-    if (user) {
-      // Get campaigns user has already joined or has pending applications for
-      const {
-        data: submissions
-      } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id).in("status", ["approved", "pending"]);
-      joinedCampaignIds = submissions?.map(s => s.campaign_id) || [];
+    // Get current user to check joined status
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-      // Get bounties user has already applied to
-      const {
-        data: bountyApps
-      } = await supabase.from("bounty_applications").select("bounty_campaign_id").eq("user_id", user.id).in("status", ["pending", "accepted"]);
-      appliedBountyIds = bountyApps?.map(b => b.bounty_campaign_id) || [];
+    // Fetch joined campaigns and boosts for the user
+    if (currentUser) {
+      const [campaignSubmissions, boostParticipants] = await Promise.all([
+        supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", currentUser.id),
+        supabase.from("boost_participants").select("boost_id").eq("user_id", currentUser.id)
+      ]);
+
+      setJoinedCampaignIds(campaignSubmissions.data?.map(s => s.campaign_id) || []);
+      setJoinedBoostIds(boostParticipants.data?.map(p => p.boost_id) || []);
     }
 
-    // Fetch campaigns
+    // Fetch campaigns (show all, including ones user has joined)
     const {
       data,
       error
@@ -385,8 +380,7 @@ export function DiscoverTab({
       ascending: false
     });
     if (!error && data) {
-      const availableCampaigns = data.filter(campaign => !joinedCampaignIds.includes(campaign.id));
-      const campaignsWithBrandLogo = availableCampaigns.map(campaign => {
+      const campaignsWithBrandLogo = data.map(campaign => {
         const brandData = campaign.brands as BrandJoinData | null;
         return {
           ...campaign,
@@ -400,7 +394,7 @@ export function DiscoverTab({
       setCampaigns(campaignsWithBrandLogo);
     }
 
-    // Fetch bounties (only non-private ones)
+    // Fetch bounties (show all, including ones user has applied to)
     const {
       data: bountiesData,
       error: bountiesError
@@ -416,8 +410,7 @@ export function DiscoverTab({
       ascending: false
     });
     if (!bountiesError && bountiesData) {
-      const availableBounties = bountiesData.filter(bounty => !appliedBountyIds.includes(bounty.id));
-      setBounties(availableBounties as BountyCampaign[]);
+      setBounties(bountiesData as BountyCampaign[]);
     }
 
     // Fetch all active brands with their campaigns
@@ -666,6 +659,7 @@ export function DiscoverTab({
                     {filteredBounties.map(bounty => {
                       const isEnded = bounty.status === "ended";
                       const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
+                      const isJoinedBoost = joinedBoostIds.includes(bounty.id);
                       return (
                         <BoostDiscoverCard
                           key={bounty.id}
@@ -685,7 +679,13 @@ export function DiscoverTab({
                           slug={bounty.slug}
                           created_at={bounty.created_at}
                           tags={bounty.tags}
+                          content_distribution={bounty.content_distribution}
                           onClick={() => {
+                            // If already joined, navigate to boost details
+                            if (isJoinedBoost) {
+                              navigate(`/dashboard/boost/${bounty.id}`);
+                              return;
+                            }
                             if (!isEnded) {
                               if (navigateOnClick && bounty.slug) {
                                 navigate(`/c/${bounty.slug}`);
@@ -743,7 +743,13 @@ export function DiscoverTab({
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {sortedCampaigns.map(campaign => {
+                    const isJoined = joinedCampaignIds.includes(campaign.id);
                     const handleCampaignClick = () => {
+                      // If already joined, navigate to campaign details
+                      if (isJoined) {
+                        navigate(`/dashboard/campaign/${campaign.id}`);
+                        return;
+                      }
                       if (navigateOnClick) {
                         navigate(`/c/${campaign.slug}`);
                       } else {

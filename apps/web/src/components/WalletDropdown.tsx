@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { CreatorWithdrawDialog } from "@/components/dashboard/CreatorWithdrawDia
 import { TransferDialog } from "@/components/dashboard/TransferDialog";
 import { LocalCurrencyAmount } from "@/components/LocalCurrencyAmount";
 import walletIconWhite from "@/assets/wallet-icon-white.svg";
+import walletIcon from "@/assets/wallet-icon.png";
 interface WalletDropdownProps {
   variant?: "sidebar" | "header";
   isCollapsed?: boolean;
@@ -75,7 +76,7 @@ export function WalletDropdown({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary hover:bg-primary/90 transition-colors">
-              <img alt="Wallet" className="w-5 h-5" src="/lovable-uploads/f5c0b6b2-e477-47ab-964e-a838fd0f4ee0.png" />
+              <img alt="Wallet" className="w-5 h-5" src={walletIcon} />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-3 bg-background border border-border rounded-xl shadow-2xl" side="right" align="center" sideOffset={8}>
@@ -94,7 +95,7 @@ export function WalletDropdown({
         <PopoverTrigger asChild>
           <button className={`flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-lg bg-muted/50 w-full ${variant === "header" ? "h-9" : ""}`}>
             <div className="flex items-center gap-2 flex-1">
-              {variant === "sidebar" ? <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} /> : <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />}
+              {variant === "sidebar" && <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />}
               <span className="font-semibold font-inter tracking-[-0.5px] text-sm">
                 <LocalCurrencyAmount amount={balance} tooltipMode />
               </span>
@@ -148,7 +149,7 @@ function WalletDropdownContent({
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <Button className="w-full font-inter tracking-[-0.5px]" size="sm" onClick={onWithdraw}>
+        <Button className="w-full font-inter tracking-[-0.5px] btn-shimmer" size="sm" onClick={onWithdraw}>
           Withdraw
         </Button>
       </div>

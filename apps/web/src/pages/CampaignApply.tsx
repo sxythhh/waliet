@@ -783,9 +783,75 @@ export default function CampaignApply() {
       });
     }
   }
+  // Direct join for boosts without application questions
+  const directJoinBoost = async () => {
+    if (!boostCampaign || !user) return;
+
+    setSubmitting(true);
+    try {
+      // Check if already applied
+      const { data: existing } = await supabase
+        .from('bounty_applications')
+        .select('id')
+        .eq('bounty_campaign_id', boostCampaign.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        toast.info("You're already a member of this campaign");
+        setIsCampaignMember(true);
+        return;
+      }
+
+      // Real-time check for available spots before submission
+      const { data: currentBoost, error: boostError } = await supabase
+        .from('bounty_campaigns')
+        .select('max_accepted_creators, accepted_creators_count, status')
+        .eq('id', boostCampaign.id)
+        .single();
+
+      if (boostError || !currentBoost) {
+        toast.error("Failed to verify boost availability");
+        return;
+      }
+
+      if (currentBoost.status !== 'active') {
+        toast.error("This boost is no longer accepting applications");
+        return;
+      }
+
+      // Check if boost is full - if so, add to waitlist
+      const currentlyFull = currentBoost.max_accepted_creators > 0 &&
+        currentBoost.accepted_creators_count >= currentBoost.max_accepted_creators;
+      const applicationStatus = currentlyFull ? 'waitlisted' : 'pending';
+
+      const { error } = await supabase.from('bounty_applications').insert({
+        bounty_campaign_id: boostCampaign.id,
+        user_id: user.id,
+        application_answers: null,
+        status: applicationStatus
+      } as any);
+
+      if (error) throw error;
+
+      toast.success(currentlyFull ? "You've been added to the waitlist!" : "Successfully joined the campaign!");
+      setIsCampaignMember(true);
+      fetchCampaignData();
+    } catch (error: any) {
+      console.error("Error joining boost:", error);
+      toast.error(error.message || "Failed to join campaign");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleApplyClick = () => {
     if (isEnded) {
       toast.error("This boost has ended and is no longer accepting applications");
+      return;
+    }
+    if (isCampaignMember) {
+      toast.info("You're already a member of this campaign");
       return;
     }
     if (!user) {
@@ -794,7 +860,13 @@ export default function CampaignApply() {
       return;
     }
     if (isBoost) {
-      setShowApplySheet(true);
+      // If no application questions, join directly without opening sheet
+      const boostQuestions = parseApplicationQuestions(boostCampaign?.application_questions);
+      if (boostQuestions.length === 0) {
+        directJoinBoost();
+      } else {
+        setShowApplySheet(true);
+      }
     } else {
       setShowMobileApplySheet(true);
     }
@@ -832,11 +904,22 @@ export default function CampaignApply() {
         <div className="flex-1 overflow-y-auto lg:pr-[380px]">
           {/* Hero Banner */}
           <div className="relative">
-            {bannerUrl && <div className="h-56 md:h-72 w-full overflow-hidden">
-                <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-              </div>}
-            
+            <div className="h-56 md:h-72 w-full overflow-hidden">
+              {bannerUrl ? (
+                <>
+                  <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                </>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
+                  {brandLogo && (
+                    <img src={brandLogo} alt={brandName || ''} className="w-20 h-20 md:w-28 md:h-28 rounded-2xl object-cover opacity-50" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                </div>
+              )}
+            </div>
+
             {/* Breadcrumb Navigation */}
             <div className="absolute top-4 left-4 z-10">
               <nav className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 font-inter tracking-[-0.5px]">
@@ -890,20 +973,20 @@ export default function CampaignApply() {
                     {isEnded ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-inter tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#b60b0b',
                     borderTop: '1px solid #ed3030',
-                    borderRadius: '20px'
+                    borderRadius: '6px'
                   }}>
                         <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                         Ended
                       </span> : status === 'active' ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-inter tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#1f6d36',
                     borderTop: '1px solid #3c8544',
-                    borderRadius: '20px'
+                    borderRadius: '6px'
                   }}>
                         <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
                         Active
                       </span> : <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-inter tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#6b7280',
-                    borderRadius: '20px'
+                    borderRadius: '6px'
                   }}>
                         {status}
                       </span>}
@@ -1062,80 +1145,93 @@ export default function CampaignApply() {
                 </div>
                 <div>
                   <h3 className="font-semibold font-inter tracking-[-0.5px] text-emerald-600 dark:text-emerald-400">You're a Member</h3>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Connected to this campaign</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    {isBoost ? 'You\'ve joined this boost program' : 'Connected to this campaign'}
+                  </p>
                 </div>
               </div>
 
-              {/* Connected Accounts */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium font-inter tracking-[-0.5px] text-muted-foreground">Connected Accounts</h4>
-                <div className="space-y-2">
-                  {connectedAccounts.map(account => {
-                    const platformIcon = getPlatformIcon(account.platform);
-                    return (
-                      <div key={account.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
-                        {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{account.username}</p>
-                          {account.follower_count && (
-                            <p className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
-                          )}
-                        </div>
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      </div>
-                    );
-                  })}
+              {/* For boosts - show simple member info */}
+              {isBoost ? (
+                <div className="text-center py-6 px-4 rounded-xl bg-muted/20">
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                    Your application has been submitted. You'll be notified when the brand reviews it.
+                  </p>
                 </div>
-              </div>
-
-              {/* Available to Connect */}
-              {(availableToConnect.length > 0 || campaign?.allowed_platforms) && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium font-inter tracking-[-0.5px] text-muted-foreground">Add More Accounts</h4>
-                  </div>
-                  {availableToConnect.length > 0 ? (
+              ) : (
+                <>
+                  {/* Connected Accounts - only for regular campaigns */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium font-inter tracking-[-0.5px] text-muted-foreground">Connected Accounts</h4>
                     <div className="space-y-2">
-                      {availableToConnect.map(account => {
+                      {connectedAccounts.map(account => {
                         const platformIcon = getPlatformIcon(account.platform);
-                        const isSelected = selectedAccounts.includes(account.id);
                         return (
-                          <button
-                            key={account.id}
-                            onClick={() => toggleAccountSelection(account.id)}
-                            className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50 bg-card"}`}
-                          >
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
-                              {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                            </div>
+                          <div key={account.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
                             {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
-                            <span className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{account.username}</span>
-                          </button>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{account.username}</p>
+                              {account.follower_count && (
+                                <p className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
+                              )}
+                            </div>
+                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                          </div>
                         );
                       })}
-                      {selectedAccounts.length > 0 && (
-                        <Button
-                          onClick={handleSubmit}
-                          disabled={submitting}
-                          className="w-full mt-3 font-inter tracking-[-0.5px]"
-                          style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
-                        >
-                          {submitting ? "Connecting..." : `Connect ${selectedAccounts.length} Account${selectedAccounts.length > 1 ? 's' : ''}`}
-                        </Button>
+                    </div>
+                  </div>
+
+                  {/* Available to Connect - only for regular campaigns */}
+                  {(availableToConnect.length > 0 || campaign?.allowed_platforms) && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium font-inter tracking-[-0.5px] text-muted-foreground">Add More Accounts</h4>
+                      </div>
+                      {availableToConnect.length > 0 ? (
+                        <div className="space-y-2">
+                          {availableToConnect.map(account => {
+                            const platformIcon = getPlatformIcon(account.platform);
+                            const isSelected = selectedAccounts.includes(account.id);
+                            return (
+                              <button
+                                key={account.id}
+                                onClick={() => toggleAccountSelection(account.id)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50 bg-card"}`}
+                              >
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
+                                  {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                                </div>
+                                {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
+                                <span className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{account.username}</span>
+                              </button>
+                            );
+                          })}
+                          {selectedAccounts.length > 0 && (
+                            <Button
+                              onClick={handleSubmit}
+                              disabled={submitting}
+                              className="w-full mt-3 font-inter tracking-[-0.5px]"
+                              style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                            >
+                              {submitting ? "Connecting..." : `Connect ${selectedAccounts.length} Account${selectedAccounts.length > 1 ? 's' : ''}`}
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
+                          <p className="text-sm text-muted-foreground mb-3 font-inter tracking-[-0.5px]">
+                            Connect another {campaign?.allowed_platforms?.join(' or ')} account
+                          </p>
+                          <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-inter tracking-[-0.5px]">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Account
+                          </Button>
+                        </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="text-center py-6 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
-                      <p className="text-sm text-muted-foreground mb-3 font-inter tracking-[-0.5px]">
-                        Connect another {campaign?.allowed_platforms?.join(' or ')} account
-                      </p>
-                      <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-inter tracking-[-0.5px]">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Account
-                      </Button>
-                    </div>
                   )}
-                </div>
+                </>
               )}
 
               {/* Quick Actions */}
@@ -1286,14 +1382,14 @@ export default function CampaignApply() {
                 <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
               </> : isBoost ? <div className="space-y-4">
                   <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Ready to join this boost program?</p>
-                  <Button 
-                    className="w-full font-inter tracking-[-0.5px]" 
-                    size="lg" 
-                    onClick={handleApplyClick} 
-                    disabled={isFull || isEnded}
+                  <Button
+                    className="w-full font-inter tracking-[-0.5px]"
+                    size="lg"
+                    onClick={handleApplyClick}
+                    disabled={isFull || isEnded || submitting}
                     style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
                   >
-                    {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Start Application'}
+                    {submitting ? 'Joining...' : isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : parseApplicationQuestions(boostCampaign?.application_questions).length === 0 ? 'Join Campaign' : 'Start Application'}
                   </Button>
                 </div> : <div className="space-y-6">
                   {/* Account Selection */}
@@ -1368,13 +1464,14 @@ export default function CampaignApply() {
 
       {/* Fixed bottom CTA for mobile */}
       {!isCampaignMember && !isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
-          <Button 
-            className="w-full font-inter tracking-[-0.5px]" 
-            size="lg" 
+          <Button
+            className="w-full font-inter tracking-[-0.5px]"
+            size="lg"
             onClick={handleApplyClick}
+            disabled={submitting}
             style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
           >
-            {user ? "Start Application" : "Sign In to Apply"}
+            {submitting ? "Joining..." : user ? (isBoost && parseApplicationQuestions(boostCampaign?.application_questions).length === 0 ? "Join Campaign" : "Start Application") : "Sign In to Apply"}
           </Button>
         </div>}
 

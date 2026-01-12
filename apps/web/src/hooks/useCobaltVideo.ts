@@ -16,10 +16,11 @@ interface VideoResult {
 
 /**
  * Extracts video ID from TikTok URL
+ * Handles both /video/ID and /photo/ID (slideshow) URLs
  */
 function extractTikTokVideoId(url: string): string | null {
-  const match = url.match(/\/video\/(\d+)/);
-  return match ? match[1] : null;
+  const match = url.match(/\/(video|photo)\/(\d+)/);
+  return match ? match[2] : null;
 }
 
 /**
@@ -62,6 +63,11 @@ export function useCobaltVideo() {
               platform: "tiktok",
             };
           }
+          // Check if it's a short URL that we can't parse
+          if (videoUrl.includes("vm.tiktok.com") || videoUrl.includes("vt.tiktok.com")) {
+            throw new Error("Short TikTok URLs not supported - use full video URL");
+          }
+          throw new Error("Invalid TikTok URL format");
         }
 
         // Instagram - use official embed
@@ -74,6 +80,7 @@ export function useCobaltVideo() {
               platform: "instagram",
             };
           }
+          throw new Error("Invalid Instagram URL format");
         }
 
         // YouTube and others - use Cobalt for direct video URL

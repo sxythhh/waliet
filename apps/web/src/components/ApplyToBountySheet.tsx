@@ -17,6 +17,8 @@ import fullscreenIconDark from "@/assets/fullscreen-icon-dark.svg";
 import { useTheme } from "@/components/ThemeProvider";
 import { ApplicationQuestionsRenderer, validateApplicationAnswers } from "@/components/ApplicationQuestionsRenderer";
 import { ApplicationAnswer, parseApplicationQuestions } from "@/types/applicationQuestions";
+import { PublicFormSettings } from "@/types/publicFormSettings";
+
 interface BountyCampaign {
   id: string;
   title: string;
@@ -33,6 +35,7 @@ interface BountyCampaign {
   blueprint_id?: string | null;
   slug?: string | null;
   application_questions?: any;
+  public_form_settings?: PublicFormSettings | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -63,7 +66,24 @@ export function ApplyToBountySheet({
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, ApplicationAnswer>>({});
   
   const questions = parseApplicationQuestions(bounty?.application_questions);
-  const hasContactInfo = hasPhone || discordConnected;
+
+  // Get the form settings - these define what contact methods are required
+  const formSettings = bounty?.public_form_settings;
+  const requiresPhone = formSettings?.require_phone === true;
+  const requiresDiscord = formSettings?.require_discord === true;
+
+  // Check if user meets the requirements based on what's actually required
+  const meetsContactRequirements = () => {
+    // If neither is required, user passes
+    if (!requiresPhone && !requiresDiscord) return true;
+    // If both are required, user needs both
+    if (requiresPhone && requiresDiscord) return hasPhone && discordConnected;
+    // If only phone is required
+    if (requiresPhone) return hasPhone;
+    // If only Discord is required
+    if (requiresDiscord) return discordConnected;
+    return true;
+  };
 
   // Check for connected accounts and fetch blueprint when sheet opens
   useEffect(() => {
@@ -108,8 +128,8 @@ export function ApplyToBountySheet({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check for contact info requirement
-    if (!hasContactInfo) {
+    // Check for contact info requirement based on boost settings
+    if (!meetsContactRequirements()) {
       setShowContactDialog(true);
       return;
     }
@@ -196,12 +216,14 @@ export function ApplyToBountySheet({
   return <>
       <AddSocialAccountDialog open={showAddSocialDialog} onOpenChange={setShowAddSocialDialog} onSuccess={checkConnectedAccounts} />
       
-      <RequireContactDialog 
-        open={showContactDialog} 
-        onOpenChange={setShowContactDialog} 
+      <RequireContactDialog
+        open={showContactDialog}
+        onOpenChange={setShowContactDialog}
         onSuccess={checkConnectedAccounts}
         hasPhone={hasPhone}
         hasDiscord={discordConnected}
+        requiresPhone={requiresPhone}
+        requiresDiscord={requiresDiscord}
       />
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-visible flex flex-col">
@@ -255,17 +277,19 @@ export function ApplyToBountySheet({
                   campaignId={bounty?.id}
                 />
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No application questions configured for this boost.
-                </p>
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    No application required. Click below to join this campaign.
+                  </p>
+                </div>
               )}
 
               <div className="flex gap-3 fixed bottom-0 left-0 right-0 bg-background py-4 px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border sm:left-auto sm:right-0 sm:w-full sm:max-w-xl">
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-inter tracking-[-0.5px]" disabled={submitting || isUploading}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting || isPaused || isUploading || questions.length === 0} className="flex-1 font-inter tracking-[-0.5px]">
-                  {isUploading ? "Uploading..." : submitting ? "Submitting..." : isPaused ? "Boost Paused" : isFull ? "Join Waitlist" : "Submit Application"}
+                <Button type="submit" disabled={submitting || isPaused || isUploading} className="flex-1 font-inter tracking-[-0.5px]">
+                  {isUploading ? "Uploading..." : submitting ? "Joining..." : isPaused ? "Boost Paused" : isFull ? "Join Waitlist" : questions.length === 0 ? "Join Campaign" : "Submit Application"}
                 </Button>
               </div>
             </form>

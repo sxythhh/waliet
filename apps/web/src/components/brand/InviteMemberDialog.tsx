@@ -34,7 +34,7 @@ export function InviteMemberDialog({
   onInviteSent,
 }: InviteMemberDialogProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "member">("member");
+  const [role, setRole] = useState<"admin" | "member" | "poster">("member");
   const [sending, setSending] = useState(false);
 
   const handleInvite = async () => {
@@ -152,7 +152,7 @@ export function InviteMemberDialog({
             <Label htmlFor="role" className="text-xs text-muted-foreground tracking-[-0.5px]">
               Role
             </Label>
-            <Select value={role} onValueChange={(value: "admin" | "member") => setRole(value)}>
+            <Select value={role} onValueChange={(value: "admin" | "member" | "poster") => setRole(value)}>
               <SelectTrigger className="bg-muted/30 border-0 h-10 font-inter tracking-[-0.5px]">
                 <SelectValue />
               </SelectTrigger>
@@ -160,6 +160,10 @@ export function InviteMemberDialog({
                 <SelectItem value="member">
                   <span className="font-medium">Member</span>
                   <span className="text-muted-foreground ml-1">- Can view and contribute</span>
+                </SelectItem>
+                <SelectItem value="poster">
+                  <span className="font-medium">Poster</span>
+                  <span className="text-muted-foreground ml-1">- Can view videos and mark as posted</span>
                 </SelectItem>
                 <SelectItem value="admin">
                   <span className="font-medium">Admin</span>

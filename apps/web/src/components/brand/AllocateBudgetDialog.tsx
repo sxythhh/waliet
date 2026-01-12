@@ -154,8 +154,18 @@ export function AllocateBudgetDialog({
       return;
     }
 
-    if (parsedAmount > walletBalance) {
-      toast.error('Insufficient brand wallet balance');
+    // Re-fetch balance to ensure it's current before allocating
+    const { data: currentWallet } = await supabase
+      .from("brand_wallets")
+      .select("balance")
+      .eq("brand_id", brandId)
+      .single();
+
+    const currentBalance = currentWallet?.balance || 0;
+
+    if (parsedAmount > currentBalance) {
+      setWalletBalance(currentBalance);
+      toast.error(`Insufficient balance. Available: ${formatCurrency(currentBalance)}`);
       return;
     }
 
@@ -170,7 +180,18 @@ export function AllocateBudgetDialog({
         },
       });
 
-      if (error) throw error;
+      // Check for error in response data (edge function returns { error: '...' } on failure)
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (error) {
+        // Try to extract error message from the response context
+        const errorMessage = error.context?.body?.error || error.message || 'Failed to allocate budget';
+        toast.error(errorMessage);
+        return;
+      }
 
       toast.success(`${formatCurrency(parsedAmount)} allocated successfully`);
       onOpenChange(false);
@@ -181,7 +202,17 @@ export function AllocateBudgetDialog({
       setAmount("");
     } catch (error: any) {
       console.error('Error allocating budget:', error);
-      toast.error(error.message || 'Failed to allocate budget');
+      // Try to parse error context if available
+      let errorMessage = 'Failed to allocate budget';
+      try {
+        if (error.context) {
+          const body = await error.context.json();
+          errorMessage = body?.error || errorMessage;
+        }
+      } catch {
+        errorMessage = error.message || errorMessage;
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -373,7 +404,7 @@ export function AllocateBudgetDialog({
           <Button
             onClick={handleAllocate}
             disabled={loading || !selectedId || parsedAmount <= 0 || insufficientBalance || loadingBalance}
-            className="h-10 px-6 text-sm font-medium bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-xl disabled:opacity-30"
+            className="h-10 px-6 text-sm font-medium bg-primary text-white hover:bg-primary/90 border-t border-white/30 rounded-lg disabled:opacity-30"
           >
             {loading ? (
               <span className="flex items-center gap-2">

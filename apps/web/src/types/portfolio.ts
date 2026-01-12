@@ -84,6 +84,7 @@ export interface CreatorPortfolio {
   content_niches: string[];
   platforms: PlatformInfo[];
   equipment: string[];
+  editing_tools: string[];
   languages: string[];
   availability: string | null;
   rate_range: RateRange | null;

@@ -96,7 +96,7 @@ export function CreateJobPostDialog({
     blueprint_embed_url: "",
     is_private: false,
     application_questions: [] as string[],
-    content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts",
+    content_distribution: "creators_own_page" as "creators_own_page" | "brand_accounts",
     position_type: "" as string,
     custom_position: "" as string,
     availability_requirement: "" as string,

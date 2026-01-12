@@ -402,7 +402,7 @@ export function DiscordServerSettings({
           </div>
         </Card>
       ) : (
-        <Card className="p-6 border-dashed">
+        <Card className="p-6 border-dashed bg-transparent">
           <div className="text-center">
             <div className="w-16 h-16 rounded-full bg-[#5865F2]/10 flex items-center justify-center mx-auto mb-4">
               <svg className="h-8 w-8 text-[#5865F2]" viewBox="0 0 24 24" fill="currentColor">

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link as LinkIcon, Plus, Trash2, X, Upload, Video, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Users, Mic, Sparkles, GraduationCap, HelpCircle } from "lucide-react";
+import { Icon } from "@iconify/react";
 import playArrowIcon from "@/assets/play-arrow-icon.svg";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
 import { TrainingModuleEditor, type TrainingModule } from "@/components/brand/TrainingModuleEditor";
-import { GoogleDocsImportButton } from "@/components/brand/GoogleDocsImportButton";
 import { DndContext, pointerWithin, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -122,6 +122,7 @@ export function BlueprintEditor({
   const [showCampaignTypeDialog, setShowCampaignTypeDialog] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
@@ -976,9 +977,15 @@ export function BlueprintEditor({
                 </span>}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <GoogleDocsImportButton onImport={handleGoogleDocsImport} />
+              <button
+                onClick={() => setImportDialogOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-muted dark:bg-muted/50 text-secondary-foreground hover:bg-muted/80 dark:hover:bg-muted/70 transition-colors text-sm font-medium font-inter tracking-[-0.3px]"
+              >
+                <Icon icon="material-symbols:download" className="h-5 w-5" />
+                Import
+              </button>
               <button onClick={() => window.open(`/blueprint/${blueprintId}/preview`, '_blank')} className="p-1.5 rounded-md border border-border bg-muted dark:bg-muted/50 text-secondary-foreground hover:bg-muted/80 dark:hover:bg-muted/70 transition-colors">
-                <img src={playArrowIcon} alt="Preview" className="h-5 w-5" />
+                <img src={playArrowIcon} alt="Preview" className="h-5 w-5 dark:invert" />
               </button>
               <button onClick={activateBlueprint} className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground border border-primary/20 font-inter font-medium tracking-[-0.4px] text-xs sm:text-sm hover:bg-primary/90 transition-colors">
                 Publish
@@ -1039,6 +1046,18 @@ export function BlueprintEditor({
         initialBlueprintId={blueprintId}
         initialType={wizardType}
         mode="create"
+      />
+
+      {/* Import Content Dialog */}
+      <TemplateSelector
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSelectTemplate={() => {}}
+        onImportFromGoogleDocs={handleGoogleDocsImport}
+        onImportFromNotion={handleGoogleDocsImport}
+        onGenerateWithAI={handleGoogleDocsImport}
+        brandId={brandId}
+        hideBlankOption
       />
     </>;
 }

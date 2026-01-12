@@ -14,6 +14,8 @@ interface RequireContactDialogProps {
   onSuccess: () => void;
   hasPhone?: boolean;
   hasDiscord?: boolean;
+  requiresPhone?: boolean;
+  requiresDiscord?: boolean;
 }
 
 export function RequireContactDialog({
@@ -22,7 +24,13 @@ export function RequireContactDialog({
   onSuccess,
   hasPhone = false,
   hasDiscord = false,
+  requiresPhone = false,
+  requiresDiscord = false,
 }: RequireContactDialogProps) {
+  // If neither is explicitly required, show both options as either/or
+  const showPhoneOption = requiresPhone || (!requiresPhone && !requiresDiscord);
+  const showDiscordOption = requiresDiscord || (!requiresPhone && !requiresDiscord);
+  const requiresBoth = requiresPhone && requiresDiscord;
   const [selectedMethod, setSelectedMethod] = useState<'phone' | 'discord' | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [saving, setSaving] = useState(false);
@@ -97,7 +105,14 @@ export function RequireContactDialog({
             Contact Verification Required
           </DialogTitle>
           <DialogDescription className="font-inter tracking-[-0.5px]">
-            To apply, you need to have either a phone number or Discord account linked to your profile. This helps brands communicate with you.
+            {requiresBoth
+              ? "To apply, you need to have both a phone number and Discord account linked to your profile."
+              : requiresPhone
+                ? "To apply, you need to have a phone number linked to your profile."
+                : requiresDiscord
+                  ? "To apply, you need to have a Discord account linked to your profile."
+                  : "To apply, you need to have either a phone number or Discord account linked to your profile."
+            } This helps brands communicate with you.
           </DialogDescription>
         </DialogHeader>
 
@@ -105,66 +120,72 @@ export function RequireContactDialog({
           {!selectedMethod ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                Choose how you'd like to verify:
+                {requiresBoth ? 'Complete both verification methods:' : 'Choose how you\'d like to verify:'}
               </p>
-              
+
               {/* Phone Option */}
-              <button
-                onClick={() => setSelectedMethod('phone')}
-                disabled={hasPhone}
-                className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
-                  hasPhone 
-                    ? 'border-emerald-500/50 bg-emerald-500/10 cursor-default'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  hasPhone ? 'bg-emerald-500/20' : 'bg-muted'
-                }`}>
-                  {hasPhone ? (
-                    <Check className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium font-inter tracking-[-0.5px]">
-                    Phone Number
-                  </p>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    {hasPhone ? 'Already connected' : 'Add your phone number'}
-                  </p>
-                </div>
-              </button>
+              {showPhoneOption && (
+                <button
+                  onClick={() => setSelectedMethod('phone')}
+                  disabled={hasPhone}
+                  className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
+                    hasPhone
+                      ? 'border-emerald-500/50 bg-emerald-500/10 cursor-default'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    hasPhone ? 'bg-emerald-500/20' : 'bg-muted'
+                  }`}>
+                    {hasPhone ? (
+                      <Check className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <Phone className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium font-inter tracking-[-0.5px]">
+                      Phone Number
+                      {requiresPhone && <span className="text-destructive ml-1">*</span>}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                      {hasPhone ? 'Already connected' : 'Add your phone number'}
+                    </p>
+                  </div>
+                </button>
+              )}
 
               {/* Discord Option */}
-              <button
-                onClick={() => setSelectedMethod('discord')}
-                disabled={hasDiscord}
-                className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
-                  hasDiscord 
-                    ? 'border-emerald-500/50 bg-emerald-500/10 cursor-default'
-                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  hasDiscord ? 'bg-emerald-500/20' : 'bg-muted'
-                }`}>
-                  {hasDiscord ? (
-                    <Check className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <img src={discordIcon} alt="Discord" className="h-5 w-5" />
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium font-inter tracking-[-0.5px]">
-                    Discord Account
-                  </p>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    {hasDiscord ? 'Already connected' : 'Connect your Discord'}
-                  </p>
-                </div>
-              </button>
+              {showDiscordOption && (
+                <button
+                  onClick={() => setSelectedMethod('discord')}
+                  disabled={hasDiscord}
+                  className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
+                    hasDiscord
+                      ? 'border-emerald-500/50 bg-emerald-500/10 cursor-default'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    hasDiscord ? 'bg-emerald-500/20' : 'bg-muted'
+                  }`}>
+                    {hasDiscord ? (
+                      <Check className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <img src={discordIcon} alt="Discord" className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium font-inter tracking-[-0.5px]">
+                      Discord Account
+                      {requiresDiscord && <span className="text-destructive ml-1">*</span>}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                      {hasDiscord ? 'Already connected' : 'Connect your Discord'}
+                    </p>
+                  </div>
+                </button>
+              )}
             </div>
           ) : selectedMethod === 'phone' ? (
             <div className="space-y-4">

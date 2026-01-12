@@ -7,7 +7,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard, Settings, GripVertical } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard, Settings, GripVertical, Columns, ExternalLink, MoreHorizontal, ArrowRight } from "lucide-react";
+import { Icon } from "@iconify/react";
+import { useDroppable } from "@dnd-kit/core";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -36,6 +38,8 @@ import { AudienceScoreIndicator } from "./AudienceScoreIndicator";
 import { BotRiskIndicator } from "./BotRiskIndicator";
 import { VideoPreview } from "@/components/ui/VideoPreview";
 import { ProxatoreVideoModal } from "@/components/ui/ProxatoreVideoModal";
+import { EditorAccountAssignment } from "./EditorAccountAssignment";
+import { BoostVideoDetailSheet } from "./BoostVideoDetailSheet";
 
 // Round to 2 decimal places to avoid floating point precision issues
 const roundCurrency = (amount: number): number => {
@@ -110,6 +114,16 @@ interface UnifiedVideo {
   estimatedPayout?: number;
   weeklyViews?: number;
   uploaded_at?: string;
+  // Boost-specific fields (for kanban workflow)
+  gdrive_url?: string | null;
+  caption?: string | null;
+  feedback?: string | null;
+  duration_seconds?: number | null;
+  revision_number?: number;
+  status_tiktok?: string | null;
+  status_instagram?: string | null;
+  status_youtube?: string | null;
+  creator_id?: string | null;
 }
 interface Profile {
   id: string;
@@ -150,8 +164,10 @@ interface VideoSubmissionsTabProps {
   };
   // For boosts
   boostId?: string;
+  brandId?: string;
   monthlyRetainer?: number;
   videosPerMonth?: number;
+  userRole?: "owner" | "admin" | "poster" | "member";
   onSubmissionReviewed?: () => void;
 }
 
@@ -193,11 +209,193 @@ function SortableColumnItem({ id, label, isVisible, isRequired, onToggle }: Sort
   );
 }
 
+// Kanban column configuration
+type KanbanColumn = "pending" | "approved" | "ready_to_post" | "posted";
+
+const KANBAN_COLUMNS: { id: KanbanColumn; label: string; dotColor: string }[] = [
+  { id: "pending", label: "Pending", dotColor: "bg-amber-500" },
+  { id: "approved", label: "Approved", dotColor: "bg-blue-500" },
+  { id: "ready_to_post", label: "Ready to Post", dotColor: "bg-violet-500" },
+  { id: "posted", label: "Posted", dotColor: "bg-emerald-500" },
+];
+
+const PLATFORM_CONFIG = {
+  tiktok: { icon: "logos:tiktok-icon", label: "TT" },
+  instagram: { icon: "skill-icons:instagram", label: "IG" },
+  youtube: { icon: "logos:youtube-icon", label: "YT" },
+};
+
+// Droppable column wrapper for Kanban
+function KanbanDroppableColumn({
+  column,
+  children,
+}: {
+  column: { id: KanbanColumn; label: string; dotColor: string };
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex-1 overflow-y-auto min-h-[300px] rounded-xl p-2 transition-colors duration-150",
+        isOver ? "bg-primary/8 ring-2 ring-primary/25" : "bg-muted/5"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Draggable card for Kanban view
+interface KanbanDraggableCardProps {
+  video: UnifiedVideo;
+  profile: Profile | undefined;
+  columnId: KanbanColumn;
+  updating: string | null;
+  onMoveToColumn: (id: string, column: KanbanColumn) => void;
+  onOpenFeedback: (video: UnifiedVideo) => void;
+  onOpenVideo: (video: UnifiedVideo) => void;
+}
+
+function KanbanDraggableCard({
+  video,
+  profile,
+  columnId,
+  updating,
+  onMoveToColumn,
+  onOpenFeedback,
+  onOpenVideo,
+}: KanbanDraggableCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: video.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const isPosted = columnId === "posted";
+  const isPending = columnId === "pending";
+
+  // Format view count compactly
+  const formatViews = (views: number | null | undefined) => {
+    if (!views) return "0";
+    if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
+    if (views >= 1000) return `${(views / 1000).toFixed(1)}K`;
+    return views.toString();
+  };
+
+  // Helper to clean caption - removes garbage lines like "0", single chars, just numbers
+  const cleanCaption = (text: string | null | undefined): string | null => {
+    if (!text) return null;
+    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => {
+      if (line.length < 2) return false;
+      if (/^\d+$/.test(line)) return false;
+      return true;
+    });
+    const cleaned = lines.join(' ').trim();
+    if (cleaned.length < 3) return null;
+    return cleaned;
+  };
+
+  // Get cleaned caption
+  const getCaption = () => {
+    return cleanCaption(video.caption) || cleanCaption(video.video_title) || cleanCaption(video.submission_notes) || "Untitled video";
+  };
+
+  // Get creator display name
+  const creatorName = profile?.full_name || profile?.username || video.video_author_username || "Unknown";
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={() => onOpenVideo(video)}
+      className={cn(
+        "group rounded-lg border border-border/40 bg-card hover:border-border/60 hover:shadow-sm transition-all cursor-pointer",
+        updating === video.id && "opacity-50 pointer-events-none",
+        isDragging && "opacity-60 shadow-lg scale-[1.02] ring-2 ring-primary/30"
+      )}
+    >
+      <div className="p-3">
+        {/* Header: Creator info */}
+        <div className="flex items-center gap-2 mb-2">
+          <div
+            {...attributes}
+            {...listeners}
+            onClick={(e) => e.stopPropagation()}
+            className="p-0.5 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors touch-none"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-xs font-medium text-foreground/80 font-inter truncate">
+            {creatorName}
+          </span>
+          <span className="text-[10px] text-muted-foreground/60 font-inter ml-auto shrink-0">
+            {formatDistanceToNow(new Date(video.submitted_at), { addSuffix: true })}
+          </span>
+        </div>
+
+        {/* Caption/Title */}
+        <p className="text-[13px] text-foreground font-inter leading-relaxed line-clamp-2 tracking-[-0.1px]">
+          {getCaption()}
+        </p>
+
+        {/* Footer row */}
+        <div className="mt-2 flex items-center gap-2">
+          {/* Duration if available */}
+          {video.duration_seconds && (
+            <span className="text-[10px] text-muted-foreground/70 font-inter tabular-nums">
+              {Math.floor(video.duration_seconds / 60)}:{(video.duration_seconds % 60).toString().padStart(2, "0")}
+            </span>
+          )}
+
+          {/* Revision indicator */}
+          {video.revision_number && video.revision_number > 0 && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-medium font-inter">
+              Rev {video.revision_number}
+            </span>
+          )}
+
+          {/* Feedback indicator */}
+          {video.feedback && (
+            <span className="inline-flex items-center gap-1 text-muted-foreground/60">
+              <MessageCircle className="w-2.5 h-2.5" />
+            </span>
+          )}
+
+          {/* View count - Only in Posted column */}
+          {isPosted && video.views !== null && video.views !== undefined && (
+            <div className="flex items-center gap-1 text-muted-foreground/70 ml-auto">
+              <Eye className="w-3 h-3" />
+              <span className="text-[10px] font-inter tabular-nums">{formatViews(video.views)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function VideoSubmissionsTab({
   campaign,
   boostId,
+  brandId: propBrandId,
   monthlyRetainer = 0,
   videosPerMonth = 1,
+  userRole = "member",
   onSubmissionReviewed
 }: VideoSubmissionsTabProps) {
   const {
@@ -205,6 +403,7 @@ export function VideoSubmissionsTab({
   } = useTheme();
   const [submissions, setSubmissions] = useState<UnifiedVideo[]>([]);
   const [trackedVideos, setTrackedVideos] = useState<UnifiedVideo[]>([]);
+  const [boostMemberIds, setBoostMemberIds] = useState<string[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [demographicScores, setDemographicScores] = useState<Record<string, DemographicScore>>({});
   const [loading, setLoading] = useState(true);
@@ -219,7 +418,7 @@ export function VideoSubmissionsTab({
   const [filterMinViews, setFilterMinViews] = useState<"all" | "met" | "not_met">("all");
   const [minimumViewsThreshold, setMinimumViewsThreshold] = useState<number | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"cards" | "table" | "grid">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "table" | "grid" | "kanban">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
@@ -238,6 +437,14 @@ export function VideoSubmissionsTab({
   // Video playback modal state
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideoForPlayback, setSelectedVideoForPlayback] = useState<UnifiedVideo | null>(null);
+
+  // Kanban-specific state (for boosts)
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSubmission, setFeedbackSubmission] = useState<UnifiedVideo | null>(null);
+  const [kanbanUpdating, setKanbanUpdating] = useState<string | null>(null);
+  const [activeKanbanId, setActiveKanbanId] = useState<string | null>(null);
+  const [editorAssignmentOpen, setEditorAssignmentOpen] = useState(false);
 
   // Column configuration for table view
   const ALL_COLUMNS = [
@@ -261,6 +468,16 @@ export function VideoSubmissionsTab({
   // DnD sensors for column reordering
   const columnSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  // DnD sensors for Kanban view (must be defined at top level, not inside conditional)
+  const kanbanSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -296,8 +513,9 @@ export function VideoSubmissionsTab({
   // Determine if this is a boost or campaign
   const isBoost = !!boostId;
   const entityId = isBoost ? boostId : campaign?.id;
-  const brandId = campaign?.brand_id;
+  const brandId = isBoost ? propBrandId : campaign?.brand_id;
   const rpmRate = campaign?.rpm_rate || 0;
+  const canManageEditors = userRole === "owner" || userRole === "admin";
   const hashtags = campaign?.hashtags || [];
 
   // Calculate payout breakdown for pay_per_post campaigns (flat rate + CPM)
@@ -367,7 +585,9 @@ export function VideoSubmissionsTab({
   useEffect(() => {
     if (entityId) {
       fetchSubmissions();
-      if (!isBoost && brandId) {
+      if (isBoost) {
+        fetchBoostMembers();
+      } else if (brandId) {
         fetchTrackedVideosFromCache();
       }
     }
@@ -470,7 +690,17 @@ export function VideoSubmissionsTab({
         bot_score: (v as any).bot_score ?? null,
         // Use the source field from database, default to 'submitted' for legacy records
         source: (v.source === "tracked" ? "tracked" : "submitted") as "submitted" | "tracked",
-        uploaded_at: v.video_upload_date
+        uploaded_at: v.video_upload_date,
+        // Boost-specific fields for Kanban workflow
+        gdrive_url: (v as any).gdrive_url ?? null,
+        caption: (v as any).caption ?? null,
+        feedback: (v as any).feedback ?? null,
+        duration_seconds: (v as any).duration_seconds ?? null,
+        revision_number: (v as any).revision_number ?? 0,
+        status_tiktok: (v as any).status_tiktok ?? null,
+        status_instagram: (v as any).status_instagram ?? null,
+        status_youtube: (v as any).status_youtube ?? null,
+        creator_id: v.creator_id,
       }));
       setSubmissions(submissionsData);
 
@@ -535,6 +765,45 @@ export function VideoSubmissionsTab({
       setLoading(false);
     }
   };
+
+  // Fetch accepted boost members from bounty_applications
+  const fetchBoostMembers = async () => {
+    if (!boostId) return;
+    try {
+      const { data, error } = await supabase
+        .from("bounty_applications")
+        .select("user_id")
+        .eq("bounty_campaign_id", boostId)
+        .eq("status", "accepted");
+
+      if (error) throw error;
+
+      const memberUserIds = (data || []).map(a => a.user_id);
+      setBoostMemberIds(memberUserIds);
+
+      // Fetch profiles for members who might not have submissions yet
+      if (memberUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, email")
+          .in("id", memberUserIds);
+
+        if (profilesData) {
+          const profileMap: Record<string, Profile> = {};
+          profilesData.forEach(p => {
+            profileMap[p.id] = p;
+          });
+          setProfiles(prev => ({
+            ...prev,
+            ...profileMap
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching boost members:", error);
+    }
+  };
+
   const fetchTrackedVideosFromCache = async () => {
     // Fetch ALL tracked videos from cached_campaign_videos
     // This includes both matched and unmatched videos that haven't been synced to video_submissions yet
@@ -1133,8 +1402,31 @@ export function VideoSubmissionsTab({
         }
       }
     });
+
+    // For boosts, also include accepted members who don't have submissions yet
+    if (isBoost && boostMemberIds.length > 0) {
+      boostMemberIds.forEach(userId => {
+        if (!statsMap.has(userId)) {
+          const profile = profiles[userId];
+          if (profile) {
+            statsMap.set(userId, {
+              userId,
+              profile,
+              totalSubmissions: 0,
+              approvedThisMonth: 0,
+              pendingThisMonth: 0,
+              earnedThisMonth: 0,
+              submissions: [],
+              totalViews: 0,
+              trackedVideos: 0
+            });
+          }
+        }
+      });
+    }
+
     return Array.from(statsMap.values()).sort((a, b) => b.approvedThisMonth - a.approvedThisMonth || b.totalViews - a.totalViews);
-  }, [allVideos, profiles, monthStart, monthEnd]);
+  }, [allVideos, profiles, monthStart, monthEnd, isBoost, boostMemberIds]);
   const formatNumber = (num: number | null | undefined) => {
     if (num === null || num === undefined) return '—';
     if (num === 0) return '0';
@@ -1289,45 +1581,16 @@ export function VideoSubmissionsTab({
         </div>
       )}
 
-      {/* Stats Header */}
-      <div className="flex-shrink-0 p-4 border-b border-border space-y-3">
-        {/* Top row: Title, hashtags, sync button */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground tracking-[-0.5px]">Videos</h3>
-              {lastSynced && <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                  Updated {format(lastSynced, "MMM d, h:mm a")}
-                </span>}
-            </div>
-            {/* Hashtags */}
-            {hashtags.length > 0 && <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70 font-medium">Tracking:</span>
-                {hashtags.map(tag => <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                    #{tag.replace(/^#/, "")}
-                  </span>)}
-              </div>}
-          </div>
-          
-          {/* Sync button - only for campaigns with brand */}
-          {!isBoost && brandId && <Button onClick={handleSync} disabled={syncing} size="sm" className="h-7 px-2.5 gap-1.5 text-[11px] font-medium bg-foreground text-background hover:bg-foreground/90">
-              <RefreshCw className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`} />
-              {syncing ? "Syncing..." : "Sync"}
-            </Button>}
-        </div>
-
-        {/* Mobile View Toggle */}
-        <div className="flex md:hidden items-center gap-1 bg-muted/30 rounded-lg p-1">
+      {/* Mobile View Toggle */}
+      <div className="flex-shrink-0 p-3 border-b border-border md:hidden">
+        <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1">
           <button onClick={() => setMobileView("creators")} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors", mobileView === "creators" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-            
             Creators
           </button>
           <button onClick={() => setMobileView("videos")} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors", mobileView === "videos" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-            
             Videos
           </button>
         </div>
-
       </div>
 
       {/* Main Content */}
@@ -1542,6 +1805,11 @@ export function VideoSubmissionsTab({
                 <button onClick={() => { setViewMode("grid"); setFocusedVideoIndex(0); }} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Grid view (with keyboard shortcuts)">
                   <Grid3X3 className="h-3.5 w-3.5" />
                 </button>
+                {isBoost && (
+                  <button onClick={() => setViewMode("kanban")} className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Kanban view">
+                    <Columns className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Column Manager - only show in table view */}
@@ -1889,7 +2157,7 @@ export function VideoSubmissionsTab({
                         const demographicScore = video.user_id ? demographicScores[video.user_id] : null;
                         const isSelected = selectedVideos.has(video.id);
                         return (
-                          <TableRow key={video.id} className={cn("border-border/30 group font-inter hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
+                          <TableRow key={video.id} className={cn("border-border/30 group font-inter hover:bg-muted/50", isSelected && "bg-primary/5")}>
                             <TableCell className="w-8 p-0 pl-2">
                               <div className={cn("h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all", isSelected ? "border-primary bg-primary" : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50")} onClick={() => toggleVideoSelection(video.id)}>
                                 {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
@@ -2084,6 +2352,147 @@ export function VideoSubmissionsTab({
                 );
               }
 
+              // Kanban View - Drag-and-drop workflow for boosts
+              if (viewMode === "kanban" && isBoost) {
+                // Group videos by status for kanban columns
+                const videosByStatus = KANBAN_COLUMNS.reduce((acc, col) => {
+                  acc[col.id] = filteredVids.filter(v => {
+                    // Map legacy statuses to kanban columns
+                    if (v.status === col.id) return true;
+                    // Handle legacy "approved" mapping
+                    if (col.id === "approved" && v.status === "approved" && !v.status_tiktok) return true;
+                    return false;
+                  });
+                  return acc;
+                }, {} as Record<KanbanColumn, UnifiedVideo[]>);
+
+                const handleKanbanMoveToColumn = async (videoId: string, newStatus: KanbanColumn) => {
+                  setKanbanUpdating(videoId);
+                  try {
+                    const updates: Record<string, any> = {
+                      status: newStatus,
+                      status_tiktok: newStatus,
+                      status_instagram: newStatus,
+                      status_youtube: newStatus,
+                    };
+
+                    const { error } = await supabase
+                      .from("video_submissions")
+                      .update(updates)
+                      .eq("id", videoId);
+
+                    if (error) throw error;
+
+                    const columnLabel = KANBAN_COLUMNS.find(c => c.id === newStatus)?.label || newStatus;
+                    toast.success("Moved to " + columnLabel);
+
+                    // Update local state optimistically
+                    setSubmissions(prev => prev.map(v =>
+                      v.id === videoId
+                        ? { ...v, status: newStatus, status_tiktok: newStatus, status_instagram: newStatus, status_youtube: newStatus }
+                        : v
+                    ));
+                  } catch (err) {
+                    console.error("Error updating status:", err);
+                    toast.error("Failed to move video");
+                  } finally {
+                    setKanbanUpdating(null);
+                  }
+                };
+
+                const handleKanbanDragStart = (event: any) => {
+                  setActiveKanbanId(event.active.id as string);
+                };
+
+                const handleKanbanDragEnd = (event: any) => {
+                  const { active, over } = event;
+                  setActiveKanbanId(null);
+
+                  if (!over) return;
+
+                  const videoId = active.id as string;
+                  const targetColumn = over.id as KanbanColumn;
+
+                  // Find the current video
+                  const video = submissions.find(v => v.id === videoId);
+                  if (!video) return;
+
+                  // Check if dropping in a different column
+                  const currentColumn = video.status as KanbanColumn;
+                  if (currentColumn === targetColumn) return;
+
+                  handleKanbanMoveToColumn(videoId, targetColumn);
+                };
+
+                const handleOpenFeedback = (video: UnifiedVideo) => {
+                  setFeedbackSubmission(video);
+                  setFeedbackText(video.feedback || "");
+                  setFeedbackDialogOpen(true);
+                };
+
+                const handleOpenVideo = (video: UnifiedVideo) => {
+                  setSelectedVideoForPlayback(video);
+                  setVideoModalOpen(true);
+                };
+
+                return (
+                  <DndContext
+                    sensors={kanbanSensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleKanbanDragStart}
+                    onDragEnd={handleKanbanDragEnd}
+                  >
+                    <div className="grid grid-cols-4 gap-4 h-full min-h-[500px]">
+                      {KANBAN_COLUMNS.map(column => {
+                        const columnVideos = videosByStatus[column.id] || [];
+                        return (
+                          <div key={column.id} className="flex flex-col">
+                            {/* Linear-style Column Header */}
+                            <div className="px-1 pb-3 flex items-center gap-2">
+                              <div className={cn("w-1.5 h-1.5 rounded-full", column.dotColor)} />
+                              <span className="text-[13px] font-medium font-inter tracking-[-0.3px] text-foreground">
+                                {column.label}
+                              </span>
+                              <span className="text-xs text-muted-foreground/60 tabular-nums">
+                                {columnVideos.length}
+                              </span>
+                            </div>
+
+                            {/* Column Content */}
+                            <KanbanDroppableColumn column={column}>
+                              <SortableContext items={columnVideos.map(v => v.id)} strategy={verticalListSortingStrategy}>
+                                <div className="space-y-2">
+                                  {columnVideos.map(video => {
+                                    const profile = video.user_id ? profiles[video.user_id] : undefined;
+                                    return (
+                                      <KanbanDraggableCard
+                                        key={video.id}
+                                        video={video}
+                                        profile={profile}
+                                        columnId={column.id}
+                                        updating={kanbanUpdating}
+                                        onMoveToColumn={handleKanbanMoveToColumn}
+                                        onOpenFeedback={handleOpenFeedback}
+                                        onOpenVideo={handleOpenVideo}
+                                      />
+                                    );
+                                  })}
+                                  {columnVideos.length === 0 && (
+                                    <div className="flex items-center justify-center py-12 text-muted-foreground/40">
+                                      <p className="text-[13px] font-inter">No videos</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </SortableContext>
+                            </KanbanDroppableColumn>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </DndContext>
+                );
+              }
+
               // Card View - Redesigned for cleaner aesthetics
               return filteredVids.map(video => {
                 const profile = video.user_id ? profiles[video.user_id] : null;
@@ -2247,11 +2656,172 @@ export function VideoSubmissionsTab({
         </DialogContent>
       </Dialog>
 
-      {/* Video Playback Modal */}
-      <ProxatoreVideoModal
-        open={videoModalOpen}
-        onOpenChange={setVideoModalOpen}
-        video={selectedVideoForPlayback}
-      />
+      {/* Video Playback Modal - Use BoostVideoDetailSheet for boosts, ProxatoreVideoModal otherwise */}
+      {isBoost ? (
+        <BoostVideoDetailSheet
+          open={videoModalOpen}
+          onOpenChange={setVideoModalOpen}
+          video={selectedVideoForPlayback}
+          profile={selectedVideoForPlayback?.user_id ? profiles[selectedVideoForPlayback.user_id] : null}
+          updating={kanbanUpdating === selectedVideoForPlayback?.id}
+          onApprove={async () => {
+            if (!selectedVideoForPlayback) return;
+            setKanbanUpdating(selectedVideoForPlayback.id);
+            try {
+              const { error } = await supabase
+                .from("video_submissions")
+                .update({ status: "approved", status_tiktok: "approved", status_instagram: "approved", status_youtube: "approved" })
+                .eq("id", selectedVideoForPlayback.id);
+              if (error) throw error;
+              toast.success("Video approved");
+              setSubmissions(prev => prev.map(v =>
+                v.id === selectedVideoForPlayback.id
+                  ? { ...v, status: "approved", status_tiktok: "approved", status_instagram: "approved", status_youtube: "approved" }
+                  : v
+              ));
+              setVideoModalOpen(false);
+            } catch (err) {
+              console.error("Error approving video:", err);
+              toast.error("Failed to approve video");
+            } finally {
+              setKanbanUpdating(null);
+            }
+          }}
+          onReject={async (feedback) => {
+            if (!selectedVideoForPlayback) return;
+            setKanbanUpdating(selectedVideoForPlayback.id);
+            try {
+              const { error } = await supabase
+                .from("video_submissions")
+                .update({ status: "pending", feedback, rejection_reason: feedback })
+                .eq("id", selectedVideoForPlayback.id);
+              if (error) throw error;
+              toast.success("Video rejected with feedback");
+              setSubmissions(prev => prev.map(v =>
+                v.id === selectedVideoForPlayback.id
+                  ? { ...v, status: "pending", feedback, rejection_reason: feedback }
+                  : v
+              ));
+              setVideoModalOpen(false);
+            } catch (err) {
+              console.error("Error rejecting video:", err);
+              toast.error("Failed to reject video");
+            } finally {
+              setKanbanUpdating(null);
+            }
+          }}
+          onMoveToStage={async (stage) => {
+            if (!selectedVideoForPlayback) return;
+            setKanbanUpdating(selectedVideoForPlayback.id);
+            try {
+              const { error } = await supabase
+                .from("video_submissions")
+                .update({ status: stage, status_tiktok: stage, status_instagram: stage, status_youtube: stage })
+                .eq("id", selectedVideoForPlayback.id);
+              if (error) throw error;
+              const stageLabel = stage === "ready_to_post" ? "Ready to Post" : stage.charAt(0).toUpperCase() + stage.slice(1);
+              toast.success(`Moved to ${stageLabel}`);
+              setSubmissions(prev => prev.map(v =>
+                v.id === selectedVideoForPlayback.id
+                  ? { ...v, status: stage, status_tiktok: stage, status_instagram: stage, status_youtube: stage }
+                  : v
+              ));
+              setVideoModalOpen(false);
+            } catch (err) {
+              console.error("Error moving video:", err);
+              toast.error("Failed to move video");
+            } finally {
+              setKanbanUpdating(null);
+            }
+          }}
+          onSaveFeedback={async (feedback) => {
+            if (!selectedVideoForPlayback) return;
+            setKanbanUpdating(selectedVideoForPlayback.id);
+            try {
+              const { error } = await supabase
+                .from("video_submissions")
+                .update({ feedback })
+                .eq("id", selectedVideoForPlayback.id);
+              if (error) throw error;
+              toast.success("Feedback saved");
+              setSubmissions(prev => prev.map(v =>
+                v.id === selectedVideoForPlayback.id
+                  ? { ...v, feedback }
+                  : v
+              ));
+            } catch (err) {
+              console.error("Error saving feedback:", err);
+              toast.error("Failed to save feedback");
+            } finally {
+              setKanbanUpdating(null);
+            }
+          }}
+        />
+      ) : (
+        <ProxatoreVideoModal
+          open={videoModalOpen}
+          onOpenChange={setVideoModalOpen}
+          video={selectedVideoForPlayback}
+        />
+      )}
+
+      {/* Feedback Dialog for Kanban */}
+      <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{feedbackSubmission?.feedback ? "Edit Feedback" : "Add Feedback"}</DialogTitle>
+            <DialogDescription>
+              Provide feedback for this video submission.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter feedback for the creator..."
+            value={feedbackText}
+            onChange={e => setFeedbackText(e.target.value)}
+            className="min-h-[100px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!feedbackSubmission) return;
+                try {
+                  const { error } = await supabase
+                    .from("video_submissions")
+                    .update({ feedback: feedbackText })
+                    .eq("id", feedbackSubmission.id);
+
+                  if (error) throw error;
+
+                  toast.success("Feedback saved");
+                  setSubmissions(prev => prev.map(v =>
+                    v.id === feedbackSubmission.id
+                      ? { ...v, feedback: feedbackText }
+                      : v
+                  ));
+                  setFeedbackDialogOpen(false);
+                } catch (err) {
+                  console.error("Error saving feedback:", err);
+                  toast.error("Failed to save feedback");
+                }
+              }}
+            >
+              Save Feedback
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editor Account Assignment Modal (for boosts) */}
+      {isBoost && boostId && brandId && (
+        <EditorAccountAssignment
+          boostId={boostId}
+          brandId={brandId}
+          open={editorAssignmentOpen}
+          onOpenChange={setEditorAssignmentOpen}
+        />
+      )}
     </div>;
 }

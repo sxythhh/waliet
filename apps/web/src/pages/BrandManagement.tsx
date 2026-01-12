@@ -161,7 +161,7 @@ export default function BrandManagement() {
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [brandLogo, setBrandLogo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Brand state
   const [brandId, setBrandId] = useState<string>("");
   
@@ -599,7 +599,7 @@ export default function BrandManagement() {
       <main className="flex-1 p-4 pt-16 md:pt-6 md:p-8 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
           {/* Header with Stats */}
-          <DashboardHeader 
+          <DashboardHeader
             campaign={selectedCampaign}
             creatorCount={approvedSubmissions.length}
             isAdmin={isAdmin}

@@ -123,21 +123,7 @@ export function BoostHomeTab({
   timeframe = "this_month",
   onTopUp
 }: BoostHomeTabProps) {
-  const [stats, setStats] = useState<StatsData>({
-    totalPayouts: 0,
-    payoutsLastWeek: 0,
-    totalSubmissions: 0,
-    approvedSubmissions: 0,
-    pendingSubmissions: 0,
-    rejectedSubmissions: 0,
-    acceptedCreators: boost.accepted_creators_count,
-    maxCreators: boost.max_accepted_creators,
-    totalViews: 0,
-    totalLikes: 0,
-    totalShares: 0,
-    totalBookmarks: 0,
-    cpm: 0
-  });
+  const [stats, setStats] = useState<StatsData | null>(null);
   const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
@@ -147,10 +133,15 @@ export function BoostHomeTab({
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   useEffect(() => {
+    // Reset data immediately when timeframe changes to prevent flash of stale data
+    setStats(null);
+    setMetricsData([]);
+    setActivityData([]);
+    setIsLoading(true);
+
     let isCancelled = false;
     const loadData = async () => {
       if (isCancelled) return;
-      setIsLoading(true);
       try {
         const dateRange = getDateRange(timeframe);
         const now = new Date();
@@ -415,9 +406,9 @@ export function BoostHomeTab({
     }
   };
   const budgetTotal = boost.budget || 0;
-  // Use actual payouts from transactions instead of boost.budget_used which may not update
-  const budgetUsed = stats.totalPayouts;
-  if (isLoading) {
+
+  // Show skeletons while loading or if stats haven't loaded yet
+  if (isLoading || !stats) {
     return <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => <div key={i} className="p-4 rounded-lg bg-transparent space-y-3">
@@ -442,6 +433,10 @@ export function BoostHomeTab({
         </div>
       </div>;
   }
+
+  // Calculate budget used from actual payouts (stats is guaranteed non-null here)
+  const budgetUsed = stats.totalPayouts;
+
   return <div className="p-4 pb-[70px] sm:pb-4 space-y-4">
       {/* Date Range Label */}
       <p className="text-sm text-muted-foreground font-geist tracking-[-0.3px]">
@@ -450,7 +445,7 @@ export function BoostHomeTab({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Views</p>
             <div className="flex items-center justify-between">
@@ -460,7 +455,7 @@ export function BoostHomeTab({
           </div>
         </Card>
 
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">CPM</p>
             <div className="flex items-center justify-between">
@@ -470,7 +465,7 @@ export function BoostHomeTab({
           </div>
         </Card>
 
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Payouts</p>
             <div className="flex items-center justify-between">
@@ -480,7 +475,7 @@ export function BoostHomeTab({
           </div>
         </Card>
 
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Submissions</p>
             <div className="flex items-center justify-between">
@@ -505,13 +500,5 @@ export function BoostHomeTab({
 
       {/* Top Performing Videos - using shared component */}
       <TopPerformingVideos videos={topVideos} totalVideos={totalVideos} />
-
-      {/* About Section */}
-      {boost.description && <div>
-          <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {boost.description}
-          </p>
-        </div>}
     </div>;
 }

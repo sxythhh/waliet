@@ -477,7 +477,8 @@ export function CampaignsTab({
               brand_id,
               blueprint_id,
               blueprint_embed_url,
-              content_style_requirements
+              content_style_requirements,
+              content_distribution
             `).eq('id', app.bounty_campaign_id).single();
         let brandData = null;
         let blueprintData = null;
@@ -846,9 +847,7 @@ export function CampaignsTab({
 
       {/* Your Campaigns & Boosts Section - Combined */}
       {(campaigns.length > 0 || boostApplications.filter(app => app.status === 'accepted').length > 0) && (
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Joined Campaigns</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* Boosts displayed as cards */}
             {boostApplications.filter(app => app.status === 'accepted').map(application => (
               <BoostCardCompact
@@ -894,7 +893,6 @@ export function CampaignsTab({
                 onClick={() => navigate(`/dashboard/campaign/${campaign.id}`, { state: { campaign } })}
               />
             ))}
-          </div>
         </div>
       )}
 

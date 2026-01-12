@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -15,7 +15,7 @@ import { useUtmTracking } from "@/hooks/useUtmTracking";
 import { queryClient } from "@/lib/queryClient";
 import { PageLoader, DashboardLoader } from "@/components/PageLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { getSubdomainSlug } from "./utils/subdomain";
+import { getSubdomainSlug, getCampaignSlugFromPath } from "./utils/subdomain";
 
 // Eagerly loaded routes (critical path)
 import Index from "./pages/Index";
@@ -62,6 +62,7 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BrandPublicPage = lazy(() => import("./pages/BrandPublicPage"));
 const Install = lazy(() => import("./pages/Install"));
 const BrandPortal = lazy(() => import("./pages/BrandPortal"));
+const CampaignPortal = lazy(() => import("./pages/CampaignPortal"));
 const JoinTeam = lazy(() => import("./pages/JoinTeam"));
 const PublicCourseDetail = lazy(() => import("./pages/PublicCourseDetail"));
 const Store = lazy(() => import("./pages/Store"));
@@ -83,16 +84,32 @@ function JoinRedirect() {
   return <Navigate to={`/dashboard?tab=discover&campaignSlug=${slug}`} replace />;
 }
 
-// Redirect /boost/:id to /c/:slug (fetch slug first)
+// Redirect /boost/:id to /c/:slug (supports both UUID and slug in URL)
 function BoostRedirect() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const fetchBoostSlug = async () => {
-      const { data } = await import("@/integrations/supabase/client").then(m => 
-        m.supabase.from("bounty_campaigns").select("slug").eq("id", id).maybeSingle()
-      );
+      const supabase = await import("@/integrations/supabase/client").then(m => m.supabase);
+
+      // First try to find by slug (most common case from shared links)
+      let { data } = await supabase
+        .from("bounty_campaigns")
+        .select("slug")
+        .eq("slug", id)
+        .maybeSingle();
+
+      // If not found by slug, try by UUID
+      if (!data) {
+        const result = await supabase
+          .from("bounty_campaigns")
+          .select("slug")
+          .eq("id", id)
+          .maybeSingle();
+        data = result.data;
+      }
+
       if (data?.slug) {
         navigate(`/c/${data.slug}`, { replace: true });
       } else {
@@ -104,29 +121,47 @@ function BoostRedirect() {
     };
     fetchBoostSlug();
   }, [id, navigate]);
-  
+
   return <PageLoader />;
 }
 
-// Handle subdomain routing for brand portal
+// Handle subdomain routing for brand portal and campaign portals
 function SubdomainHandler({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const subdomainSlug = getSubdomainSlug();
 
   useEffect(() => {
     if (subdomainSlug) {
-      navigate(`/portal/${subdomainSlug}`, { replace: true });
+      const pathname = location.pathname;
+
+      // Root path → brand portal home
+      if (pathname === '/' || pathname === '') {
+        navigate(`/portal/${subdomainSlug}`, { replace: true });
+        return;
+      }
+
+      // Check if this path should be treated as a campaign portal
+      const campaignSlug = getCampaignSlugFromPath(pathname);
+      if (campaignSlug) {
+        navigate(`/portal/${subdomainSlug}/${campaignSlug}`, { replace: true });
+        return;
+      }
     }
-  }, [subdomainSlug, navigate]);
+  }, [subdomainSlug, navigate, location.pathname]);
 
   return <>{children}</>;
 }
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  // Don't add top padding on detail pages - they have their own header
+  const isDetailPage = location.pathname.startsWith('/dashboard/campaign/') || location.pathname.startsWith('/dashboard/boost/');
+
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       <AppSidebar />
-      <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0 overflow-y-auto">{children}</main>
+      <main className={`flex-1 pb-20 md:pt-0 md:pb-0 overflow-y-auto ${isDetailPage ? '' : 'pt-14'}`}>{children}</main>
     </div>
   );
 }
@@ -270,6 +305,7 @@ const App = () => (
                       <BrandLayout><Training /></BrandLayout>
                     </Suspense>
                   } />
+                  <Route path="/portal/:brandSlug/:campaignSlug" element={<CampaignPortal />} />
                   <Route path="/portal/:slug" element={<BrandPortal />} />
                   <Route path="/join-team/:inviteCode" element={<JoinTeam />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

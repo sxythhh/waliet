@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { BrandOnboardingDialog } from "./BrandOnboardingDialog";
+import { BrandWelcomeDialog } from "./brand/BrandWelcomeDialog";
 import { generateSlug } from "@/lib/slug";
 
 const BRAND_COLORS = [
@@ -46,6 +47,7 @@ export function CreateBrandDialog({
   hideTrigger = false
 }: CreateBrandDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [createdBrand, setCreatedBrand] = useState<CreatedBrand | null>(null);
   const isControlled = controlledOpen !== undefined;
@@ -164,7 +166,7 @@ export function CreateBrandDialog({
       setBrandColor("#8B5CF6");
       onSuccess?.();
 
-      // Open the onboarding dialog
+      // Store the created brand and open welcome dialog first
       setCreatedBrand({
         id: brandData.id,
         name: brandData.name,
@@ -173,7 +175,7 @@ export function CreateBrandDialog({
         logo_url: brandData.logo_url,
         brand_color: brandData.brand_color,
       });
-      setOnboardingOpen(true);
+      setWelcomeOpen(true);
     } catch (error: any) {
       console.error("Error creating brand:", error);
       if (error.code === "23505") {
@@ -192,6 +194,11 @@ export function CreateBrandDialog({
     setBrandColor("#8B5CF6");
     setOpen(false);
   };
+  const handleWelcomeGetStarted = () => {
+    setWelcomeOpen(false);
+    setOnboardingOpen(true);
+  };
+
   return (<>
     <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && <DialogTrigger asChild />}
@@ -330,6 +337,16 @@ export function CreateBrandDialog({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* Welcome Dialog */}
+    {createdBrand && (
+      <BrandWelcomeDialog
+        open={welcomeOpen}
+        onOpenChange={setWelcomeOpen}
+        brandName={createdBrand.name}
+        onGetStarted={handleWelcomeGetStarted}
+      />
+    )}
 
     {/* Onboarding Dialog */}
     {createdBrand && (

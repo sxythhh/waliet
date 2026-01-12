@@ -20,7 +20,8 @@ import { Plus } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
 import { BrandOnboardingSteps } from "@/components/brand/BrandOnboardingSteps";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
 interface Campaign {
@@ -81,6 +82,7 @@ export function BrandCampaignsTab({
   const [bountyMembers, setBountyMembers] = useState<Record<string, CampaignMember[]>>({});
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -294,6 +296,7 @@ export function BrandCampaignsTab({
       } finally {
         setDeleteDialogOpen(false);
         setCampaignToDelete(null);
+        setDeleteConfirmInput("");
       }
     } else if (bountyToDelete) {
       try {
@@ -301,13 +304,14 @@ export function BrandCampaignsTab({
           error
         } = await supabase.from("bounty_campaigns").delete().eq("id", bountyToDelete.id);
         if (error) throw error;
-        toast.success("Bounty deleted");
+        toast.success("Boost deleted");
         fetchBrandData();
       } catch (error) {
-        toast.error("Failed to delete bounty");
+        toast.error("Failed to delete boost");
       } finally {
         setDeleteDialogOpen(false);
         setBountyToDelete(null);
+        setDeleteConfirmInput("");
       }
     }
   };
@@ -665,22 +669,45 @@ export function BrandCampaignsTab({
       <CreateJobPostDialog open={createJobPostOpen} onOpenChange={setCreateJobPostOpen} brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the {campaignToDelete ? 'campaign' : 'bounty'}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-0">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 border-t border-red-400">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
+        setDeleteDialogOpen(open);
+        if (!open) setDeleteConfirmInput("");
+      }}>
+        <DialogContent className="sm:max-w-[440px] p-0 gap-0 overflow-hidden [&>button]:text-muted-foreground [&>button]:hover:text-foreground">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">
+              Delete {campaignToDelete ? 'Campaign' : 'Boost'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-6 space-y-5">
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
+              <p className="text-sm text-red-600 dark:text-red-400 font-inter tracking-[-0.3px] leading-relaxed">
+                This action cannot be undone. This will permanently delete <strong>{campaignToDelete?.title || bountyToDelete?.title}</strong> and remove all associated data.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-foreground font-inter tracking-[-0.3px]">
+                Type <span className="font-semibold">DELETE</span> to confirm:
+              </label>
+              <Input
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                className="h-11 bg-muted/30 border border-border/80 dark:border-border font-inter tracking-[-0.3px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={handleDeleteConfirm}
+                disabled={deleteConfirmInput.toUpperCase() !== "DELETE"}
+                className="h-10 px-5 font-inter tracking-[-0.5px] bg-red-600 hover:bg-red-700 text-white border-t border-red-400 rounded-lg disabled:opacity-40"
+              >
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Subscription Gate Dialog */}
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />

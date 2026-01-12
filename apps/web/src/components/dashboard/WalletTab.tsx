@@ -374,6 +374,11 @@ export function WalletTab() {
       amount: ledgerSummary?.totalPending || 0,
       videoCount: ledgerSummary?.accruingCount || 0
     },
+    held: (ledgerSummary?.totalHeld || 0) > 0 ? {
+      amount: ledgerSummary?.totalHeld || 0,
+      videoCount: ledgerSummary?.heldCount || 0,
+      releaseAt: ledgerSummary?.earliestReleaseAt,
+    } : undefined,
     clearing: {
       amount: (ledgerSummary?.totalClearing || 0) + clearingPayouts,
       videoCount: ledgerSummary?.clearingCount || 0,
@@ -1712,7 +1717,19 @@ export function WalletTab() {
         </div>
       )}
 
-      {/* Tabs Section - Hidden for now */}
+      {/* Payout Status Cards - Earnings Pipeline */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-6">
+        <h2 className="text-lg font-semibold tracking-[-0.5px] mb-4">Earnings</h2>
+        <PayoutStatusCards
+          accruing={payoutPipelineData.accruing}
+          held={payoutPipelineData.held}
+          clearing={payoutPipelineData.clearing}
+          paid={payoutPipelineData.paid}
+          onRequestPayout={handleRequestEarningsPayout}
+          isRequesting={isRequestingEarningsPayout}
+          minPayout={1}
+        />
+      </div>
 
       {/* Edit Profile Dialog */}
       <EditProfileDialog

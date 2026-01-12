@@ -1,25 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, ChevronDown, CreditCard, ChevronLeft, ChevronRight, Wallet, Building2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
-import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BrandToPersonalTransferDialog } from "./BrandToPersonalTransferDialog";
 import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
-import { PersonalToBrandTransferDialog } from "./PersonalToBrandTransferDialog";
-import { BrandDepositInfoDialog } from "./BrandDepositInfoDialog";
-import { CryptoDepositDialog } from "./CryptoDepositDialog";
-import { CoinbaseOnrampWidget } from "./CoinbaseOnrampWidget";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+
+// New wallet components
+import {
+  PaymentMethodsGrid,
+  DepositDrawer,
+  DepositAmountStep,
+  DepositConfirmStep,
+  CryptoNetworkStep,
+  CryptoAddressStep,
+  WireTransferStep,
+  TransactionRow,
+  PendingDepositsSection,
+  useDepositFlow,
+  WalletTransaction,
+  PendingDeposit,
+  PaymentMethod,
+  CryptoNetwork,
+} from "./wallet";
 
 interface BrandWalletTabProps {
   brandId: string;
   brandSlug: string;
 }
+
 interface WalletData {
   balance: number;
   virality_balance: number;
@@ -27,164 +39,141 @@ interface WalletData {
   pending_balance: number;
   currency: string;
 }
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  status: string;
-  description: string | null;
-  created_at: string;
-  metadata?: {
-    checkout_url?: string;
-    whop_checkout_id?: string;
-  } | null;
-}
-export function BrandWalletTab({
-  brandId,
-  brandSlug
-}: BrandWalletTabProps) {
+
+export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [walletData, setWalletData] = useState<WalletData | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [addFundsOpen, setAddFundsOpen] = useState(false);
-  const [allocateOpen, setAllocateOpen] = useState(false);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [brandToPersonalOpen, setBrandToPersonalOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
-  const [personalTransferOpen, setPersonalTransferOpen] = useState(false);
-  const [depositInfoOpen, setDepositInfoOpen] = useState(false);
-  const [cryptoDepositOpen, setCryptoDepositOpen] = useState(false);
-  const [coinbaseOnrampOpen, setCoinbaseOnrampOpen] = useState(false);
   const [brandName, setBrandName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [personalBalance, setPersonalBalance] = useState(0);
+  const [cryptoAddress, setCryptoAddress] = useState("");
   const itemsPerPage = 10;
-  const {
-    isAdmin
-  } = useAdminCheck();
+  const { isAdmin } = useAdminCheck();
 
+  // Deposit flow state machine
+  const depositFlow = useDepositFlow();
+
+  // Fetch brand name
   useEffect(() => {
     const fetchBrandName = async () => {
-      const { data } = await supabase.from('brands').select('name').eq('id', brandId).single();
+      const { data } = await supabase
+        .from("brands")
+        .select("name")
+        .eq("id", brandId)
+        .single();
       if (data) setBrandName(data.name);
     };
     fetchBrandName();
   }, [brandId]);
+
+  // Fetch personal wallet balance for transfers
+  useEffect(() => {
+    const fetchPersonalBalance = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (data) setPersonalBalance(data.balance);
+    };
+    fetchPersonalBalance();
+  }, []);
+
   const fetchWalletData = async () => {
     try {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('get-brand-balance', {
-        body: {
-          brand_id: brandId
-        }
+
+      const { data, error } = await supabase.functions.invoke("get-brand-balance", {
+        body: { brand_id: brandId },
       });
+
       if (error) throw error;
       setWalletData(data);
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
-      toast.error('Failed to load wallet data');
+      console.error("Error fetching wallet data:", error);
+      toast.error("Failed to load wallet data");
     }
   };
+
   const fetchTransactions = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('brand_wallet_transactions').select('*').eq('brand_id', brandId).order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from("brand_wallet_transactions")
+        .select("*")
+        .eq("brand_id", brandId)
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
-      setTransactions((data || []) as Transaction[]);
+      setTransactions((data || []) as WalletTransaction[]);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error("Error fetching transactions:", error);
     }
   };
 
-  // Handle returning from checkout
+  // Handle checkout return
   useEffect(() => {
-    const checkoutStatus = searchParams.get('checkout_status');
-    const status = searchParams.get('status');
+    const checkoutStatus = searchParams.get("checkout_status");
+    const status = searchParams.get("status");
+    const hasSuccess = checkoutStatus === "success" || status === "success";
+    const hasReturnId =
+      searchParams.get("setup_intent_id") ||
+      searchParams.get("membership_id") ||
+      searchParams.get("payment_id") ||
+      searchParams.get("receipt_id");
 
-    // Different Whop flows return different identifiers
-    const setupIntentId = searchParams.get('setup_intent_id');
-    const membershipId = searchParams.get('membership_id');
-    const paymentId = searchParams.get('payment_id');
-    const receiptId = searchParams.get('receipt_id');
-    const isSuccess = checkoutStatus === 'success' || status === 'success';
-    const hasReturnId = setupIntentId || membershipId || paymentId || receiptId;
-    if (!isSuccess || !hasReturnId) return;
+    if (!hasSuccess || !hasReturnId) return;
 
-    // Clean up URL params first
-    searchParams.delete('checkout_status');
-    searchParams.delete('status');
-    searchParams.delete('setup_intent_id');
-    searchParams.delete('membership_id');
-    searchParams.delete('payment_id');
-    searchParams.delete('receipt_id');
-    searchParams.delete('state_id');
-    setSearchParams(searchParams, {
-      replace: true
-    });
+    // Clean up URL params
+    ["checkout_status", "status", "setup_intent_id", "membership_id", "payment_id", "receipt_id", "state_id"].forEach(
+      (p) => searchParams.delete(p)
+    );
+    setSearchParams(searchParams, { replace: true });
+
     const pendingTopupData = localStorage.getItem(`pending_topup_${brandId}`);
     if (!pendingTopupData) {
-      toast.success('Checkout completed.');
+      toast.success("Checkout completed.");
       fetchWalletData();
       fetchTransactions();
       return;
     }
-    const {
-      amount,
-      transactionId
-    } = JSON.parse(pendingTopupData) as {
-      amount: number;
-      transactionId?: string;
-    };
+
+    const { amount, transactionId } = JSON.parse(pendingTopupData);
     localStorage.removeItem(`pending_topup_${brandId}`);
+
     const finalizeTopup = async () => {
-      toast.loading('Finalizing top-up...', {
-        id: 'topup-finalize'
-      });
+      toast.loading("Finalizing top-up...", { id: "topup-finalize" });
       try {
         const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('create-brand-wallet-topup', {
-          body: {
-            brand_id: brandId,
-            amount,
-            return_url: returnUrl,
-            transaction_id: transactionId
-          }
+        const { data, error } = await supabase.functions.invoke("create-brand-wallet-topup", {
+          body: { brand_id: brandId, amount, return_url: returnUrl, transaction_id: transactionId },
         });
+
         if (error) throw error;
         if (data?.success && !data?.needs_payment_method) {
-          toast.success(`Added $${amount} to your wallet!`, {
-            id: 'topup-finalize'
-          });
+          toast.success(`Added $${amount} to your wallet!`, { id: "topup-finalize" });
           fetchWalletData();
           fetchTransactions();
           return;
         }
-        toast.error('Could not finalize top-up. Please try again.', {
-          id: 'topup-finalize'
-        });
+        toast.error("Could not finalize top-up. Please try again.", { id: "topup-finalize" });
       } catch (e) {
-        console.error('Error finalizing top-up:', e);
-        toast.error('Failed to finalize top-up.', {
-          id: 'topup-finalize'
-        });
+        console.error("Error finalizing top-up:", e);
+        toast.error("Failed to finalize top-up.", { id: "topup-finalize" });
       }
     };
     finalizeTopup();
   }, [searchParams, setSearchParams, brandId, brandSlug]);
+
+  // Initial data load
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -193,77 +182,159 @@ export function BrandWalletTab({
     };
     loadData();
   }, [brandId]);
-  const handleOpenBrandToPersonal = () => {
-    setBrandToPersonalOpen(true);
+
+  // Real-time subscription for deposit confirmations
+  useEffect(() => {
+    const channel = supabase
+      .channel(`brand-wallet-${brandId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "brand_wallet_transactions",
+        filter: `brand_id=eq.${brandId}`,
+      }, (payload) => {
+        const newStatus = payload.new?.status;
+        const oldStatus = payload.old?.status;
+        const amount = payload.new?.amount;
+        const type = payload.new?.type;
+
+        if (oldStatus === "pending" && newStatus === "completed") {
+          const typeLabel =
+            type === "crypto_deposit" ? "Crypto deposit" :
+            type === "deposit" ? "Wire deposit" :
+            type === "topup" ? "Card payment" : "Deposit";
+          toast.success(`${typeLabel} of $${Number(amount).toFixed(2)} confirmed!`, { duration: 5000 });
+          fetchWalletData();
+          fetchTransactions();
+        }
+      })
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "brand_wallet_transactions",
+        filter: `brand_id=eq.${brandId}`,
+      }, (payload) => {
+        const status = payload.new?.status;
+        const amount = payload.new?.amount;
+        const type = payload.new?.type;
+
+        if (status === "completed" && (type === "crypto_deposit" || type === "deposit")) {
+          const typeLabel = type === "crypto_deposit" ? "Crypto deposit" : "Wire deposit";
+          toast.success(`${typeLabel} of $${Number(amount).toFixed(2)} received!`, { duration: 5000 });
+          fetchWalletData();
+          fetchTransactions();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [brandId]);
+
+  // Pending deposits (filter pending transactions)
+  const pendingDeposits = useMemo<PendingDeposit[]>(() => {
+    return transactions
+      .filter((tx) => tx.status === "pending" && ["crypto_deposit", "deposit", "topup"].includes(tx.type))
+      .map((tx) => ({
+        id: tx.id,
+        type: tx.type as "crypto_deposit" | "deposit" | "topup",
+        amount: tx.amount,
+        status: "pending" as const,
+        created_at: tx.created_at,
+        network: tx.metadata?.network,
+        tx_signature: tx.metadata?.tx_signature,
+      }));
+  }, [transactions]);
+
+  // Completed/processing transactions for history
+  const historyTransactions = useMemo(() => {
+    return transactions.filter(
+      (tx) => tx.status === "completed" || (tx.status === "pending" && tx.type !== "deposit_intent")
+    );
+  }, [transactions]);
+
+  // Pagination
+  const totalPages = Math.ceil(historyTransactions.length / itemsPerPage);
+  const paginatedTransactions = historyTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Handle payment method selection
+  const handleSelectMethod = (method: PaymentMethod) => {
+    depositFlow.selectMethod(method);
   };
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-  const getTransactionTypeLabel = (type: string) => {
-    switch (type) {
-      case 'topup':
-        return 'Top Up';
-      case 'withdrawal':
-        return 'Withdrawal';
-      case 'campaign_allocation':
-        return 'Campaign Funding';
-      case 'boost_allocation':
-        return 'Boost Funding';
-      case 'refund':
-        return 'Refund';
-      case 'deposit':
-        return 'Deposit';
-      case 'deposit_intent':
-        return 'Deposit Intent';
-      case 'transfer_in':
-        return 'Transfer In';
-      case 'transfer_out':
-        return 'Transfer Out';
-      case 'crypto_deposit':
-        return 'Crypto Deposit';
-      case 'coinbase_onramp':
-        return 'Coinbase Purchase';
-      default:
-        return type;
-    }
-  };
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-400';
-      case 'pending':
-        return 'text-yellow-400';
-      case 'failed':
-        return 'text-red-400';
-      default:
-        return 'text-neutral-400';
+
+  // Handle network selection for crypto - fetch address for selected network
+  const handleNetworkSelect = async (network: CryptoNetwork) => {
+    depositFlow.setNetwork(network);
+    depositFlow.setLoading(true);
+
+    try {
+      // Get current session to ensure auth token is fresh
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Please sign in to continue");
+        depositFlow.setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("generate-deposit-address", {
+        body: { brand_id: brandId, network },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+
+      console.log("generate-deposit-address response:", { data, error });
+
+      if (error) {
+        // Try to get more details from the error
+        const errorContext = (error as any).context;
+        let errorMessage = "Failed to generate deposit address";
+
+        if (errorContext) {
+          try {
+            const errorBody = await errorContext.json();
+            console.error("Edge function error details:", errorBody);
+            errorMessage = errorBody.error || errorMessage;
+          } catch {
+            console.error("Edge function error:", error);
+          }
+        }
+
+        toast.error(errorMessage);
+        return;
+      }
+
+      if (data?.error) {
+        console.error("Function returned error:", data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.address) {
+        setCryptoAddress(data.address);
+        depositFlow.nextStep();
+      } else {
+        toast.error("No address returned from server");
+      }
+    } catch (error) {
+      console.error("Error fetching deposit address:", error);
+      toast.error("Failed to generate deposit address");
+    } finally {
+      depositFlow.setLoading(false);
     }
   };
 
-  const handleCompletePayment = async (tx: Transaction) => {
-    // Try to resume the checkout
-    const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
-    
+  // Handle card deposit
+  const handleCardDeposit = async () => {
+    depositFlow.setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
-        body: {
-          brand_id: brandId,
-          amount: tx.amount,
-          return_url: returnUrl,
-          transaction_id: tx.id
-        }
+      const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
+      const { data, error } = await supabase.functions.invoke("create-brand-wallet-topup", {
+        body: { brand_id: brandId, amount: depositFlow.amount, return_url: returnUrl },
       });
 
       if (error) throw error;
@@ -271,247 +342,273 @@ export function BrandWalletTab({
       if (data?.checkout_url) {
         localStorage.setItem(
           `pending_topup_${brandId}`,
-          JSON.stringify({ amount: tx.amount, transactionId: tx.id })
+          JSON.stringify({ amount: depositFlow.amount, transactionId: data.transaction_id })
         );
         window.location.href = data.checkout_url;
       } else {
-        toast.error('Could not create checkout. Please try again.');
+        toast.error("Could not create checkout. Please try again.");
+        depositFlow.setLoading(false);
       }
     } catch (err) {
-      console.error('Error resuming payment:', err);
-      toast.error('Failed to resume payment');
+      console.error("Error creating card deposit:", err);
+      toast.error("Failed to create deposit");
+      depositFlow.setLoading(false);
     }
   };
-  return <div className="space-y-6">
+
+  // Handle personal wallet transfer
+  const handlePersonalTransfer = async () => {
+    depositFlow.setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke("personal-to-brand-transfer", {
+        body: { brand_id: brandId, amount: depositFlow.amount },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Transferred $${depositFlow.amount.toFixed(2)} to ${brandName}`);
+      depositFlow.success();
+      fetchWalletData();
+      fetchTransactions();
+
+      // Reset after success
+      setTimeout(() => depositFlow.reset(), 2000);
+    } catch (err) {
+      console.error("Error transferring funds:", err);
+      toast.error("Failed to transfer funds");
+      depositFlow.setLoading(false);
+    }
+  };
+
+  // Handle confirm based on method
+  const handleConfirm = () => {
+    if (depositFlow.method === "card") {
+      handleCardDeposit();
+    } else if (depositFlow.method === "personal") {
+      handlePersonalTransfer();
+    }
+  };
+
+  // Render current drawer step
+  const renderDrawerContent = () => {
+    switch (depositFlow.step) {
+      case "network":
+        return (
+          <CryptoNetworkStep
+            selectedNetwork={depositFlow.network}
+            onSelectNetwork={handleNetworkSelect}
+            isLoading={depositFlow.isLoading}
+          />
+        );
+
+      case "address":
+        if (depositFlow.method === "crypto" && depositFlow.network) {
+          return (
+            <CryptoAddressStep
+              network={depositFlow.network}
+              address={cryptoAddress}
+            />
+          );
+        }
+        if (depositFlow.method === "wire") {
+          return (
+            <WireTransferStep
+              accountName="Virality Inc."
+              accountNumber="123456789"
+              routingNumber="021000021"
+              bankName="Chase Bank"
+              reference={brandId.slice(0, 8).toUpperCase()}
+              onDone={depositFlow.reset}
+            />
+          );
+        }
+        return null;
+
+      case "amount":
+        return (
+          <DepositAmountStep
+            method={depositFlow.method!}
+            amount={depositFlow.amount}
+            onAmountChange={depositFlow.setAmount}
+            onContinue={depositFlow.nextStep}
+            personalBalance={personalBalance}
+          />
+        );
+
+      case "confirm":
+        return depositFlow.fees ? (
+          <DepositConfirmStep
+            method={depositFlow.method!}
+            amount={depositFlow.amount}
+            fees={depositFlow.fees}
+            isLoading={depositFlow.isLoading}
+            onConfirm={handleConfirm}
+            onCancel={depositFlow.prevStep}
+          />
+        ) : null;
+
+      case "success":
+        return (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold">Transfer Complete</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              ${depositFlow.amount.toFixed(2)} has been added to your wallet
+            </p>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  };
+
+  return (
+    <div className="space-y-6">
       {/* Balance Card */}
-      <Card className="border-border overflow-hidden bg-black/0">
-        <CardHeader className="pb-2 px-0">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Virality Balance
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+          Virality Balance
+        </p>
+        <p className="text-4xl font-semibold text-foreground font-inter tracking-[-1.5px]">
+          {formatCurrency(walletData?.virality_balance || 0)}
+        </p>
+        <div className="flex items-center gap-3 pt-1">
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+            Available for campaigns
+          </p>
+          {(walletData?.virality_balance || 0) > 0 && (
+            <>
+              <span className="text-muted-foreground/30">·</span>
+              <button
+                onClick={() => setBrandToPersonalOpen(true)}
+                className="text-sm text-primary hover:text-primary/80 font-inter tracking-[-0.3px] transition-colors"
+              >
+                Withdraw to personal
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Payment Methods Grid */}
+      <PaymentMethodsGrid
+        onSelectMethod={handleSelectMethod}
+        personalBalance={personalBalance}
+      />
+
+      {/* Pending Deposits */}
+      <PendingDepositsSection deposits={pendingDeposits} />
+
+      {/* Transaction History */}
+      <Card className="border-border/50 bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold font-inter tracking-[-0.5px]">
+            Transaction History
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-semibold text-foreground tracking-tight">
-                {formatCurrency(walletData?.virality_balance || 0)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Available for campaigns
+        <CardContent className="pt-0">
+          {historyTransactions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <span
+                  className="material-symbols-rounded text-[24px] text-muted-foreground/60"
+                  style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}
+                >
+                  local_atm
+                </span>
+              </div>
+              <h3 className="font-inter tracking-[-0.5px] font-medium text-foreground">
+                No transactions yet
+              </h3>
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1 max-w-[280px]">
+                Add funds to your wallet to start funding campaigns
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleOpenBrandToPersonal} disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-                fontFamily: 'Inter, sans-serif'
-              }}>
-                To Personal Wallet
-              </Button>
+          ) : (
+            <>
+              <div className="space-y-1">
+                {paginatedTransactions.map((tx) => (
+                  <TransactionRow key={tx.id} transaction={tx} />
+                ))}
+              </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="justify-center bg-primary hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-primary/70" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
-                    <Plus className="w-4 h-4 mr-1.5" />
-                    Add Funds
-                    <ChevronDown className="w-3.5 h-3.5 ml-1.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-popover border-border">
-                  <DropdownMenuItem onClick={() => setAddFundsOpen(true)}>
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Pay with Card
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setPersonalTransferOpen(true)}>
-                    <Wallet className="w-4 h-4 mr-2" />
-                    From Personal Wallet
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setCryptoDepositOpen(true)}>
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3" />
-                    </svg>
-                    Crypto Deposit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setDepositInfoOpen(true)}>
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Wire Transfer
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pending Payments */}
-      {transactions.filter(tx => tx.status === 'pending' && tx.type === 'deposit_intent').length > 0 && (
-        <Card className="border-border bg-black/0">
-          <CardHeader className="px-0">
-            <CardTitle className="text-lg text-foreground">Pending Payments</CardTitle>
-          </CardHeader>
-          <CardContent className="py-0 px-0">
-            <div className="space-y-0">
-              {transactions.filter(tx => tx.status === 'pending' && tx.type === 'deposit_intent').map(tx => (
-                <div key={tx.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-foreground font-inter text-sm font-medium tracking-[-0.5px]">
-                      {tx.description || 'Deposit Intent'}
-                    </p>
-                    <p className="font-inter text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
-                      {formatDate(tx.created_at)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p className="font-inter text-sm font-medium tracking-[-0.5px] text-yellow-500">
-                      {formatCurrency(tx.amount)}
-                    </p>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/50">
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                    {Math.min((currentPage - 1) * itemsPerPage + 1, historyTransactions.length)}-
+                    {Math.min(currentPage * itemsPerPage, historyTransactions.length)} of{" "}
+                    {historyTransactions.length}
+                  </p>
+                  <div className="flex gap-1">
                     <Button
-                      size="sm"
-                      onClick={() => handleCompletePayment(tx)}
-                      className="h-8 px-3 text-xs bg-primary hover:bg-[#1850b8] text-white border-t border-primary/70"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 w-8"
                     >
-                      <CreditCard className="w-3.5 h-3.5 mr-1.5" />
-                      Complete Payment
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage >= totalPages}
+                      className="h-8 w-8"
+                    >
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Transaction History */}
-      <Card className="border-border bg-black/0">
-        <CardHeader className="px-0">
-          <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
-        </CardHeader>
-        <CardContent className="py-0 px-0">
-          {(() => {
-            const filteredTx = transactions.filter(tx => tx.status === 'completed' || (tx.status === 'pending' && tx.type !== 'deposit_intent'));
-            const totalPages = Math.ceil(filteredTx.length / itemsPerPage);
-            const paginatedTx = filteredTx.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-            
-            if (filteredTx.length === 0) {
-              return (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground font-inter text-sm tracking-[-0.5px]">No transactions yet</p>
-                </div>
-              );
-            }
-            
-            return (
-              <>
-                <div className="space-y-0">
-                  {paginatedTx.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between py-3">
-                      <div>
-                        <p className="text-foreground font-inter text-sm font-medium tracking-[-0.5px]">
-                          {tx.description || getTransactionTypeLabel(tx.type)}
-                        </p>
-                        <p className="font-inter text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
-                          {formatDate(tx.created_at)}
-                        </p>
-                      </div>
-                      <p className={`font-inter text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
-                        {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-border">
-                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-                      Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTx.length)}-{Math.min(currentPage * itemsPerPage, filteredTx.length)} of {filteredTx.length}
-                    </p>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        disabled={currentPage === 1}
-                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        disabled={currentPage >= totalPages}
-                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
-      <AddBrandFundsDialog open={addFundsOpen} onOpenChange={setAddFundsOpen} brandId={brandId} currentBalance={walletData?.balance || 0} onSuccess={() => {
-      fetchWalletData();
-      fetchTransactions();
-    }} />
+      {/* Deposit Drawer */}
+      <DepositDrawer
+        state={depositFlow}
+        isOpen={depositFlow.isOpen}
+        onClose={depositFlow.reset}
+      >
+        {renderDrawerContent()}
+      </DepositDrawer>
 
-      <AllocateBudgetDialog open={allocateOpen} onOpenChange={setAllocateOpen} brandId={brandId} onSuccess={() => {
-      fetchWalletData();
-      fetchTransactions();
-    }} />
-
-      <BrandToPersonalTransferDialog open={brandToPersonalOpen} onOpenChange={setBrandToPersonalOpen} brandId={brandId} brandName={brandName} viralityBalance={walletData?.virality_balance || 0} onSuccess={() => { fetchWalletData(); fetchTransactions(); }} />
-
-      {isAdmin && <TransferToWithdrawDialog open={transferOpen} onOpenChange={setTransferOpen} brandId={brandId} viralityBalance={walletData?.virality_balance || 0} onSuccess={() => {
-      fetchWalletData();
-      fetchTransactions();
-    }} />}
-
-      <PersonalToBrandTransferDialog 
-        open={personalTransferOpen} 
-        onOpenChange={setPersonalTransferOpen} 
-        brandId={brandId} 
-        brandName={brandName}
-        onSuccess={() => {
-          fetchWalletData();
-          fetchTransactions();
-        }} 
-      />
-
-      <BrandDepositInfoDialog
-        open={depositInfoOpen}
-        onOpenChange={setDepositInfoOpen}
+      {/* Transfer Dialogs (keep these for now) */}
+      <BrandToPersonalTransferDialog
+        open={brandToPersonalOpen}
+        onOpenChange={setBrandToPersonalOpen}
         brandId={brandId}
         brandName={brandName}
-      />
-
-      <CryptoDepositDialog
-        open={cryptoDepositOpen}
-        onOpenChange={setCryptoDepositOpen}
-        brandId={brandId}
-        brandName={brandName}
-        onCoinbaseOnramp={() => {
-          setCryptoDepositOpen(false);
-          setCoinbaseOnrampOpen(true);
-        }}
-      />
-
-      <CoinbaseOnrampWidget
-        open={coinbaseOnrampOpen}
-        onOpenChange={setCoinbaseOnrampOpen}
-        brandId={brandId}
-        brandName={brandName}
+        viralityBalance={walletData?.virality_balance || 0}
         onSuccess={() => {
           fetchWalletData();
           fetchTransactions();
         }}
       />
-    </div>;
+
+      {isAdmin && (
+        <TransferToWithdrawDialog
+          open={transferOpen}
+          onOpenChange={setTransferOpen}
+          brandId={brandId}
+          viralityBalance={walletData?.virality_balance || 0}
+          onSuccess={() => {
+            fetchWalletData();
+            fetchTransactions();
+          }}
+        />
+      )}
+    </div>
+  );
 }

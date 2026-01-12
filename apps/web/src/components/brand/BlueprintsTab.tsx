@@ -436,6 +436,8 @@ export function BlueprintsTab({
         onStartBlank={createBlueprint}
         onImportFromGoogleDocs={handleImportFromExternal}
         onImportFromNotion={handleImportFromExternal}
+        onGenerateWithAI={handleImportFromExternal}
+        brandId={brandId}
       />
 
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import clippingIcon from "@/assets/clipping-icon.svg";
@@ -99,6 +100,11 @@ export function CreateCampaignTypeDialog({
   const handleCreateBlueprint = () => {
     setOpen(false);
     const newParams = new URLSearchParams(searchParams);
+    // Preserve workspace parameter when navigating to blueprints tab
+    const workspace = searchParams.get("workspace");
+    if (workspace) {
+      newParams.set("workspace", workspace);
+    }
     newParams.set("tab", "blueprints");
     setSearchParams(newParams);
   };
@@ -178,7 +184,7 @@ export function CreateCampaignTypeDialog({
             <>
               {/* Blueprint Select */}
               {loading ? <div className="h-11 bg-muted/50 rounded-lg animate-pulse" /> : hasBlueprints ? <div className="space-y-2">
-
+                  <label className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Blueprint</label>
                   <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
                     <SelectTrigger className="w-full bg-muted/50 border-none h-11 rounded-lg">
                       <SelectValue placeholder="Select a blueprint" />
@@ -189,7 +195,7 @@ export function CreateCampaignTypeDialog({
                         </SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div> : <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/30 text-center">
+                </div> : <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl text-center">
                   <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                     <img src={blueprintsIcon} alt="Blueprints" className="h-5 w-5 opacity-60" />
                   </div>
@@ -307,6 +313,17 @@ export function CreateCampaignTypeDialog({
               </div>
             </>
           )}
+
+          {/* Need Help Footer */}
+          <div className="pt-1">
+            <button
+              onClick={() => window.open("https://virality.gg/contact", "_blank")}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-inter tracking-[-0.5px]"
+            >
+              <Icon icon="material-symbols:calendar-today-outline" className="h-4 w-4" />
+              Need help? Book a call
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>;
@@ -332,7 +349,7 @@ export function CreateCampaignTypeDialog({
           
           {/* Blueprint Select */}
           {loading ? <div className="h-11 bg-muted/50 rounded-lg animate-pulse" /> : hasBlueprints ? <div className="space-y-2">
-              
+              <label className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Blueprint</label>
               <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
                 <SelectTrigger className="w-full bg-muted/50 border-none h-11 rounded-lg">
                   <SelectValue placeholder="Select a blueprint" />
@@ -343,7 +360,7 @@ export function CreateCampaignTypeDialog({
                     </SelectItem>)}
                 </SelectContent>
               </Select>
-            </div> : <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/30 text-center">
+            </div> : <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl text-center">
               <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                 <img src={blueprintsIcon} alt="Blueprints" className="h-5 w-5 opacity-60" />
               </div>
@@ -443,6 +460,17 @@ export function CreateCampaignTypeDialog({
                 </div>
               </button>
             </div>
+          </div>
+
+          {/* Need Help Footer */}
+          <div className="pt-1">
+            <button
+              onClick={() => window.open("https://virality.gg/contact", "_blank")}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-inter tracking-[-0.5px]"
+            >
+              <Icon icon="material-symbols:calendar-today-outline" className="h-4 w-4" />
+              Need help? Book a call
+            </button>
           </div>
         </div>
       </DialogContent>

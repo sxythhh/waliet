@@ -1,29 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { format, subDays, subMonths, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
-import { Download, BarChart3, Users } from "lucide-react";
-import { PerformanceChart, MetricsData } from "./PerformanceChart";
-import { cn } from "@/lib/utils";
+import { format, subDays, subMonths, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, eachHourOfInterval, differenceInDays, setHours, setMinutes, setSeconds, setMilliseconds, getHours } from "date-fns";
+import { PerformanceChart, MetricsData, MetricType } from "./PerformanceChart";
+import { SparklineStatCard } from "./SparklineStatCard";
+import { ProgramsDataTable } from "./ProgramsDataTable";
 import { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
-import { exportToCSV, generateCSVFilename } from "@/lib/csv";
-
-interface CreatorROI {
-  oduserId: string;
-  username: string;
-  avatarUrl: string | null;
-  totalViews: number;
-  totalPaid: number;
-  costPerView: number;
-  videoCount: number;
-  avgViewsPerVideo: number;
-}
+import { toast } from "sonner";
 
 interface BrandPerformanceDashboardProps {
   brandId: string;
   timeframe?: TimeframeOption;
 }
+
+// Metric type for stat cards (subset that makes sense for cards)
+type StatMetricType = "views" | "spent" | "creators" | "videos";
 
 // Convert timeframe option to date range
 function getDateRangeFromTimeframe(timeframe: TimeframeOption): { from: Date; to: Date } {
@@ -47,7 +38,7 @@ function getDateRangeFromTimeframe(timeframe: TimeframeOption): { from: Date; to
     }
     case "all_time":
     default:
-      return { from: subMonths(now, 12), to }; // Last 12 months for "all time"
+      return { from: subMonths(now, 12), to };
   }
 }
 
@@ -58,171 +49,220 @@ const formatNumber = (num: number): string => {
 };
 
 const formatCurrency = (num: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(num);
 };
 
+// Map stat metric to chart metric - now supports all metrics including spent/creators
+const statToChartMetric: Record<StatMetricType, MetricType> = {
+  views: "views",
+  spent: "spent",
+  creators: "creators",
+  videos: "videos",
+};
+
+// Chart titles for each metric
+const chartTitles: Record<StatMetricType, string> = {
+  views: "Performance Over Time",
+  spent: "Spend Over Time",
+  creators: "New Creators Over Time",
+  videos: "Videos Over Time",
+};
+
 export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: BrandPerformanceDashboardProps) {
-  // Data state
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalViews: 0,
-    totalPayouts: 0,
-    effectiveCPM: 0,
-    totalSubmissions: 0,
-    approvedSubmissions: 0,
-    activeCreators: 0,
-    avgViewsPerCreator: 0
-  });
-  const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
-  const [creatorROI, setCreatorROI] = useState<CreatorROI[]>([]);
+  const queryClient = useQueryClient();
+  const [selectedMetric, setSelectedMetric] = useState<StatMetricType>("views");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Load analytics data
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const { from: startDate, to: endDate } = getDateRangeFromTimeframe(timeframe);
+  const { from: startDate, to: endDate } = useMemo(
+    () => getDateRangeFromTimeframe(timeframe),
+    [timeframe]
+  );
 
+  // Fetch all analytics data
+  const { data: analyticsData, isLoading } = useQuery({
+    queryKey: ["brand-analytics", brandId, timeframe],
+    queryFn: async () => {
       // Get campaign and boost IDs
-      const [campaignsData, boostsData] = await Promise.all([
-        supabase.from('campaigns').select('id').eq('brand_id', brandId),
-        supabase.from('bounty_campaigns').select('id').eq('brand_id', brandId)
+      const [campaignsRes, boostsRes] = await Promise.all([
+        supabase.from("campaigns").select("id, title, slug, status").eq("brand_id", brandId),
+        supabase.from("bounty_campaigns").select("id, title, slug, status").eq("brand_id", brandId),
       ]);
 
-      const campaignIds = campaignsData.data?.map(c => c.id) || [];
-      const boostIds = boostsData.data?.map(b => b.id) || [];
+      const campaigns = campaignsRes.data || [];
+      const boosts = boostsRes.data || [];
+      const campaignIds = campaigns.map((c) => c.id);
+      const boostIds = boosts.map((b) => b.id);
 
       if (campaignIds.length === 0 && boostIds.length === 0) {
-        setStats({
-          totalViews: 0,
-          totalPayouts: 0,
-          effectiveCPM: 0,
-          totalSubmissions: 0,
-          approvedSubmissions: 0,
-          activeCreators: 0,
-          avgViewsPerCreator: 0
-        });
-        setMetricsData([]);
-        setCreatorROI([]);
-        setIsLoading(false);
-        return;
+        return {
+          stats: { totalViews: 0, totalSpent: 0, activeCreators: 0, totalVideos: 0 },
+          metricsData: [],
+          sparklineData: { views: [], spent: [], creators: [], videos: [] },
+          campaigns: [],
+          boosts: [],
+        };
       }
 
       // Fetch cached campaign videos
       const { data: cachedVideos } = await supabase
-        .from('cached_campaign_videos')
-        .select(`
-          id, views, likes, shares, bookmarks,
-          user_id, campaign_id, created_at, username
-        `)
-        .eq('brand_id', brandId)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+        .from("cached_campaign_videos")
+        .select("id, views, likes, shares, bookmarks, user_id, campaign_id, created_at")
+        .eq("brand_id", brandId)
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString());
+
+      // Fetch campaign submissions for accurate creator count
+      const { data: campaignSubmissions } = campaignIds.length > 0
+        ? await supabase
+            .from("campaign_submissions")
+            .select("creator_id, campaign_id, submitted_at")
+            .in("campaign_id", campaignIds)
+            .gte("submitted_at", startDate.toISOString())
+            .lte("submitted_at", endDate.toISOString())
+        : { data: [] };
+
+      // Fetch campaign participants for publicly joinable campaigns
+      const { data: campaignParticipants } = campaignIds.length > 0
+        ? await supabase
+            .from("campaign_participants")
+            .select("user_id, campaign_id, joined_at")
+            .in("campaign_id", campaignIds)
+            .gte("joined_at", startDate.toISOString())
+            .lte("joined_at", endDate.toISOString())
+        : { data: [] };
+
+      // Fetch bounty applications for accurate creator count
+      const { data: bountyApplications } = boostIds.length > 0
+        ? await supabase
+            .from("bounty_applications")
+            .select("user_id, bounty_campaign_id, created_at")
+            .in("bounty_campaign_id", boostIds)
+            .gte("created_at", startDate.toISOString())
+            .lte("created_at", endDate.toISOString())
+        : { data: [] };
 
       // Fetch wallet transactions for payouts
       const transactionPromises = [];
       for (const campaignId of campaignIds) {
         transactionPromises.push(
           supabase
-            .from('wallet_transactions')
-            .select('amount, created_at, user_id')
-            .eq('type', 'earning')
-            .eq('metadata->>campaign_id', campaignId)
-            .gte('created_at', startDate.toISOString())
-            .lte('created_at', endDate.toISOString())
+            .from("wallet_transactions")
+            .select("amount, created_at, user_id")
+            .eq("type", "earning")
+            .eq("metadata->>campaign_id", campaignId)
+            .gte("created_at", startDate.toISOString())
+            .lte("created_at", endDate.toISOString())
         );
       }
       for (const boostId of boostIds) {
         transactionPromises.push(
           supabase
-            .from('wallet_transactions')
-            .select('amount, created_at, user_id')
-            .eq('type', 'earning')
-            .eq('metadata->>boost_id', boostId)
-            .gte('created_at', startDate.toISOString())
-            .lte('created_at', endDate.toISOString())
+            .from("wallet_transactions")
+            .select("amount, created_at, user_id")
+            .eq("type", "earning")
+            .eq("metadata->>boost_id", boostId)
+            .gte("created_at", startDate.toISOString())
+            .lte("created_at", endDate.toISOString())
         );
       }
 
       const transactionResults = await Promise.all(transactionPromises);
-      const allTransactions = transactionResults.flatMap(r => r.data || []);
+      const allTransactions = transactionResults.flatMap((r) => r.data || []);
 
       // Calculate stats
       const videos = cachedVideos || [];
+      const submissions = campaignSubmissions || [];
+      const participants = campaignParticipants || [];
+      const applications = bountyApplications || [];
       const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
-      const totalPayouts = allTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-      const effectiveCPM = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
+      const totalSpent = allTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
 
-      // Count unique creators
-      const uniqueCreators = new Set(videos.map(v => v.user_id).filter(Boolean));
+      // Count unique creators from participants, submissions and applications (not just videos)
+      const uniqueCreators = new Set([
+        ...participants.map((p) => p.user_id).filter(Boolean),
+        ...submissions.map((s) => s.creator_id).filter(Boolean),
+        ...applications.map((a) => a.user_id).filter(Boolean),
+      ]);
       const activeCreators = uniqueCreators.size;
-      const avgViewsPerCreator = activeCreators > 0 ? totalViews / activeCreators : 0;
+      const totalVideos = videos.length;
 
-      setStats({
-        totalViews,
-        totalPayouts,
-        effectiveCPM,
-        totalSubmissions: videos.length,
-        approvedSubmissions: videos.length,
-        activeCreators,
-        avgViewsPerCreator
-      });
-
-      // Calculate Creator ROI
-      const creatorMap = new Map<string, CreatorROI>();
-
-      videos.forEach(video => {
-        if (!video.user_id) return;
-        const existing = creatorMap.get(video.user_id) || {
-          oduserId: video.user_id,
-          username: video.username || 'Unknown',
-          avatarUrl: null,
-          totalViews: 0,
-          totalPaid: 0,
-          costPerView: 0,
-          videoCount: 0,
-          avgViewsPerVideo: 0
-        };
-
-        existing.totalViews += video.views || 0;
-        existing.videoCount += 1;
-        creatorMap.set(video.user_id, existing);
-      });
-
-      allTransactions.forEach(tx => {
-        const existing = creatorMap.get(tx.user_id);
-        if (existing) {
-          existing.totalPaid += tx.amount || 0;
-        }
-      });
-
-      // Calculate derived metrics
-      creatorMap.forEach(creator => {
-        creator.costPerView = creator.totalViews > 0
-          ? (creator.totalPaid / creator.totalViews) * 1000
-          : 0;
-        creator.avgViewsPerVideo = creator.videoCount > 0
-          ? creator.totalViews / creator.videoCount
-          : 0;
-      });
-
-      const sortedCreatorROI = Array.from(creatorMap.values())
-        .sort((a, b) => b.totalViews - a.totalViews);
-
-      setCreatorROI(sortedCreatorROI);
-
-      // Build metrics data for chart (aggregate by date)
+      // Build metrics by date for chart - smart aggregation based on timeframe
       const metricsByDate = new Map<string, MetricsData>();
+      const daysDiff = differenceInDays(endDate, startDate);
 
-      videos.forEach(video => {
-        const dateKey = format(new Date(video.created_at), 'yyyy-MM-dd');
-        const existing = metricsByDate.get(dateKey) || {
-          date: format(new Date(video.created_at), 'MMM d'),
-          datetime: format(new Date(video.created_at), 'MMM d, yyyy'),
+      // Determine aggregation level based on date range
+      // - today (0-1 days): 3-hour intervals
+      // - 2-14 days: daily
+      // - 15-60 days: weekly
+      // - 60+ days: monthly
+      type AggregationLevel = 'hourly' | 'daily' | 'weekly' | 'monthly';
+      const isToday = timeframe === 'today';
+      const aggregationLevel: AggregationLevel = isToday
+        ? 'hourly'
+        : daysDiff <= 14
+        ? 'daily'
+        : daysDiff <= 60
+        ? 'weekly'
+        : 'monthly';
+
+      // Generate intervals based on aggregation level
+      let intervals: Date[];
+      if (aggregationLevel === 'hourly') {
+        // Generate 3-hour intervals from 00:00 to current time
+        const todayStart = startOfDay(new Date());
+        const now = new Date();
+        const allHours = eachHourOfInterval({ start: todayStart, end: now });
+        // Filter to only 3-hour intervals (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00)
+        intervals = allHours.filter((h) => getHours(h) % 3 === 0);
+        // Always include the last completed 3-hour slot
+        if (intervals.length === 0 || getHours(intervals[intervals.length - 1]) < Math.floor(getHours(now) / 3) * 3) {
+          const lastSlotHour = Math.floor(getHours(now) / 3) * 3;
+          const lastSlot = setMilliseconds(setSeconds(setMinutes(setHours(todayStart, lastSlotHour), 0), 0), 0);
+          if (!intervals.some((i) => getHours(i) === lastSlotHour)) {
+            intervals.push(lastSlot);
+          }
+        }
+      } else if (aggregationLevel === 'daily') {
+        intervals = eachDayOfInterval({ start: startDate, end: endDate });
+      } else if (aggregationLevel === 'weekly') {
+        intervals = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 1 });
+      } else {
+        intervals = eachMonthOfInterval({ start: startDate, end: endDate });
+      }
+
+      // Initialize all intervals
+      intervals.forEach((interval) => {
+        let dateKey: string;
+        let dateLabel: string;
+        let datetimeLabel: string;
+
+        if (aggregationLevel === 'hourly') {
+          const hour = getHours(interval);
+          dateKey = format(interval, "yyyy-MM-dd-HH");
+          dateLabel = format(interval, "HH:mm");
+          datetimeLabel = format(interval, "MMM d, HH:mm");
+        } else if (aggregationLevel === 'daily') {
+          dateKey = format(interval, "yyyy-MM-dd");
+          dateLabel = format(interval, "MMM d");
+          datetimeLabel = format(interval, "MMM d, yyyy");
+        } else if (aggregationLevel === 'weekly') {
+          dateKey = format(interval, "yyyy-'W'ww");
+          dateLabel = `Week of ${format(interval, "MMM d")}`;
+          datetimeLabel = `Week of ${format(interval, "MMM d, yyyy")}`;
+        } else {
+          dateKey = format(interval, "yyyy-MM");
+          dateLabel = format(interval, "MMM yyyy");
+          datetimeLabel = format(interval, "MMMM yyyy");
+        }
+
+        metricsByDate.set(dateKey, {
+          date: dateLabel,
+          datetime: datetimeLabel,
           views: 0,
           likes: 0,
           shares: 0,
@@ -232,106 +272,265 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           dailyLikes: 0,
           dailyShares: 0,
           dailyBookmarks: 0,
-          dailyVideos: 0
-        };
-
-        existing.views += video.views || 0;
-        existing.likes += video.likes || 0;
-        existing.shares += video.shares || 0;
-        existing.bookmarks += video.bookmarks || 0;
-        existing.videos += 1;
-        existing.dailyViews = existing.views;
-        existing.dailyLikes = existing.likes;
-        existing.dailyShares = existing.shares;
-        existing.dailyBookmarks = existing.bookmarks;
-        existing.dailyVideos = existing.videos;
-
-        metricsByDate.set(dateKey, existing);
+          dailyVideos: 0,
+          spent: 0,
+          creators: 0,
+        });
       });
 
-      const sortedMetrics = Array.from(metricsByDate.values())
-        .sort((a, b) => new Date(a.datetime || '').getTime() - new Date(b.datetime || '').getTime());
+      // Helper to get the bucket key for a date
+      const getDateKey = (date: Date): string => {
+        if (aggregationLevel === 'hourly') {
+          // Round down to nearest 3-hour slot
+          const hour = Math.floor(getHours(date) / 3) * 3;
+          const bucketDate = setMilliseconds(setSeconds(setMinutes(setHours(date, hour), 0), 0), 0);
+          return format(bucketDate, "yyyy-MM-dd-HH");
+        } else if (aggregationLevel === 'daily') {
+          return format(date, "yyyy-MM-dd");
+        } else if (aggregationLevel === 'weekly') {
+          return format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-'W'ww");
+        } else {
+          return format(startOfMonth(date), "yyyy-MM");
+        }
+      };
 
-      setMetricsData(sortedMetrics);
+      // Aggregate video data
+      videos.forEach((video) => {
+        const dateKey = getDateKey(new Date(video.created_at));
+        const existing = metricsByDate.get(dateKey);
+        if (existing) {
+          existing.views += video.views || 0;
+          existing.likes += video.likes || 0;
+          existing.shares += video.shares || 0;
+          existing.bookmarks += video.bookmarks || 0;
+          existing.videos += 1;
+          existing.dailyViews = existing.views;
+          existing.dailyLikes = existing.likes;
+          existing.dailyShares = existing.shares;
+          existing.dailyBookmarks = existing.bookmarks;
+          existing.dailyVideos = existing.videos;
+        }
+      });
 
-    } catch (error) {
-      console.error('Error loading analytics:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      // Add creators data to the chart
+      const creatorsByDate = new Map<string, Set<string>>();
+
+      // Track creators from submissions
+      submissions.forEach((s) => {
+        const dateKey = getDateKey(new Date(s.submitted_at || new Date()));
+        if (!creatorsByDate.has(dateKey)) {
+          creatorsByDate.set(dateKey, new Set());
+        }
+        if (s.creator_id) {
+          creatorsByDate.get(dateKey)!.add(s.creator_id);
+        }
+      });
+
+      // Track creators from campaign participants
+      participants.forEach((p) => {
+        const dateKey = getDateKey(new Date(p.joined_at || new Date()));
+        if (!creatorsByDate.has(dateKey)) {
+          creatorsByDate.set(dateKey, new Set());
+        }
+        if (p.user_id) {
+          creatorsByDate.get(dateKey)!.add(p.user_id);
+        }
+      });
+
+      // Track creators from applications
+      applications.forEach((a) => {
+        const dateKey = getDateKey(new Date(a.created_at));
+        if (!creatorsByDate.has(dateKey)) {
+          creatorsByDate.set(dateKey, new Set());
+        }
+        if (a.user_id) {
+          creatorsByDate.get(dateKey)!.add(a.user_id);
+        }
+      });
+
+      // Track spent by date
+      const spentByDate = new Map<string, number>();
+      allTransactions.forEach((t) => {
+        const dateKey = getDateKey(new Date(t.created_at));
+        spentByDate.set(dateKey, (spentByDate.get(dateKey) || 0) + (t.amount || 0));
+      });
+
+      // Add spent and creators to metrics data
+      metricsByDate.forEach((metrics, dateKey) => {
+        metrics.spent = spentByDate.get(dateKey) || 0;
+        metrics.creators = creatorsByDate.get(dateKey)?.size || 0;
+      });
+
+      const sortedMetrics = Array.from(metricsByDate.values());
+
+      // Build sparkline data (last 14 entries for compact view)
+      const last14Entries = sortedMetrics.slice(-14);
+      const sparklineData = {
+        views: last14Entries.map((d) => d.views),
+        spent: last14Entries.map((d) => d.spent || 0),
+        creators: last14Entries.map((d) => d.creators || 0),
+        videos: last14Entries.map((d) => d.videos),
+      };
+
+      // Calculate per-campaign/boost stats
+      const campaignStats = await Promise.all(
+        campaigns.map(async (c) => {
+          const campaignVideos = videos.filter((v) => v.campaign_id === c.id);
+          const views = campaignVideos.reduce((sum, v) => sum + (v.views || 0), 0);
+
+          // Count creators from submissions and participants, not just videos
+          const campaignSubs = submissions.filter((s) => s.campaign_id === c.id);
+          const campaignParts = participants.filter((p) => p.campaign_id === c.id);
+          const creators = new Set([
+            ...campaignSubs.map((s) => s.creator_id).filter(Boolean),
+            ...campaignParts.map((p) => p.user_id).filter(Boolean),
+          ]).size;
+
+          // Get spent for this campaign
+          const { data: txData } = await supabase
+            .from("wallet_transactions")
+            .select("amount")
+            .eq("type", "earning")
+            .eq("metadata->>campaign_id", c.id);
+          const spent = (txData || []).reduce((sum, t) => sum + (t.amount || 0), 0);
+          const cpm = views > 0 ? (spent / views) * 1000 : 0;
+
+          return {
+            id: c.id,
+            title: c.title,
+            slug: c.slug,
+            status: c.status || "active",
+            views,
+            spent,
+            creators,
+            cpm,
+            type: "campaign" as const,
+          };
+        })
+      );
+
+      const boostStats = await Promise.all(
+        boosts.map(async (b) => {
+          // Count creators from already fetched applications
+          const boostApps = applications.filter((a) => a.bounty_campaign_id === b.id);
+          const creators = new Set(boostApps.map((a) => a.user_id).filter(Boolean)).size;
+
+          // Get spent for this boost
+          const { data: txData } = await supabase
+            .from("wallet_transactions")
+            .select("amount")
+            .eq("type", "earning")
+            .eq("metadata->>boost_id", b.id);
+          const spent = (txData || []).reduce((sum, t) => sum + (t.amount || 0), 0);
+
+          return {
+            id: b.id,
+            title: b.title,
+            slug: b.slug,
+            status: b.status || "active",
+            views: 0, // Boosts don't track views the same way
+            spent,
+            creators,
+            cpm: 0,
+            type: "boost" as const,
+          };
+        })
+      );
+
+      return {
+        stats: { totalViews, totalSpent, activeCreators, totalVideos },
+        metricsData: sortedMetrics,
+        sparklineData,
+        campaigns: campaignStats,
+        boosts: boostStats,
+      };
+    },
+  });
+
+  // Toggle program status mutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({
+      id,
+      type,
+      isActive,
+    }: {
+      id: string;
+      type: "campaign" | "boost";
+      isActive: boolean;
+    }) => {
+      const newStatus = isActive ? "active" : "paused";
+      if (type === "campaign") {
+        const { error } = await supabase.from("campaigns").update({ status: newStatus }).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("bounty_campaigns").update({ status: newStatus }).eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["brand-analytics", brandId] });
+      toast.success("Program status updated");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update status", { description: error.message });
+    },
+  });
+
+  const handleToggleStatus = (id: string, type: "campaign" | "boost", isActive: boolean) => {
+    toggleStatusMutation.mutate({ id, type, isActive });
   };
-
-  useEffect(() => {
-    loadData();
-  }, [brandId, timeframe]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadData();
+    await queryClient.invalidateQueries({ queryKey: ["brand-analytics", brandId] });
     setIsRefreshing(false);
   };
 
-  // CSV Export function
-  const handleExportCSV = () => {
-    const headers = ['Creator', 'Videos', 'Total Views', 'Avg Views/Video', 'Total Paid', 'CPM'];
-    const rows = creatorROI.map(c => [
-      c.username,
-      c.videoCount,
-      c.totalViews,
-      c.avgViewsPerVideo.toFixed(0),
-      c.totalPaid.toFixed(2),
-      c.costPerView.toFixed(2)
-    ]);
-    exportToCSV(headers, rows, generateCSVFilename('creator-roi'));
-  };
+  const stats = analyticsData?.stats || { totalViews: 0, totalSpent: 0, activeCreators: 0, totalVideos: 0 };
+  const metricsData = analyticsData?.metricsData || [];
+  const sparklineData = analyticsData?.sparklineData || { views: [], spent: [], creators: [], videos: [] };
+  const campaigns = analyticsData?.campaigns || [];
+  const boosts = analyticsData?.boosts || [];
 
+  // Get chart metric based on selected stat card
+  const chartMetric = statToChartMetric[selectedMetric];
 
   return (
-    <div className="p-4 pb-[70px] sm:pb-4 space-y-5">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="p-4 bg-stats-card border-table-border">
-          <div className="space-y-2">
-            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Views</p>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
-            </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.avgViewsPerCreator)} avg per creator</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-stats-card border-table-border">
-          <div className="space-y-2">
-            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Spent</p>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
-            </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatCurrency(stats.effectiveCPM)} CPM</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-stats-card border-table-border">
-          <div className="space-y-2">
-            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Active Creators</p>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.activeCreators}</p>
-            </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.totalSubmissions} total submissions</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-stats-card border-table-border">
-          <div className="space-y-2">
-            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Videos</p>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.approvedSubmissions}</p>
-              <div className="text-xs px-2 py-1 rounded-full tracking-[-0.5px] bg-primary/10 text-primary">
-                {stats.totalSubmissions - stats.approvedSubmissions} pending
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.totalSubmissions} total</p>
-          </div>
-        </Card>
+    <div className="px-4 sm:px-6 md:px-8 py-6 space-y-6">
+      {/* Stat Cards with Sparklines */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SparklineStatCard
+          label="Views"
+          value={formatNumber(stats.totalViews)}
+          sparklineData={sparklineData.views}
+          isSelected={selectedMetric === "views"}
+          onClick={() => setSelectedMetric("views")}
+          color="#3b82f6"
+        />
+        <SparklineStatCard
+          label="Spent"
+          value={formatCurrency(stats.totalSpent)}
+          sparklineData={sparklineData.spent}
+          isSelected={selectedMetric === "spent"}
+          onClick={() => setSelectedMetric("spent")}
+          color="#22c55e"
+        />
+        <SparklineStatCard
+          label="Creators"
+          value={stats.activeCreators}
+          sparklineData={sparklineData.creators}
+          isSelected={selectedMetric === "creators"}
+          onClick={() => setSelectedMetric("creators")}
+          color="#ec4899"
+        />
+        <SparklineStatCard
+          label="Videos"
+          value={stats.totalVideos}
+          sparklineData={sparklineData.videos}
+          isSelected={selectedMetric === "videos"}
+          onClick={() => setSelectedMetric("videos")}
+          color="#a855f7"
+        />
       </div>
 
       {/* Performance Chart */}
@@ -339,70 +538,18 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
         metricsData={metricsData}
         isRefreshing={isRefreshing}
         onRefresh={handleRefresh}
+        defaultMetric={chartMetric}
+        singleMetricMode={selectedMetric === "spent" || selectedMetric === "creators"}
+        title={chartTitles[selectedMetric]}
       />
 
-      {/* Creator ROI Table */}
-      <Card className="p-4 bg-card border-border">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold tracking-[-0.5px]">Creator ROI</h3>
-          <Button variant="ghost" size="sm" onClick={handleExportCSV} className="text-xs">
-            <Download className="h-3.5 w-3.5 mr-1.5" />
-            Export CSV
-          </Button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Creator</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Videos</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Total Views</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Avg Views</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">Total Paid</th>
-                <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs tracking-[-0.3px]">CPM</th>
-              </tr>
-            </thead>
-            <tbody>
-              {creatorROI.slice(0, 10).map((creator, index) => (
-                <tr key={creator.oduserId} className="border-b border-border/50 hover:bg-muted/30">
-                  <td className="py-3 px-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground w-4">{index + 1}</span>
-                      {creator.avatarUrl ? (
-                        <img
-                          src={creator.avatarUrl}
-                          alt={creator.username}
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                          <Users className="h-3 w-3 text-muted-foreground" />
-                        </div>
-                      )}
-                      <span className="font-medium tracking-[-0.3px]">@{creator.username}</span>
-                    </div>
-                  </td>
-                  <td className="text-right py-3 px-2 tabular-nums">{creator.videoCount}</td>
-                  <td className="text-right py-3 px-2 tabular-nums">{formatNumber(creator.totalViews)}</td>
-                  <td className="text-right py-3 px-2 tabular-nums">{formatNumber(creator.avgViewsPerVideo)}</td>
-                  <td className="text-right py-3 px-2 tabular-nums">{formatCurrency(creator.totalPaid)}</td>
-                  <td className="text-right py-3 px-2">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded text-xs font-medium tabular-nums",
-                      creator.costPerView < stats.effectiveCPM
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : "bg-orange-500/10 text-orange-500"
-                    )}>
-                      ${creator.costPerView.toFixed(2)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {/* Programs Data Table */}
+      <ProgramsDataTable
+        campaigns={campaigns}
+        boosts={boosts}
+        onToggleStatus={handleToggleStatus}
+        isToggling={toggleStatusMutation.isPending}
+      />
     </div>
   );
 }

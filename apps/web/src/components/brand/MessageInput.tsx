@@ -1,8 +1,16 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { Bold, Italic, Smile, Command } from 'lucide-react';
+import { Command } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+const COMMON_EMOJIS = [
+  '😀', '😂', '😊', '🥰', '😍', '🤩', '😎', '🤔',
+  '👍', '👏', '🙌', '💪', '🔥', '✨', '💯', '❤️',
+  '🎉', '🎊', '🚀', '💡', '✅', '⭐', '🌟', '💫',
+  '👀', '🙏', '💰', '📈', '🎯', '💼', '🤝', '👋',
+];
 
 interface MessageInputProps {
   value: string;
@@ -13,6 +21,8 @@ interface MessageInputProps {
 }
 
 export function MessageInput({ value, onChange, onSend, disabled, placeholder = "Type a message..." }: MessageInputProps) {
+  const [emojiOpen, setEmojiOpen] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -50,6 +60,13 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder = 
     }
   }, [value, editor]);
 
+  const insertEmoji = (emoji: string) => {
+    if (editor) {
+      editor.chain().focus().insertContent(emoji).run();
+      setEmojiOpen(false);
+    }
+  };
+
   if (!editor) return null;
 
   return (
@@ -57,37 +74,60 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder = 
       <EditorContent editor={editor} />
       <div className="flex items-center justify-between px-3 pb-3 pt-1">
         <div className="flex items-center gap-0.5">
-          <Button 
+          <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              >
+                <span className="material-symbols-rounded text-[18px]">sentiment_satisfied</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[280px] p-2"
+              align="start"
+              side="top"
+              sideOffset={8}
+            >
+              <div className="grid grid-cols-8 gap-1">
+                {COMMON_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => insertEmoji(emoji)}
+                    className="h-8 w-8 flex items-center justify-center text-lg hover:bg-muted rounded-md transition-colors"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button
             type="button"
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50"
-          >
-            <Smile className="h-4 w-4" />
-          </Button>
-          <Button 
-            type="button"
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 ${editor.isActive('bold') ? 'text-foreground bg-muted/50' : ''}`}
           >
-            <Bold className="h-4 w-4" />
+            <span className="material-symbols-rounded text-[18px]">format_bold</span>
           </Button>
-          <Button 
+          <Button
             type="button"
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={`h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 ${editor.isActive('italic') ? 'text-foreground bg-muted/50' : ''}`}
           >
-            <Italic className="h-4 w-4" />
+            <span className="material-symbols-rounded text-[18px]">format_italic</span>
           </Button>
         </div>
-        <Button 
-          size="sm" 
-          className="h-8 px-3 rounded-lg bg-primary hover:bg-[#1a50c0] text-white text-xs gap-1.5" 
-          onClick={onSend} 
+        <Button
+          size="sm"
+          className="h-8 px-3 rounded-lg bg-primary hover:bg-[#1a50c0] text-white text-xs gap-1.5"
+          onClick={onSend}
           disabled={disabled || !editor.getText().trim()}
         >
           <span className="flex items-center gap-0.5 text-white/70">

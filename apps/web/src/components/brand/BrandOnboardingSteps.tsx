@@ -2,8 +2,6 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import DescriptionRounded from "@mui/icons-material/DescriptionRounded";
 import EventRounded from "@mui/icons-material/EventRounded";
 import RocketLaunchRounded from "@mui/icons-material/RocketLaunchRounded";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -77,81 +75,66 @@ export function BrandOnboardingSteps({
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-foreground tracking-tight font-inter">
-          Get Started
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.3px]">
-          Complete these steps to set up your brand for success
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {steps.map((step, index) => (
-          <Card
+          <div
             key={step.id}
             className={cn(
-              "group relative overflow-hidden transition-all duration-300 cursor-pointer",
-              "bg-white dark:bg-[#0e0e0e] border border-border dark:border-transparent",
-              step.completed && "bg-primary/5 border-primary/20"
+              "group relative overflow-hidden transition-all duration-200 cursor-pointer",
+              "bg-white dark:bg-[#111111] rounded-xl",
+              "hover:bg-slate-50 dark:hover:bg-[#151515]",
+              step.completed && "bg-primary/5"
             )}
             onClick={() => handleStepClick(step)}
           >
-            <CardContent className="p-5 flex flex-col h-full min-h-[180px]">
-              {/* Step Number & Icon */}
-              <div className="flex items-center justify-between mb-4">
+            <div className="p-4 flex flex-col h-full min-h-[140px]">
+              {/* Icon */}
+              <div className="mb-3">
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center",
+                    "w-9 h-9 rounded-lg flex items-center justify-center",
                     "transition-colors duration-200",
                     step.completed
                       ? "bg-primary/10 text-primary"
-                      : "bg-gray-100 dark:bg-[#121212] text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                      : "bg-slate-100 dark:bg-[#1a1a1a] text-muted-foreground group-hover:text-foreground"
                   )}
                 >
                   {step.completed ? (
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-[18px] w-[18px]" />
                   ) : (
                     step.icon
                   )}
                 </div>
-                <span className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">
-                  Step {index + 1}
-                </span>
               </div>
 
               {/* Title & Description */}
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-foreground mb-1.5 font-inter tracking-[-0.4px]">
+              <div className="flex-1 mb-3">
+                <h3 className="text-sm font-semibold text-foreground mb-1 font-inter tracking-[-0.4px]">
                   {step.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed font-inter tracking-[-0.3px]">
+                <p className="text-xs text-muted-foreground leading-relaxed font-inter tracking-[-0.3px] line-clamp-2">
                   {step.description}
                 </p>
               </div>
 
-              {/* Action Button */}
-              <div className="mt-4 pt-3 border-t border-border/50">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-between h-9 px-3",
-                    "text-sm font-medium",
-                    "dark:bg-[#1e1e1e]",
-                    "hover:bg-muted dark:hover:bg-[#2a2a2a]",
-                    "transition-all duration-200",
-                    step.completed && "text-primary"
-                  )}
-                >
-                  <span className="font-inter tracking-[-0.3px]">
-                    {step.completed ? "Completed" : step.action}
-                  </span>
-                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Button>
+              {/* Action Link */}
+              <div className="flex items-center justify-between mt-auto">
+                <span className={cn(
+                  "text-xs font-medium font-inter tracking-[-0.3px] transition-colors",
+                  step.completed
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-foreground"
+                )}>
+                  {step.completed ? "View" : step.action}
+                </span>
+                <ArrowRight className={cn(
+                  "h-3.5 w-3.5 transition-all duration-200",
+                  "text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5",
+                  step.completed && "text-primary"
+                )} />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>

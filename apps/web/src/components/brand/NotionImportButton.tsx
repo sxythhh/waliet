@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Loader2, ChevronRight, Unlink, Search } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { cn } from "@/lib/utils";
 
 interface NotionPage {
@@ -570,10 +571,7 @@ export function NotionImportButton({
           {loading || isConnected === null ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <svg className="h-4 w-4" viewBox="0 0 100 100" fill="currentColor">
-              <path d="M6.017 4.313l55.333 -4.087c6.797 -0.583 8.543 -0.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277 -1.553 6.807 -6.99 7.193L24.467 99.967c-4.08 0.193 -6.023 -0.39 -8.16 -3.113L3.3 79.94c-2.333 -3.113 -3.3 -5.443 -3.3 -8.167V11.113c0 -3.497 1.553 -6.413 6.017 -6.8z"/>
-              <path fill="#fff" d="M61.35 16.903l-52.32 3.89c-1.97 .147-2.43 .19-3.72-.87l-2.43-1.77c-.73-.58-.29-1.45.73-1.55l53.68-3.7c1.8-.15 2.72.34 3.58 1.16l2.33 1.77c.19.14.14.58-.29.63l-1.55.45zm-1.94 8.83v63.34c0 3.4-1.7 5.05-5.2 5.2l-44.56 2.62c-3.5.14-5.2-1.84-5.2-5.2V28.25c0-3.4 1.55-5.2 5.2-5.35l44.26-2.62c3.8-.15 5.5 1.7 5.5 5.05zm-43.46.29c-.78.05-1.14.15-1.56.34-.87.44-1.12 1.21-1.12 2.57v55.06c0 1.36.58 2.08 1.84 2.03l41.26-2.33c1.27-.05 1.84-.93 1.84-2.29V28.64c0-.63-.34-1.07-1.07-1.02l-41.2 2.42z"/>
-            </svg>
+            <Icon icon="simple-icons:notion" className="h-4 w-4" />
           )}
           Import from Notion
         </Button>
@@ -625,31 +623,28 @@ export function NotionImportButton({
         onClick={handleClick}
         disabled={loading || isConnected === null}
         className={cn(
-          "flex flex-col items-center gap-3 p-6 rounded-xl border border-dashed border-border",
-          "hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer",
+          "group flex items-center gap-4 p-4 rounded-xl border border-border/40 bg-card/20",
+          "hover:bg-muted/40 hover:border-border/60 transition-all text-left w-full",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           className
         )}
       >
-        <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center",
-          notionBgClass
-        )}>
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-500/10 shrink-0">
           {loading || isConnected === null ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
+            <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
           ) : (
-            <svg className={cn("h-6 w-6", notionTextClass)} viewBox="0 0 100 100" fill="currentColor">
-              <path d="M6.017 4.313l55.333 -4.087c6.797 -0.583 8.543 -0.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277 -1.553 6.807 -6.99 7.193L24.467 99.967c-4.08 0.193 -6.023 -0.39 -8.16 -3.113L3.3 79.94c-2.333 -3.113 -3.3 -5.443 -3.3 -8.167V11.113c0 -3.497 1.553 -6.413 6.017 -6.8z"/>
-              <path fill="currentColor" className="text-white dark:text-gray-900" d="M61.35 16.903l-52.32 3.89c-1.97 .147-2.43 .19-3.72-.87l-2.43-1.77c-.73-.58-.29-1.45.73-1.55l53.68-3.7c1.8-.15 2.72.34 3.58 1.16l2.33 1.77c.19.14.14.58-.29.63l-1.55.45zm-1.94 8.83v63.34c0 3.4-1.7 5.05-5.2 5.2l-44.56 2.62c-3.5.14-5.2-1.84-5.2-5.2V28.25c0-3.4 1.55-5.2 5.2-5.35l44.26-2.62c3.8-.15 5.5 1.7 5.5 5.05zm-43.46.29c-.78.05-1.14.15-1.56.34-.87.44-1.12 1.21-1.12 2.57v55.06c0 1.36.58 2.08 1.84 2.03l41.26-2.33c1.27-.05 1.84-.93 1.84-2.29V28.64c0-.63-.34-1.07-1.07-1.02l-41.2 2.42z"/>
-            </svg>
+            <Icon icon="simple-icons:notion" className="h-5 w-5" />
           )}
         </div>
-        <div className="text-center">
-          <div className="font-medium">Import from Notion</div>
-          <div className="text-sm text-muted-foreground mt-1">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-[14px] text-foreground font-inter tracking-[-0.3px]">
+            Import from Notion
+          </h3>
+          <p className="text-[13px] text-muted-foreground font-inter tracking-[-0.2px] mt-0.5">
             Use an existing brand guidelines page
-          </div>
+          </p>
         </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
       </button>
 
       <Dialog open={pagesOpen} onOpenChange={setPagesOpen}>

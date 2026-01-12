@@ -49,6 +49,7 @@ function getSectionItemCount(
       return (
         (portfolio.content_niches?.length || 0) +
         (portfolio.equipment?.length || 0) +
+        (portfolio.editing_tools?.length || 0) +
         (portfolio.languages?.length || 0)
       );
     default:
@@ -203,11 +204,13 @@ export function PortfolioBuilder() {
           <CreatorInfoSection
             contentNiches={localPortfolio.content_niches || []}
             equipment={localPortfolio.equipment || []}
+            editingTools={localPortfolio.editing_tools || []}
             languages={localPortfolio.languages || []}
             availability={localPortfolio.availability || null}
             rateRange={localPortfolio.rate_range || null}
             onContentNichesChange={(value) => updateField("content_niches", value)}
             onEquipmentChange={(value) => updateField("equipment", value)}
+            onEditingToolsChange={(value) => updateField("editing_tools", value)}
             onLanguagesChange={(value) => updateField("languages", value)}
             onAvailabilityChange={(value) => updateField("availability", value)}
             onRateRangeChange={(value) => updateField("rate_range", value)}

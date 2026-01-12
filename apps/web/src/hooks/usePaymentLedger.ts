@@ -18,11 +18,12 @@ export interface PaymentLedgerEntry {
   milestone_threshold: number | null;
   accrued_amount: number;
   paid_amount: number;
-  status: 'pending' | 'clearing' | 'paid' | 'clawed_back';
+  status: 'pending' | 'held' | 'locked' | 'clearing' | 'paid' | 'clawed_back';
   payout_request_id: string | null;
   locked_at: string | null;
   clearing_ends_at: string | null;
   cleared_at: string | null;
+  release_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -30,11 +31,12 @@ export interface PaymentLedgerEntry {
 export interface VideoLedgerEntry {
   videoSubmissionId: string | null;
   boostSubmissionId: string | null;
-  status: 'accruing' | 'clearing' | 'paid' | 'clawed_back';
+  status: 'accruing' | 'held' | 'clearing' | 'paid' | 'clawed_back';
   accrued: number;
   paid: number;
   pending: number;
   clearingEndsAt?: string;
+  releaseAt?: string;
   payoutRequestId?: string;
   createdAt: string;
 }
@@ -59,14 +61,17 @@ export interface PaymentLedgerSummary {
   totalAccrued: number;
   totalPaid: number;
   totalPending: number;
+  totalHeld: number;
   totalClearing: number;
   entriesByVideo: Record<string, VideoLedgerEntry>;
   clearingRequests: ClearingRequest[];
   accruingCount: number;
+  heldCount: number;
   clearingCount: number;
   paidCount: number;
   clawedBackCount: number;
   earliestClearingEndsAt?: string;
+  earliestReleaseAt?: string;
   hasActiveFlaggableItems: boolean;
   entriesBySource: Record<string, {
     sourceType: 'campaign' | 'boost';
@@ -197,16 +202,19 @@ export function usePaymentLedger(userId?: string) {
       let totalAccruedCents = 0;
       let totalPaidCents = 0;
       let totalPendingCents = 0;
+      let totalHeldCents = 0;
       let totalClearingCents = 0;
 
       const summaryData: PaymentLedgerSummary = {
         totalAccrued: 0,
         totalPaid: 0,
         totalPending: 0,
+        totalHeld: 0,
         totalClearing: 0,
         entriesByVideo: {},
         clearingRequests: [],
         accruingCount: 0,
+        heldCount: 0,
         clearingCount: 0,
         paidCount: 0,
         clawedBackCount: 0,
@@ -218,6 +226,7 @@ export function usePaymentLedger(userId?: string) {
 
       const clearingRequestMap: Record<string, ClearingRequest & { amountCents: number }> = {};
       let earliestClearingEnd: Date | null = null;
+      let earliestReleaseAt: Date | null = null;
 
       ledgerEntries.forEach(entry => {
         // FIX #5: Safe number parsing with anomaly detection
@@ -268,6 +277,23 @@ export function usePaymentLedger(userId?: string) {
           totalPendingCents += safePendingCents;
           uiStatus = 'accruing';
           summaryData.accruingCount++;
+        } else if (entry.status === 'held') {
+          totalHeldCents += safePendingCents;
+          uiStatus = 'held';
+          summaryData.heldCount++;
+
+          // Track earliest release date for held entries
+          if (entry.release_at) {
+            const releaseDate = new Date(entry.release_at);
+            if (!earliestReleaseAt || releaseDate < earliestReleaseAt) {
+              earliestReleaseAt = releaseDate;
+            }
+          }
+        } else if (entry.status === 'locked') {
+          // Locked status is between held and clearing - treat as clearing for UI
+          totalClearingCents += safePendingCents;
+          uiStatus = 'clearing';
+          summaryData.clearingCount++;
         } else if (entry.status === 'paid' && safePendingCents > 0) {
           totalPendingCents += safePendingCents;
           uiStatus = 'accruing';
@@ -329,6 +355,7 @@ export function usePaymentLedger(userId?: string) {
           paid: centsToDollars(paidCents),
           pending: centsToDollars(safePendingCents),
           clearingEndsAt: entry.clearing_ends_at || undefined,
+          releaseAt: entry.release_at || undefined,
           payoutRequestId: entry.payout_request_id || undefined,
           createdAt: entry.created_at,
         };
@@ -360,6 +387,7 @@ export function usePaymentLedger(userId?: string) {
       summaryData.totalAccrued = centsToDollars(totalAccruedCents);
       summaryData.totalPaid = centsToDollars(totalPaidCents);
       summaryData.totalPending = centsToDollars(totalPendingCents);
+      summaryData.totalHeld = centsToDollars(totalHeldCents);
       summaryData.totalClearing = centsToDollars(totalClearingCents);
 
       // Convert clearing request amounts from cents to dollars
@@ -374,6 +402,10 @@ export function usePaymentLedger(userId?: string) {
 
       if (earliestClearingEnd) {
         summaryData.earliestClearingEndsAt = earliestClearingEnd.toISOString();
+      }
+
+      if (earliestReleaseAt) {
+        summaryData.earliestReleaseAt = earliestReleaseAt.toISOString();
       }
 
       // Set anomaly flag

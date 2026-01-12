@@ -23,6 +23,7 @@ export interface BoostDiscoverCardProps {
   slug?: string;
   created_at?: string;
   tags?: string[] | null;
+  content_distribution?: string | null;
   onClick?: () => void;
   onBookmarkClick?: (e: React.MouseEvent) => void;
   onFullscreenClick?: (e: React.MouseEvent) => void;
@@ -43,10 +44,12 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   isBookmarked,
   created_at,
   tags,
+  content_distribution,
   onClick,
   onBookmarkClick,
   onFullscreenClick
 }: BoostDiscoverCardProps) {
+  const isEditorBoost = content_distribution === 'brand_accounts';
   const navigate = useNavigate();
   const spotsRemaining = max_accepted_creators - accepted_creators_count;
   const isFull = spotsRemaining <= 0;
@@ -68,6 +71,11 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         <h3 className="text-[15px] font-semibold leading-tight line-clamp-2 text-foreground tracking-[-0.3px] group-hover:underline transition-all pr-8">
           {title}
         </h3>
+
+        {/* Posted By Label */}
+        <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+          Posted by: <span className="font-medium text-foreground">{isEditorBoost ? 'Brand' : 'You'}</span>
+        </span>
 
         {/* Stats */}
         <div className="space-y-1.5">

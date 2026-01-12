@@ -340,7 +340,6 @@ export function CampaignAnalyticsTable({
       });
 
       // Fetch global social accounts for unmatched analytics accounts
-      // Use batched queries to avoid hitting the 1000 row limit
       if (unmatchedUsernames.length > 0) {
         // Get original (non-normalized) usernames from analytics data for the query
         const unmatchedOriginalUsernames = [...new Set((data || []).filter(item => {
@@ -348,34 +347,29 @@ export function CampaignAnalyticsTable({
           return !socialAccountsByUsernameMap.has(key);
         }).map(item => item.account_username.trim().replace(/^@+/, "")))];
 
-        // Batch fetch in chunks of 50 to avoid query size limits
-        // Use ilike for case-insensitive matching
-        const batchSize = 50;
-        for (let i = 0; i < unmatchedOriginalUsernames.length; i += batchSize) {
-          const batch = unmatchedOriginalUsernames.slice(i, i + batchSize);
+        // Create a set of lowercased usernames for efficient lookup
+        const unmatchedLower = new Set(unmatchedOriginalUsernames.map(u => u.toLowerCase()));
 
-          // Fetch all social accounts and filter client-side for case-insensitive match
-          const {
-            data: globalAccounts
-          } = await supabase.from("social_accounts").select("id, platform, username, user_id");
+        // Fetch all social accounts once and filter client-side for case-insensitive match
+        const {
+          data: globalAccounts
+        } = await supabase.from("social_accounts").select("id, platform, username, user_id");
 
-          // Filter to only accounts that match our unmatched usernames (case-insensitive)
-          const batchLower = batch.map(u => u.toLowerCase());
-          const matchingAccounts = (globalAccounts || []).filter(account => batchLower.includes(account.username.toLowerCase()));
-          matchingAccounts.forEach(account => {
-            const normalizedUsername = normalizeUsername(account.username);
-            const normalizedPlatform = normalizePlatform(account.platform);
-            const usernameKey = `${normalizedPlatform}_${normalizedUsername}`;
+        // Filter to only accounts that match our unmatched usernames (case-insensitive)
+        const matchingAccounts = (globalAccounts || []).filter(account =>
+          unmatchedLower.has(account.username.toLowerCase())
+        );
 
-            // Only add if not already in the map
-            if (!socialAccountsByUsernameMap.has(usernameKey)) {
-              socialAccountsByUsernameMap.set(usernameKey, account);
-            }
-          });
+        matchingAccounts.forEach(account => {
+          const normalizedUsername = normalizeUsername(account.username);
+          const normalizedPlatform = normalizePlatform(account.platform);
+          const usernameKey = `${normalizedPlatform}_${normalizedUsername}`;
 
-          // Break after first batch since we fetched all accounts
-          break;
-        }
+          // Only add if not already in the map
+          if (!socialAccountsByUsernameMap.has(usernameKey)) {
+            socialAccountsByUsernameMap.set(usernameKey, account);
+          }
+        });
       }
 
       // Get all social account IDs for demographic submissions (from both campaign and global matches)
@@ -494,6 +488,7 @@ export function CampaignAnalyticsTable({
           }).eq("id", record.id);
         }
       }
+
       setAnalytics(analyticsWithProfiles);
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -1243,109 +1238,105 @@ export function CampaignAnalyticsTable({
   const avgEngagement = analytics.length > 0 ? analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length : 0;
   // Don't show main skeleton for transactions tab - PayoutRequestsTable handles its own loading state
   if (loading && activeTab !== 'transactions') {
-    return <Card className="bg-card border">
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {/* Header Skeleton */}
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-6 w-32" />
-              <div className="flex gap-2">
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
-              </div>
-            </div>
-            
-            {/* Table Skeleton */}
-            <div className="space-y-2">
-              {/* Table Header */}
-              <div className="grid grid-cols-6 gap-4 pb-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-12" />
-              </div>
-              
-              {/* Table Rows */}
-              {[...Array(8)].map((_, i) => <div key={i} className="grid grid-cols-6 gap-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                  <Skeleton className="h-4 w-16 ml-auto" />
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-7 w-7 ml-auto" />
-                </div>)}
+    return <Card className="bg-card rounded-xl border border-border/50 overflow-hidden">
+        <div className="px-4 py-3 border-b border-border/40">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-32 rounded-lg" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-48 rounded-lg" />
+              <Skeleton className="h-8 w-20 rounded-lg" />
             </div>
           </div>
+        </div>
+        <CardContent className="p-0">
+          {/* Table Header Skeleton */}
+          <div className="border-b border-border/40 bg-muted/20 dark:bg-muted/10 px-4 py-3 grid grid-cols-6 gap-4">
+            <Skeleton className="h-3 w-16 rounded" />
+            <Skeleton className="h-3 w-12 rounded" />
+            <Skeleton className="h-3 w-12 ml-auto rounded" />
+            <Skeleton className="h-3 w-14 rounded" />
+            <Skeleton className="h-3 w-16 rounded" />
+            <Skeleton className="h-3 w-14 rounded" />
+          </div>
+
+          {/* Table Rows Skeleton */}
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="border-b border-border/10 px-4 py-3 grid grid-cols-6 gap-4 items-center">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-7 w-7 rounded-lg" />
+                <Skeleton className="h-4 w-24 rounded" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-7 w-7 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+              <Skeleton className="h-4 w-14 ml-auto rounded" />
+              <Skeleton className="h-4 w-24 rounded" />
+              <Skeleton className="h-4 w-16 rounded" />
+              <Skeleton className="h-7 w-7 rounded-lg" />
+            </div>
+          ))}
         </CardContent>
       </Card>;
   }
   if (analytics.length === 0 && activeTab === 'analytics') {
-    return <Card className="bg-card/50 border-0 shadow-sm">
-        <CardHeader className="px-4 py-0 pt-0 pl-[4px] pr-[4px] pb-[7px]">
-          <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:flex sm:items-center sm:justify-between">
+    return <Card className="bg-card rounded-xl border border-border/50 overflow-hidden">
+        <div className="px-4 py-3 border-b border-border/40">
+          <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:items-center">
             <div className="flex items-center gap-2">
               <ImportCampaignStatsDialog campaignId={campaignId} onImportComplete={fetchAnalytics} onMatchingRequired={() => {}} />
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-44">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
-                <Input disabled className="pl-9 h-8 bg-muted/30 border-0 text-sm tracking-[-0.5px] cursor-not-allowed" placeholder="" />
+              <div className="relative flex-1 sm:w-48">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/20" />
+                <Input disabled className="pl-9 h-8 bg-muted/20 border-0 text-sm font-inter tracking-[-0.5px] cursor-not-allowed rounded-lg opacity-50" placeholder="Search creators..." />
               </div>
-              <Button variant="ghost" size="sm" disabled className="h-8 text-sm tracking-[-0.5px] gap-1.5 bg-muted/30 text-muted-foreground/30 cursor-not-allowed">
+              <Button variant="ghost" size="sm" disabled className="h-8 text-sm font-inter tracking-[-0.5px] gap-1.5 bg-muted/20 text-muted-foreground/30 cursor-not-allowed rounded-lg">
                 <Filter className="h-3.5 w-3.5" />
                 Filters
               </Button>
             </div>
           </div>
-        </CardHeader>
+        </div>
         <CardContent className="p-0 relative">
-          <div className="overflow-hidden rounded-lg dark:border dark:border-[#141414]">
+          <div className="overflow-hidden">
             <Table>
-              <TableHeader className="bg-card">
-                <TableRow className="border-0 hover:bg-transparent dark:border-b dark:border-[#141414]">
-                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Account</TableHead>
-                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">User</TableHead>
-                  <TableHead className="text-muted-foreground/50 font-medium text-right text-xs tracking-[-0.5px] py-3">Views</TableHead>
-                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Period</TableHead>
-                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Last Paid</TableHead>
-                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Actions</TableHead>
+              <TableHeader>
+                <TableRow className="border-b border-border/40 hover:bg-transparent bg-muted/20 dark:bg-muted/10">
+                  <TableHead className="text-muted-foreground/40 font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">Account</TableHead>
+                  <TableHead className="text-muted-foreground/40 font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">User</TableHead>
+                  <TableHead className="text-muted-foreground/40 font-medium text-right text-xs font-inter tracking-[-0.3px] py-3 px-4">Views</TableHead>
+                  <TableHead className="text-muted-foreground/40 font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">Period</TableHead>
+                  <TableHead className="text-muted-foreground/40 font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">Last Paid</TableHead>
+                  <TableHead className="text-muted-foreground/40 font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {[...Array(5)].map((_, i) => (
-                  <TableRow key={i} className="border-0">
-                    <TableCell className="py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-6 h-6 rounded-lg bg-muted/30" />
-                        <div className="h-4 w-24 bg-muted/30 rounded" />
+                  <TableRow key={i} className="border-b border-border/10">
+                    <TableCell className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-muted/20 animate-pulse" />
+                        <div className="h-4 w-24 bg-muted/20 rounded animate-pulse" />
                       </div>
                     </TableCell>
-                    <TableCell className="py-3.5">
+                    <TableCell className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-muted/30" />
-                        <div className="h-4 w-16 bg-muted/30 rounded" />
+                        <div className="h-7 w-7 rounded-full bg-muted/20 animate-pulse" />
+                        <div className="h-4 w-16 bg-muted/20 rounded animate-pulse" />
                       </div>
                     </TableCell>
-                    <TableCell className="py-3.5 text-right">
-                      <div className="h-4 w-12 bg-muted/30 rounded ml-auto" />
+                    <TableCell className="py-3 px-4 text-right">
+                      <div className="h-4 w-12 bg-muted/20 rounded ml-auto animate-pulse" />
                     </TableCell>
-                    <TableCell className="py-3.5">
-                      <div className="h-4 w-28 bg-muted/30 rounded" />
+                    <TableCell className="py-3 px-4">
+                      <div className="h-4 w-28 bg-muted/20 rounded animate-pulse" />
                     </TableCell>
-                    <TableCell className="py-3.5">
-                      <div className="h-4 w-16 bg-muted/30 rounded" />
+                    <TableCell className="py-3 px-4">
+                      <div className="h-4 w-16 bg-muted/20 rounded animate-pulse" />
                     </TableCell>
-                    <TableCell className="py-3.5">
-                      <div className="h-7 w-7 bg-muted/30 rounded" />
+                    <TableCell className="py-3 px-4">
+                      <div className="h-7 w-7 bg-muted/20 rounded-lg animate-pulse" />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1353,9 +1344,15 @@ export function CampaignAnalyticsTable({
             </Table>
           </div>
           {/* Overlay with message */}
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+          <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm">
             <div className="text-center px-6">
-              <p className="text-muted-foreground text-sm">
+              <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-foreground font-medium text-sm font-inter tracking-[-0.5px] mb-1">
+                No analytics yet
+              </p>
+              <p className="text-muted-foreground text-sm font-inter tracking-[-0.3px]">
                 Import analytics to get started
               </p>
             </div>
@@ -1368,23 +1365,23 @@ export function CampaignAnalyticsTable({
   return <>
       <div className={`space-y-4 ${className || ''}`}>
         {/* Summary Cards */}
-        
+
 
 
 
         {/* Filters and Table */}
-        {activeTab === 'analytics' && <Card className="bg-card/50 border-0 shadow-sm mt-4">
-          <CardHeader className="px-4 py-0 pt-0 pl-[4px] pr-[4px] pb-[7px]">
-            <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:flex sm:items-center sm:justify-between">
+        {activeTab === 'analytics' && <Card className="bg-card rounded-xl border border-border/50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/40">
+            <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:items-center">
               <div className="flex items-center gap-2">
                 {dateRanges.length > 0 && <>
                   <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
-                    <SelectTrigger className="w-[180px] bg-muted/50 border-0 h-8 text-sm">
+                    <SelectTrigger className="w-[180px] bg-muted/30 dark:bg-muted/20 border-0 h-8 text-sm font-inter tracking-[-0.5px] rounded-lg">
                       <SelectValue placeholder="All periods" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-0 shadow-lg">
-                      <SelectItem value="all">All Periods</SelectItem>
-                      {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`}>
+                    <SelectContent className="bg-popover border border-border/50 shadow-lg rounded-lg">
+                      <SelectItem value="all" className="font-inter tracking-[-0.5px]">All Periods</SelectItem>
+                      {dateRanges.map((range, idx) => <SelectItem key={idx} value={`${range.start}|${range.end}`} className="font-inter tracking-[-0.5px]">
                           {new Date(range.start).toLocaleDateString()} - {new Date(range.end).toLocaleDateString()}
                         </SelectItem>)}
                     </SelectContent>
@@ -1403,86 +1400,79 @@ export function CampaignAnalyticsTable({
                     console.error("Error deleting CSV period:", error);
                     toast.error("Failed to delete CSV period");
                   }
-                }} className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                }} className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>}
                 </>}
                 <ImportCampaignStatsDialog campaignId={campaignId} onImportComplete={fetchAnalytics} onMatchingRequired={() => {}} />
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-44">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-8 bg-muted/50 border-0 text-sm tracking-[-0.5px]" style={{
-                  fontFamily: 'Inter, sans-serif'
-                }} placeholder="" />
+                <div className="relative flex-1 sm:w-48">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                  <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-8 bg-muted/30 dark:bg-muted/20 border-0 text-sm font-inter tracking-[-0.5px] rounded-lg placeholder:text-muted-foreground/40" placeholder="Search creators..." />
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className={`h-8 text-sm tracking-[-0.5px] gap-1.5 bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground ${platformFilter !== 'all' || showLinkedOnly || showPaidOnly ? "text-foreground" : ""}`} style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>
+                    <Button variant="ghost" size="sm" className={cn(
+                      "h-8 text-sm font-inter tracking-[-0.5px] gap-1.5 rounded-lg",
+                      "bg-muted/30 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/30",
+                      "text-muted-foreground hover:text-foreground transition-colors",
+                      (platformFilter !== 'all' || showLinkedOnly || showPaidOnly) && "text-foreground bg-muted/50"
+                    )}>
                       <Filter className="h-3.5 w-3.5" />
                       Filters
-                      {(platformFilter !== 'all' || showLinkedOnly || showPaidOnly) && <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-primary/20 rounded-full">
+                      {(platformFilter !== 'all' || showLinkedOnly || showPaidOnly) && <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-primary/20 text-primary rounded-full font-medium">
                           {[platformFilter !== 'all', showLinkedOnly, showPaidOnly].filter(Boolean).length}
                         </span>}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-popover border border-border shadow-lg">
-                    <div className="px-2 py-1.5">
-                      <p className="text-xs text-muted-foreground mb-2 tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Platform</p>
+                  <DropdownMenuContent align="end" className="w-48 bg-popover border border-border/50 shadow-lg rounded-lg">
+                    <div className="px-3 py-2">
+                      <p className="text-xs text-muted-foreground mb-2 font-inter tracking-[-0.3px] font-medium">Platform</p>
                       <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                        <SelectTrigger className="w-full h-8 bg-muted/50 border-0 text-sm tracking-[-0.5px]" style={{
-                        fontFamily: 'Inter, sans-serif'
-                      }}>
+                        <SelectTrigger className="w-full h-8 bg-muted/30 dark:bg-muted/20 border-0 text-sm font-inter tracking-[-0.5px] rounded-lg">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-popover border border-border shadow-lg">
-                          <SelectItem value="all" className="text-sm tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>All Platforms</SelectItem>
-                          {platforms.map(platform => <SelectItem key={platform} value={platform} className="capitalize text-sm tracking-[-0.5px]" style={{
-                          fontFamily: 'Inter, sans-serif'
-                        }}>
+                        <SelectContent className="bg-popover border border-border/50 shadow-lg rounded-lg">
+                          <SelectItem value="all" className="text-sm font-inter tracking-[-0.5px]">All Platforms</SelectItem>
+                          {platforms.map(platform => <SelectItem key={platform} value={platform} className="capitalize text-sm font-inter tracking-[-0.5px]">
                               {platform}
                             </SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="border-t border-border my-1" />
+                    <div className="border-t border-border/40 my-1" />
                     <DropdownMenuItem onClick={e => {
                     e.preventDefault();
                     setShowLinkedOnly(!showLinkedOnly);
-                  }} className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Linked only</span>
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${showLinkedOnly ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                  }} className="flex items-center justify-between cursor-pointer px-3 py-2">
+                      <span className="text-sm font-inter tracking-[-0.5px]">Linked only</span>
+                      <div className={cn(
+                        "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                        showLinkedOnly ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                      )}>
                         {showLinkedOnly && <Check className="h-3 w-3 text-primary-foreground" />}
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={e => {
                     e.preventDefault();
                     setShowPaidOnly(!showPaidOnly);
-                  }} className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Paid only</span>
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${showPaidOnly ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                  }} className="flex items-center justify-between cursor-pointer px-3 py-2">
+                      <span className="text-sm font-inter tracking-[-0.5px]">Paid only</span>
+                      <div className={cn(
+                        "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                        showPaidOnly ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                      )}>
                         {showPaidOnly && <Check className="h-3 w-3 text-primary-foreground" />}
                       </div>
                     </DropdownMenuItem>
                     {(platformFilter !== 'all' || showLinkedOnly || showPaidOnly) && <>
-                        <div className="border-t border-border my-1" />
+                        <div className="border-t border-border/40 my-1" />
                         <DropdownMenuItem onClick={() => {
                       setPlatformFilter('all');
                       setShowLinkedOnly(false);
                       setShowPaidOnly(false);
-                    }} className="text-sm text-muted-foreground tracking-[-0.5px]" style={{
-                      fontFamily: 'Inter, sans-serif'
-                    }}>
+                    }} className="text-sm text-muted-foreground font-inter tracking-[-0.5px] px-3 py-2">
                           Clear all filters
                         </DropdownMenuItem>
                       </>}
@@ -1494,65 +1484,52 @@ export function CampaignAnalyticsTable({
                       <Button variant="ghost" size="sm" onClick={() => {
                       toast.info("Re-linking accounts...");
                       fetchAnalytics();
-                    }} disabled={loading} className="h-8 w-8 p-0">
-                        <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    }} disabled={loading} className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors">
+                        <RotateCcw className={cn("h-4 w-4", loading && 'animate-spin')} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Re-link accounts</p>
+                    <TooltipContent className="bg-popover border border-border/50">
+                      <p className="text-sm font-inter tracking-[-0.3px]">Re-link accounts</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
             </div>
-          </CardHeader>
+          </div>
           <CardContent className="p-0">
-          <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-lg dark:border dark:border-[#141414]">
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
               <Table>
-                <TableHeader className="sticky top-0 z-20 bg-card">
-                  <TableRow className="border-0 hover:bg-transparent dark:border-b dark:border-[#141414]">
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] sticky left-0 bg-card z-30 py-3" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>Account</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>User</TableHead>
-                    <TableHead className="text-foreground font-medium text-right cursor-pointer hover:text-muted-foreground transition-colors text-xs tracking-[-0.5px] whitespace-nowrap py-3 bg-card" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }} onClick={() => handleSort('total_views')}>
-                      <div className="flex items-center justify-end gap-1">
+                <TableHeader className="sticky top-0 z-20">
+                  <TableRow className="border-b border-border/40 hover:bg-transparent bg-muted/30 dark:bg-muted/10">
+                    <TableHead className="text-muted-foreground font-medium text-xs font-inter tracking-[-0.3px] sticky left-0 bg-muted/30 dark:bg-muted/10 z-30 py-3 px-4">Account</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">User</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-right cursor-pointer hover:text-foreground transition-colors text-xs font-inter tracking-[-0.3px] whitespace-nowrap py-3 px-4" onClick={() => handleSort('total_views')}>
+                      <div className="flex items-center justify-end gap-1.5">
                         Views
-                        {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5 opacity-30" />}
+                        {sortField === 'total_views' ? sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
                       </div>
                     </TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>Period</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>Last Paid</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs tracking-[-0.5px] py-3 bg-card" style={{
-                    fontFamily: 'Inter, sans-serif'
-                  }}>Actions</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">Period</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4">Last Paid</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs font-inter tracking-[-0.3px] py-3 px-4 w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
               <TableBody>
                 {paginatedAnalytics.map(item => {
                   const platformIcon = getPlatformIcon(item.platform);
                   const username = item.account_username.startsWith('@') ? item.account_username.slice(1) : item.account_username;
-                  return <TableRow key={item.id} className="border-0 hover:bg-muted/30 transition-colors">
-                      <TableCell className="py-3.5 sticky left-0 bg-card/50 z-10">
-                        <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+                  const isPaidForThisPeriod = transactions.some(txn => txn.metadata?.analytics_id === item.id);
+                  return <TableRow key={item.id} className="border-b border-border/20 hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors group">
+                      <TableCell className="py-3 px-4 sticky left-0 bg-card z-10 group-hover:bg-muted/20 dark:group-hover:bg-muted/10 transition-colors">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
                         setSelectedAccountForDemo(item);
                         setDemographicDialogOpen(true);
                       }}>
-                          {platformIcon && <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-muted/50 flex items-center justify-center p-1">
+                          {platformIcon && <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-muted/40 dark:bg-muted/30 flex items-center justify-center p-1.5">
                               <img src={platformIcon} alt={item.platform} className="w-full h-full object-contain" />
                             </div>}
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-foreground font-medium text-sm truncate max-w-[150px] hover:underline">{username}</span>
-                            
-                            {/* Demographic Status Icon - show for all accounts */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-foreground font-medium text-sm font-inter tracking-[-0.5px] truncate max-w-[140px] hover:underline">{username}</span>
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1560,51 +1537,44 @@ export function CampaignAnalyticsTable({
                                     {getDemographicIcon(getDemographicStatus(item))}
                                   </div>
                                 </TooltipTrigger>
-                                <TooltipContent className="bg-popover border">
-                                  <p className="text-sm">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
+                                <TooltipContent className="bg-popover border border-border/50">
+                                  <p className="text-sm font-inter tracking-[-0.3px]">{getDemographicTooltip(getDemographicStatus(item), item.demographic_submission)}</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3.5 bg-card/50">
-                        {item.profiles ? <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => openUserDetailsDialog(item)}>
-                              <Avatar className="h-6 w-6">
+                      <TableCell className="py-3 px-4">
+                        {item.profiles ? <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => openUserDetailsDialog(item)}>
+                              <Avatar className="h-7 w-7 ring-1 ring-border/30">
                                 <AvatarImage src={item.profiles.avatar_url || undefined} />
-                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                                   {item.profiles.username?.charAt(0).toUpperCase() || 'U'}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-foreground text-sm font-medium truncate max-w-[100px] hover:underline">
+                              <span className="text-foreground text-sm font-medium font-inter tracking-[-0.5px] truncate max-w-[100px] hover:underline">
                                 {item.profiles.username}
                               </span>
                             </div>
-                            {(() => {
-                          // Check if this specific analytics record has been paid
-                          const isPaidForThisPeriod = transactions.some(txn => txn.metadata?.analytics_id === item.id);
-                          if (isPaidForThisPeriod) {
-                            return <Badge className="text-green-500 px-1.5 py-0 text-[10px] font-inter tracking-[-0.5px] font-medium rounded-sm bg-[#21693c]/[0.56] hover:bg-[#21693c]/[0.56]">
-                                    <Check className="h-2.5 w-2.5 mr-0.5" />
+                            {isPaidForThisPeriod && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium font-inter tracking-[-0.3px] rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                    <Check className="h-2.5 w-2.5" />
                                     Paid
-                                  </Badge>;
-                          }
-                          return null;
-                        })()}
-                          </div> : <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm" onClick={e => {
+                                  </span>}
+                          </div> : <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors text-sm font-inter tracking-[-0.5px]" onClick={e => {
                         e.stopPropagation();
                         openLinkDialog(item);
                       }}>
-                            <Link2 className="h-4 w-4" />
-                            <span>Link User</span>
+                            <Link2 className="h-3.5 w-3.5" />
+                            <span className="font-medium">Link User</span>
                           </button>}
                       </TableCell>
-                      <TableCell className="text-foreground text-right text-sm bg-card/50 py-3.5 font-medium tabular-nums">
+                      <TableCell className="text-foreground text-right text-sm py-3 px-4 font-semibold font-inter tracking-[-0.5px] tabular-nums">
                         {item.total_views.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
-                        {item.start_date && item.end_date ? <span className="text-sm whitespace-nowrap">
+                      <TableCell className="text-muted-foreground text-sm py-3 px-4 font-inter tracking-[-0.3px]">
+                        {item.start_date && item.end_date ? <span className="whitespace-nowrap">
                             {new Date(item.start_date).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric'
@@ -1612,45 +1582,45 @@ export function CampaignAnalyticsTable({
                           month: 'short',
                           day: 'numeric'
                         })}
-                          </span> : <span className="text-muted-foreground/50">—</span>}
+                          </span> : <span className="text-muted-foreground/40">—</span>}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm bg-card/50 py-3.5">
-                        {item.last_payment_date ? <span className="text-sm">
+                      <TableCell className="text-muted-foreground text-sm py-3 px-4 font-inter tracking-[-0.3px]">
+                        {item.last_payment_date ? <span>
                             {formatDistanceToNow(new Date(item.last_payment_date), {
                           addSuffix: true
                         })}
-                          </span> : <span className="text-muted-foreground/50">—</span>}
+                          </span> : <span className="text-muted-foreground/40">—</span>}
                       </TableCell>
-                      <TableCell className="py-3.5 bg-card/50">
-                        <div className="flex items-center gap-0.5">
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center gap-1">
                           {item.user_id && <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={e => {
+                                  <Button variant="ghost" size="sm" onClick={e => {
                                 e.stopPropagation();
                                 setSelectedUser(item);
                                 setPaymentDialogOpen(true);
-                              }} className="h-8 w-8 text-green-500 hover:text-green-400 hover:bg-green-500/10">
+                              }} className="h-7 w-7 p-0 rounded-lg text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
                                     <DollarSign className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Send payment</p>
+                                <TooltipContent className="bg-popover border border-border/50">
+                                  <p className="text-sm font-inter tracking-[-0.3px]">Send payment</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>}
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => {
+                                <Button variant="ghost" size="sm" onClick={() => {
                                 setDeleteAccountId(item.id);
                                 setDeleteDialogOpen(true);
-                              }} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-                                  <Trash2 className="h-4 w-4" />
+                              }} className="h-7 w-7 p-0 rounded-lg text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors">
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Delete analytics</p>
+                              <TooltipContent className="bg-popover border border-border/50">
+                                <p className="text-sm font-inter tracking-[-0.3px]">Delete analytics</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -1661,21 +1631,30 @@ export function CampaignAnalyticsTable({
               </TableBody>
             </Table>
           </div>
-          {filteredAnalytics.length === 0 && <div className="text-center py-12 text-muted-foreground">
-              No accounts match your filters
+          {filteredAnalytics.length === 0 && <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                <Search className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-muted-foreground text-sm font-inter tracking-[-0.3px]">No accounts match your filters</p>
+              <button
+                onClick={() => { setPlatformFilter('all'); setShowLinkedOnly(false); setShowPaidOnly(false); setSearchTerm(''); }}
+                className="text-primary text-sm font-inter tracking-[-0.5px] mt-2 hover:underline"
+              >
+                Clear all filters
+              </button>
             </div>}
         </CardContent>
       </Card>}
 
         {/* Transactions View - PayoutRequestsTable + Transaction History */}
         {activeTab === 'transactions' && <>
-            {/* Payout Requests Section */}
+            {/* Payout Requests Section - only shows when there are requests */}
             <div className="py-2">
-              <PayoutRequestsTable campaignId={campaignId} showEmpty={true} />
+              <PayoutRequestsTable campaignId={campaignId} showEmpty={false} />
             </div>
 
             {/* Transaction History Section */}
-            <Card className="mt-4 bg-card border border-border rounded-xl overflow-hidden">
+            <Card className="bg-card border border-border rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-sm font-semibold tracking-[-0.3px]">Payment History</h3>
                 <p className="text-xs text-muted-foreground tracking-[-0.2px] mt-0.5">All payments made to creators for this campaign</p>
@@ -1926,27 +1905,38 @@ export function CampaignAnalyticsTable({
          </div>}
 
       {/* Pagination */}
-      {activeTab === 'analytics' && totalPages > 1 && <div className="flex justify-center mt-3">
-          <div className="flex items-center gap-1">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none">
-              <ChevronLeft className="h-3.5 w-3.5" />
+      {activeTab === 'analytics' && totalPages > 1 && <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-card rounded-b-xl">
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+            {filteredAnalytics.length} creator{filteredAnalytics.length !== 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none">
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            
+
             {Array.from({
             length: totalPages
-          }, (_, i) => i + 1).map(page => {
-            if (page === 1 || page === totalPages || page >= currentPage - 1 && page <= currentPage + 1) {
-              return <button key={page} onClick={() => setCurrentPage(page)} className={`h-7 min-w-[28px] px-2 text-xs rounded transition-colors ${currentPage === page ? 'bg-muted/70 text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}>
+          }, (_, i) => i + 1).filter(page => {
+            if (totalPages <= 5) return true;
+            if (page === 1 || page === totalPages) return true;
+            if (Math.abs(page - currentPage) <= 1) return true;
+            return false;
+          }).map((page, index, arr) => (
+              <span key={page}>
+                {index > 0 && arr[index - 1] !== page - 1 && (
+                  <span className="px-1 text-muted-foreground/40 text-xs">...</span>
+                )}
+                <button onClick={() => setCurrentPage(page)} className={cn(
+                    "h-7 w-7 text-xs font-inter rounded-lg transition-colors",
+                    currentPage === page ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                  )}>
                     {page}
-                  </button>;
-            } else if (page === currentPage - 2 || page === currentPage + 2) {
-              return <span key={page} className="px-1 text-muted-foreground/50 text-xs">...</span>;
-            }
-            return null;
-          })}
+                  </button>
+              </span>
+            ))}
 
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none">
-              <ChevronRight className="h-3.5 w-3.5" />
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none">
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </div>}

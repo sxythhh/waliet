@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Briefcase } from "lucide-react";
-import { BrandPitchesPanel } from "@/components/brand/BrandPitchesPanel";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -82,7 +81,7 @@ const getPlatformLogos = (isDark: boolean): Record<string, string> => ({
   x: isDark ? xLogoWhite : xLogoBlack
 });
 type MobileView = 'messages' | 'conversation' | 'creators';
-type MessageFilter = 'all' | 'unread' | 'bookmarked' | 'pitches';
+type MessageFilter = 'all' | 'unread' | 'bookmarked';
 type MembershipFilter = 'all' | 'active' | 'applied';
 interface Campaign {
   id: string;
@@ -701,20 +700,15 @@ export function CreatorsTab({
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
-          <button className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'pitches' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('pitches')}>
-            <Briefcase className="h-3 w-3" />
-            Pitches
-          </button>
         </div>
 
-        {/* Pitches Panel or Messages List */}
-        {messageFilter === 'pitches' ? (
-          <BrandPitchesPanel brandId={brandId} />
-        ) : (
+        {/* Messages List */}
         <ScrollArea className="flex-1">
           {conversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
-              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
-                <img src={mailIcon} className="h-8 w-8 opacity-60" alt="Mail" />
+              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-muted/50 flex items-center justify-center mb-5">
+                <span className="material-symbols-rounded text-[32px] text-muted-foreground" style={{ fontVariationSettings: "'FILL' 1, 'wght' 400" }}>
+                  mail
+                </span>
               </div>
               <h3 className="font-semibold text-base mb-2">Your Inbox is Empty</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
@@ -783,7 +777,6 @@ export function CreatorsTab({
             })}
             </div>}
         </ScrollArea>
-        )}
       </div>
 
       {/* Middle Column - Active Conversation */}

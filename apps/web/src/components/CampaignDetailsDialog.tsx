@@ -538,7 +538,7 @@ export function CampaignDetailsDialog({
             </div>
             
             {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
-                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 transition-all duration-200 cursor-pointer bg-popover rounded-md">
+                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 transition-all duration-200 cursor-pointer bg-popover hover:bg-muted dark:hover:bg-muted/60 rounded-md">
                     <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
                       {getPlatformIcon(account.platform) && <img src={getPlatformIcon(account.platform)!} alt={account.platform} className="w-4 h-4" />}
                     </div>

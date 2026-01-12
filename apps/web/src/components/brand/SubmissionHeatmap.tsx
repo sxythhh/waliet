@@ -236,49 +236,47 @@ export function SubmissionHeatmap({
                             }} 
                           />
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="bg-popover border border-border/60 shadow-lg px-3 py-2">
-                          <div className="font-medium tracking-[-0.3px]">
-                            <p className="text-xs text-muted-foreground mb-1">
-                              {format(day.date, "EEE, MMM d")}
-                            </p>
-                            {isFuture ? (
-                              <p className="text-sm font-medium text-foreground/60">Upcoming</p>
-                            ) : (
-                              <>
-                                <p className="text-sm font-semibold text-foreground">
-                                  {day.total} {day.total === 1 ? "video" : "videos"}
-                                </p>
-                                {day.total > 0 && (
-                                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5 text-[10px]">
-                                    {day.approved > 0 && (
-                                      <span className="text-emerald-500 flex items-center gap-1">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        {day.approved} approved
-                                      </span>
-                                    )}
-                                    {day.tracked > 0 && (
-                                      <span className="text-purple-500 flex items-center gap-1">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                                        {day.tracked} tracked
-                                      </span>
-                                    )}
-                                    {day.pending > 0 && (
-                                      <span className="text-amber-500 flex items-center gap-1">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                        {day.pending} pending
-                                      </span>
-                                    )}
-                                    {day.rejected > 0 && (
-                                      <span className="text-red-400 flex items-center gap-1">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                                        {day.rejected} rejected
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
+                        <TooltipContent side="top" className="bg-background border border-border/40 shadow-md px-2 py-1.5">
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(day.date, "EEE, MMM d")}
+                          </p>
+                          {isFuture ? (
+                            <p className="text-xs text-foreground/50">Upcoming</p>
+                          ) : (
+                            <>
+                              <p className="text-xs font-medium text-foreground">
+                                {day.total} {day.total === 1 ? "video" : "videos"}
+                              </p>
+                              {day.total > 0 && (
+                                <div className="flex flex-col gap-0.5 mt-1 text-[10px]">
+                                  {day.approved > 0 && (
+                                    <span className="text-emerald-500 flex items-center gap-1">
+                                      <span className="h-1 w-1 rounded-[2px] bg-emerald-500" />
+                                      {day.approved} approved
+                                    </span>
+                                  )}
+                                  {day.tracked > 0 && (
+                                    <span className="text-purple-500 flex items-center gap-1">
+                                      <span className="h-1 w-1 rounded-[2px] bg-purple-500" />
+                                      {day.tracked} tracked
+                                    </span>
+                                  )}
+                                  {day.pending > 0 && (
+                                    <span className="text-amber-500 flex items-center gap-1">
+                                      <span className="h-1 w-1 rounded-[2px] bg-amber-500" />
+                                      {day.pending} pending
+                                    </span>
+                                  )}
+                                  {day.rejected > 0 && (
+                                    <span className="text-red-400 flex items-center gap-1">
+                                      <span className="h-1 w-1 rounded-[2px] bg-red-400" />
+                                      {day.rejected} rejected
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     );

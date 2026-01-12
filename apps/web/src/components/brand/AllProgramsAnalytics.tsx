@@ -334,6 +334,8 @@ export function AllProgramsAnalytics({
     }
   };
   useEffect(() => {
+    // Reset data immediately when timeframe changes to prevent flash of stale data
+    setMetricsData([]);
     loadData();
   }, [brandId, timeframe]);
   if (isLoading) {
@@ -359,7 +361,7 @@ export function AllProgramsAnalytics({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Views Generated</p>
             <div className="flex items-center justify-between">
@@ -370,7 +372,7 @@ export function AllProgramsAnalytics({
           </div>
         </Card>
 
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Effective CPM</p>
             <div className="flex items-center justify-between">
@@ -380,7 +382,7 @@ export function AllProgramsAnalytics({
           </div>
         </Card>
 
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Payouts</p>
             <div className="flex items-center justify-between">
@@ -391,7 +393,7 @@ export function AllProgramsAnalytics({
           </div>
         </Card>
 
-        <Card className="p-4 bg-stats-card border-table-border">
+        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Submissions</p>
             <div className="flex items-center justify-between">

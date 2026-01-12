@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,12 +25,24 @@ export const useAuth = () => {
   return context;
 };
 
+// Polyfill for crypto.randomUUID (not available on iOS < 15.4 or some WebViews)
+const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback using crypto.getRandomValues
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 15) >> (c === 'x' ? 0 : 3);
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+};
+
 // Get or create a unique browser/device session identifier
 const getBrowserSessionId = (): string => {
   const storageKey = 'browser_session_id';
   let sessionId = localStorage.getItem(storageKey);
   if (!sessionId) {
-    sessionId = crypto.randomUUID();
+    sessionId = generateUUID();
     localStorage.setItem(storageKey, sessionId);
   }
   return sessionId;
@@ -75,12 +87,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Popups should not initialize auth to avoid affecting main window's session
   const isPopup = typeof window !== 'undefined' && window.opener !== null;
 
-  const updateAuthState = useCallback((newSession: Session | null) => {
-    setSession(newSession);
-    setUser(newSession?.user ?? null);
-    setLoading(false);
-  }, []);
-
   useEffect(() => {
     // Skip auth initialization in popup windows to prevent cross-tab auth sync issues
     if (isPopup) {
@@ -88,52 +94,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Set up auth state listener FIRST
+    // Get the initial session FIRST - this is the authoritative source
+    // This must complete before we set loading to false
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      setLoading(false);
+
+      // Track existing session on page load (but only once)
+      if (initialSession && !hasTrackedSession.current) {
+        const browserSessionId = getBrowserSessionId();
+        hasTrackedSession.current = browserSessionId;
+        trackUserSession(initialSession.user.id, initialSession.access_token);
+      }
+    });
+
+    // Set up auth state listener for SUBSEQUENT changes only
+    // This handles sign in, sign out, token refresh AFTER initial load
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        // Only sign out if the user explicitly signed out or session is truly invalid
-        if (event === 'SIGNED_OUT') {
-          hasTrackedSession.current = null;
-          updateAuthState(null);
+        // Ignore INITIAL_SESSION - we handle that with getSession() above
+        if (event === 'INITIAL_SESSION') {
           return;
         }
 
-        // For all other events (including TOKEN_REFRESHED, SIGNED_IN, etc.), update state
+        // Handle sign out
+        if (event === 'SIGNED_OUT') {
+          hasTrackedSession.current = null;
+          setSession(null);
+          setUser(null);
+          return;
+        }
+
+        // Handle sign in, token refresh, etc.
         if (currentSession) {
-          updateAuthState(currentSession);
-          
+          setSession(currentSession);
+          setUser(currentSession.user);
+
           // Track session on sign in (only once per browser session)
           const browserSessionId = getBrowserSessionId();
           if (event === 'SIGNED_IN' && browserSessionId !== hasTrackedSession.current) {
             hasTrackedSession.current = browserSessionId;
-            // Use setTimeout to avoid blocking the auth flow
             setTimeout(() => {
               trackUserSession(currentSession.user.id, currentSession.access_token);
             }, 0);
           }
-        } else if (event === 'INITIAL_SESSION' && !currentSession) {
-          // No session on initial load - that's fine, user isn't logged in
-          updateAuthState(null);
         }
-        // Don't sign out on TOKEN_REFRESH_FAILED - let the session persist
-        // The next API call will handle re-auth if truly needed
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      updateAuthState(existingSession);
-      
-      // Track existing session on page load (but only once)
-      if (existingSession && !hasTrackedSession.current) {
-        const browserSessionId = getBrowserSessionId();
-        hasTrackedSession.current = browserSessionId;
-        trackUserSession(existingSession.user.id, existingSession.access_token);
-      }
-    });
-
     return () => subscription.unsubscribe();
-  }, [updateAuthState]);
+  }, []);
 
 
   return (

@@ -12,15 +12,18 @@ import {
   RATE_TYPE_OPTIONS,
 } from "@/types/portfolio";
 import type { RateRange } from "@/types/portfolio";
+import { EDITING_TOOLS } from "@/components/EditingToolsDialog";
 
 interface CreatorInfoSectionProps {
   contentNiches: string[];
   equipment: string[];
+  editingTools: string[];
   languages: string[];
   availability: string | null;
   rateRange: RateRange | null;
   onContentNichesChange: (value: string[]) => void;
   onEquipmentChange: (value: string[]) => void;
+  onEditingToolsChange: (value: string[]) => void;
   onLanguagesChange: (value: string[]) => void;
   onAvailabilityChange: (value: string | null) => void;
   onRateRangeChange: (value: RateRange | null) => void;
@@ -29,11 +32,13 @@ interface CreatorInfoSectionProps {
 export function CreatorInfoSection({
   contentNiches,
   equipment,
+  editingTools,
   languages,
   availability,
   rateRange,
   onContentNichesChange,
   onEquipmentChange,
+  onEditingToolsChange,
   onLanguagesChange,
   onAvailabilityChange,
   onRateRangeChange,
@@ -56,6 +61,16 @@ export function CreatorInfoSection({
 
   const handleRemoveEquipment = (item: string) => {
     onEquipmentChange(equipment.filter((e) => e !== item));
+  };
+
+  const handleAddEditingTool = (toolId: string) => {
+    if (!editingTools.includes(toolId)) {
+      onEditingToolsChange([...editingTools, toolId]);
+    }
+  };
+
+  const handleRemoveEditingTool = (toolId: string) => {
+    onEditingToolsChange(editingTools.filter((t) => t !== toolId));
   };
 
   const handleAddLanguage = (lang: string) => {
@@ -119,6 +134,41 @@ export function CreatorInfoSection({
             {EQUIPMENT_OPTIONS.filter((e) => !equipment.includes(e)).map((item) => (
               <SelectItem key={item} value={item}>
                 {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </InfoGroup>
+
+      {/* Editing Tools */}
+      <InfoGroup label="Editing Tools" description="What video editing and AI tools do you use?">
+        {editingTools.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {editingTools.map((toolId) => {
+              const tool = EDITING_TOOLS.find((t) => t.id === toolId);
+              if (!tool) return null;
+              return (
+                <ToolBadge
+                  key={toolId}
+                  logo={tool.logo}
+                  name={tool.name}
+                  onRemove={() => handleRemoveEditingTool(toolId)}
+                />
+              );
+            })}
+          </div>
+        )}
+        <Select onValueChange={handleAddEditingTool}>
+          <SelectTrigger className="bg-muted/30 border-0 focus:ring-1">
+            <SelectValue placeholder="Add a tool..." />
+          </SelectTrigger>
+          <SelectContent>
+            {EDITING_TOOLS.filter((t) => !editingTools.includes(t.id)).map((tool) => (
+              <SelectItem key={tool.id} value={tool.id}>
+                <div className="flex items-center gap-2">
+                  <img src={tool.logo} alt="" className="w-4 h-4 rounded object-contain" />
+                  <span>{tool.name}</span>
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
@@ -289,6 +339,36 @@ function TagBadge({
       )}
     >
       <span>{children}</span>
+      <button
+        onClick={onRemove}
+        className="p-0.5 rounded-full opacity-60 hover:opacity-100 hover:bg-muted-foreground/20 transition-all"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+
+// Tool Badge Component (with logo)
+function ToolBadge({
+  logo,
+  name,
+  onRemove,
+}: {
+  logo: string;
+  name: string;
+  onRemove: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "group flex items-center gap-2 px-3 py-1.5 rounded-full",
+        "bg-muted text-foreground text-sm",
+        "border border-border/50"
+      )}
+    >
+      <img src={logo} alt="" className="w-4 h-4 rounded object-contain" />
+      <span>{name}</span>
       <button
         onClick={onRemove}
         className="p-0.5 rounded-full opacity-60 hover:opacity-100 hover:bg-muted-foreground/20 transition-all"
