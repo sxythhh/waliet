@@ -130,6 +130,24 @@ const STATUS_CONFIG = {
   rejected: { color: "bg-red-500", textColor: "text-red-600 dark:text-red-400" },
 } as const;
 
+// Helper to clean caption - removes garbage lines like "0", single chars, just numbers
+const cleanCaption = (text: string | null | undefined): string | null => {
+  if (!text) return null;
+
+  // Split on any line break character (handles \n, \r\n, \r, and Unicode line separators)
+  const lines = text.split(/[\r\n\u2028\u2029]+/).map(line => line.trim()).filter(line => {
+    if (line.length < 2) return false; // Single char or empty
+    if (/^\d+$/.test(line)) return false; // Just numbers
+    return true;
+  });
+
+  const cleaned = lines.join(' ').trim();
+  if (cleaned.length < 3) return null;
+  // Final check: if result is just digits/whitespace, return null
+  if (/^\d+$/.test(cleaned)) return null;
+  return cleaned;
+};
+
 // Droppable column content wrapper
 function DroppableColumn({
   column,
@@ -217,20 +235,16 @@ function DraggableCard({
         isDragging && "opacity-50 shadow-lg ring-2 ring-primary/30"
       )}
     >
-      {/* Video Thumbnail */}
-      {submission.gdrive_thumbnail_url ? (
-        <div className="relative aspect-video w-full bg-muted">
-          <img
-            src={submission.gdrive_thumbnail_url}
-            alt={submission.gdrive_file_name || "Video thumbnail"}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Hide broken image and show fallback
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+      {/* Video Thumbnail - Use iframe preview for better quality */}
+      {submission.gdrive_file_id ? (
+        <div className="relative aspect-video w-full bg-muted overflow-hidden">
+          <iframe
+            src={`https://drive.google.com/file/d/${submission.gdrive_file_id}/preview`}
+            className="w-full h-full border-0 pointer-events-none"
+            allow="autoplay"
           />
           {submission.duration_seconds && (
-            <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-medium rounded font-inter tabular-nums">
+            <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-medium rounded font-inter tabular-nums z-10">
               {Math.floor(submission.duration_seconds / 60)}:{(submission.duration_seconds % 60).toString().padStart(2, "0")}
             </span>
           )}
@@ -240,7 +254,7 @@ function DraggableCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="absolute top-1.5 right-1.5 p-1 bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 rounded transition-colors opacity-0 group-hover:opacity-100"
+              className="absolute top-1.5 right-1.5 p-1 bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
             >
               <ExternalLink className="w-3 h-3" />
             </a>
@@ -358,15 +372,15 @@ function DraggableCard({
         </div>
 
         {/* Caption Preview */}
-        {submission.caption && (
+        {cleanCaption(submission.caption) && (
           <p className="text-[11px] text-foreground/80 font-inter leading-relaxed line-clamp-2 mb-2">
-            {submission.caption}
+            {cleanCaption(submission.caption)}
           </p>
         )}
 
         {/* Revision + Feedback Row */}
         <div className="flex items-center gap-2 mb-2">
-          {submission.revision_number > 0 && (
+          {(submission.revision_number ?? 0) > 0 && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-medium font-inter">
               Rev {submission.revision_number}
             </span>
@@ -1275,10 +1289,10 @@ export function BoostVideoReviewQueue({
                     </Button>
                   )}
                 </div>
-                {drawerSubmission.caption ? (
+                {cleanCaption(drawerSubmission.caption) ? (
                   <div className="space-y-1.5">
                     <p className="text-sm text-foreground font-inter leading-relaxed bg-muted/20 rounded-lg p-3">
-                      {drawerSubmission.caption}
+                      {cleanCaption(drawerSubmission.caption)}
                     </p>
                     {drawerSubmission.caption_edited_at && (
                       <p className="text-[10px] text-muted-foreground font-inter">
@@ -1312,11 +1326,11 @@ export function BoostVideoReviewQueue({
               </div>
 
               {/* Submission Notes */}
-              {drawerSubmission.submission_notes && (
+              {cleanCaption(drawerSubmission.submission_notes) && (
                 <div>
                   <p className="text-[10px] uppercase text-muted-foreground font-medium tracking-wide mb-2">Creator Notes</p>
                   <p className="text-sm text-foreground font-inter leading-relaxed bg-muted/20 rounded-lg p-3">
-                    {drawerSubmission.submission_notes}
+                    {cleanCaption(drawerSubmission.submission_notes)}
                   </p>
                 </div>
               )}
@@ -1377,7 +1391,7 @@ export function BoostVideoReviewQueue({
                   <Button
                     size="sm"
                     onClick={() => openMarkAsPosted(drawerSubmission)}
-                    className="w-full justify-start gap-2 font-inter bg-emerald-600 hover:bg-emerald-700"
+                    className="w-full justify-start gap-2 font-inter bg-emerald-600 hover:bg-emerald-700 border-t-emerald-500"
                   >
                     <Icon icon="lucide:check-circle-2" className="w-4 h-4" />
                     Mark as Posted

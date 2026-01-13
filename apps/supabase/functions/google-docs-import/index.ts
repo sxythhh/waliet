@@ -302,12 +302,28 @@ Deno.serve(async (req) => {
 
     // List user's recent Google Docs
     if (action === 'list_documents') {
-      const accessToken = await getValidAccessToken(
-        supabase,
-        user.id,
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET
-      );
+      let accessToken: string;
+      try {
+        accessToken = await getValidAccessToken(
+          supabase,
+          user.id,
+          GOOGLE_CLIENT_ID,
+          GOOGLE_CLIENT_SECRET
+        );
+      } catch (tokenError) {
+        // Return a structured error for "not connected" scenarios
+        const message = tokenError instanceof Error ? tokenError.message : 'Token error';
+        if (message.includes('not connected') || message.includes('connect your Google')) {
+          return new Response(JSON.stringify({
+            error: 'Google Docs not connected. Please connect your Google account first.',
+            code: 'NOT_CONNECTED',
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw tokenError;
+      }
 
       // Query for Google Docs only, ordered by last modified
       const params = new URLSearchParams({
@@ -351,12 +367,27 @@ Deno.serve(async (req) => {
         });
       }
 
-      const accessToken = await getValidAccessToken(
-        supabase,
-        user.id,
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET
-      );
+      let accessToken: string;
+      try {
+        accessToken = await getValidAccessToken(
+          supabase,
+          user.id,
+          GOOGLE_CLIENT_ID,
+          GOOGLE_CLIENT_SECRET
+        );
+      } catch (tokenError) {
+        const message = tokenError instanceof Error ? tokenError.message : 'Token error';
+        if (message.includes('not connected') || message.includes('connect your Google')) {
+          return new Response(JSON.stringify({
+            error: 'Google Docs not connected. Please connect your Google account first.',
+            code: 'NOT_CONNECTED',
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw tokenError;
+      }
 
       // Fetch the document content
       const response = await fetch(`${GOOGLE_DOCS_API}/documents/${document_id}`, {

@@ -362,7 +362,22 @@ Deno.serve(async (req) => {
 
     // Search user's Notion pages
     if (action === 'search_pages') {
-      const accessToken = await getAccessToken(supabase, user.id);
+      let accessToken: string;
+      try {
+        accessToken = await getAccessToken(supabase, user.id);
+      } catch (tokenError) {
+        const message = tokenError instanceof Error ? tokenError.message : 'Token error';
+        if (message.includes('not connected') || message.includes('connect your Notion')) {
+          return new Response(JSON.stringify({
+            error: 'Notion not connected. Please connect your Notion account first.',
+            code: 'NOT_CONNECTED',
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw tokenError;
+      }
 
       const searchBody: Record<string, unknown> = {
         filter: {
@@ -418,7 +433,22 @@ Deno.serve(async (req) => {
 
     // List user's recent Notion pages (alias for search without query)
     if (action === 'list_pages') {
-      const accessToken = await getAccessToken(supabase, user.id);
+      let accessToken: string;
+      try {
+        accessToken = await getAccessToken(supabase, user.id);
+      } catch (tokenError) {
+        const message = tokenError instanceof Error ? tokenError.message : 'Token error';
+        if (message.includes('not connected') || message.includes('connect your Notion')) {
+          return new Response(JSON.stringify({
+            error: 'Notion not connected. Please connect your Notion account first.',
+            code: 'NOT_CONNECTED',
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw tokenError;
+      }
 
       const response = await fetch(`${NOTION_API_URL}/search`, {
         method: 'POST',
@@ -475,7 +505,22 @@ Deno.serve(async (req) => {
         });
       }
 
-      const accessToken = await getAccessToken(supabase, user.id);
+      let accessToken: string;
+      try {
+        accessToken = await getAccessToken(supabase, user.id);
+      } catch (tokenError) {
+        const message = tokenError instanceof Error ? tokenError.message : 'Token error';
+        if (message.includes('not connected') || message.includes('connect your Notion')) {
+          return new Response(JSON.stringify({
+            error: 'Notion not connected. Please connect your Notion account first.',
+            code: 'NOT_CONNECTED',
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        throw tokenError;
+      }
 
       // Fetch page metadata
       const pageResponse = await fetch(`${NOTION_API_URL}/pages/${page_id}`, {

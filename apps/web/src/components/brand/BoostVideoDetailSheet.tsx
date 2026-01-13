@@ -57,8 +57,8 @@ interface BoostVideoDetailSheetProps {
 const cleanCaption = (text: string | null | undefined): string | null => {
   if (!text) return null;
 
-  // Split by newlines and filter out garbage lines
-  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => {
+  // Split on any line break character (handles \n, \r\n, \r, and Unicode line separators)
+  const lines = text.split(/[\r\n\u2028\u2029]+/).map(line => line.trim()).filter(line => {
     if (line.length < 2) return false; // Single char or empty
     if (/^\d+$/.test(line)) return false; // Just numbers
     return true;
@@ -66,6 +66,8 @@ const cleanCaption = (text: string | null | undefined): string | null => {
 
   const cleaned = lines.join(' ').trim();
   if (cleaned.length < 3) return null;
+  // Final check: if result is just digits/whitespace, return null
+  if (/^\d+$/.test(cleaned)) return null;
   return cleaned;
 };
 
@@ -220,7 +222,7 @@ export function BoostVideoDetailSheet({
               )}
 
               {/* Revision */}
-              {video.revision_number && video.revision_number > 0 && (
+              {(video.revision_number ?? 0) > 0 && (
                 <div className="flex items-center gap-1.5 text-xs text-amber-500">
                   <History className="w-3 h-3" />
                   <span>Rev {video.revision_number}</span>
@@ -273,7 +275,7 @@ export function BoostVideoDetailSheet({
           {isPending && (
             <div className="flex gap-2">
               <Button
-                className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-medium border-t-emerald-500"
                 onClick={handleApprove}
                 disabled={updating}
               >

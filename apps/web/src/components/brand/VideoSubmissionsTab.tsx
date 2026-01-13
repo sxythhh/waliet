@@ -370,7 +370,7 @@ function KanbanDraggableCard({
           )}
 
           {/* Revision indicator */}
-          {video.revision_number && video.revision_number > 0 && (
+          {(video.revision_number ?? 0) > 0 && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-medium font-inter">
               Rev {video.revision_number}
             </span>

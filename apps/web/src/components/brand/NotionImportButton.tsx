@@ -313,6 +313,18 @@ export function NotionImportButton({
       }
 
       if (data?.error) {
+        // Check for NOT_CONNECTED code
+        if (data?.code === "NOT_CONNECTED") {
+          setIsConnected(false);
+          setPagesOpen(false);
+          toast({
+            variant: "destructive",
+            title: "Connection Required",
+            description: data.error,
+          });
+          setTimeout(() => handleConnect(), 500);
+          return;
+        }
         throw new Error(data.error);
       }
 
@@ -349,6 +361,18 @@ export function NotionImportButton({
       }
 
       if (data?.error) {
+        // Check for NOT_CONNECTED code
+        if (data?.code === "NOT_CONNECTED") {
+          setIsConnected(false);
+          setPagesOpen(false);
+          toast({
+            variant: "destructive",
+            title: "Connection Required",
+            description: data.error,
+          });
+          setTimeout(() => handleConnect(), 500);
+          return;
+        }
         throw new Error(data.error);
       }
 
