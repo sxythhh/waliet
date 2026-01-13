@@ -165,52 +165,99 @@ export function SubmitAudienceInsightsDialog({
         return;
       }
 
-      // Upload video to R2 via edge function
+      // Upload video via edge function with retry logic
       setUploadProgress(0);
       clearProgressInterval();
       progressIntervalRef.current = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) return prev;
-          return prev + Math.random() * 15;
+          return prev + Math.random() * 10;
         });
-      }, 300);
+      }, 500);
 
-      // Create form data for upload
-      const formData = new FormData();
-      formData.append('file', videoFile);
-      formData.append('userId', session.user.id);
-      formData.append('socialAccountId', socialAccountId);
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('Application configuration error. Please refresh and try again.');
+      }
 
-      // Upload to R2 via edge function
-      let uploadResponse: Response;
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        if (!supabaseUrl) {
-          throw new Error('Application configuration error. Please refresh and try again.');
-        }
+      // Retry logic for transient failures
+      const MAX_RETRIES = 3;
+      const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes for large files
+      let uploadResponse: Response | null = null;
+      let lastError: Error | null = null;
 
-        uploadResponse = await fetch(
-          `${supabaseUrl}/functions/v1/upload-demographics-video`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: formData,
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // Create fresh form data for each attempt
+          const formData = new FormData();
+          formData.append('file', videoFile);
+          formData.append('userId', session.user.id);
+          formData.append('socialAccountId', socialAccountId);
+
+          // Use AbortController for timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+          try {
+            uploadResponse = await fetch(
+              `${supabaseUrl}/functions/v1/upload-demographics-video`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: formData,
+                signal: controller.signal,
+              }
+            );
+            clearTimeout(timeoutId);
+
+            // If we get a response (even error), don't retry
+            if (uploadResponse.ok) break;
+
+            // Check if it's a retryable error (5xx server errors)
+            if (uploadResponse.status >= 500 && attempt < MAX_RETRIES) {
+              console.log(`Upload attempt ${attempt} failed with status ${uploadResponse.status}, retrying...`);
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+              continue;
+            }
+            break; // Non-retryable error, exit loop
+          } catch (fetchError: unknown) {
+            clearTimeout(timeoutId);
+            throw fetchError;
           }
-        );
-      } catch (fetchError: unknown) {
-        clearProgressInterval();
-        setUploadProgress(0);
-        // Handle network errors specifically
-        if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
-          throw new Error('Network error. Please check your internet connection and try again.');
+        } catch (fetchError: unknown) {
+          lastError = fetchError instanceof Error ? fetchError : new Error('Unknown error');
+
+          // Check if it's a retryable error
+          const isTimeout = lastError.name === 'AbortError';
+          const isNetworkError = lastError instanceof TypeError && lastError.message === 'Failed to fetch';
+
+          if ((isTimeout || isNetworkError) && attempt < MAX_RETRIES) {
+            console.log(`Upload attempt ${attempt} failed (${isTimeout ? 'timeout' : 'network error'}), retrying...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+            continue;
+          }
+
+          // Final attempt failed
+          clearProgressInterval();
+          setUploadProgress(0);
+
+          if (isTimeout) {
+            throw new Error('Upload timed out. Your connection may be slow - please try again or use a smaller video file.');
+          }
+          if (isNetworkError) {
+            throw new Error('Network error. Please check your internet connection and try again.');
+          }
+          throw new Error(lastError.message || 'Failed to connect to upload service');
         }
-        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Failed to connect to upload service';
-        throw new Error(errorMessage);
       }
 
       clearProgressInterval();
+
+      if (!uploadResponse) {
+        throw new Error(lastError?.message || 'Upload failed after multiple attempts');
+      }
 
       if (!uploadResponse.ok) {
         setUploadProgress(0);
@@ -317,12 +364,12 @@ export function SubmitAudienceInsightsDialog({
       return;
     }
 
-    // Validate file size (max 15MB - compressed videos only)
-    if (file.size > 15 * 1024 * 1024) {
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Video must be less than 15MB. Try compressing the video or reducing resolution."
+        description: "Video must be less than 50MB. Try compressing the video or reducing resolution."
       });
       return;
     }
@@ -432,7 +479,7 @@ export function SubmitAudienceInsightsDialog({
                       Click to upload video
                     </p>
                     <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                      MP4, MOV up to 15MB
+                      MP4, MOV up to 50MB
                     </p>
                   </div>
                 )}

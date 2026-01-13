@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard, Settings, GripVertical, Columns, ExternalLink, MoreHorizontal, ArrowRight } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { useDroppable } from "@dnd-kit/core";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -281,9 +281,13 @@ function KanbanDraggableCard({
     id: video.id,
   });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    // Use faster transition during drag for smoother feel
+    transition: isDragging ? 'none' : transition,
+    // GPU acceleration for smooth transforms
+    willChange: isDragging ? 'transform' : 'auto',
+    touchAction: 'none',
   };
 
   const isPosted = columnId === "posted";
@@ -300,13 +304,16 @@ function KanbanDraggableCard({
   // Helper to clean caption - removes garbage lines like "0", single chars, just numbers
   const cleanCaption = (text: string | null | undefined): string | null => {
     if (!text) return null;
-    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => {
+    // Split on any line break character (handles \n, \r\n, \r, and Unicode line separators)
+    const lines = text.split(/[\r\n\u2028\u2029]+/).map(line => line.trim()).filter(line => {
       if (line.length < 2) return false;
       if (/^\d+$/.test(line)) return false;
       return true;
     });
     const cleaned = lines.join(' ').trim();
     if (cleaned.length < 3) return null;
+    // Final check: if result is just digits/whitespace, return null
+    if (/^\d+$/.test(cleaned)) return null;
     return cleaned;
   };
 
@@ -475,7 +482,13 @@ export function VideoSubmissionsTab({
   const kanbanSensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3,
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
