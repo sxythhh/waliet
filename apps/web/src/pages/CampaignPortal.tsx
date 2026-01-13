@@ -324,7 +324,7 @@ export default function CampaignPortal() {
 
     // For embed mode, open in new tab
     if (isEmbed) {
-      const applyUrl = `/c/${campaignSlug}`;
+      const applyUrl = `/join/${campaignSlug}`;
       window.open(applyUrl, "_blank");
       return;
     }
@@ -336,7 +336,7 @@ export default function CampaignPortal() {
     }
 
     // Navigate to apply page
-    navigate(`/c/${campaignSlug}`);
+    navigate(`/join/${campaignSlug}`);
   };
 
   // Loading state

@@ -381,7 +381,7 @@ export function CreateCampaignDialog({
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-white/40">Join URL: virality.gg/c/{field.value}</p>
+                  <p className="text-xs text-white/40">Join URL: virality.gg/join/{field.value}</p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />}
 

@@ -259,7 +259,7 @@ export function CampaignDetailsDialog({
               <h2 className="text-base sm:text-lg font-semibold cursor-pointer hover:underline" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
-            }} onClick={() => window.location.href = `/c/${campaign.slug}`}>{campaign.title}</h2>
+            }} onClick={() => window.location.href = `/join/${campaign.slug}`}>{campaign.title}</h2>
               {campaign.status === 'ended' && onLeaveCampaign && <button onClick={onLeaveCampaign} className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md transition-colors" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'

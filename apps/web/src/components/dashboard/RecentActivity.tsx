@@ -262,7 +262,7 @@ export function RecentActivity() {
                       <button
                         onClick={() =>
                           activity.campaign_slug &&
-                          navigate(`/c/${activity.campaign_slug}`)
+                          navigate(`/join/${activity.campaign_slug}`)
                         }
                         className="text-foreground truncate hover:underline cursor-pointer bg-transparent border-none p-0 text-left text-xs"
                         title={activity.campaign_name}

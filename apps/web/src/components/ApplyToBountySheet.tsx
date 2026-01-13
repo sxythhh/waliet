@@ -230,7 +230,7 @@ export function ApplyToBountySheet({
           {/* Floating Fullscreen Button */}
           <button onClick={() => {
           onOpenChange(false);
-          navigate(`/c/${bounty.slug || bounty.id}`);
+          navigate(`/join/${bounty.slug || bounty.id}`);
         }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-card backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors z-50" title="Open full page">
             <img src={resolvedTheme === 'dark' ? fullscreenIcon : fullscreenIconDark} alt="Fullscreen" className="w-5 h-5" />
           </button>

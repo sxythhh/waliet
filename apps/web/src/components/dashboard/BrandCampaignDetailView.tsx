@@ -327,7 +327,7 @@ export function BrandCampaignDetailView({
     }
   };
   const handleCopyInviteUrl = () => {
-    const url = isBoost ? `${window.location.origin}/boost/${boostId}` : `${window.location.origin}/c/${campaign?.slug}`;
+    const url = isBoost ? `${window.location.origin}/boost/${boostId}` : `${window.location.origin}/join/${campaign?.slug}`;
     navigator.clipboard.writeText(url);
     toast.success("Invite URL copied to clipboard");
   };

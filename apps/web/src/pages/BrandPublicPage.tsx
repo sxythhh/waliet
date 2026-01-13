@@ -257,9 +257,9 @@ export default function BrandPublicPage() {
   }
   const handleItemClick = (item: ContentItem) => {
     if (item.type === "campaign") {
-      navigate(`/c/${item.data.slug}`);
+      navigate(`/join/${item.data.slug}`);
     } else {
-      navigate(`/c/${item.data.id}`);
+      navigate(`/join/${item.data.id}`);
     }
   };
   // SEO data
@@ -382,7 +382,7 @@ export default function BrandPublicPage() {
                       platforms={campaign.allowed_platforms || []}
                       isEnded={isEnded}
                       slug={campaign.slug}
-                      onClick={() => navigate(`/c/${campaign.slug}`)}
+                      onClick={() => navigate(`/join/${campaign.slug}`)}
                       showBookmark={false}
                     />
                   );
@@ -407,7 +407,7 @@ export default function BrandPublicPage() {
                       slug={boost.slug}
                       created_at={boost.created_at}
                       tags={boost.tags}
-                      onClick={() => navigate(`/c/${boost.slug}`)}
+                      onClick={() => navigate(`/join/${boost.slug}`)}
                     />
                   );
                 }

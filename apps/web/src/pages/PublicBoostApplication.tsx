@@ -444,7 +444,7 @@ export default function PublicBoostApplication() {
               <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 Already have an account?{" "}
                 <Link
-                  to={`/c/${boost.slug}`}
+                  to={`/join/${boost.slug}`}
                   className="underline hover:text-foreground"
                   style={{ color: brandColor }}
                 >

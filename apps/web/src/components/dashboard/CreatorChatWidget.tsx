@@ -45,10 +45,10 @@ interface Announcement {
 
 // Helper to detect and parse boost/campaign URLs
 const parseInviteUrl = (content: string): { type: 'boost' | 'campaign'; id: string } | null => {
-  // Match patterns like /boost/{id} or /c/{slug}
+  // Match patterns like /boost/{id} or /join/{slug}
   const boostMatch = content.match(/\/boost\/([a-zA-Z0-9-]+)/);
-  const campaignMatch = content.match(/\/c\/([a-zA-Z0-9-]+)/);
-  
+  const campaignMatch = content.match(/\/join\/([a-zA-Z0-9-]+)/);
+
   if (boostMatch) return { type: 'boost', id: boostMatch[1] };
   if (campaignMatch) return { type: 'campaign', id: campaignMatch[1] };
   return null;
@@ -96,7 +96,7 @@ function InviteCard({ type, id, isCreatorMessage }: { type: 'boost' | 'campaign'
     if (type === 'boost') {
       navigate(`/boost/${id}`);
     } else {
-      navigate(`/c/${id}`);
+      navigate(`/join/${id}`);
     }
   };
 

@@ -208,7 +208,7 @@ export function BrandPortalCampaigns({ brand, userId }: BrandPortalCampaignsProp
                       <Button 
                         className="w-full text-white"
                         style={{ backgroundColor: accentColor }}
-                        onClick={() => window.open(`/c/${campaign.id}`, "_blank")}
+                        onClick={() => window.open(`/join/${campaign.id}`, "_blank")}
                       >
                         View Details
                         <ExternalLink className="h-4 w-4 ml-2" />

@@ -127,7 +127,7 @@ function InviteCard({ type, id, isCreatorMessage }: { type: 'boost' | 'campaign'
     if (type === 'boost') {
       navigate(`/boost/${id}`);
     } else {
-      navigate(`/c/${id}`);
+      navigate(`/join/${id}`);
     }
   };
 

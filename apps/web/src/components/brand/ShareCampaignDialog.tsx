@@ -11,6 +11,7 @@ import { Icon } from "@iconify/react";
 import { useToast } from "@/hooks/use-toast";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { getEmbedCode } from "@/utils/subdomain";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareCampaignDialogProps {
   open: boolean;
@@ -21,6 +22,8 @@ interface ShareCampaignDialogProps {
   brandColor?: string | null;
   brandSlug: string;
   slug: string;
+  id: string;
+  onSlugUpdate?: (newSlug: string) => void;
 }
 
 export function ShareCampaignDialog({
@@ -32,21 +35,97 @@ export function ShareCampaignDialog({
   brandColor,
   brandSlug,
   slug,
+  id,
+  onSlugUpdate,
 }: ShareCampaignDialogProps) {
   const { toast } = useToast();
   const [linkCopied, setLinkCopied] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
+  const [showPortalUrl, setShowPortalUrl] = useState(false);
+  const [isEditingSlug, setIsEditingSlug] = useState(false);
+  const [editedSlug, setEditedSlug] = useState(slug);
+  const [isSavingSlug, setIsSavingSlug] = useState(false);
+  const [currentSlug, setCurrentSlug] = useState(slug);
 
-  const publicUrl = type === "campaign"
-    ? `${window.location.origin}/c/${slug}`
-    : `${window.location.origin}/boost/${slug}`;
+  const publicUrl = `${window.location.origin}/join/${currentSlug}`;
 
-  const embedCode = getEmbedCode(brandSlug, slug);
+  // Portal URL for boosts - uses the /campaign/ route
+  const portalUrl = `${window.location.origin}/campaign/${currentSlug}`;
+
+  // Current displayed URL based on toggle state
+  const displayedUrl = showPortalUrl ? portalUrl : publicUrl;
+
+  const embedCode = getEmbedCode(brandSlug, currentSlug);
+
+  const handleSaveSlug = async () => {
+    if (!editedSlug.trim() || editedSlug === currentSlug) {
+      setIsEditingSlug(false);
+      return;
+    }
+
+    // Validate slug format
+    const slugRegex = /^[a-z0-9-]+$/;
+    if (!slugRegex.test(editedSlug)) {
+      toast({
+        title: "Invalid slug",
+        description: "Slug can only contain lowercase letters, numbers, and hyphens",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingSlug(true);
+    try {
+      const table = type === "campaign" ? "campaigns" : "bounty_campaigns";
+
+      // Check if slug is already taken
+      const { data: existing } = await supabase
+        .from(table)
+        .select("id")
+        .eq("slug", editedSlug)
+        .neq("id", id)
+        .maybeSingle();
+
+      if (existing) {
+        toast({
+          title: "Slug already taken",
+          description: "Please choose a different slug",
+          variant: "destructive",
+        });
+        setIsSavingSlug(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from(table)
+        .update({ slug: editedSlug })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setCurrentSlug(editedSlug);
+      setIsEditingSlug(false);
+      onSlugUpdate?.(editedSlug);
+      toast({
+        title: "Slug updated",
+        description: "Your campaign URL has been updated",
+      });
+    } catch (error) {
+      console.error("Error updating slug:", error);
+      toast({
+        title: "Failed to update",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSlug(false);
+    }
+  };
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(publicUrl);
+      await navigator.clipboard.writeText(displayedUrl);
       setLinkCopied(true);
       toast({
         title: "Link copied",
@@ -138,29 +217,94 @@ export function ShareCampaignDialog({
             </div>
           </div>
 
-          {/* Copy Link */}
+          {/* Public Link with Inline Slug Editing */}
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-              Public link
-            </label>
-            <div className="flex gap-2">
-              <Input
-                value={publicUrl}
-                readOnly
-                className="h-10 !bg-muted/30 dark:!bg-muted/20 border border-border/50 text-sm font-inter tracking-[-0.3px] cursor-text"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <Button
-                onClick={handleCopyLink}
-                className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
-              >
-                {linkCopied ? (
-                  <Icon icon="material-symbols:check-rounded" className="w-4 h-4" />
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                Public link
+              </label>
+              <div className="flex items-center gap-3">
+                {/* Swap to Portal - only for boosts */}
+                {type === "boost" && !isEditingSlug && (
+                  <button
+                    onClick={() => setShowPortalUrl(!showPortalUrl)}
+                    className="flex items-center gap-1 text-xs font-medium font-inter tracking-[-0.3px] text-foreground hover:text-foreground/80 transition-colors"
+                  >
+                    <Icon icon="material-symbols:swap-horiz-rounded" className="w-3.5 h-3.5" />
+                    <span>{showPortalUrl ? "Swap to Boost" : "Swap to Portal"}</span>
+                  </button>
+                )}
+                {!isEditingSlug && (
+                  <button
+                    onClick={() => {
+                      setEditedSlug(currentSlug);
+                      setIsEditingSlug(true);
+                    }}
+                    className="flex items-center gap-1 text-xs font-medium font-inter tracking-[-0.3px] text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <Icon icon="material-symbols:edit-outline" className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+                )}
+              </div>
+            </div>
+            {isEditingSlug ? (
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-0 h-10 bg-muted/30 dark:bg-muted/20 border border-border/50 rounded-md overflow-hidden">
+                  <span className="pl-3 text-sm text-muted-foreground font-inter tracking-[-0.3px] whitespace-nowrap">
+                    virality.gg/join/
+                  </span>
+                  <input
+                    type="text"
+                    value={editedSlug}
+                    onChange={(e) => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    className="flex-1 h-full bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.3px] text-foreground"
+                    placeholder="my-campaign"
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  onClick={handleSaveSlug}
+                  disabled={isSavingSlug || !editedSlug.trim()}
+                  className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
+                >
+                  {isSavingSlug ? (
+                    <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Icon icon="material-symbols:check-rounded" className="w-4 h-4" />
+                  )}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsEditingSlug(false);
+                    setEditedSlug(currentSlug);
+                  }}
+                  variant="ghost"
+                  className="h-10 px-3 shrink-0"
+                >
+                  <Icon icon="material-symbols:close-rounded" className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={displayedUrl}
+                  readOnly
+                  className="h-10 !bg-muted/30 dark:!bg-muted/20 border border-border/50 text-sm font-inter tracking-[-0.3px] cursor-text"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  onClick={handleCopyLink}
+                  className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
+                >
+                  {linkCopied ? (
+                    <Icon icon="material-symbols:check-rounded" className="w-4 h-4" />
                 ) : (
                   <Icon icon="material-symbols:content-copy-outline-rounded" className="w-4 h-4" />
                 )}
               </Button>
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Social Share Buttons */}

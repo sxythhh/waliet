@@ -659,7 +659,7 @@ export default function CampaignApply() {
     brandName,
     brandLogo: brandLogo || undefined,
     datePosted: createdAt,
-    url: `/c/${slug}`,
+    url: `/join/${slug}`,
   }) : null;
 
   // Handle boost with embed URL
@@ -678,7 +678,7 @@ export default function CampaignApply() {
         <SEOHead
           title={seoTitle}
           description={seoDescription}
-          canonical={getCanonicalUrl(`/c/${slug}`)}
+          canonical={getCanonicalUrl(`/join/${slug}`)}
           ogImage={seoImage}
           ogType="website"
           keywords={['boost campaign', 'creator program', 'content creator', brandName || '', title || ''].filter(Boolean)}
@@ -878,7 +878,7 @@ export default function CampaignApply() {
       <SEOHead
         title={seoTitle}
         description={seoDescription}
-        canonical={getCanonicalUrl(`/c/${slug}`)}
+        canonical={getCanonicalUrl(`/join/${slug}`)}
         ogImage={seoImage}
         ogType="website"
         keywords={[
@@ -893,7 +893,7 @@ export default function CampaignApply() {
           { name: 'Home', url: '/' },
           { name: 'Discover', url: '/discover' },
           ...(brandSlug ? [{ name: brandName || 'Brand', url: `/b/${brandSlug}` }] : []),
-          { name: title || 'Campaign', url: `/c/${slug}` },
+          { name: title || 'Campaign', url: `/join/${slug}` },
         ]}
         structuredData={campaignSchema || undefined}
       />

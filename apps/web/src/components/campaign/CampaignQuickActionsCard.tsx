@@ -71,7 +71,7 @@ export function CampaignQuickActionsCard({
       icon: 'material-symbols:open-in-new',
       onClick: () => {
         if (campaign.slug) {
-          window.open(`/c/${campaign.slug}`, '_blank');
+          window.open(`/join/${campaign.slug}`, '_blank');
         }
       },
       disabled: !campaign.slug,

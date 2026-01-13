@@ -202,6 +202,7 @@ export function SourceDetailsLeftSidebar({
   const navigate = useNavigate();
   const {
     sourceType,
+    isPublicView,
     activeSection,
     setActiveSection,
     isMobile,
@@ -338,7 +339,7 @@ export function SourceDetailsLeftSidebar({
               {sourceSlug && (
                 <button
                   onClick={() => {
-                    window.open(isCampaign ? `/c/${sourceSlug}` : `/boost/${sourceSlug}`, '_blank');
+                    window.open(isCampaign ? `/join/${sourceSlug}` : `/boost/${sourceSlug}`, '_blank');
                     setHeaderMenuOpen(false);
                   }}
                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors"
@@ -353,7 +354,7 @@ export function SourceDetailsLeftSidebar({
               {sourceSlug && (
                 <button
                   onClick={() => {
-                    const publicUrl = `${window.location.origin}${isCampaign ? `/c/${sourceSlug}` : `/boost/${sourceSlug}`}`;
+                    const publicUrl = `${window.location.origin}${isCampaign ? `/join/${sourceSlug}` : `/boost/${sourceSlug}`}`;
                     navigator.clipboard.writeText(publicUrl);
                     toast.success("Link copied to clipboard");
                     setHeaderMenuOpen(false);
@@ -411,6 +412,17 @@ export function SourceDetailsLeftSidebar({
           isActive={activeSection.type === "overview"}
         />
 
+        {/* Earnings - Right after Overview (hidden for public view) */}
+        {!isPublicView && (
+          <QuickActionItem
+            icon="material-symbols:savings-outline"
+            label="Earnings"
+            description="View your earnings history"
+            onClick={() => handleNavClick("earnings")}
+            isActive={activeSection.type === "earnings"}
+          />
+        )}
+
         <QuickActionItem
           icon="material-symbols:sticky-note-2-outline"
           label="Blueprint"
@@ -420,28 +432,28 @@ export function SourceDetailsLeftSidebar({
           badge={isCampaign && hasTrainingModules && trainingProgress < 100 ? `${completedCount}/${sortedModules.length}` : undefined}
         />
 
-        {/* Assets - Show if blueprint has assets */}
-        {hasAssets && (
+        {/* Folders - Always visible */}
+        <QuickActionItem
+          icon="material-symbols:folder-match-outline"
+          label="Folders"
+          description="Brand assets and resources"
+          onClick={() => handleNavClick("assets")}
+          isActive={activeSection.type === "assets"}
+        />
+
+        {/* Get Support (hidden for public view) */}
+        {!isPublicView && (
           <QuickActionItem
-            icon="material-symbols:folder-open-outline"
-            label="Assets"
-            description="Brand assets and resources"
-            onClick={() => handleNavClick("assets")}
-            isActive={activeSection.type === "assets"}
+            icon="material-symbols:support-agent"
+            label="Get Support"
+            description="Need help? Contact us"
+            onClick={() => handleNavClick("support")}
+            isActive={activeSection.type === "support"}
           />
         )}
 
-        {/* Get Support */}
-        <QuickActionItem
-          icon="material-symbols:support-agent"
-          label="Get Support"
-          description="Need help? Contact us"
-          onClick={() => handleNavClick("support")}
-          isActive={activeSection.type === "support"}
-        />
-
-        {/* My Submissions - Only show for boosts or campaigns that require video submissions */}
-        {(isBoost || (isCampaign && paymentModel === 'pay_per_post')) && (
+        {/* My Submissions - Only show for boosts or campaigns that require video submissions (hidden for public view) */}
+        {!isPublicView && (isBoost || (isCampaign && paymentModel === 'pay_per_post')) && (
           <QuickActionItem
             icon="material-symbols:install-desktop"
             label="My Submissions"
@@ -452,17 +464,8 @@ export function SourceDetailsLeftSidebar({
           />
         )}
 
-        {/* Earnings */}
-        <QuickActionItem
-          icon="material-symbols:savings-outline"
-          label="Earnings"
-          description="View your earnings history"
-          onClick={() => handleNavClick("earnings")}
-          isActive={activeSection.type === "earnings"}
-        />
-
-        {/* BOOST: Agreement - Only show when contract exists */}
-        {isBoost && hasContract && (
+        {/* BOOST: Agreement - Only show when contract exists (hidden for public view) */}
+        {!isPublicView && isBoost && hasContract && (
           <QuickActionItem
             icon="material-symbols:lab-profile-outline"
             label="Agreement"
@@ -491,8 +494,8 @@ export function SourceDetailsLeftSidebar({
           />
         )}
 
-        {/* Discord - Show Connect Discord if server has Discord but user hasn't connected */}
-        {hasDiscordServer && !hasDiscordConnected && (
+        {/* Discord - Show Connect Discord if server has Discord but user hasn't connected (hidden for public view) */}
+        {!isPublicView && hasDiscordServer && !hasDiscordConnected && (
           <QuickActionItem
             icon="ic:baseline-discord"
             label="Connect Discord"
@@ -505,8 +508,8 @@ export function SourceDetailsLeftSidebar({
           />
         )}
 
-        {/* Discord - Show Join Discord if user has Discord connected and there's a URL */}
-        {discordUrl && hasDiscordConnected && (
+        {/* Discord - Show Join Discord if user has Discord connected and there's a URL (hidden for public view) */}
+        {!isPublicView && discordUrl && hasDiscordConnected && (
           <QuickActionItem
             icon="ic:baseline-discord"
             label="Discord"
@@ -518,31 +521,52 @@ export function SourceDetailsLeftSidebar({
       </div>
 
       {/* Bottom status - Budget progress (campaigns only) */}
-      {isCampaign && (
-        <div className="p-3 border-t border-border/50 mt-auto">
-          <div className="px-3 py-2.5 rounded-lg bg-muted/30">
-            <div className="space-y-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-foreground font-inter tracking-[-0.5px]">
-                  ${budgetUsed.toLocaleString()}
-                </span>
-                <span className="text-sm text-muted-foreground font-medium font-inter">
-                  / ${budget.toLocaleString()}
+      {isCampaign && (() => {
+        const budgetRemaining = Math.max(0, budget - budgetUsed);
+        const budgetPercentage = budget > 0 ? (budgetUsed / budget) * 100 : 0;
+        const isDepleted = budget > 0 && budgetPercentage >= 100;
+        const isCritical = budget > 0 && budgetPercentage >= 90;
+        const isWarning = budget > 0 && budgetPercentage >= 75 && budgetPercentage < 90;
+
+        const getStatusColor = () => {
+          if (isDepleted || isCritical) return 'text-red-500';
+          if (isWarning) return 'text-amber-500';
+          return 'text-emerald-500';
+        };
+
+        const getBarColor = () => {
+          if (isDepleted || isCritical) return 'bg-red-500';
+          if (isWarning) return 'bg-amber-500';
+          return 'bg-emerald-500';
+        };
+
+        return (
+          <div className="p-3 border-t border-border/50 mt-auto">
+            <div className="px-3 py-2.5 rounded-lg bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className={cn("text-base font-semibold font-inter tracking-[-0.5px]", getStatusColor())}>
+                  {isDepleted ? 'Depleted' : `$${budgetRemaining.toLocaleString()} left`}
                 </span>
               </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all",
-                    budget > 0 && budgetUsed >= budget ? "bg-red-500" : "bg-primary"
-                  )}
-                  style={{ width: `${budget > 0 ? Math.min((budgetUsed / budget) * 100, 100) : 0}%` }}
-                />
+              {/* Segmented progress bar */}
+              <div className="flex gap-1">
+                {[0, 25, 50, 75].map((threshold) => (
+                  <div
+                    key={threshold}
+                    className={cn(
+                      "h-1.5 flex-1 rounded-full transition-colors",
+                      budgetPercentage > threshold ? getBarColor() : "bg-muted"
+                    )}
+                  />
+                ))}
               </div>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                ${budgetUsed.toLocaleString()} of ${budget.toLocaleString()} spent
+              </p>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </aside>
   );
 }

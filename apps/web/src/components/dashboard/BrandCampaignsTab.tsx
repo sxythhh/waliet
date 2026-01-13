@@ -11,7 +11,7 @@ import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { BrandUpgradeCTA } from "@/components/brand/BrandUpgradeCTA";
-import { CampaignRowCard } from "@/components/brand/CampaignRowCard";
+import { CampaignGridCard } from "@/components/brand/CampaignGridCard";
 import { ShareCampaignDialog } from "@/components/brand/ShareCampaignDialog";
 import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
 import { CreateJobPostDialog } from "@/components/brand/CreateJobPostDialog";
@@ -458,40 +458,36 @@ export function BrandCampaignsTab({
   };
   if (loading) {
     return (
-      <div className="space-y-8 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-300">
+      <div className="space-y-6 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-300">
         {/* Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-4">
+          <div className="h-7 w-56 bg-muted/30 rounded-lg animate-pulse" />
+          <div className="flex items-center gap-3 flex-1 justify-end">
             <div className="h-10 w-full max-w-md bg-muted/30 rounded-lg animate-pulse" />
-          </div>
-          <div className="h-10 w-36 bg-muted/30 rounded-lg animate-pulse shrink-0 ml-4" />
-        </div>
-
-        {/* Section Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="h-5 w-24 bg-muted/30 rounded-md animate-pulse" />
-          <div className="flex gap-2">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-7 w-16 bg-muted/30 rounded-full animate-pulse" />)}
+            <div className="h-10 w-40 bg-muted/30 rounded-lg animate-pulse shrink-0" />
           </div>
         </div>
 
-        {/* Campaign Cards Skeleton */}
-        <div className="space-y-3">
+        {/* Tabs Skeleton */}
+        <div className="flex gap-0 border-b border-border">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-10 w-16 bg-muted/30 animate-pulse" />)}
+        </div>
+
+        {/* Campaign Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="flex flex-col sm:flex-row rounded-xl overflow-hidden bg-card">
-              <div className="w-full sm:w-40 md:w-48 h-28 sm:h-auto bg-muted/30 flex-shrink-0 animate-pulse" />
-              <div className="flex-1 p-3 sm:p-4 space-y-2">
-                <div className="h-3 w-16 bg-muted/30 rounded animate-pulse" />
-                <div className="h-5 w-48 bg-muted/30 rounded animate-pulse" />
-                <div className="flex items-center gap-3">
-                  <div className="h-3 w-24 bg-muted/30 rounded animate-pulse" />
-                  <div className="h-1.5 w-32 bg-muted/30 rounded-full animate-pulse" />
-                  <div className="h-3 w-8 bg-muted/30 rounded animate-pulse" />
+            <div key={i} className="rounded-xl overflow-hidden bg-card border border-border/50">
+              <div className="aspect-[16/9] bg-muted/30 animate-pulse" />
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-32 bg-muted/30 rounded animate-pulse" />
+                  <div className="flex gap-1.5">
+                    <div className="h-6 w-16 bg-muted/30 rounded-full animate-pulse" />
+                    <div className="h-6 w-20 bg-muted/30 rounded-full animate-pulse" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-16 bg-muted/30 rounded-full animate-pulse" />
-                  <div className="h-3 w-24 bg-muted/30 rounded animate-pulse" />
-                </div>
+                <div className="h-4 w-24 bg-muted/30 rounded animate-pulse" />
+                <div className="h-1 w-full bg-muted/30 rounded-full animate-pulse" />
               </div>
             </div>
           ))}
@@ -525,15 +521,20 @@ export function BrandCampaignsTab({
 
       {selectedBoostId ? <BrandCampaignDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
           {/* Header */}
-          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4">
-            <div className="flex-1 min-w-0">
-              <GlobalBrandSearch brandId={brandId} />
+          <div className="flex flex-row items-center justify-between gap-4">
+            <h1 className="text-xl font-semibold font-inter tracking-[-0.5px] text-foreground whitespace-nowrap">
+              Your Content Campaigns
+            </h1>
+            <div className="flex items-center gap-3 flex-1 justify-end">
+              <div className="flex-1 max-w-md">
+                <GlobalBrandSearch brandId={brandId} />
+              </div>
+              <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary py-2 px-4 hover:bg-primary/90 shrink-0">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create Campaign</span>
+                <span className="sm:hidden">Create</span>
+              </Button>
             </div>
-            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary py-1.5 hover:bg-primary/90 shrink-0">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Launch Opportunity</span>
-              <span className="sm:hidden">Launch</span>
-            </Button>
             <CreateCampaignTypeDialog brandId={brandId} subscriptionPlan={subscriptionPlan} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
           setWizardMode('create');
           setWizardType('cpm');
@@ -569,16 +570,16 @@ export function BrandCampaignsTab({
           )}
 
           {/* Combined Campaigns & Boosts Grid */}
-          {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Campaigns</h2>
-                <div className="flex items-center gap-0 border-b border-border">
-                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-inter tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                      {filter}
-                    </button>)}
-                </div>
+          {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-4 mt-6">
+              {/* Status filter tabs */}
+              <div className="flex items-center gap-0 border-b border-border">
+                {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-4 py-2.5 text-sm font-medium font-inter tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                    {filter}
+                  </button>)}
               </div>
-              <div className="flex flex-col gap-2">
+
+              {/* Campaign grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Combined and sorted list */}
                 {[...campaigns.filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
             ...c,
@@ -591,43 +592,79 @@ export function BrandCampaignsTab({
               const campaign = item as Campaign & {
                 type: "campaign";
               };
-              return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} brandColor={brandColor || null} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} slug={campaign.slug} onClick={() => handleCampaignClick(campaign)} onEdit={() => {
-                setWizardMode('edit');
-                setWizardType('cpm');
-                setWizardCampaignId(campaign.id);
-                setWizardBoostId(undefined);
-                setWizardOpen(true);
-              }} onDuplicate={() => handleDuplicateCampaign(campaign)} onDelete={() => handleDeleteClick(campaign)} onTopUp={() => {
-                setSelectedCampaignForFunding({
-                  id: campaign.id,
-                  type: 'campaign'
-                });
-                setAllocateBudgetOpen(true);
-              }} onShare={() => {
-                setShareData({ id: campaign.id, type: 'campaign', title: campaign.title, slug: campaign.slug, bannerUrl: campaign.banner_url });
-                setShareDialogOpen(true);
-              }} />;
+              return <CampaignGridCard
+                key={`campaign-${campaign.id}`}
+                id={campaign.id}
+                title={campaign.title}
+                type="campaign"
+                bannerUrl={campaign.banner_url}
+                brandColor={brandColor || null}
+                budget={Number(campaign.budget)}
+                budgetUsed={Number(campaign.budget_used || 0)}
+                status={campaign.status}
+                slug={campaign.slug}
+                members={campaignMembers[campaign.id] || []}
+                onClick={() => handleCampaignClick(campaign)}
+                onEdit={() => {
+                  setWizardMode('edit');
+                  setWizardType('cpm');
+                  setWizardCampaignId(campaign.id);
+                  setWizardBoostId(undefined);
+                  setWizardOpen(true);
+                }}
+                onDuplicate={() => handleDuplicateCampaign(campaign)}
+                onDelete={() => handleDeleteClick(campaign)}
+                onTopUp={() => {
+                  setSelectedCampaignForFunding({
+                    id: campaign.id,
+                    type: 'campaign'
+                  });
+                  setAllocateBudgetOpen(true);
+                }}
+                onShare={() => {
+                  setShareData({ id: campaign.id, type: 'campaign', title: campaign.title, slug: campaign.slug, bannerUrl: campaign.banner_url });
+                  setShareDialogOpen(true);
+                }}
+              />;
             } else {
               const bounty = item as BountyCampaign & {
                 type: "boost";
               };
-              const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)} onEdit={() => {
-                setWizardMode('edit');
-                setWizardType('boost');
-                setWizardCampaignId(undefined);
-                setWizardBoostId(bounty.id);
-                setWizardOpen(true);
-              }} onDuplicate={() => handleDuplicateBounty(bounty)} onPause={bounty.status !== 'ended' && bounty.status !== 'draft' ? () => handlePauseBounty(bounty) : undefined} onDelete={() => handleDeleteBountyClick(bounty)} onTopUp={() => {
-                setSelectedCampaignForFunding({
-                  id: bounty.id,
-                  type: 'boost'
-                });
-                setAllocateBudgetOpen(true);
-              }} onShare={bounty.slug ? () => {
-                setShareData({ id: bounty.id, type: 'boost', title: bounty.title, slug: bounty.slug!, bannerUrl: bounty.banner_url });
-                setShareDialogOpen(true);
-              } : undefined} />;
+              return <CampaignGridCard
+                key={`boost-${bounty.id}`}
+                id={bounty.id}
+                title={bounty.title}
+                type="boost"
+                bannerUrl={bounty.banner_url}
+                brandColor={brandColor || null}
+                budget={Number(bounty.budget || 0)}
+                budgetUsed={Number(bounty.budget_used || 0)}
+                status={bounty.status}
+                slug={bounty.slug || undefined}
+                members={bountyMembers[bounty.id] || []}
+                onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)}
+                onEdit={() => {
+                  setWizardMode('edit');
+                  setWizardType('boost');
+                  setWizardCampaignId(undefined);
+                  setWizardBoostId(bounty.id);
+                  setWizardOpen(true);
+                }}
+                onDuplicate={() => handleDuplicateBounty(bounty)}
+                onPause={bounty.status !== 'ended' && bounty.status !== 'draft' ? () => handlePauseBounty(bounty) : undefined}
+                onDelete={() => handleDeleteBountyClick(bounty)}
+                onTopUp={() => {
+                  setSelectedCampaignForFunding({
+                    id: bounty.id,
+                    type: 'boost'
+                  });
+                  setAllocateBudgetOpen(true);
+                }}
+                onShare={bounty.slug ? () => {
+                  setShareData({ id: bounty.id, type: 'boost', title: bounty.title, slug: bounty.slug!, bannerUrl: bounty.banner_url });
+                  setShareDialogOpen(true);
+                } : undefined}
+              />;
             }
           })}
               </div>
@@ -732,6 +769,11 @@ export function BrandCampaignsTab({
           brandColor={brandColor || null}
           brandSlug={brandSlug}
           slug={shareData.slug}
+          id={shareData.id}
+          onSlugUpdate={(newSlug) => {
+            setShareData({ ...shareData, slug: newSlug });
+            fetchBrandData();
+          }}
         />
       )}
     </div>;

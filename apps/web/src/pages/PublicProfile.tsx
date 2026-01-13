@@ -625,7 +625,7 @@ export default function PublicProfile() {
                   earnings: p.total_earned,
                 })),
               ]}
-              onItemClick={(slug) => navigate(`/c/${slug}`)}
+              onItemClick={(slug) => navigate(`/join/${slug}`)}
             />
           </TabsContent>
 

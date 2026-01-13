@@ -24,7 +24,6 @@ import NotFound from "./pages/NotFound";
 
 // Lazily loaded routes (secondary pages)
 const Discover = lazy(() => import("./pages/Discover"));
-const CampaignDetail = lazy(() => import("./pages/CampaignDetail"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CampaignJoin = lazy(() => import("./pages/CampaignJoin"));
@@ -71,6 +70,7 @@ const AffiliateHowItWorks = lazy(() => import("./pages/AffiliateHowItWorks"));
 const CreatorCampaignDetails = lazy(() => import("./pages/CreatorCampaignDetails"));
 const CreatorBoostDetails = lazy(() => import("./pages/CreatorBoostDetails"));
 const PublicBoostApplication = lazy(() => import("./pages/PublicBoostApplication"));
+const PublicCampaignPage = lazy(() => import("./pages/PublicCampaignPage"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -78,13 +78,13 @@ function UtmTracker() {
   return null;
 }
 
-// Redirect /join/:slug to discover page with campaign slug param
-function JoinRedirect() {
+// Redirect /c/:slug to /join/:slug for backwards compatibility
+function CampaignSlugRedirect() {
   const { slug } = useParams();
-  return <Navigate to={`/dashboard?tab=discover&campaignSlug=${slug}`} replace />;
+  return <Navigate to={`/join/${slug}`} replace />;
 }
 
-// Redirect /boost/:id to /c/:slug (supports both UUID and slug in URL)
+// Redirect /boost/:id to /join/:slug (supports both UUID and slug in URL)
 function BoostRedirect() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ function BoostRedirect() {
       }
 
       if (data?.slug) {
-        navigate(`/c/${data.slug}`, { replace: true });
+        navigate(`/join/${data.slug}`, { replace: true });
       } else {
         toast.error("Boost not found", {
           description: "The boost you're looking for doesn't exist or has been removed."
@@ -234,9 +234,8 @@ const App = () => (
                   } />
                   <Route path="/boost/:id" element={<BoostRedirect />} />
                   <Route path="/blueprint/:id" element={<BlueprintDetail />} />
-                  <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
-                  <Route path="/join/:slug" element={<JoinRedirect />} />
-                  <Route path="/c/:slug" element={<CampaignApply />} />
+                  <Route path="/join/:slug" element={<CampaignApply />} />
+                  <Route path="/c/:slug" element={<CampaignSlugRedirect />} />
                   <Route path="/apply/:slug" element={
                     <Suspense fallback={<PageLoader />}>
                       <PublicBoostApplication />
@@ -259,7 +258,7 @@ const App = () => (
                   } />
                   <Route path="/campaign/:id" element={
                     <Suspense fallback={<DashboardLoader />}>
-                      <DashboardLayout><CampaignDetail /></DashboardLayout>
+                      <PublicCampaignPage />
                     </Suspense>
                   } />
                   <Route path="/campaign/join/:id" element={

@@ -688,7 +688,7 @@ export function DiscoverTab({
                             }
                             if (!isEnded) {
                               if (navigateOnClick && bounty.slug) {
-                                navigate(`/c/${bounty.slug}`);
+                                navigate(`/join/${bounty.slug}`);
                               } else {
                                 setSelectedBounty(bounty);
                                 setBountySheetOpen(true);
@@ -698,7 +698,7 @@ export function DiscoverTab({
                           onBookmarkClick={e => toggleBountyBookmark(bounty.id, e)}
                           onFullscreenClick={e => {
                             e.stopPropagation();
-                            navigate(`/c/${bounty.slug}`);
+                            navigate(`/join/${bounty.slug}`);
                           }}
                         />
                       );
@@ -751,7 +751,7 @@ export function DiscoverTab({
                         return;
                       }
                       if (navigateOnClick) {
-                        navigate(`/c/${campaign.slug}`);
+                        navigate(`/join/${campaign.slug}`);
                       } else {
                         setSelectedCampaign(campaign);
                         setSheetOpen(true);
@@ -779,7 +779,7 @@ export function DiscoverTab({
                           onBookmarkClick={e => toggleBookmark(campaign.id, e)}
                           onFullscreenClick={e => {
                             e.stopPropagation();
-                            navigate(`/c/${campaign.slug}`);
+                            navigate(`/join/${campaign.slug}`);
                           }}
                         />
                       </div>

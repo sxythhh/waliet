@@ -2,12 +2,18 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Trash2, Shield, Crown, Link2, Copy, Check, UserPlus, Mail, Users } from "lucide-react";
+import { Trash2, Link2, Copy, Check, Plus, MoreHorizontal } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { formatDistanceToNow } from "date-fns";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Member {
   id: string;
@@ -42,13 +48,12 @@ interface TeamMembersTabProps {
   brandId: string;
   brandSlug: string;
 }
+
 export function TeamMembersTab({
   brandId,
   brandSlug
 }: TeamMembersTabProps) {
-  const {
-    isAdmin
-  } = useAdminCheck();
+  const { isAdmin } = useAdminCheck();
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [linkInvites, setLinkInvites] = useState<LinkInvite[]>([]);
@@ -58,46 +63,49 @@ export function TeamMembersTab({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState(false);
+  const [activeTab, setActiveTab] = useState<"members" | "invites">("members");
   const [confirmDialog, setConfirmDialog] = useState<{
     type: "member" | "link" | "invitation" | null;
     id: string;
     name?: string;
   }>({ type: null, id: "" });
+
   useEffect(() => {
     if (brandId) {
       fetchTeamData();
     }
   }, [brandId]);
+
   const fetchTeamData = async () => {
     try {
       setLoading(true);
 
       // Get current user's role
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
-        const {
-          data: memberData
-        } = await supabase.from("brand_members").select("role").eq("brand_id", brandId).eq("user_id", user.id).maybeSingle();
+        const { data: memberData } = await supabase
+          .from("brand_members")
+          .select("role")
+          .eq("brand_id", brandId)
+          .eq("user_id", user.id)
+          .maybeSingle();
         setCurrentUserRole(memberData?.role || null);
       }
 
       // Fetch brand members
-      const {
-        data: membersData,
-        error: membersError
-      } = await supabase.from("brand_members").select("id, user_id, role, created_at").eq("brand_id", brandId);
+      const { data: membersData, error: membersError } = await supabase
+        .from("brand_members")
+        .select("id, user_id, role, created_at")
+        .eq("brand_id", brandId);
       if (membersError) throw membersError;
 
       // Fetch all profiles in one query
       const userIds = (membersData || []).map(m => m.user_id);
-      const {
-        data: profilesData
-      } = await supabase.from("profiles").select("id, full_name, email, avatar_url").in("id", userIds);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", userIds);
 
       // Map profiles to members
       const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
@@ -112,10 +120,7 @@ export function TeamMembersTab({
       setMembers(membersWithProfiles);
 
       // Fetch pending email invitations (non-link invites)
-      const {
-        data: invitationsData,
-        error: invitationsError
-      } = await supabase
+      const { data: invitationsData, error: invitationsError } = await supabase
         .from("brand_invitations")
         .select("*")
         .eq("brand_id", brandId)
@@ -125,10 +130,7 @@ export function TeamMembersTab({
       setInvitations(invitationsData || []);
 
       // Fetch active link invitations
-      const {
-        data: linkInvitesData,
-        error: linkInvitesError
-      } = await supabase
+      const { data: linkInvitesData, error: linkInvitesError } = await supabase
         .from("brand_invitations")
         .select("id, role, invite_token, created_at, expires_at")
         .eq("brand_id", brandId)
@@ -145,6 +147,7 @@ export function TeamMembersTab({
       setLoading(false);
     }
   };
+
   const handleConfirmAction = async () => {
     const { type, id } = confirmDialog;
     if (!type || !id) return;
@@ -171,6 +174,7 @@ export function TeamMembersTab({
       setConfirmDialog({ type: null, id: "" });
     }
   };
+
   const generateNewLink = async () => {
     if (!currentUserId) return;
 
@@ -217,25 +221,40 @@ export function TeamMembersTab({
 
   const canManageTeam = isAdmin || currentUserRole === "owner" || currentUserRole === "admin";
 
+  // Calculate stats
+  const ownersAndAdmins = members.filter(m => m.role === "owner" || m.role === "admin").length;
+  const supportMembers = members.filter(m => m.role === "support").length;
+  const viewerMembers = members.filter(m => m.role === "member" || m.role === "viewer").length;
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "owner": return "Owner";
+      case "admin": return "Admin";
+      case "support": return "Support";
+      default: return "Member";
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
-        {/* Loading skeleton */}
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-[#0e0e0e] overflow-hidden">
-          <div className="p-5 border-b border-border/50">
-            <div className="flex items-center justify-between">
-              <div className="h-5 w-32 bg-muted/50 rounded animate-pulse" />
-              <div className="h-8 w-20 bg-muted/50 rounded-lg animate-pulse" />
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 w-32 bg-muted/50 rounded animate-pulse" />
+            <div className="h-4 w-56 bg-muted/30 rounded animate-pulse mt-2" />
           </div>
-          <div className="p-5 space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
-                <div className="h-10 w-10 rounded-full bg-muted/50 animate-pulse" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-32 bg-muted/50 rounded animate-pulse" />
-                  <div className="h-3 w-48 bg-muted/30 rounded animate-pulse" />
-                </div>
+          <div className="h-10 w-24 bg-muted/50 rounded-lg animate-pulse" />
+        </div>
+        <div className="h-px bg-border" />
+        <div className="flex justify-center">
+          <div className="h-10 w-64 bg-muted/30 rounded-full animate-pulse" />
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="text-center py-4">
+                <div className="h-8 w-8 bg-muted/50 rounded mx-auto animate-pulse" />
+                <div className="h-4 w-24 bg-muted/30 rounded mx-auto mt-2 animate-pulse" />
               </div>
             ))}
           </div>
@@ -246,287 +265,298 @@ export function TeamMembersTab({
 
   return (
     <div className="space-y-6">
-      {/* Team Members Card */}
-      <div className="rounded-xl border border-border/50 bg-card dark:bg-[#0e0e0e] overflow-hidden">
-        {/* Header */}
-        <div className="p-5 border-b border-border/50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold tracking-[-0.5px]">
-                Team Members
-              </h3>
-              <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                {members.length} {members.length === 1 ? "member" : "members"}
-              </p>
-            </div>
-          </div>
-          {canManageTeam && (
-            <Button
-              onClick={() => setInviteDialogOpen(true)}
-              size="sm"
-              className="bg-primary border-t border-primary/70 text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-primary/90 rounded-lg gap-1.5"
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-              Invite
-            </Button>
-          )}
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Members</h2>
+          <p className="text-muted-foreground mt-1">
+            Manage your team and their roles.
+          </p>
         </div>
+        {canManageTeam && (
+          <Button
+            onClick={() => setInviteDialogOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Invite
+          </Button>
+        )}
+      </div>
 
-        {/* Members List */}
-        <div className="p-4">
-          {members.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <Users className="h-6 w-6 text-muted-foreground/60" />
-              </div>
-              <h4 className="font-inter tracking-[-0.5px] font-medium text-foreground">
-                No team members yet
-              </h4>
-              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1 max-w-xs">
-                Invite team members to collaborate on campaigns and manage your brand.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {members.map(member => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    {member.profiles.avatar_url ? (
-                      <img
-                        src={member.profiles.avatar_url}
-                        alt={member.profiles.full_name}
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-border/50"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-semibold ring-2 ring-border/50">
-                        {member.profiles.full_name?.[0]?.toUpperCase() || "?"}
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium tracking-[-0.5px]">
-                          {member.profiles.full_name || "Unknown"}
-                        </p>
-                        {member.role === "owner" && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-medium">
-                            <Crown className="h-2.5 w-2.5" />
-                            Owner
-                          </span>
-                        )}
-                        {member.role === "admin" && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-medium">
-                            <Shield className="h-2.5 w-2.5" />
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                        {member.profiles.email}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {canManageTeam && member.role !== "owner" && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setConfirmDialog({ type: "member", id: member.id, name: member.profiles.full_name })}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        aria-label="Remove member"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      {/* Separator */}
+      <div className="h-px bg-border" />
+
+      {/* Tabs */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center rounded-full border border-border bg-muted/30 p-1">
+          <button
+            onClick={() => setActiveTab("members")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-full transition-colors tracking-[-0.5px]",
+              activeTab === "members"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Active members
+          </button>
+          <button
+            onClick={() => setActiveTab("invites")}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-full transition-colors tracking-[-0.5px]",
+              activeTab === "invites"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Pending invites
+          </button>
         </div>
       </div>
 
-      {/* Invite Links Card */}
-      {canManageTeam && (
-        <div className="rounded-xl border border-border/50 bg-card dark:bg-[#0e0e0e] overflow-hidden">
-          {/* Header */}
-          <div className="p-5 border-b border-border/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <Link2 className="h-4 w-4 text-emerald-500" />
+      {activeTab === "members" ? (
+        <>
+          {/* Stats Card */}
+          <div className="rounded-xl border border-border bg-card">
+            <div className="grid grid-cols-3 divide-x divide-border">
+              <div className="text-center py-6">
+                <p className="text-2xl font-semibold">{ownersAndAdmins}</p>
+                <p className="text-sm text-muted-foreground mt-1">Owners & Admins</p>
               </div>
-              <div>
-                <h3 className="text-sm font-semibold tracking-[-0.5px]">
-                  Invite Links
-                </h3>
-                <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                  Share links to invite team members
-                </p>
+              <div className="text-center py-6">
+                <p className="text-2xl font-semibold">{supportMembers}</p>
+                <p className="text-sm text-muted-foreground mt-1">Support members</p>
+              </div>
+              <div className="text-center py-6">
+                <p className="text-2xl font-semibold">{viewerMembers}</p>
+                <p className="text-sm text-muted-foreground mt-1">Viewer members</p>
               </div>
             </div>
-            <Button
-              onClick={generateNewLink}
-              disabled={generatingLink}
-              size="sm"
-              variant="outline"
-              className="text-[13px] font-medium tracking-[-0.5px] rounded-lg gap-1.5 border-border/50"
-            >
-              {generatingLink ? (
-                <>
-                  <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Link2 className="h-3.5 w-3.5" />
-                  Generate Link
-                </>
-              )}
-            </Button>
           </div>
 
-          {/* Links List */}
-          <div className="p-4">
-            {linkInvites.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-                  No active invite links. Generate one to share.
+          {/* Members List */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            {members.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <h4 className="font-medium text-foreground">No team members yet</h4>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                  Invite team members to collaborate on campaigns and manage your brand.
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {linkInvites.map(invite => (
+              <div className="divide-y divide-border">
+                {members.map(member => (
                   <div
-                    key={invite.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-colors"
+                    key={member.id}
+                    className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium capitalize",
-                          invite.role === "admin"
-                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                            : "bg-muted text-muted-foreground"
-                        )}>
-                          {invite.role}
-                        </span>
-                        <span className="text-xs text-muted-foreground tracking-[-0.3px]">
-                          Expires {formatDistanceToNow(new Date(invite.expires_at), { addSuffix: true })}
-                        </span>
+                    <div className="flex items-center gap-4">
+                      {member.profiles.avatar_url ? (
+                        <img
+                          src={member.profiles.avatar_url}
+                          alt={member.profiles.full_name}
+                          className="w-11 h-11 rounded-full object-cover ring-2 ring-purple-200 dark:ring-purple-900/50"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 text-base font-semibold ring-2 ring-purple-200 dark:ring-purple-900/50">
+                          {member.profiles.full_name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {member.profiles.full_name || "Unknown"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {member.profiles.email}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground/80 font-mono truncate tracking-[-0.3px] mt-1">
-                        {getInviteUrl(invite.invite_token)}
-                      </p>
                     </div>
-                    <div className="flex items-center gap-1 ml-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => copyLink(invite)}
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                      >
-                        {copiedLinkId === invite.id ? (
-                          <Check className="h-4 w-4 text-emerald-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setConfirmDialog({ type: "link", id: invite.id })}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        aria-label="Revoke link"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-muted-foreground">
+                        {getRoleLabel(member.role)}
+                      </span>
+                      {canManageTeam && member.role !== "owner" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => setConfirmDialog({ type: "member", id: member.id, name: member.profiles.full_name })}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Remove member
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        </div>
-      )}
+        </>
+      ) : (
+        <>
+          {/* Pending Invites Tab */}
+          {canManageTeam && (
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">Invite Links</h3>
+                  <p className="text-sm text-muted-foreground">Share links to invite team members</p>
+                </div>
+                <Button
+                  onClick={generateNewLink}
+                  disabled={generatingLink}
+                  size="sm"
+                  className="gap-2 bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-foreground border-0"
+                >
+                  {generatingLink ? (
+                    <>
+                      <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="h-4 w-4" />
+                      Generate Link
+                    </>
+                  )}
+                </Button>
+              </div>
 
-      {/* Pending Invitations Card */}
-      <div className="rounded-xl border border-border/50 bg-card dark:bg-[#0e0e0e] overflow-hidden">
-        {/* Header */}
-        <div className="p-5 border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <Mail className="h-4 w-4 text-amber-500" />
+              {linkInvites.length === 0 ? (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No active invite links. Generate one to share.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {linkInvites.map(invite => (
+                    <div
+                      key={invite.id}
+                      className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize",
+                            invite.role === "admin"
+                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            {invite.role}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Expires {formatDistanceToNow(new Date(invite.expires_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-mono truncate mt-1">
+                          {getInviteUrl(invite.invite_token)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => copyLink(invite)}
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          {copiedLinkId === invite.id ? (
+                            <Check className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setConfirmDialog({ type: "link", id: invite.id })}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div>
-              <h3 className="text-sm font-semibold tracking-[-0.5px]">
-                Pending Invitations
-              </h3>
-              <p className="text-xs text-muted-foreground tracking-[-0.3px]">
+          )}
+
+          {/* Email Invitations */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="px-5 py-4 border-b border-border">
+              <h3 className="font-medium">Email Invitations</h3>
+              <p className="text-sm text-muted-foreground">
                 {invitations.length} pending {invitations.length === 1 ? "invitation" : "invitations"}
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* Invitations List */}
-        <div className="p-4">
-          {invitations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-                No pending invitations
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {invitations.map(invitation => (
-                <div
-                  key={invitation.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30 dark:bg-muted/10 hover:bg-muted/50 dark:hover:bg-muted/20 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 text-sm font-semibold">
-                      {invitation.email[0]?.toUpperCase() || "?"}
+            {invitations.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No pending invitations
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {invitations.map(invitation => (
+                  <div
+                    key={invitation.id}
+                    className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-11 h-11 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 text-base font-semibold">
+                        {invitation.email[0]?.toUpperCase() || "?"}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {invitation.email}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Invited {formatDistanceToNow(new Date(invitation.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium tracking-[-0.5px]">
-                        {invitation.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                        Invited {formatDistanceToNow(new Date(invitation.created_at), { addSuffix: true })}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize",
+                        invitation.role === "admin"
+                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {invitation.role}
+                      </span>
+                      {canManageTeam && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setConfirmDialog({ type: "invitation", id: invitation.id, name: invitation.email })}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          Cancel
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "inline-flex items-center px-2 py-1 rounded text-[10px] font-medium capitalize",
-                      invitation.role === "admin"
-                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                        : "bg-muted text-muted-foreground"
-                    )}>
-                      {invitation.role}
-                    </span>
-                    {canManageTeam && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setConfirmDialog({ type: "invitation", id: invitation.id, name: invitation.email })}
-                        className="h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       <InviteMemberDialog
         open={inviteDialogOpen}

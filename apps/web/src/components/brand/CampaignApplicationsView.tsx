@@ -593,7 +593,7 @@ export function CampaignApplicationsView({
               className="bg-foreground text-background hover:bg-foreground/90 font-medium px-6"
               onClick={() => {
                 const baseUrl = window.location.origin;
-                navigator.clipboard.writeText(`${baseUrl}/c/${shareableCampaignSlug}`);
+                navigator.clipboard.writeText(`${baseUrl}/join/${shareableCampaignSlug}`);
                 toast.success("Link copied to clipboard");
               }}
             >
