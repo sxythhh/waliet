@@ -135,12 +135,10 @@ export function SubmitAudienceInsightsDialog({
     }
     setUploading(true);
     try {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
-      if (!session) {
+      // Force refresh to ensure we have a valid token
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+      if (sessionError || !session) {
+        console.error('Session refresh error:', sessionError?.message);
         toast({
           variant: "destructive",
           title: "Error",

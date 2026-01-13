@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsOptions } from "../_shared/cors.ts";
 
 // Allowed video extensions (whitelist)
@@ -21,35 +21,39 @@ Deno.serve(async (req) => {
 
   // Validate authorization header
   const authHeader = req.headers.get('Authorization');
+  const origin = req.headers.get('Origin');
+  console.log(`[upload-demographics] Request from origin: ${origin}, method: ${req.method}`);
+
   if (!authHeader) {
+    console.error('[upload-demographics] Missing authorization header');
     return new Response(
       JSON.stringify({ error: 'Unauthorized: Missing authorization header' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
-  // Create Supabase client and verify JWT
+  // Extract the JWT token from "Bearer <token>"
+  const token = authHeader.replace('Bearer ', '');
+  console.log(`[upload-demographics] Token length: ${token.length}`);
+
+  // Create Supabase admin client
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-  // Client for user auth verification
-  const supabaseClient = createClient(
-    supabaseUrl,
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  // Admin client for storage operations
+  // Admin client for storage and auth verification
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  // Verify the JWT token directly
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
   if (authError || !user) {
-    console.error('Auth error:', authError?.message);
+    console.error(`[upload-demographics] Auth verification failed: ${authError?.message || 'no user returned'}`);
     return new Response(
-      JSON.stringify({ error: 'Unauthorized: Invalid or expired token' }),
+      JSON.stringify({ error: `Unauthorized: ${authError?.message || 'Invalid or expired token'}` }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
+
+  console.log(`[upload-demographics] Auth successful for user: ${user.id}`);
 
   try {
     // Handle DELETE request
@@ -136,7 +140,7 @@ Deno.serve(async (req) => {
     }
 
     // SECURITY: Verify social account ownership
-    const { data: socialAccount, error: accountError } = await supabaseClient
+    const { data: socialAccount, error: accountError } = await supabaseAdmin
       .from('social_accounts')
       .select('id')
       .eq('id', socialAccountId)
@@ -153,7 +157,7 @@ Deno.serve(async (req) => {
 
     // Rate limiting: Max 3 submissions per social account per 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count, error: countError } = await supabaseClient
+    const { count, error: countError } = await supabaseAdmin
       .from('demographic_submissions')
       .select('*', { count: 'exact', head: true })
       .eq('social_account_id', socialAccountId)
