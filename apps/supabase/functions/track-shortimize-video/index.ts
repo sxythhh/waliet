@@ -95,10 +95,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch brand's Shortimize API key and fallback collection name
+    // Fetch brand's collection name
     const { data: brand, error: brandError } = await supabase
       .from('brands')
-      .select('shortimize_api_key, collection_name')
+      .select('collection_name')
       .eq('id', brandId)
       .single();
 
@@ -110,17 +110,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!brand.shortimize_api_key) {
+    // Fetch API key from secure brand_secrets table
+    const { data: secrets, error: secretsError } = await supabase
+      .from('brand_secrets')
+      .select('shortimize_api_key')
+      .eq('brand_id', brandId)
+      .single();
+
+    if (secretsError || !secrets?.shortimize_api_key) {
       console.log('No Shortimize API key configured for brand');
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          skipped: true, 
-          message: 'No Shortimize API key configured for this brand' 
+        JSON.stringify({
+          success: false,
+          skipped: true,
+          message: 'No Shortimize API key configured for this brand'
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const shortimizeApiKey = secrets.shortimize_api_key;
 
     // Use campaign/boost-specific collection, fall back to brand-level collection
     const finalCollectionName = collectionName || brand.collection_name;
@@ -148,7 +157,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${brand.shortimize_api_key}`,
+        'Authorization': `Bearer ${shortimizeApiKey}`,
       },
       body: JSON.stringify({
         link: videoUrl,

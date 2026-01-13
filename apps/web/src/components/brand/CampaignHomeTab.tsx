@@ -140,7 +140,6 @@ export function CampaignHomeTab({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [brand, setBrand] = useState<{
     collection_name: string | null;
-    shortimize_api_key: string | null;
   } | null>(null);
   const [campaignHashtags, setCampaignHashtags] = useState<string[]>([]);
   const [campaignCollectionName, setCampaignCollectionName] = useState<string | null>(null);
@@ -166,7 +165,7 @@ export function CampaignHomeTab({
         const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
         // Build all queries
-        const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
+        const brandQuery = supabase.from('brands').select('collection_name').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags, shortimize_collection_name, rpm_rate').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
         

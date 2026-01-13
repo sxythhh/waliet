@@ -122,15 +122,26 @@ export function CreateCampaignDialog({
   useEffect(() => {
     if (open && brandId) {
       const fetchSettings = async () => {
+        // Fetch collection_name from brands (non-secret)
         const { data: brandData } = await supabase
           .from('brands')
-          .select('shortimize_api_key, collection_name')
+          .select('collection_name')
           .eq('id', brandId)
           .single();
-        
+
         if (brandData) {
-          setShortimizeApiKey(brandData.shortimize_api_key || "");
           setCollectionName(brandData.collection_name || "");
+        }
+
+        // Fetch API key from secure brand_secrets table
+        const { data: secrets } = await supabase
+          .from('brand_secrets')
+          .select('shortimize_api_key')
+          .eq('brand_id', brandId)
+          .single();
+
+        if (secrets) {
+          setShortimizeApiKey(secrets.shortimize_api_key || "");
         }
 
         // Fetch campaign's video collection name if editing
@@ -140,7 +151,7 @@ export function CreateCampaignDialog({
             .select('shortimize_collection_name')
             .eq('id', campaign.id)
             .single();
-          
+
           if (campaignData) {
             setVideoCollectionName(campaignData.shortimize_collection_name || "");
           }
@@ -260,17 +271,33 @@ export function CreateCampaignDialog({
         } = await supabase.from("campaigns").update(campaignData).eq("id", campaign.id);
         if (error) throw error;
 
-        // Update brand's Shortimize settings
+        // Update brand's collection_name (non-secret) in brands table
         const { error: brandError } = await supabase
           .from("brands")
           .update({
-            shortimize_api_key: shortimizeApiKey || null,
             collection_name: collectionName || null,
           })
           .eq("id", brandId);
-        
+
         if (brandError) {
-          console.error("Error updating brand Shortimize settings:", brandError);
+          console.error("Error updating brand collection_name:", brandError);
+        }
+
+        // Upsert API key to secure brand_secrets table
+        if (shortimizeApiKey) {
+          const { error: secretsError } = await supabase
+            .from("brand_secrets")
+            .upsert({
+              brand_id: brandId,
+              shortimize_api_key: shortimizeApiKey || null,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'brand_id'
+            });
+
+          if (secretsError) {
+            console.error("Error updating brand secrets:", secretsError);
+          }
         }
 
         toast.success("Campaign updated successfully!");
@@ -283,16 +310,35 @@ export function CreateCampaignDialog({
 
         // Update brand's Shortimize settings for new campaigns too
         if (shortimizeApiKey || collectionName) {
-          const { error: brandError } = await supabase
-            .from("brands")
-            .update({
-              shortimize_api_key: shortimizeApiKey || null,
-              collection_name: collectionName || null,
-            })
-            .eq("id", brandId);
-          
-          if (brandError) {
-            console.error("Error updating brand Shortimize settings:", brandError);
+          // Update collection_name in brands table
+          if (collectionName) {
+            const { error: brandError } = await supabase
+              .from("brands")
+              .update({
+                collection_name: collectionName || null,
+              })
+              .eq("id", brandId);
+
+            if (brandError) {
+              console.error("Error updating brand collection_name:", brandError);
+            }
+          }
+
+          // Upsert API key to secure brand_secrets table
+          if (shortimizeApiKey) {
+            const { error: secretsError } = await supabase
+              .from("brand_secrets")
+              .upsert({
+                brand_id: brandId,
+                shortimize_api_key: shortimizeApiKey || null,
+                updated_at: new Date().toISOString()
+              }, {
+                onConflict: 'brand_id'
+              });
+
+            if (secretsError) {
+              console.error("Error updating brand secrets:", secretsError);
+            }
           }
         }
 

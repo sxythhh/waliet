@@ -650,8 +650,7 @@ interface Brand {
   subscription_expires_at: string | null;
   whop_membership_id: string | null;
   whop_manage_url: string | null;
-  shortimize_api_key: string | null;
-  dub_api_key: string | null;
+  // Note: shortimize_api_key and dub_api_key moved to brand_secrets table
   slack_webhook_url: string | null;
   discord_webhook_url: string | null;
   notify_new_application: boolean;
@@ -737,6 +736,7 @@ export function UserSettingsTab() {
   const fetchBrand = async () => {
     if (!currentBrand?.id) return;
     try {
+      // Fetch brand data (non-secret fields)
       const {
         data,
         error
@@ -746,10 +746,8 @@ export function UserSettingsTab() {
       setEditedBrandName(data?.name || "");
       setEditedSlug(data?.slug || "");
       setEditedDescription(data?.description || "");
-      setShortimizeApiKey(data?.shortimize_api_key || "");
       const settings = data?.settings as Record<string, any> || {};
       setShortimizeCollectionName(settings?.shortimize_collection_name || "");
-      setDubApiKey(data?.dub_api_key || "");
       setSlackWebhookUrl(data?.slack_webhook_url || "");
       setDiscordWebhookUrl(data?.discord_webhook_url || "");
       setNotifyNewApplication(data?.notify_new_application ?? true);
@@ -761,6 +759,16 @@ export function UserSettingsTab() {
       setWebsiteUrl(data?.website_url || "");
       setAppStoreUrl(data?.app_store_url || "");
       setBrandColor(data?.brand_color || "#8B5CF6");
+
+      // Fetch API keys from secure brand_secrets table
+      const { data: secrets } = await supabase
+        .from("brand_secrets")
+        .select("shortimize_api_key, dub_api_key")
+        .eq("brand_id", currentBrand.id)
+        .single();
+
+      setShortimizeApiKey(secrets?.shortimize_api_key || "");
+      setDubApiKey(secrets?.dub_api_key || "");
     } catch (error) {
       console.error("Error fetching brand:", error);
     }
@@ -795,16 +803,31 @@ export function UserSettingsTab() {
         ...existingSettings,
         shortimize_collection_name: shortimizeCollectionName || null
       };
+
+      // Update non-secret fields in brands table
       const {
         error
       } = await supabase.from("brands").update({
-        shortimize_api_key: shortimizeApiKey || null,
-        dub_api_key: dubApiKey || null,
         slack_webhook_url: slackWebhookUrl || null,
         discord_webhook_url: discordWebhookUrl || null,
         settings: updatedSettings
       }).eq("id", brand.id);
       if (error) throw error;
+
+      // Upsert API keys to secure brand_secrets table
+      const { error: secretsError } = await supabase
+        .from("brand_secrets")
+        .upsert({
+          brand_id: brand.id,
+          shortimize_api_key: shortimizeApiKey || null,
+          dub_api_key: dubApiKey || null,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'brand_id'
+        });
+
+      if (secretsError) throw secretsError;
+
       toast.success("Integrations saved");
       fetchBrand();
     } catch (error) {

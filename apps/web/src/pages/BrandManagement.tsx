@@ -235,7 +235,7 @@ export default function BrandManagement() {
           banner_url, preview_url, analytics_url, guidelines, allowed_platforms,
           application_questions, slug, embed_url, is_private, access_code,
           requires_application, is_infinite_budget, is_featured, brand_id,
-          brands!campaigns_brand_id_fkey (id, name, logo_url, shortimize_api_key, collection_name)
+          brands!campaigns_brand_id_fkey (id, name, logo_url, collection_name)
         `)
         .eq("slug", campaignSlug)
         .maybeSingle();

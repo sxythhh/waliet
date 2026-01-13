@@ -53,23 +53,23 @@ Deno.serve(async (req) => {
 
     console.log("Starting comprehensive campaign video sync...", { brandId, campaignId });
 
-    // Fetch brands with shortimize_api_key configured
-    let brandsQuery = supabase
-      .from("brands")
-      .select("id, name, shortimize_api_key, collection_name")
+    // Fetch brand secrets with API keys configured
+    let secretsQuery = supabase
+      .from("brand_secrets")
+      .select("brand_id, shortimize_api_key")
       .not("shortimize_api_key", "is", null);
 
     if (brandId) {
-      brandsQuery = brandsQuery.eq("id", brandId);
+      secretsQuery = secretsQuery.eq("brand_id", brandId);
     }
 
-    const { data: brands, error: brandsError } = await brandsQuery;
+    const { data: secrets, error: secretsError } = await secretsQuery;
 
-    if (brandsError) {
-      throw new Error(`Failed to fetch brands: ${brandsError.message}`);
+    if (secretsError) {
+      throw new Error(`Failed to fetch brand secrets: ${secretsError.message}`);
     }
 
-    if (!brands || brands.length === 0) {
+    if (!secrets || secrets.length === 0) {
       console.log("No brands with Shortimize API keys found");
       return new Response(
         JSON.stringify({ success: true, message: "No brands to sync", synced: 0 }),
@@ -77,7 +77,35 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Found ${brands.length} brands with Shortimize API keys`);
+    // Create a map of brand_id to API key
+    const apiKeyMap = new Map(secrets.map(s => [s.brand_id, s.shortimize_api_key]));
+    const brandIds = secrets.map(s => s.brand_id);
+
+    // Fetch brand details
+    const { data: brands, error: brandsError } = await supabase
+      .from("brands")
+      .select("id, name, collection_name")
+      .in("id", brandIds);
+
+    if (brandsError) {
+      throw new Error(`Failed to fetch brands: ${brandsError.message}`);
+    }
+
+    if (!brands || brands.length === 0) {
+      console.log("No brands found");
+      return new Response(
+        JSON.stringify({ success: true, message: "No brands to sync", synced: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Attach API keys to brands
+    const brandsWithKeys = brands.map(b => ({
+      ...b,
+      shortimize_api_key: apiKeyMap.get(b.id)
+    }));
+
+    console.log(`Found ${brandsWithKeys.length} brands with Shortimize API keys`);
 
     const results: {
       brandId: string;
@@ -89,7 +117,7 @@ Deno.serve(async (req) => {
     let totalVideosMatched = 0;
     let totalVideosUnmatched = 0;
 
-    for (const brand of brands) {
+    for (const brand of brandsWithKeys) {
       try {
         console.log(`Processing brand: ${brand.name} (${brand.id})`);
 
