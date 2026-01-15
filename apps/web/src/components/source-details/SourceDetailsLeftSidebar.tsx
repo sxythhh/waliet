@@ -454,12 +454,13 @@ export function SourceDetailsLeftSidebar({
       {/* Budget progress bar (campaigns only) - beneath banner */}
       {isCampaign && (() => {
         const budgetPercentage = budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
+        const budgetRemaining = Math.max(0, budget - budgetUsed);
         const TOTAL_SEGMENTS = 8;
         const filledSegments = Math.round((budgetPercentage / 100) * TOTAL_SEGMENTS);
 
         return (
-          <div className="px-3 pt-2 pb-1">
-            <div className="relative group cursor-pointer">
+          <div className="px-3 pt-2 pb-0.5 flex items-center gap-2">
+            <div className="relative group cursor-pointer flex-1">
               <div className="flex gap-0.5">
                 {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
                   <div
@@ -495,12 +496,15 @@ export function SourceDetailsLeftSidebar({
                 />
               </div>
             </div>
+            <span className="text-xs font-medium text-foreground font-inter whitespace-nowrap">
+              ${budgetRemaining.toLocaleString()}
+            </span>
           </div>
         );
       })()}
 
       {/* Navigation */}
-      <div className="flex-1 px-2 py-3 space-y-1">
+      <div className="flex-1 px-2 py-2 space-y-1">
         {/* Submit Video - Prominent CTA at top */}
         {onSubmitVideo && (isCampaign ? paymentModel === 'pay_per_post' : true) && (
           <button
