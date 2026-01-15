@@ -169,11 +169,11 @@ async function fetchAllBrands(): Promise<Brand[]> {
 // Hook for joined campaigns
 export function useJoinedCampaigns(userId: string | undefined) {
   return useQuery({
-    queryKey: ["joinedCampaigns", userId],
+    queryKey: ["joinedCampaigns", "v2", userId],
     queryFn: () => fetchJoinedCampaigns(userId!),
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

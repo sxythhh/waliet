@@ -1,5 +1,5 @@
 import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon, GripVertical } from "lucide-react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, Modifier } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Icon } from "@iconify/react";
@@ -147,18 +147,43 @@ const brandMenuItems: MenuItem[] = [{
   icon: CircleUser
 }];
 
+// Restrict drag to vertical axis only
+const restrictToVerticalAxis: Modifier = ({ transform }) => ({
+  ...transform,
+  x: 0,
+});
+
 // Sortable sidebar item component for drag and drop reordering
-function SortableSidebarItem({ id, children }: { id: string; children: React.ReactNode }) {
+function SortableSidebarItem({ id, children }: { id: string; children: (isHovered: boolean) => React.ReactNode }) {
+  const [isHovered, setIsHovered] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    cursor: 'grab',
+    touchAction: 'none',
   };
+
+  // Wrap listeners to add hover detection
+  const enhancedListeners = {
+    ...listeners,
+    onPointerEnter: (e: React.PointerEvent) => {
+      setIsHovered(true);
+    },
+    onPointerLeave: (e: React.PointerEvent) => {
+      setIsHovered(false);
+    },
+  };
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="overflow-visible"
+      {...attributes}
+      {...enhancedListeners}
+    >
+      {children(isHovered)}
     </div>
   );
 }
@@ -232,9 +257,13 @@ export function AppSidebar() {
   // Load sidebar campaign order from localStorage
   useEffect(() => {
     if (effectiveUserId) {
-      const savedOrder = localStorage.getItem(`sidebarOrder_${effectiveUserId}`);
-      if (savedOrder) {
-        setSidebarCampaignOrder(JSON.parse(savedOrder));
+      try {
+        const savedOrder = localStorage.getItem(`sidebarOrder_${effectiveUserId}`);
+        if (savedOrder) {
+          setSidebarCampaignOrder(JSON.parse(savedOrder));
+        }
+      } catch (e) {
+        console.warn("Failed to load sidebar order from localStorage:", e);
       }
     }
   }, [effectiveUserId]);
@@ -265,7 +294,11 @@ export function AppSidebar() {
       );
       setSidebarCampaignOrder(newOrder);
       if (effectiveUserId) {
-        localStorage.setItem(`sidebarOrder_${effectiveUserId}`, JSON.stringify(newOrder));
+        try {
+          localStorage.setItem(`sidebarOrder_${effectiveUserId}`, JSON.stringify(newOrder));
+        } catch (e) {
+          console.warn("Failed to save sidebar order to localStorage:", e);
+        }
       }
     }
   };
@@ -562,7 +595,7 @@ export function AppSidebar() {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border transition-all duration-200`}>
+      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border transition-all duration-200 overflow-visible`}>
         {/* Logo - hidden when collapsed */}
         {!isCollapsed && (
           <div className="flex items-center px-[14px] pl-[17px] py-[8px]">
@@ -703,8 +736,8 @@ export function AppSidebar() {
 
         {/* Main Navigation */}
         <TooltipProvider delayDuration={0}>
-        <nav className="flex-1 py-0 px-2">
-          <div className="flex flex-col gap-1">
+        <nav className="flex-1 py-0 px-2 overflow-visible">
+          <div className="flex flex-col gap-1 overflow-visible">
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -792,43 +825,47 @@ export function AppSidebar() {
             {isCollapsed && isCreatorMode && sortedJoinedCampaigns.length > 0 && (
               <>
                 <div className="w-8 h-[1px] bg-border mx-auto my-2" />
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSidebarDragEnd}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSidebarDragEnd} modifiers={[restrictToVerticalAxis]}>
                   <SortableContext items={sortedJoinedCampaigns.map(item => `${item.type}-${item.id}`)} strategy={verticalListSortingStrategy}>
-                    <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto scrollbar-hide">
+                    <div className="flex flex-col items-center gap-2 flex-1 overflow-visible">
                       {sortedJoinedCampaigns.map((item) => {
                         const itemPath = item.type === "campaign" ? `/dashboard/campaign/${item.id}` : `/dashboard/boost/${item.id}`;
                         const isActiveItem = location.pathname === itemPath;
                         const itemKey = `${item.type}-${item.id}`;
                         return (
                           <SortableSidebarItem key={itemKey} id={itemKey}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="relative flex items-center justify-center group">
-                                  {/* Left pill indicator - taller when active, appears on hover (no animation on hover out) */}
-                                  <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-1 bg-foreground rounded-r-full ${isActiveItem ? 'h-8 transition-[height] duration-150 ease-out' : 'h-0 group-hover:h-5 group-hover:transition-[height] group-hover:duration-150 group-hover:ease-out'}`} />
-                                  <button
-                                    onClick={() => navigate(itemPath)}
-                                    className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
-                                  >
-                                    {item.brand_logo_url ? (
-                                      <img
-                                        src={item.brand_logo_url}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <span className="text-xs font-semibold text-foreground">
-                                        {item.brand_name?.charAt(0).toUpperCase() || (item.type === "boost" ? 'B' : 'C')}
-                                      </span>
-                                    )}
-                                  </button>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="right" sideOffset={12} className="bg-[#111] dark:bg-[#111] text-white border-0 px-3 py-1.5 rounded-md shadow-xl">
-                                <p className="text-sm font-medium font-inter tracking-[-0.3px]">{item.title}</p>
-                                <p className="text-xs text-white/60 font-inter tracking-[-0.3px] capitalize">{item.type} • drag to reorder</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            {(isHovered) => (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="relative flex items-center justify-center overflow-visible">
+                                    {/* Left pill indicator - at sidebar edge, half overflowing */}
+                                    <div
+                                      className={`absolute -left-3 top-1/2 -translate-y-1/2 w-1 bg-foreground rounded-r-full ${isHovered || isActiveItem ? 'transition-[height] duration-150 ease-out' : ''}`}
+                                      style={{ height: isActiveItem ? 32 : isHovered ? 20 : 0 }}
+                                    />
+                                    <button
+                                      onClick={() => navigate(itemPath)}
+                                      className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
+                                    >
+                                      {item.brand_logo_url ? (
+                                        <img
+                                          src={item.brand_logo_url}
+                                          alt={item.title}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-semibold text-foreground">
+                                          {item.brand_name?.charAt(0).toUpperCase() || (item.type === "boost" ? 'B' : 'C')}
+                                        </span>
+                                      )}
+                                    </button>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" sideOffset={12} className="bg-[#111] dark:bg-[#111] text-white border-0 px-3 py-1.5 rounded-md shadow-xl">
+                                  <p className="text-sm font-medium font-inter tracking-[-0.3px]">{item.title}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </SortableSidebarItem>
                         );
                       })}
