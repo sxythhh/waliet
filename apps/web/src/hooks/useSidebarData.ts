@@ -142,8 +142,8 @@ async function fetchJoinedCampaigns(userId: string): Promise<JoinedCampaign[]> {
     }
   }
 
-  // Sort by created date (newest first) and limit to 5 total
-  return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
+  // Sort by created date (newest first)
+  return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 // Fetch brand memberships for a user
@@ -207,7 +207,7 @@ export interface BrandCampaignItem {
   type: "campaign" | "boost";
 }
 
-// Fetch brand campaigns and boosts for sidebar (limited to 5)
+// Fetch brand campaigns and boosts for sidebar
 async function fetchBrandCampaignsForSidebar(brandId: string): Promise<BrandCampaignItem[]> {
   // Fetch campaigns for this brand
   const { data: campaigns } = await supabase
@@ -215,8 +215,7 @@ async function fetchBrandCampaignsForSidebar(brandId: string): Promise<BrandCamp
     .select("id, title, cover_url")
     .eq("brand_id", brandId)
     .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(5);
+    .order("created_at", { ascending: false });
 
   // Fetch boosts for this brand
   const { data: boosts } = await supabase
@@ -224,8 +223,7 @@ async function fetchBrandCampaignsForSidebar(brandId: string): Promise<BrandCamp
     .select("id, title, cover_url")
     .eq("brand_id", brandId)
     .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(5);
+    .order("created_at", { ascending: false });
 
   const items: BrandCampaignItem[] = [];
 
@@ -249,8 +247,7 @@ async function fetchBrandCampaignsForSidebar(brandId: string): Promise<BrandCamp
     })));
   }
 
-  // Sort by created date (newest first) and limit to 5 total
-  return items.slice(0, 5);
+  return items;
 }
 
 // Hook for brand campaigns and boosts for sidebar
