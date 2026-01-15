@@ -62,6 +62,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -70,49 +71,19 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import SidebarMenuButtons from "@/components/SidebarMenuButtons";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
-interface JoinedCampaign {
-  id: string;
-  title: string;
-  slug: string;
-  brand_name: string;
-  brand_logo_url: string | null;
-  description: string | null;
-  status: string;
-  budget: number;
-  budget_used?: number | null;
-  rpm_rate: number;
-  allowed_platforms: string[] | null;
-  end_date: string | null;
-  created_at: string;
-  hashtags?: string[] | null;
-  guidelines?: string | null;
-  embed_url?: string | null;
-  asset_links?: { url: string; label?: string }[] | null;
-  requirements?: string[] | null;
-  campaign_update?: string | null;
-  campaign_update_at?: string | null;
-  payout_day_of_week?: number | null;
-  blueprint_id?: string | null;
-  payment_model?: string | null;
-  post_rate?: number | null;
-}
-interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-  logo_url: string | null;
-  brand_color: string | null;
-}
-interface BrandMembership {
-  brand_id: string;
-  role: string;
-  brands: {
-    name: string;
-    slug: string;
-    logo_url: string | null;
-    brand_color: string | null;
-  };
-}
+import {
+  useJoinedCampaigns,
+  useBrandMemberships,
+  useAllBrands,
+  useCurrentBrandInfo,
+  useBrandCampaignsForSidebar,
+  useUserProfile,
+  type JoinedCampaign,
+  type BrandMembership,
+  type Brand,
+  type BrandCampaignItem,
+} from "@/hooks/useSidebarData";
+
 interface SubItem {
   title: string;
   subtab: string;
@@ -189,19 +160,8 @@ export function AppSidebar() {
   const {
     isAdmin
   } = useAdminCheck();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState<string>("");
-  const [accountType, setAccountType] = useState<string>("creator");
-  const [brandMemberships, setBrandMemberships] = useState<BrandMembership[]>([]);
-  const [allBrands, setAllBrands] = useState<Brand[]>([]);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [workspaceSearch, setWorkspaceSearch] = useState("");
-  const [currentBrandName, setCurrentBrandName] = useState<string>("");
-  const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
-  const [currentBrandColor, setCurrentBrandColor] = useState<string | null>(null);
-  const [currentBrandSubscriptionStatus, setCurrentBrandSubscriptionStatus] = useState<string | null>(null);
-  const [currentBrandSubscriptionPlan, setCurrentBrandSubscriptionPlan] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isMobile = useIsMobile();
@@ -209,13 +169,51 @@ export function AppSidebar() {
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<"feature" | "bug">("feature");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [currentBrandMemberCount, setCurrentBrandMemberCount] = useState<number>(0);
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
   const [creatorsExpanded, setCreatorsExpanded] = useState(false);
-  const [joinedCampaigns, setJoinedCampaigns] = useState<JoinedCampaign[]>([]);
   const [selectedCampaignForDetails, setSelectedCampaignForDetails] = useState<JoinedCampaign | null>(null);
   const [campaignDetailsDialogOpen, setCampaignDetailsDialogOpen] = useState(false);
   const [campaignsExpanded, setCampaignsExpanded] = useState(true);
+  const [effectiveUserId, setEffectiveUserId] = useState<string | undefined>(user?.id);
+  const [effectiveUserEmail, setEffectiveUserEmail] = useState<string | undefined>(user?.email || undefined);
+
+  // Sync effectiveUserId with user from context, or fetch directly if context is stale
+  useEffect(() => {
+    const syncUserId = async () => {
+      if (user?.id) {
+        setEffectiveUserId(user.id);
+        setEffectiveUserEmail(user.email || undefined);
+      } else {
+        // Context might be stale - fetch session directly
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setEffectiveUserId(session.user.id);
+          setEffectiveUserEmail(session.user.email || undefined);
+        }
+      }
+    };
+    syncUserId();
+  }, [user?.id, user?.email]);
+
+  // React Query for data fetching with caching - use effectiveUserId instead of user?.id
+  const queryClient = useQueryClient();
+  const { data: brandMemberships = [] } = useBrandMemberships(effectiveUserId);
+  const { data: allBrands = [] } = useAllBrands(isAdmin);
+  const { data: joinedCampaigns = [] } = useJoinedCampaigns(effectiveUserId);
+  const { data: userProfile } = useUserProfile(effectiveUserId);
+
+  // Derive profile values from cached query (prevents flicker on navigation)
+  const avatarUrl = userProfile?.avatar_url || null;
+  const bannerUrl = userProfile?.banner_url || null;
+  const displayName = userProfile?.full_name || userProfile?.username || effectiveUserEmail || "";
+  const accountType = userProfile?.account_type || "creator";
+
+  // Get workspace/brand ID early for the hook
+  const workspaceBrandId = !isCreatorMode && workspace
+    ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || null
+    : null;
+  const { data: brandCampaignsForSidebar = [] } = useBrandCampaignsForSidebar(workspaceBrandId);
+
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
   const currentSubtab = searchParams.get("subtab") || "messages";
   
@@ -237,128 +235,30 @@ export function AppSidebar() {
     }
   }, [isMobile, isDetailPage]);
 
-  // Get current brand ID for subscription dialog
-  const currentBrandId = !isCreatorMode && workspace ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '' : '';
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-      fetchBrandMemberships();
-      fetchJoinedCampaigns();
-    }
-  }, [user]);
-  useEffect(() => {
-    if (isAdmin) {
-      fetchAllBrands();
-    }
-  }, [isAdmin]);
-  useEffect(() => {
-    // Update current brand info when workspace changes
-    const fetchCurrentBrandInfo = async () => {
-      if (!isCreatorMode && workspace) {
-        // Find the brand id first
-        const brandFromAll = allBrands.find(b => b.slug === workspace);
-        const brandFromMembership = brandMemberships.find(m => m.brands.slug === workspace);
-        if (brandFromAll) {
-          setCurrentBrandName(brandFromAll.name);
-          setCurrentBrandLogo(brandFromAll.logo_url);
-          setCurrentBrandColor(brandFromAll.brand_color);
-          // Fetch subscription status and plan
-          const {
-            data
-          } = await supabase.from("brands").select("subscription_status, subscription_plan").eq("id", brandFromAll.id).single();
-          setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
-          setCurrentBrandSubscriptionPlan(data?.subscription_plan || null);
-          // Fetch member count
-          const {
-            count
-          } = await supabase.from("brand_members").select("id", {
-            count: 'exact',
-            head: true
-          }).eq("brand_id", brandFromAll.id);
-          setCurrentBrandMemberCount(count || 0);
-        } else if (brandFromMembership) {
-          setCurrentBrandName(brandFromMembership.brands.name);
-          setCurrentBrandLogo(brandFromMembership.brands.logo_url);
-          setCurrentBrandColor(brandFromMembership.brands.brand_color);
-          // Fetch subscription status and plan
-          const {
-            data
-          } = await supabase.from("brands").select("subscription_status, subscription_plan").eq("id", brandFromMembership.brand_id).single();
-          setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
-          setCurrentBrandSubscriptionPlan(data?.subscription_plan || null);
-          // Fetch member count
-          const {
-            count
-          } = await supabase.from("brand_members").select("id", {
-            count: 'exact',
-            head: true
-          }).eq("brand_id", brandFromMembership.brand_id);
-          setCurrentBrandMemberCount(count || 0);
-        }
-      } else {
-        setCurrentBrandSubscriptionStatus(null);
-        setCurrentBrandSubscriptionPlan(null);
-        setCurrentBrandMemberCount(0);
-      }
-    };
-    fetchCurrentBrandInfo();
-  }, [workspace, brandMemberships, allBrands, isCreatorMode]);
-  const fetchProfile = async () => {
-    if (!user) return;
-    const {
-      data
-    } = await supabase.from("profiles").select("avatar_url, banner_url, full_name, username, account_type").eq("id", user.id).single();
-    if (data) {
-      setAvatarUrl(data.avatar_url);
-      setBannerUrl(data.banner_url);
-      setDisplayName(data.full_name || data.username || user.email || "");
-      setAccountType(data.account_type || "creator");
-    } else {
-      setDisplayName(user.email || "");
-    }
-  };
-  const fetchBrandMemberships = async () => {
-    if (!user) return;
-    const {
-      data
-    } = await supabase.from("brand_members").select("brand_id, role, brands(name, slug, logo_url, brand_color)").eq("user_id", user.id);
-    if (data) {
-      setBrandMemberships(data as unknown as BrandMembership[]);
-    }
-  };
-  const fetchAllBrands = async () => {
-    const {
-      data
-    } = await supabase.from("brands").select("id, name, slug, logo_url, brand_color").order("name");
-    if (data) {
-      setAllBrands(data);
-    }
-  };
-  const fetchJoinedCampaigns = async () => {
-    if (!user) return;
+  // Get current brand ID for subscription dialog and brand info
+  const currentBrandId = !isCreatorMode && workspace
+    ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || ''
+    : '';
 
-    // First get campaign IDs user has joined (accepted submissions)
-    const {
-      data: submissions
-    } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id).eq("status", "approved");
-    if (!submissions || submissions.length === 0) {
-      setJoinedCampaigns([]);
-      return;
-    }
-    const campaignIds = submissions.map(s => s.campaign_id);
+  // Use React Query for current brand info (cached)
+  const { data: currentBrandInfo } = useCurrentBrandInfo(currentBrandId || null);
 
-    // Fetch campaign details
-    const {
-      data: campaigns
-    } = await supabase.from("campaigns").select("*").in("id", campaignIds).eq("status", "active").order("created_at", {
-      ascending: false
-    }).limit(5);
-    if (campaigns) {
-      setJoinedCampaigns(campaigns as JoinedCampaign[]);
-    }
-  };
+  // Derive brand info from the hook data or memberships
+  const currentBrandName = currentBrandInfo?.name
+    || brandMemberships.find(m => m.brands.slug === workspace)?.brands.name
+    || "";
+  const currentBrandLogo = currentBrandInfo?.logo_url
+    || brandMemberships.find(m => m.brands.slug === workspace)?.brands.logo_url
+    || null;
+  const currentBrandColor = currentBrandInfo?.brand_color
+    || brandMemberships.find(m => m.brands.slug === workspace)?.brands.brand_color
+    || null;
+  const currentBrandSubscriptionStatus = currentBrandInfo?.subscription_status || null;
+  const currentBrandSubscriptionPlan = currentBrandInfo?.subscription_plan || null;
+  const currentBrandMemberCount = currentBrandInfo?.memberCount || 0;
+
   const getInitial = () => {
-    return displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
+    return displayName.charAt(0).toUpperCase() || effectiveUserEmail?.charAt(0).toUpperCase() || "U";
   };
   const handleTabClick = (tab: string, subtab?: string) => {
     // If clicking scope without an active subscription, show upgrade popup
@@ -595,15 +495,17 @@ export function AppSidebar() {
 
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border transition-all duration-200`}>
-        {/* Logo */}
-        <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-[14px] pl-[17px]'} py-[8px]`}>
-          <Link to="/" className={`flex items-center gap-0 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center' : ''}`}>
-            <OptimizedImage src={ghostLogoBlue} alt="Logo" className={`h-6 w-6 rounded-none object-cover ${isCollapsed ? 'mr-0' : 'mr-[2px]'}`} />
-            {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">
+        {/* Logo - hidden when collapsed */}
+        {!isCollapsed && (
+          <div className="flex items-center px-[14px] pl-[17px] py-[8px]">
+            <Link to="/" className="flex items-center gap-0 hover:opacity-80 transition-opacity">
+              <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover mr-[2px]" />
+              <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">
                 VIRALITY
-              </span>}
-          </Link>
-        </div>
+              </span>
+            </Link>
+          </div>
+        )}
 
         {/* Workspace Toggle */}
         {!isCollapsed ? <div className="px-2 py-[5px]">
@@ -674,32 +576,42 @@ export function AppSidebar() {
                       </button> : null}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === brand.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                    {isAdmin && allBrands.filter(brand => (brand.name || brand.slug || '').toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => {
+                      const brandDisplayName = brand.name || brand.slug || 'Unnamed Brand';
+                      return (
+                        <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === brand.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
                             {brand.logo_url ? <Avatar className="w-6 h-6 rounded-md">
-                                <AvatarImage src={brand.logo_url} alt={brand.name} className="object-cover rounded-md" />
-                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brand.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={brand.logo_url} alt={brandDisplayName} className="object-cover rounded-md" />
+                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brandDisplayName.charAt(0)}</AvatarFallback>
                               </Avatar> : <Avatar className="w-6 h-6 rounded-md">
-                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brand.name.charAt(0)}</AvatarFallback>
+                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brandDisplayName.charAt(0)}</AvatarFallback>
                               </Avatar>}
-                            <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{brand.name}</span>
+                            <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{brandDisplayName}</span>
                           </div>
                           {workspace === brand.slug && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center"><Check className="w-2.5 h-2.5 text-primary-foreground" /></div>}
-                        </button>)}
+                        </button>
+                      );
+                    })}
 
                     {/* Non-admin brand memberships */}
-                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === membership.brands.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                    {!isAdmin && brandMemberships.filter(membership => (membership.brands.name || membership.brands.slug || '').toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => {
+                      const brandDisplayName = membership.brands.name || membership.brands.slug || 'Unnamed Brand';
+                      return (
+                        <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === membership.brands.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
                             {membership.brands.logo_url ? <Avatar className="w-6 h-6 rounded-md">
-                                <AvatarImage src={membership.brands.logo_url} alt={membership.brands.name} className="object-cover rounded-md" />
-                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{membership.brands.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={membership.brands.logo_url} alt={brandDisplayName} className="object-cover rounded-md" />
+                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brandDisplayName.charAt(0)}</AvatarFallback>
                               </Avatar> : <Avatar className="w-6 h-6 rounded-md">
-                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{membership.brands.name.charAt(0)}</AvatarFallback>
+                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase rounded-md">{brandDisplayName.charAt(0)}</AvatarFallback>
                               </Avatar>}
-                            <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{membership.brands.name}</span>
+                            <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{brandDisplayName}</span>
                           </div>
                           {workspace === membership.brands.slug && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center"><Check className="w-2.5 h-2.5 text-primary-foreground" /></div>}
-                        </button>)}
+                        </button>
+                      );
+                    })}
                   </div>
                   
                   <div className="border-t border-border" />
@@ -807,12 +719,111 @@ export function AppSidebar() {
               </Tooltip>
             ) : buttonContent;
           })}
+
+            {/* Joined Campaigns & Boosts - Discord style icons when collapsed */}
+            {isCollapsed && isCreatorMode && joinedCampaigns.length > 0 && (
+              <>
+                <div className="w-8 h-[1px] bg-border mx-auto my-2" />
+                <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto scrollbar-hide">
+                  {joinedCampaigns.map((item) => {
+                    const itemPath = item.type === "campaign" ? `/dashboard/campaign/${item.id}` : `/dashboard/boost/${item.id}`;
+                    const isActiveItem = location.pathname === itemPath;
+                    return (
+                      <Tooltip key={`${item.type}-${item.id}`}>
+                        <TooltipTrigger asChild>
+                          <div className="relative flex items-center justify-center group">
+                            {/* Left pill indicator - taller when active, appears on hover (no animation on hover out) */}
+                            <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-1 bg-foreground rounded-r-full ${isActiveItem ? 'h-8 transition-[height] duration-150 ease-out' : 'h-0 group-hover:h-5 group-hover:transition-[height] group-hover:duration-150 group-hover:ease-out'}`} />
+                            <button
+                              onClick={() => navigate(itemPath)}
+                              className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
+                            >
+                              {item.brand_logo_url ? (
+                                <img
+                                  src={item.brand_logo_url}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-xs font-semibold text-foreground">
+                                  {item.brand_name?.charAt(0).toUpperCase() || (item.type === "boost" ? 'B' : 'C')}
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" sideOffset={12} className="bg-[#111] dark:bg-[#111] text-white border-0 px-3 py-1.5 rounded-md shadow-xl">
+                          <p className="text-sm font-medium font-inter tracking-[-0.3px]">{item.title}</p>
+                          <p className="text-xs text-white/60 font-inter tracking-[-0.3px] capitalize">{item.type}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Brand Campaigns & Boosts - Discord style icons when collapsed (brand mode) */}
+            {isCollapsed && !isCreatorMode && brandCampaignsForSidebar.length > 0 && (
+              <>
+                <div className="w-8 h-[1px] bg-border mx-auto my-2" />
+                <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto scrollbar-hide">
+                  {brandCampaignsForSidebar.map((item) => {
+                    const isActiveItem = item.type === "campaign"
+                      ? searchParams.get("campaign") === item.id
+                      : searchParams.get("boost") === item.id;
+                    return (
+                      <Tooltip key={`${item.type}-${item.id}`}>
+                        <TooltipTrigger asChild>
+                          <div className="relative flex items-center justify-center group">
+                            {/* Left pill indicator */}
+                            <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-1 bg-foreground rounded-r-full ${isActiveItem ? 'h-8 transition-[height] duration-150 ease-out' : 'h-0 group-hover:h-5 group-hover:transition-[height] group-hover:duration-150 group-hover:ease-out'}`} />
+                            <button
+                              onClick={() => {
+                                const newParams = new URLSearchParams(searchParams);
+                                newParams.set("tab", "analytics");
+                                if (item.type === "campaign") {
+                                  newParams.delete("boost");
+                                  newParams.set("campaign", item.id);
+                                } else {
+                                  newParams.delete("campaign");
+                                  newParams.set("boost", item.id);
+                                }
+                                navigate(`/dashboard?${newParams.toString()}`);
+                              }}
+                              className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
+                            >
+                              {item.cover_url ? (
+                                <img
+                                  src={item.cover_url}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-xs font-semibold text-foreground">
+                                  {item.title?.charAt(0).toUpperCase() || (item.type === "boost" ? "B" : "C")}
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" sideOffset={12} className="bg-[#111] dark:bg-[#111] text-white border-0 px-3 py-1.5 rounded-md shadow-xl">
+                          <p className="text-sm font-medium font-inter tracking-[-0.3px]">{item.title}</p>
+                          <p className="text-xs text-white/60 font-inter tracking-[-0.3px] capitalize">{item.type}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </nav>
         </TooltipProvider>
 
-        {/* Joined Campaigns Section - Hidden, campaigns shown on home page instead */}
+        {/* Joined Campaigns Section - Hidden, shown inside nav when collapsed */}
 
+        {/* BrandUpgradeCTA - Hidden for now
         {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && currentBrandId && (
             <BrandUpgradeCTA
               brandId={currentBrandId}
@@ -821,10 +832,13 @@ export function AppSidebar() {
               variant="sidebar"
             />
           )}
+        */}
 
 
         {/* User Profile Section */}
-        <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
+        <div className={`p-2 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
+          {/* Separator line when collapsed */}
+          {isCollapsed && <div className="w-8 h-[1px] bg-border mb-2" />}
           <Popover>
             <PopoverTrigger asChild>
               <button className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full gap-3 p-2.5'} flex items-center rounded-lg hover:bg-muted/50 transition-colors`}>
@@ -837,7 +851,7 @@ export function AppSidebar() {
                 {!isCollapsed && <>
                     <div className="flex-1 text-left min-w-0">
                       <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
-                      <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">{effectiveUserEmail}</p>
                     </div>
                     
                   </>}
@@ -856,7 +870,7 @@ export function AppSidebar() {
                   <div className="flex items-center gap-2.5">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[100px] font-inter tracking-[-0.5px]">{effectiveUserEmail}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-muted/50">
@@ -885,31 +899,23 @@ export function AppSidebar() {
           </Popover>
         </div>
 
-        {/* Wallet Dropdown - Desktop Sidebar */}
-        <div className={`px-2 pb-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
-            <WalletDropdown variant="sidebar" isCollapsed={isCollapsed} />
+        {/* Wallet Dropdown - Desktop Sidebar (hidden when collapsed) */}
+        {!isCollapsed && (
+          <div className="px-2 pb-2">
+            <WalletDropdown variant="sidebar" isCollapsed={false} />
           </div>
+        )}
       </aside>
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
-      fetchBrandMemberships();
-    }} />
+        // Invalidate brand memberships cache to refetch
+        queryClient.invalidateQueries({ queryKey: ["brandMemberships", user?.id] });
+      }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />
       <InviteMemberDialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen} brandId={currentBrandId} brandSlug={workspace || ''} onInviteSent={() => {
-      // Refresh member count
-      const fetchMemberCount = async () => {
-        if (currentBrandId) {
-          const {
-            count
-          } = await supabase.from("brand_members").select("id", {
-            count: 'exact',
-            head: true
-          }).eq("brand_id", currentBrandId);
-          setCurrentBrandMemberCount(count || 0);
-        }
-      };
-      fetchMemberCount();
-    }} />
+        // Invalidate brand info cache to refresh member count
+        queryClient.invalidateQueries({ queryKey: ["currentBrandInfo", currentBrandId] });
+      }} />
       <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
     </>;
 }
