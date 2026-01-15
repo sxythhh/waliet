@@ -1,4 +1,7 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy, LucideIcon, GripVertical } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Icon } from "@iconify/react";
 import { WalletDropdown } from "@/components/WalletDropdown";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
@@ -143,6 +146,23 @@ const brandMenuItems: MenuItem[] = [{
   tab: "settings",
   icon: CircleUser
 }];
+
+// Sortable sidebar item component for drag and drop reordering
+function SortableSidebarItem({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: 'grab',
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
+
 export function AppSidebar() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,6 +196,13 @@ export function AppSidebar() {
   const [campaignsExpanded, setCampaignsExpanded] = useState(true);
   const [effectiveUserId, setEffectiveUserId] = useState<string | undefined>(user?.id);
   const [effectiveUserEmail, setEffectiveUserEmail] = useState<string | undefined>(user?.email || undefined);
+  const [sidebarCampaignOrder, setSidebarCampaignOrder] = useState<string[]>([]);
+
+  // DnD sensors for reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   // Sync effectiveUserId with user from context, or fetch directly if context is stale
   useEffect(() => {
@@ -201,6 +228,47 @@ export function AppSidebar() {
   const { data: allBrands = [] } = useAllBrands(isAdmin);
   const { data: joinedCampaigns = [] } = useJoinedCampaigns(effectiveUserId);
   const { data: userProfile } = useUserProfile(effectiveUserId);
+
+  // Load sidebar campaign order from localStorage
+  useEffect(() => {
+    if (effectiveUserId) {
+      const savedOrder = localStorage.getItem(`sidebarOrder_${effectiveUserId}`);
+      if (savedOrder) {
+        setSidebarCampaignOrder(JSON.parse(savedOrder));
+      }
+    }
+  }, [effectiveUserId]);
+
+  // Sort joined campaigns based on saved order
+  const sortedJoinedCampaigns = [...joinedCampaigns].sort((a, b) => {
+    const aKey = `${a.type}-${a.id}`;
+    const bKey = `${b.type}-${b.id}`;
+    const aIndex = sidebarCampaignOrder.indexOf(aKey);
+    const bIndex = sidebarCampaignOrder.indexOf(bKey);
+    // Items not in order go to the end, sorted by created_at
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+
+  // Handle drag end for reordering sidebar campaigns
+  const handleSidebarDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = sortedJoinedCampaigns.findIndex(item => `${item.type}-${item.id}` === active.id);
+      const newIndex = sortedJoinedCampaigns.findIndex(item => `${item.type}-${item.id}` === over.id);
+      const newOrder = arrayMove(
+        sortedJoinedCampaigns.map(item => `${item.type}-${item.id}`),
+        oldIndex,
+        newIndex
+      );
+      setSidebarCampaignOrder(newOrder);
+      if (effectiveUserId) {
+        localStorage.setItem(`sidebarOrder_${effectiveUserId}`, JSON.stringify(newOrder));
+      }
+    }
+  };
 
   // Derive profile values from cached query (prevents flicker on navigation)
   const avatarUrl = userProfile?.avatar_url || null;
@@ -720,46 +788,53 @@ export function AppSidebar() {
             ) : buttonContent;
           })}
 
-            {/* Joined Campaigns & Boosts - Discord style icons when collapsed */}
-            {isCollapsed && isCreatorMode && joinedCampaigns.length > 0 && (
+            {/* Joined Campaigns & Boosts - Discord style icons when collapsed (draggable) */}
+            {isCollapsed && isCreatorMode && sortedJoinedCampaigns.length > 0 && (
               <>
                 <div className="w-8 h-[1px] bg-border mx-auto my-2" />
-                <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto scrollbar-hide">
-                  {joinedCampaigns.map((item) => {
-                    const itemPath = item.type === "campaign" ? `/dashboard/campaign/${item.id}` : `/dashboard/boost/${item.id}`;
-                    const isActiveItem = location.pathname === itemPath;
-                    return (
-                      <Tooltip key={`${item.type}-${item.id}`}>
-                        <TooltipTrigger asChild>
-                          <div className="relative flex items-center justify-center group">
-                            {/* Left pill indicator - taller when active, appears on hover (no animation on hover out) */}
-                            <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-1 bg-foreground rounded-r-full ${isActiveItem ? 'h-8 transition-[height] duration-150 ease-out' : 'h-0 group-hover:h-5 group-hover:transition-[height] group-hover:duration-150 group-hover:ease-out'}`} />
-                            <button
-                              onClick={() => navigate(itemPath)}
-                              className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
-                            >
-                              {item.brand_logo_url ? (
-                                <img
-                                  src={item.brand_logo_url}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-xs font-semibold text-foreground">
-                                  {item.brand_name?.charAt(0).toUpperCase() || (item.type === "boost" ? 'B' : 'C')}
-                                </span>
-                              )}
-                            </button>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={12} className="bg-[#111] dark:bg-[#111] text-white border-0 px-3 py-1.5 rounded-md shadow-xl">
-                          <p className="text-sm font-medium font-inter tracking-[-0.3px]">{item.title}</p>
-                          <p className="text-xs text-white/60 font-inter tracking-[-0.3px] capitalize">{item.type}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSidebarDragEnd}>
+                  <SortableContext items={sortedJoinedCampaigns.map(item => `${item.type}-${item.id}`)} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto scrollbar-hide">
+                      {sortedJoinedCampaigns.map((item) => {
+                        const itemPath = item.type === "campaign" ? `/dashboard/campaign/${item.id}` : `/dashboard/boost/${item.id}`;
+                        const isActiveItem = location.pathname === itemPath;
+                        const itemKey = `${item.type}-${item.id}`;
+                        return (
+                          <SortableSidebarItem key={itemKey} id={itemKey}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="relative flex items-center justify-center group">
+                                  {/* Left pill indicator - taller when active, appears on hover (no animation on hover out) */}
+                                  <div className={`absolute -left-2 top-1/2 -translate-y-1/2 w-1 bg-foreground rounded-r-full ${isActiveItem ? 'h-8 transition-[height] duration-150 ease-out' : 'h-0 group-hover:h-5 group-hover:transition-[height] group-hover:duration-150 group-hover:ease-out'}`} />
+                                  <button
+                                    onClick={() => navigate(itemPath)}
+                                    className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
+                                  >
+                                    {item.brand_logo_url ? (
+                                      <img
+                                        src={item.brand_logo_url}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <span className="text-xs font-semibold text-foreground">
+                                        {item.brand_name?.charAt(0).toUpperCase() || (item.type === "boost" ? 'B' : 'C')}
+                                      </span>
+                                    )}
+                                  </button>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" sideOffset={12} className="bg-[#111] dark:bg-[#111] text-white border-0 px-3 py-1.5 rounded-md shadow-xl">
+                                <p className="text-sm font-medium font-inter tracking-[-0.3px]">{item.title}</p>
+                                <p className="text-xs text-white/60 font-inter tracking-[-0.3px] capitalize">{item.type} • drag to reorder</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </SortableSidebarItem>
+                        );
+                      })}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </>
             )}
 
