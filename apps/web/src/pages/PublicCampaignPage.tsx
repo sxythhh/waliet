@@ -35,6 +35,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
 import { TransactionsTable, Transaction } from "@/components/dashboard/TransactionsTable";
 import { AssetLibrary, AssetRequestDialog } from "@/components/assets";
+import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 
 interface ConnectedAccount {
   id: string;
@@ -189,6 +190,8 @@ function PublicCampaignContent({
   const [selectedAccount, setSelectedAccount] = useState<ConnectedAccount | null>(null);
   const [leaveCampaignDialogOpen, setLeaveCampaignDialogOpen] = useState(false);
   const [leavingCampaign, setLeavingCampaign] = useState(false);
+  const [isBrandAdmin, setIsBrandAdmin] = useState(false);
+  const [showJoinSheet, setShowJoinSheet] = useState(false);
 
   // Training hook
   const training = useTrainingCompletion(campaign?.blueprint_id || undefined);
@@ -263,6 +266,8 @@ function PublicCampaignContent({
             brand_color: brandData?.brand_color,
             is_verified: brandData?.is_verified,
             brand_slug: brandData?.slug,
+            // Use boost's blueprint_id
+            blueprint_id: boostData.blueprint_id,
           });
           setLoading(false);
         } else {
@@ -321,6 +326,8 @@ function PublicCampaignContent({
             brand_color: brandData?.brand_color,
             is_verified: brandData?.is_verified,
             brand_slug: brandData?.slug,
+            // Use campaign's blueprint_id
+            blueprint_id: campaignData.blueprint_id,
             connected_accounts: connectedAccounts
           });
           setLoading(false);
@@ -338,6 +345,9 @@ function PublicCampaignContent({
   useEffect(() => {
     const fetchSecondaryData = async () => {
       if (!resolvedSourceId) return;
+      // Wait for campaign or boost to be loaded before fetching secondary data
+      if (isBoost && !boost) return;
+      if (!isBoost && !campaign) return;
 
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -359,15 +369,15 @@ function PublicCampaignContent({
           .order('created_at', { ascending: true })
           .limit(20),
 
-        // Blueprint data
+        // Blueprint data - fetch by blueprint_id if set, otherwise by brand_id
         boost?.blueprint_id
-          ? supabase.from('blueprints').select('content, assets').eq('id', boost.blueprint_id).single()
-          : Promise.resolve({ data: null }),
+          ? supabase.from('blueprints').select('id, content, assets').eq('id', boost.blueprint_id).maybeSingle()
+          : boost?.brand_id
+            ? supabase.from('blueprints').select('id, content, assets').eq('brand_id', boost.brand_id).maybeSingle()
+            : Promise.resolve({ data: null }),
 
-        // Training modules
-        boost?.blueprint_id
-          ? supabase.from('blueprint_training_modules').select('id, title, required, order_index').eq('blueprint_id', boost.blueprint_id).order('order_index')
-          : Promise.resolve({ data: null })
+        // Training modules - will be fetched after blueprint is resolved
+        Promise.resolve({ data: null })
       ] : [
         // Campaign: Member count
         supabase
@@ -385,15 +395,15 @@ function PublicCampaignContent({
           .order('created_at', { ascending: true })
           .limit(20),
 
-        // Blueprint data
+        // Blueprint data - fetch by blueprint_id if set, otherwise by brand_id
         campaign?.blueprint_id
-          ? supabase.from('blueprints').select('content, assets').eq('id', campaign.blueprint_id).single()
-          : Promise.resolve({ data: null }),
+          ? supabase.from('blueprints').select('id, content, assets').eq('id', campaign.blueprint_id).maybeSingle()
+          : campaign?.brand_id
+            ? supabase.from('blueprints').select('id, content, assets').eq('brand_id', campaign.brand_id).maybeSingle()
+            : Promise.resolve({ data: null }),
 
-        // Training modules
-        campaign?.blueprint_id
-          ? supabase.from('blueprint_training_modules').select('id, title, required, order_index').eq('blueprint_id', campaign.blueprint_id).order('order_index')
-          : Promise.resolve({ data: null })
+        // Training modules - will be fetched after blueprint is resolved
+        Promise.resolve({ data: null })
       ];
 
       // Add member-only fetches
@@ -476,8 +486,12 @@ function PublicCampaignContent({
         setMembers(membersList);
       }
 
-      // Process blueprint
+      // Process blueprint and fetch training modules
+      console.log('Blueprint fetch result:', blueprintResult);
+      console.log('Campaign brand_id:', campaign?.brand_id);
+      console.log('Campaign blueprint_id:', campaign?.blueprint_id);
       if (blueprintResult.data) {
+        console.log('Setting blueprint content:', blueprintResult.data.content?.substring(0, 100));
         setBlueprintContent(blueprintResult.data.content || null);
         if (blueprintResult.data.assets && Array.isArray(blueprintResult.data.assets) && blueprintResult.data.assets.length > 0) {
           const mappedAssets = blueprintResult.data.assets.map((asset: any) => ({
@@ -486,11 +500,18 @@ function PublicCampaignContent({
           })).filter((asset: AssetLink) => asset.url);
           setBlueprintAssets(mappedAssets.length > 0 ? mappedAssets : null);
         }
-      }
 
-      // Process training modules
-      if (modulesResult.data) {
-        setTrainingModules(modulesResult.data);
+        // Fetch training modules using the blueprint id
+        if (blueprintResult.data.id) {
+          const { data: modulesData } = await supabase
+            .from('blueprint_training_modules')
+            .select('id, title, required, order_index')
+            .eq('blueprint_id', blueprintResult.data.id)
+            .order('order_index');
+          if (modulesData) {
+            setTrainingModules(modulesData);
+          }
+        }
       }
 
       // Process member-only data
@@ -547,10 +568,34 @@ function PublicCampaignContent({
           setExpectedPayout({ views: totalViews, amount });
         }
       }
+
+      // Check brand admin status
+      if (user) {
+        const brandId = isBoost ? boost?.brand_id : campaign?.brand_id;
+        if (brandId) {
+          const { data: membershipData } = await supabase
+            .from('brand_members')
+            .select('role')
+            .eq('brand_id', brandId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (membershipData) {
+            const role = membershipData.role;
+            setIsBrandAdmin(role === 'owner' || role === 'admin');
+          } else {
+            setIsBrandAdmin(false);
+          }
+        } else {
+          setIsBrandAdmin(false);
+        }
+      } else {
+        setIsBrandAdmin(false);
+      }
     };
 
     fetchSecondaryData();
-  }, [resolvedSourceId, isBoost, campaign?.blueprint_id, boost?.blueprint_id, campaign?.rpm_rate, isMember]);
+  }, [resolvedSourceId, isBoost, campaign, boost, isMember]);
 
   const refreshCampaignData = async () => {
     if (!sourceId) return;
@@ -640,11 +685,7 @@ function PublicCampaignContent({
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return null;
   }
 
   // Either campaign or boost must be loaded
@@ -1076,7 +1117,7 @@ function PublicCampaignContent({
         <div className="space-y-6">
           <AssetLibrary
             brandId={sourceBrandId}
-            isAdmin={false}
+            isAdmin={isBrandAdmin}
             selectedAsset={null}
             onSelectAsset={() => {}}
             onRequestAsset={isMember ? () => setShowAssetRequestDialog(true) : undefined}
@@ -1218,8 +1259,52 @@ function PublicCampaignContent({
             />
           }
         >
-          <div className="p-4 max-w-4xl mx-auto">
-            {renderContent()}
+          <div className="relative min-h-[60vh]">
+            <div className={cn(
+              "p-4 max-w-4xl mx-auto",
+              !isMember && "blur-md pointer-events-none select-none"
+            )}>
+              {renderContent()}
+            </div>
+
+            {/* Non-member Join CTA Overlay (Mobile) */}
+            {!isMember && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+                <div className="bg-card border border-border/50 rounded-2xl p-6 max-w-sm mx-4 text-center shadow-lg">
+                  <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                    {sourceBrandLogo ? (
+                      <img src={sourceBrandLogo} alt={sourceBrandName} className="w-full h-full object-cover" />
+                    ) : (
+                      <Icon icon="material-symbols:lock" className="w-7 h-7 text-primary" />
+                    )}
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2 font-inter tracking-[-0.5px]">
+                    Join to Access Full Details
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5 font-inter">
+                    {isBoost && boost
+                      ? `Earn $${boost.monthly_retainer.toLocaleString()}/mo`
+                      : campaign
+                        ? `Earn $${((campaign.rpm_rate || 0) * 1000).toLocaleString()} per 1M views`
+                        : 'Apply to join this campaign'}
+                  </p>
+                  {!isBoost && campaign ? (
+                    <Button
+                      onClick={() => setShowJoinSheet(true)}
+                      className="w-full bg-primary hover:bg-primary/90 text-white py-5 text-base font-medium tracking-[-0.5px]"
+                    >
+                      Apply Now
+                    </Button>
+                  ) : (
+                    <Link to={`/join/${sourceSlug}`}>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-white py-5 text-base font-medium tracking-[-0.5px]">
+                        Apply Now
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </SourceDetailsMobileLayout>
       ) : (
@@ -1259,10 +1344,52 @@ function PublicCampaignContent({
           />
 
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto bg-background">
-            <div className="p-6 max-w-4xl mx-auto">
+          <main className="flex-1 overflow-y-auto bg-background relative">
+            <div className={cn(
+              "p-6 max-w-4xl mx-auto",
+              !isMember && "blur-md pointer-events-none select-none"
+            )}>
               {renderContent()}
             </div>
+
+            {/* Non-member Join CTA Overlay */}
+            {!isMember && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+                <div className="bg-card border border-border/50 rounded-2xl p-8 max-w-md mx-4 text-center shadow-lg">
+                  <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                    {sourceBrandLogo ? (
+                      <img src={sourceBrandLogo} alt={sourceBrandName} className="w-full h-full object-cover" />
+                    ) : (
+                      <Icon icon="material-symbols:lock" className="w-8 h-8 text-primary" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2 font-inter tracking-[-0.5px]">
+                    Join to Access Full Details
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6 font-inter">
+                    {isBoost && boost
+                      ? `Apply to earn $${boost.monthly_retainer.toLocaleString()}/month for creating ${boost.videos_per_month} videos`
+                      : campaign
+                        ? `Start earning $${((campaign.rpm_rate || 0) * 1000).toLocaleString()} per 1M views on your content`
+                        : 'Apply to join this campaign and start earning'}
+                  </p>
+                  {!isBoost && campaign ? (
+                    <Button
+                      onClick={() => setShowJoinSheet(true)}
+                      className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-base font-medium tracking-[-0.5px]"
+                    >
+                      Apply to Join Campaign
+                    </Button>
+                  ) : (
+                    <Link to={`/join/${sourceSlug}`}>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-base font-medium tracking-[-0.5px]">
+                        Apply to Join Opportunity
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
           </main>
 
           {/* Right Panel */}
@@ -1407,6 +1534,38 @@ function PublicCampaignContent({
           </AlertDialog>
         </>
       )}
+
+      {/* Non-member join dialog for campaigns */}
+      {!isMember && !isBoost && campaign && (
+        <JoinCampaignSheet
+          campaign={{
+            id: campaign.id,
+            title: campaign.title,
+            description: campaign.description || '',
+            brand_name: campaign.brand_name,
+            brand_logo_url: campaign.brand_logo_url || '',
+            budget: campaign.budget,
+            budget_used: campaign.budget_used || 0,
+            rpm_rate: campaign.rpm_rate,
+            status: campaign.status,
+            start_date: campaign.start_date || null,
+            banner_url: null,
+            platforms: campaign.allowed_platforms || [],
+            slug: campaign.slug,
+            guidelines: campaign.guidelines || null,
+            application_questions: [],
+            requires_application: false,
+            blueprint_id: campaign.blueprint_id,
+            brands: campaign.brand_logo_url ? {
+              logo_url: campaign.brand_logo_url,
+              is_verified: campaign.is_verified
+            } : undefined
+          }}
+          open={showJoinSheet}
+          onOpenChange={setShowJoinSheet}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </>
   );
 }
@@ -1414,31 +1573,35 @@ function PublicCampaignContent({
 // Wrapper that checks membership before rendering
 export default function PublicCampaignPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [isMember, setIsMember] = useState<boolean | null>(null);
   const [sourceType, setSourceType] = useState<'campaign' | 'boost'>('campaign');
   const [sourceId, setSourceId] = useState<string | null>(null);
+  const [sourceSlug, setSourceSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkMembership = async () => {
+      console.log('[PublicCampaignPage] checkMembership started, id:', id);
       if (!id) {
-        setIsMember(false);
-        setLoading(false);
+        navigate('/');
         return;
       }
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        console.log('[PublicCampaignPage] User:', user?.id || 'not logged in');
 
         // Check if id looks like a UUID
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        console.log('[PublicCampaignPage] isUUID:', isUUID);
 
         // First try to find in campaigns table
         let campaignData = null;
         if (isUUID) {
           const { data } = await supabase
             .from("campaigns")
-            .select("id")
+            .select("id, slug")
             .eq("id", id)
             .maybeSingle();
           campaignData = data;
@@ -1446,7 +1609,7 @@ export default function PublicCampaignPage() {
         if (!campaignData) {
           const { data } = await supabase
             .from("campaigns")
-            .select("id")
+            .select("id, slug")
             .eq("slug", id)
             .maybeSingle();
           campaignData = data;
@@ -1455,8 +1618,10 @@ export default function PublicCampaignPage() {
         if (campaignData) {
           setSourceType('campaign');
           setSourceId(campaignData.id);
+          setSourceSlug(campaignData.slug || id);
 
           if (!user) {
+            // Not logged in, allow viewing but not as member
             setIsMember(false);
             setLoading(false);
             return;
@@ -1472,35 +1637,43 @@ export default function PublicCampaignPage() {
             .limit(1)
             .maybeSingle();
 
+          // Set member status without redirecting
           setIsMember(!!membership);
           setLoading(false);
           return;
         }
 
         // If not found in campaigns, try bounty_campaigns (boosts)
+        console.log('[PublicCampaignPage] Campaign not found, checking bounty_campaigns');
         let boostData = null;
         if (isUUID) {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from("bounty_campaigns")
-            .select("id")
+            .select("id, slug")
             .eq("id", id)
             .maybeSingle();
+          console.log('[PublicCampaignPage] Boost query by UUID:', { data, error });
           boostData = data;
         }
         if (!boostData) {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from("bounty_campaigns")
-            .select("id")
+            .select("id, slug")
             .eq("slug", id)
             .maybeSingle();
+          console.log('[PublicCampaignPage] Boost query by slug:', { data, error });
           boostData = data;
         }
 
         if (boostData) {
+          console.log('[PublicCampaignPage] Boost found:', boostData.id);
           setSourceType('boost');
           setSourceId(boostData.id);
+          setSourceSlug(boostData.slug || id);
 
           if (!user) {
+            // Not logged in, allow viewing but not as member
+            console.log('[PublicCampaignPage] No user, allowing non-member view');
             setIsMember(false);
             setLoading(false);
             return;
@@ -1516,46 +1689,35 @@ export default function PublicCampaignPage() {
             .limit(1)
             .maybeSingle();
 
+          // Set member status without redirecting
           setIsMember(!!membership);
           setLoading(false);
           return;
         }
 
-        // Not found in either table
-        setIsMember(false);
-        setLoading(false);
+        // Not found in either table, redirect to join page with the slug
+        console.warn('Campaign/boost not found:', id);
+        console.log('Checked campaigns and bounty_campaigns tables');
+        navigate(`/join/${id}`, { replace: true });
       } catch (error) {
         console.error('Error checking membership:', error);
-        setIsMember(false);
-        setLoading(false);
+        // On error, redirect to join page instead of home
+        navigate(`/join/${id}`, { replace: true });
       }
     };
 
     checkMembership();
-  }, [id]);
+  }, [id, navigate]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+  // Show nothing while loading
+  if (loading || !sourceId || isMember === null) {
+    return null;
   }
 
-  // If no source was found, redirect to home
-  if (!sourceId) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-muted-foreground">Campaign not found</p>
-        <a href="/" className="text-primary hover:underline">Go to homepage</a>
-      </div>
-    );
-  }
-
-  // Now we know membership status, render with correct isPublicView
+  // Render for everyone (members and non-members)
   return (
     <SourceDetailsSidebarProvider sourceType={sourceType} isPublicView={!isMember}>
-      <PublicCampaignContent isMember={isMember ?? false} sourceType={sourceType} resolvedSourceId={sourceId} />
+      <PublicCampaignContent isMember={isMember} sourceType={sourceType} resolvedSourceId={sourceId} />
     </SourceDetailsSidebarProvider>
   );
 }

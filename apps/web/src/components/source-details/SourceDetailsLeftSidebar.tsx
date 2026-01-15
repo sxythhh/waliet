@@ -12,6 +12,12 @@ import { useSourceDetails, SourceDetailsSectionType } from "./SourceDetailsSideb
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { usePaymentLedger } from "@/hooks/usePaymentLedger";
+import { CreatorWithdrawDialog } from "@/components/dashboard/CreatorWithdrawDialog";
+import { LocalCurrencyAmount } from "@/components/LocalCurrencyAmount";
 
 // Training module interface (for campaigns)
 export interface TrainingModule {
@@ -91,7 +97,7 @@ function QuickActionItem({ icon, label, onClick, disabled, danger, badge, isActi
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group relative flex items-center gap-1.5 p-2 rounded-lg w-full text-left transition-all duration-200",
+        "group relative flex items-center gap-1.5 py-1.5 px-1.5 rounded-lg w-full text-left transition-all duration-200",
         disabled
           ? "opacity-50 cursor-not-allowed"
           : danger
@@ -101,16 +107,23 @@ function QuickActionItem({ icon, label, onClick, disabled, danger, badge, isActi
               : "hover:bg-muted/50"
       )}
     >
-      <Icon
-        icon={icon}
+      <div
         className={cn(
-          "w-5 h-5 flex-shrink-0",
-          danger ? "text-destructive" : isActive ? "text-primary" : "text-muted-foreground"
+          "w-6 h-6 flex items-center justify-center rounded-md flex-shrink-0 transition-colors",
+          isActive ? "bg-primary/15" : ""
         )}
-      />
+      >
+        <Icon
+          icon={icon}
+          className={cn(
+            "w-[18px] h-[18px]",
+            danger ? "text-destructive" : isActive ? "text-primary" : "text-muted-foreground"
+          )}
+        />
+      </div>
       <span className={cn(
-        "text-sm font-medium truncate font-inter tracking-[-0.5px] transition-colors",
-        danger ? "text-destructive" : isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground dark:group-hover:text-white"
+        "text-[13px] font-medium truncate font-inter tracking-[-0.5px] transition-colors",
+        danger ? "text-destructive" : isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground dark:group-hover:text-white"
       )}>
         {label}
       </span>
@@ -211,6 +224,59 @@ export function SourceDetailsLeftSidebar({
   } = useSourceDetails();
 
   const [headerMenuOpen, setHeaderMenuOpen] = React.useState(false);
+  const { user } = useAuth();
+
+  // Wallet state
+  const [walletBalance, setWalletBalance] = React.useState<number>(0);
+  const [pendingWithdrawals, setPendingWithdrawals] = React.useState<number>(0);
+  const [pendingBoostEarnings, setPendingBoostEarnings] = React.useState<number>(0);
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = React.useState(false);
+  const { summary: ledgerSummary } = usePaymentLedger(user?.id);
+
+  // Fetch wallet data
+  const fetchWalletData = React.useCallback(async () => {
+    if (!user) return;
+
+    // Fetch wallet balance
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .single();
+    if (walletData) {
+      setWalletBalance(walletData.balance || 0);
+    }
+
+    // Fetch pending withdrawals (in transit)
+    const { data: payoutRequests } = await supabase
+      .from("payout_requests")
+      .select("amount")
+      .eq("user_id", user.id)
+      .in("status", ["pending", "in_transit"]);
+    if (payoutRequests) {
+      const totalPending = payoutRequests.reduce((sum, req) => sum + (req.amount || 0), 0);
+      setPendingWithdrawals(totalPending);
+    }
+
+    // Fetch pending boost earnings
+    const { data: boostSubmissions } = await supabase
+      .from("boost_video_submissions")
+      .select("payout_amount")
+      .eq("user_id", user.id)
+      .eq("status", "approved");
+    if (boostSubmissions) {
+      const totalBoost = boostSubmissions.reduce((sum, sub) => sum + (sub.payout_amount || 0), 0);
+      setPendingBoostEarnings(totalBoost);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    if (user && !isPublicView) {
+      fetchWalletData();
+    }
+  }, [user, isPublicView, fetchWalletData]);
+
+  const totalPending = (ledgerSummary?.totalPending || 0) + pendingBoostEarnings;
 
   // Prevent popover from opening when sidebar just opened (accidental tap prevention)
   const handlePopoverOpenChange = (open: boolean) => {
@@ -385,6 +451,54 @@ export function SourceDetailsLeftSidebar({
         </div>
       </div>
 
+      {/* Budget progress bar (campaigns only) - beneath banner */}
+      {isCampaign && (() => {
+        const budgetPercentage = budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
+        const TOTAL_SEGMENTS = 8;
+        const filledSegments = Math.round((budgetPercentage / 100) * TOTAL_SEGMENTS);
+
+        return (
+          <div className="px-3 pt-2 pb-1">
+            <div className="relative group cursor-pointer">
+              <div className="flex gap-0.5">
+                {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-2 flex-1 transition-all duration-300 border-t ${
+                      i === 0 ? 'rounded-l-full' : ''
+                    } ${
+                      i === TOTAL_SEGMENTS - 1 ? 'rounded-r-full' : ''
+                    } ${
+                      i < filledSegments
+                        ? 'bg-primary border-primary/40'
+                        : 'bg-muted border-muted-foreground/10'
+                    }`}
+                  />
+                ))}
+              </div>
+              {/* Tooltip indicator - shows on hover, positioned above last filled segment */}
+              <div
+                className="absolute bottom-full mb-1 pointer-events-none flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                style={{
+                  left: `${((Math.max(filledSegments, 1) - 0.5) / TOTAL_SEGMENTS) * 100}%`,
+                  transform: filledSegments <= 1 ? 'translateX(-20%)' : filledSegments >= TOTAL_SEGMENTS - 1 ? 'translateX(-80%)' : 'translateX(-50%)'
+                }}
+              >
+                <div className="bg-blue-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap font-inter">
+                  ${budgetUsed.toLocaleString()} of ${budget.toLocaleString()}
+                </div>
+                <div
+                  className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-blue-500"
+                  style={{
+                    marginLeft: filledSegments <= 1 ? '-30%' : filledSegments >= TOTAL_SEGMENTS - 1 ? '30%' : '0'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Navigation */}
       <div className="flex-1 px-2 py-3 space-y-1">
         {/* Submit Video - Prominent CTA at top */}
@@ -494,20 +608,6 @@ export function SourceDetailsLeftSidebar({
           />
         )}
 
-        {/* Discord - Show Connect Discord if server has Discord but user hasn't connected (hidden for public view) */}
-        {!isPublicView && hasDiscordServer && !hasDiscordConnected && (
-          <QuickActionItem
-            icon="ic:baseline-discord"
-            label="Connect Discord"
-            description="Link your Discord account"
-            onClick={() => {
-              // Store return URL and redirect to Discord connect
-              localStorage.setItem('discord_return_url', window.location.href);
-              window.location.href = '/connect-discord';
-            }}
-          />
-        )}
-
         {/* Discord - Show Join Discord if user has Discord connected and there's a URL (hidden for public view) */}
         {!isPublicView && discordUrl && hasDiscordConnected && (
           <QuickActionItem
@@ -520,53 +620,47 @@ export function SourceDetailsLeftSidebar({
 
       </div>
 
-      {/* Bottom status - Budget progress (campaigns only) */}
-      {isCampaign && (() => {
-        const budgetRemaining = Math.max(0, budget - budgetUsed);
-        const budgetPercentage = budget > 0 ? (budgetUsed / budget) * 100 : 0;
-        const isDepleted = budget > 0 && budgetPercentage >= 100;
-        const isCritical = budget > 0 && budgetPercentage >= 90;
-        const isWarning = budget > 0 && budgetPercentage >= 75 && budgetPercentage < 90;
-
-        const getStatusColor = () => {
-          if (isDepleted || isCritical) return 'text-red-500';
-          if (isWarning) return 'text-amber-500';
-          return 'text-emerald-500';
-        };
-
-        const getBarColor = () => {
-          if (isDepleted || isCritical) return 'bg-red-500';
-          if (isWarning) return 'bg-amber-500';
-          return 'bg-emerald-500';
-        };
-
-        return (
-          <div className="p-3 border-t border-border/50 mt-auto">
-            <div className="px-3 py-2.5 rounded-lg bg-muted/30 space-y-2">
+      {/* Wallet Balance Section (hidden for public view) */}
+      {!isPublicView && user && (
+        <div className={cn("px-3 pt-1.5 pb-3", !isCampaign && "mt-auto")}>
+          <div className="px-3 py-2.5 rounded-lg bg-muted/30 space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className={cn("text-base font-semibold font-inter tracking-[-0.5px]", getStatusColor())}>
-                  {isDepleted ? 'Depleted' : `$${budgetRemaining.toLocaleString()} left`}
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Current Balance</span>
+                <span className="text-sm font-semibold font-inter tracking-[-0.5px]">
+                  <LocalCurrencyAmount amount={walletBalance} />
                 </span>
               </div>
-              {/* Segmented progress bar */}
-              <div className="flex gap-1">
-                {[0, 25, 50, 75].map((threshold) => (
-                  <div
-                    key={threshold}
-                    className={cn(
-                      "h-1.5 flex-1 rounded-full transition-colors",
-                      budgetPercentage > threshold ? getBarColor() : "bg-muted"
-                    )}
-                  />
-                ))}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Pending Balance</span>
+                <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">
+                  <LocalCurrencyAmount amount={totalPending} />
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                ${budgetUsed.toLocaleString()} of ${budget.toLocaleString()} spent
-              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">In Transit</span>
+                <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">
+                  <LocalCurrencyAmount amount={pendingWithdrawals} />
+                </span>
+              </div>
             </div>
+            <Button
+              className="w-full font-inter tracking-[-0.5px]"
+              size="sm"
+              onClick={() => setWithdrawDialogOpen(true)}
+            >
+              Withdraw
+            </Button>
           </div>
-        );
-      })()}
+        </div>
+      )}
+
+      {/* Withdraw Dialog */}
+      <CreatorWithdrawDialog
+        open={withdrawDialogOpen}
+        onOpenChange={setWithdrawDialogOpen}
+        onSuccess={fetchWalletData}
+      />
     </aside>
   );
 }
