@@ -245,19 +245,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
       const url = event.url;
+      console.log('Deep link received:', url);
 
-      if (url.includes('auth/callback') || url.includes('access_token')) {
+      if (url.includes('auth/callback') || url.includes('code=') || url.includes('access_token') || url.includes('error')) {
+        // Check for error in URL first
+        const errorMatch = url.match(/error=([^&]+)/);
+        const errorDescMatch = url.match(/error_description=([^&]+)/);
+
+        if (errorMatch) {
+          const errorMsg = decodeURIComponent(errorDescMatch?.[1] || errorMatch[1]).replace(/\+/g, ' ');
+          console.error('OAuth error:', errorMsg);
+          Alert.alert('Sign In Failed', errorMsg);
+          return;
+        }
+
+        // PKCE flow: look for authorization code first
+        const codeMatch = url.match(/code=([^&]+)/);
+        if (codeMatch) {
+          const code = decodeURIComponent(codeMatch[1]);
+          console.log('Found authorization code, exchanging for session...');
+
+          try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+            if (error) {
+              console.error('Error exchanging code for session:', error);
+              Alert.alert('Sign In Failed', error.message);
+            } else if (data.session) {
+              console.log('Session established successfully:', data.session.user?.email);
+              // Session will be picked up by onAuthStateChange
+            } else {
+              console.warn('No error but no session returned');
+            }
+          } catch (err: any) {
+            console.error('Exception exchanging code:', err);
+            Alert.alert('Sign In Error', err.message || 'Failed to complete sign in');
+          }
+          return;
+        }
+
+        // Fallback: try to extract tokens directly (implicit flow)
         const { accessToken, refreshToken } = extractTokensFromUrl(url);
+        console.log('Extracted tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
 
         if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
+          const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
 
           if (error) {
             console.error('Error setting session from deep link:', error);
+            Alert.alert('Sign In Failed', error.message);
+          } else {
+            console.log('Session set successfully:', data.user?.email);
           }
+        } else {
+          console.warn('No code or tokens found in URL:', url);
         }
       }
     };

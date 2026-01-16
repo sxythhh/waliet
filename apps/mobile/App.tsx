@@ -3,8 +3,12 @@
  * React Native app for creators
  */
 
+// Gesture Handler must be imported at the top of the entry file
+import 'react-native-gesture-handler';
+
 import React, { useEffect } from 'react';
 import { StatusBar, Linking } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -84,16 +88,18 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SafeAreaProvider>
-          <NavigationContainer linking={linking}>
-            <StatusBar barStyle="light-content" backgroundColor="#000" />
-            <AppNavigator />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SafeAreaProvider>
+            <NavigationContainer linking={linking}>
+              <StatusBar barStyle="light-content" backgroundColor="#000" />
+              <AppNavigator />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
 

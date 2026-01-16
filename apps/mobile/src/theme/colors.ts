@@ -16,6 +16,7 @@ export const colors = {
 
   // Primary - Discord Blurple
   primary: '#5865F2',        // hsl(235, 86%, 65%)
+  primaryForeground: '#ffffff', // Text on primary background
   primaryGlow: '#7983F5',    // hsl(235, 86%, 75%)
   primaryMuted: 'rgba(88, 101, 242, 0.15)',
 

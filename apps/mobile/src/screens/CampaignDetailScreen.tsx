@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,15 +6,17 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
-  Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LiquidGlassView } from '@callstack/liquid-glass';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { LogoLoader } from '../components/LogoLoader';
+import { colors } from '../theme/colors';
 import type { Campaign } from '@virality/shared-types';
 
 // Platform icon config
@@ -32,6 +34,10 @@ export function CampaignDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { campaignId } = route.params as RouteParams;
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const [applySuccess, setApplySuccess] = useState(false);
 
   const {
     data: campaign,
@@ -51,19 +57,75 @@ export function CampaignDetailScreen() {
     },
   });
 
-  const handleApply = () => {
-    // TODO: Implement apply flow
-    // For now, open the web version
-    if (campaign?.slug) {
-      Linking.openURL(`https://virality.so/c/${campaign.slug}`);
+  // Check if user has already applied/joined via campaign_submissions table
+  const { data: existingSubmission } = useQuery({
+    queryKey: ['campaignSubmission', campaignId, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('campaign_submissions')
+        .select('id, status')
+        .eq('campaign_id', campaignId)
+        .eq('creator_id', user.id)
+        .neq('status', 'withdrawn')
+        .maybeSingle();
+      return data as { id: string; status: string } | null;
+    },
+    enabled: !!user?.id && !!campaignId,
+  });
+
+  // Apply mutation - direct submit without confirmation
+  const applyMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id || !campaign?.id) {
+        throw new Error('Must be logged in to apply');
+      }
+
+      // Get campaign's allowed platforms to use for submission
+      const campaignData = campaign as any;
+      const platforms = campaignData.allowed_platforms || campaignData.platforms_allowed || ['tiktok'];
+      const platform = platforms[0] || 'tiktok';
+
+      // Insert into campaign_submissions to apply
+      const { error } = await supabase
+        .from('campaign_submissions')
+        .insert({
+          campaign_id: campaign.id,
+          creator_id: user.id,
+          platform: platform,
+          status: 'pending',
+        });
+
+      if (error) throw error;
+    },
+    onError: (error: Error) => {
+      Alert.alert('Application Failed', error.message);
+    },
+    onSuccess: () => {
+      setApplySuccess(true);
+      queryClient.invalidateQueries({ queryKey: ['campaignSubmission', campaignId] });
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setApplySuccess(false), 3000);
+    },
+  });
+
+  // Direct apply - no nested confirmations
+  const handleApply = useCallback(() => {
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to apply to campaigns.');
+      return;
     }
-  };
+    if (existingSubmission) {
+      return; // Already applied
+    }
+    applyMutation.mutate();
+  }, [user, existingSubmission, applyMutation]);
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <LogoLoader size={56} />
         </View>
       </SafeAreaView>
     );
@@ -85,9 +147,11 @@ export function CampaignDetailScreen() {
     );
   }
 
+  // Cast to any for type flexibility between shared-types and database schema
+  const campaignData = campaign as any;
   const isActive = campaign.status === 'active';
-  const platforms = campaign.platforms_allowed || ['tiktok'];
-  const budgetRemaining = (campaign.budget_total || 0) - (campaign.budget_used || 0);
+  const platforms = campaignData.allowed_platforms || campaignData.platforms_allowed || ['tiktok'];
+  const budgetRemaining = (campaignData.total_budget || campaignData.budget_total || 0) - (campaignData.budget_used || 0);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -107,7 +171,7 @@ export function CampaignDetailScreen() {
         <View
           style={[
             styles.banner,
-            { backgroundColor: campaign.brand_color || '#6366f1' },
+            { backgroundColor: '#6366f1' },
           ]}
         >
           {campaign.banner_url ? (
@@ -149,7 +213,7 @@ export function CampaignDetailScreen() {
               <Text style={styles.brandName}>{campaign.brand_name}</Text>
             </View>
             <View style={styles.platforms}>
-              {platforms.map((platform, i) => {
+              {platforms.map((platform: string, i: number) => {
                 const config = platformConfig[platform.toLowerCase()] || { bg: '#666', icon: 'web' };
                 return (
                   <View key={i} style={[styles.platformBadge, { backgroundColor: config.bg }]}>
@@ -169,10 +233,10 @@ export function CampaignDetailScreen() {
             {campaign.rpm_rate !== null && campaign.rpm_rate !== undefined && (
               <View style={styles.statBox}>
                 <View style={styles.statHeader}>
-                  <Icon name="trending-up" size={14} color="#22c55e" />
+                  <Icon name="trending-up" size={14} color="#6366f1" />
                   <Text style={styles.statLabel}>RPM</Text>
                 </View>
-                <Text style={styles.statValue}>
+                <Text style={[styles.statValue, { color: '#fff' }]}>
                   ${campaign.rpm_rate.toFixed(2)}
                 </Text>
               </View>
@@ -185,21 +249,21 @@ export function CampaignDetailScreen() {
                 <Text style={styles.statLabel}>Budget</Text>
               </View>
               <Text style={[styles.statValue, { color: '#6366f1' }]}>
-                {campaign.infinite_budget
+                {campaignData.is_infinite_budget || campaignData.infinite_budget
                   ? 'Unlimited'
                   : `$${budgetRemaining.toLocaleString()}`}
               </Text>
             </View>
 
             {/* Min Views */}
-            {campaign.min_views && (
+            {(campaignData.minimum_views || campaignData.min_views) && (
               <View style={styles.statBox}>
                 <View style={styles.statHeader}>
                   <Icon name="eye-outline" size={14} color="#f59e0b" />
                   <Text style={styles.statLabel}>Min Views</Text>
                 </View>
                 <Text style={[styles.statValue, { color: '#f59e0b' }]}>
-                  {campaign.min_views.toLocaleString()}
+                  {(campaignData.minimum_views || campaignData.min_views).toLocaleString()}
                 </Text>
               </View>
             )}
@@ -228,14 +292,14 @@ export function CampaignDetailScreen() {
           )}
 
           {/* Content Guidelines */}
-          {campaign.content_guidelines && (
+          {campaign.guidelines && (
             <View style={styles.section}>
               <View style={styles.sectionTitleRow}>
                 <Icon name="text-box-check-outline" size={18} color="#fff" />
                 <Text style={styles.sectionTitle}>Content Guidelines</Text>
               </View>
               <Text style={styles.guidelines}>
-                {campaign.content_guidelines}
+                {campaign.guidelines}
               </Text>
             </View>
           )}
@@ -259,13 +323,70 @@ export function CampaignDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Apply Button - Fixed at bottom */}
+      {/* Apply Button - Fixed at bottom with inline feedback */}
       {isActive && (
         <View style={styles.applyContainer}>
-          <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
-            <Icon name="send" size={20} color="#fff" style={styles.applyIcon} />
-            <Text style={styles.applyButtonText}>Apply to Campaign</Text>
-          </TouchableOpacity>
+          {/* Success Toast */}
+          {applySuccess && (
+            <View style={styles.successToast}>
+              <Icon name="check-circle" size={20} color={colors.success} />
+              <Text style={styles.successToastText}>Application submitted!</Text>
+            </View>
+          )}
+
+          {existingSubmission ? (
+            <View style={styles.applicationStatusCard}>
+              <View style={styles.applicationStatusLeft}>
+                <View style={[
+                  styles.applicationStatusIcon,
+                  existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? styles.applicationStatusIconAccepted :
+                  existingSubmission.status === 'rejected' ? styles.applicationStatusIconRejected :
+                  styles.applicationStatusIconPending
+                ]}>
+                  <Icon
+                    name={
+                      existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'check' :
+                      existingSubmission.status === 'rejected' ? 'close' : 'clock-outline'
+                    }
+                    size={18}
+                    color={
+                      existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? colors.success :
+                      existingSubmission.status === 'rejected' ? colors.destructive : colors.warning
+                    }
+                  />
+                </View>
+                <View>
+                  <Text style={styles.applicationStatusTitle}>
+                    {existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'Accepted!' :
+                     existingSubmission.status === 'rejected' ? 'Not Selected' : 'Application Pending'}
+                  </Text>
+                  <Text style={styles.applicationStatusSubtext}>
+                    {existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'You\'re in! Check your dashboard.' :
+                     existingSubmission.status === 'rejected' ? 'Try other opportunities.' : 'Brand is reviewing your profile'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.applyButtonNew, applyMutation.isPending && styles.applyButtonDisabled]}
+              onPress={handleApply}
+              disabled={applyMutation.isPending}
+              activeOpacity={0.8}
+            >
+              {applyMutation.isPending ? (
+                <View style={styles.applyButtonContent}>
+                  <LogoLoader size={24} />
+                  <Text style={styles.applyButtonText}>Applying...</Text>
+                </View>
+              ) : (
+                <View style={styles.applyButtonContent}>
+                  <Icon name="send" size={22} color={colors.primaryForeground} />
+                  <Text style={styles.applyButtonText}>Apply Now</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -437,7 +558,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#22c55e',
+    color: '#fff',
   },
   section: {
     marginBottom: 20,
@@ -488,24 +609,91 @@ const styles = StyleSheet.create({
   applyContainer: {
     padding: 16,
     paddingBottom: 32,
-    backgroundColor: '#000',
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: colors.border,
   },
-  applyButton: {
+  // Success toast
+  successToast: {
     flexDirection: 'row',
-    backgroundColor: '#6366f1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.successMuted,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    gap: 8,
+  },
+  successToastText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.success,
+  },
+  // New apply button
+  applyButtonNew: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
     paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  applyButtonDisabled: {
+    opacity: 0.7,
+  },
+  applyButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  applyButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.primaryForeground,
+    letterSpacing: -0.3,
+  },
+  // Application status card
+  applicationStatusCard: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  applicationStatusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  applicationStatusIcon: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  applyIcon: {
-    marginRight: 8,
+  applicationStatusIconPending: {
+    backgroundColor: colors.warningMuted,
   },
-  applyButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+  applicationStatusIconAccepted: {
+    backgroundColor: colors.successMuted,
+  },
+  applicationStatusIconRejected: {
+    backgroundColor: colors.destructiveMuted,
+  },
+  applicationStatusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginBottom: 2,
+  },
+  applicationStatusSubtext: {
+    fontSize: 13,
+    color: colors.mutedForeground,
   },
 });

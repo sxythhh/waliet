@@ -4,22 +4,23 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   Image,
   ScrollView,
   Linking,
-  Switch,
   TextInput,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { colors } from '../theme/colors';
+import { LogoLoader } from '../components/LogoLoader';
 
 interface CreatorStats {
   totalSubmissions: number;
@@ -35,10 +36,15 @@ interface CreatorProfile {
   full_name: string;
   avatar_url: string;
   bio: string;
-  tiktok_handle: string;
-  instagram_handle: string;
-  youtube_handle: string;
   tier: string;
+}
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  avatar_url: string | null;
+  follower_count: number | null;
 }
 
 function formatNumber(num: number): string {
@@ -48,6 +54,38 @@ function formatNumber(num: number): string {
     return `${(num / 1000).toFixed(1)}K`;
   }
   return num.toString();
+}
+
+function getPlatformConfig(platform: string): { name: string; icon: string; bg: string } {
+  switch (platform.toLowerCase()) {
+    case 'tiktok':
+      return { name: 'TikTok', icon: 'music-note', bg: colors.background };
+    case 'instagram':
+      return { name: 'Instagram', icon: 'instagram', bg: '#E1306C' };
+    case 'youtube':
+      return { name: 'YouTube', icon: 'youtube', bg: '#FF0000' };
+    case 'twitter':
+    case 'x':
+      return { name: 'X', icon: 'twitter', bg: colors.background };
+    default:
+      return { name: platform, icon: 'web', bg: colors.muted };
+  }
+}
+
+function getPlatformUrl(platform: string, username: string): string {
+  switch (platform.toLowerCase()) {
+    case 'tiktok':
+      return `https://tiktok.com/@${username}`;
+    case 'instagram':
+      return `https://instagram.com/${username}`;
+    case 'youtube':
+      return `https://youtube.com/@${username}`;
+    case 'twitter':
+    case 'x':
+      return `https://x.com/${username}`;
+    default:
+      return '#';
+  }
 }
 
 function formatCurrency(cents: number): string {
@@ -227,6 +265,7 @@ function EmailSignIn({
 }
 
 export function ProfileScreen() {
+  const navigation = useNavigation();
   const {
     user,
     loading,
@@ -236,8 +275,17 @@ export function ProfileScreen() {
     verifyEmailOTP,
     signOut
   } = useAuth();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [authMode, setAuthMode] = useState<'options' | 'email'>('options');
+
+  const handleEditProfile = () => {
+    // @ts-expect-error - Navigation types not set up yet
+    navigation.navigate('EditProfile');
+  };
+
+  const handleOpenSettings = () => {
+    // @ts-expect-error - Navigation types not set up yet
+    navigation.navigate('Settings');
+  };
 
   // Fetch creator profile
   const { data: profile } = useQuery({
@@ -251,7 +299,23 @@ export function ProfileScreen() {
         .eq('id', user.id)
         .single();
 
-      return data;
+      return data as CreatorProfile | null;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch social accounts
+  const { data: socialAccounts } = useQuery({
+    queryKey: ['social-accounts', user?.id],
+    queryFn: async (): Promise<SocialAccount[]> => {
+      if (!user?.id) return [];
+
+      const { data } = await supabase
+        .from('social_accounts')
+        .select('id, platform, username, avatar_url, follower_count')
+        .eq('user_id', user.id);
+
+      return (data || []) as SocialAccount[];
     },
     enabled: !!user?.id,
   });
@@ -273,15 +337,17 @@ export function ProfileScreen() {
       // Get submission stats
       const { data: submissions } = await supabase
         .from('video_submissions')
-        .select('status, total_views, total_earned')
-        .eq('user_id', user.id);
+        .select('status, views, payout_amount')
+        .eq('creator_id', user.id);
 
-      const total = submissions?.length || 0;
-      const approved = submissions?.filter(
+      // Cast to any for flexible field access
+      const subs = (submissions || []) as any[];
+      const total = subs.length;
+      const approved = subs.filter(
         (s) => s.status === 'approved' || s.status === 'paid'
-      ).length || 0;
-      const views = submissions?.reduce((sum, s) => sum + (s.total_views || 0), 0) || 0;
-      const earned = submissions?.reduce((sum, s) => sum + (s.total_earned || 0), 0) || 0;
+      ).length;
+      const views = subs.reduce((sum, s) => sum + (s.views || 0), 0);
+      const earned = subs.reduce((sum, s) => sum + (s.payout_amount || 0), 0);
 
       return {
         totalSubmissions: total,
@@ -302,7 +368,7 @@ export function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <LogoLoader size={56} />
         </View>
       </SafeAreaView>
     );
@@ -381,6 +447,12 @@ export function ProfileScreen() {
             )
           ) : (
             <View style={styles.profileCard}>
+              <TouchableOpacity
+                style={styles.editProfileButton}
+                onPress={handleEditProfile}
+              >
+                <Icon name="pencil" size={16} color={colors.foreground} />
+              </TouchableOpacity>
               <View style={styles.avatar}>
                 {profile?.avatar_url || user.user_metadata?.avatar_url ? (
                   <Image
@@ -417,7 +489,7 @@ export function ProfileScreen() {
                 <Text style={styles.statLabel}>Submissions</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors.success }]}>
+                <Text style={styles.statValue}>
                   {stats.approvalRate}%
                 </Text>
                 <Text style={styles.statLabel}>Approval Rate</Text>
@@ -427,7 +499,7 @@ export function ProfileScreen() {
                 <Text style={styles.statLabel}>Total Views</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: colors.primary }]}>
+                <Text style={[styles.statValue, { color: colors.success }]}>
                   {formatCurrency(stats.totalEarned)}
                 </Text>
                 <Text style={styles.statLabel}>Earned</Text>
@@ -436,59 +508,35 @@ export function ProfileScreen() {
           )}
 
           {/* Connected Accounts - Only show when signed in */}
-          {user && profile && (
+          {user && (
             <View style={styles.section}>
               <View style={styles.sectionTitleRow}>
                 <Icon name="link-variant" size={18} color={colors.foreground} />
                 <Text style={styles.sectionTitle}>Connected Accounts</Text>
               </View>
               <View style={styles.accountsList}>
-                {profile.tiktok_handle && (
-                  <TouchableOpacity
-                    style={styles.accountItem}
-                    onPress={() => handleOpenLink(`https://tiktok.com/@${profile.tiktok_handle}`)}
-                  >
-                    <View style={[styles.accountIcon, { backgroundColor: colors.background }]}>
-                      <Icon name="music-note" size={18} color={colors.foreground} />
-                    </View>
-                    <View style={styles.accountInfo}>
-                      <Text style={styles.accountName}>TikTok</Text>
-                      <Text style={styles.accountHandle}>@{profile.tiktok_handle}</Text>
-                    </View>
-                    <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
-                  </TouchableOpacity>
-                )}
-                {profile.instagram_handle && (
-                  <TouchableOpacity
-                    style={styles.accountItem}
-                    onPress={() => handleOpenLink(`https://instagram.com/${profile.instagram_handle}`)}
-                  >
-                    <View style={[styles.accountIcon, { backgroundColor: '#E1306C' }]}>
-                      <Icon name="instagram" size={18} color={colors.foreground} />
-                    </View>
-                    <View style={styles.accountInfo}>
-                      <Text style={styles.accountName}>Instagram</Text>
-                      <Text style={styles.accountHandle}>@{profile.instagram_handle}</Text>
-                    </View>
-                    <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
-                  </TouchableOpacity>
-                )}
-                {profile.youtube_handle && (
-                  <TouchableOpacity
-                    style={styles.accountItem}
-                    onPress={() => handleOpenLink(`https://youtube.com/@${profile.youtube_handle}`)}
-                  >
-                    <View style={[styles.accountIcon, { backgroundColor: '#FF0000' }]}>
-                      <Icon name="youtube" size={18} color={colors.foreground} />
-                    </View>
-                    <View style={styles.accountInfo}>
-                      <Text style={styles.accountName}>YouTube</Text>
-                      <Text style={styles.accountHandle}>@{profile.youtube_handle}</Text>
-                    </View>
-                    <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
-                  </TouchableOpacity>
-                )}
-                {!profile.tiktok_handle && !profile.instagram_handle && !profile.youtube_handle && (
+                {socialAccounts && socialAccounts.length > 0 ? (
+                  socialAccounts.map((account) => {
+                    const platformConfig = getPlatformConfig(account.platform);
+                    const platformUrl = getPlatformUrl(account.platform, account.username);
+                    return (
+                      <TouchableOpacity
+                        key={account.id}
+                        style={styles.accountItem}
+                        onPress={() => handleOpenLink(platformUrl)}
+                      >
+                        <View style={[styles.accountIcon, { backgroundColor: platformConfig.bg }]}>
+                          <Icon name={platformConfig.icon} size={18} color={colors.foreground} />
+                        </View>
+                        <View style={styles.accountInfo}>
+                          <Text style={styles.accountName}>{platformConfig.name}</Text>
+                          <Text style={styles.accountHandle}>@{account.username}</Text>
+                        </View>
+                        <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
                   <TouchableOpacity
                     style={styles.connectButton}
                     onPress={() => handleOpenLink('https://virality.so/settings')}
@@ -508,21 +556,16 @@ export function ProfileScreen() {
               <Text style={styles.sectionTitle}>Settings</Text>
             </View>
             <View style={styles.settingsList}>
-              <View style={styles.settingItem}>
+              <TouchableOpacity style={styles.settingItem} onPress={handleOpenSettings}>
                 <Icon name="bell-outline" size={22} color={colors.mutedForeground} style={styles.settingIconLeft} />
                 <View style={styles.settingInfo}>
-                  <Text style={styles.settingName}>Push Notifications</Text>
+                  <Text style={styles.settingName}>Notifications</Text>
                   <Text style={styles.settingDescription}>
-                    Get notified about campaign updates
+                    Manage email and push notifications
                   </Text>
                 </View>
-                <Switch
-                  value={notificationsEnabled}
-                  onValueChange={setNotificationsEnabled}
-                  trackColor={{ false: colors.muted, true: colors.primary }}
-                  thumbColor={colors.foreground}
-                />
-              </View>
+                <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -602,6 +645,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    position: 'relative',
+  },
+  editProfileButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: colors.muted,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },

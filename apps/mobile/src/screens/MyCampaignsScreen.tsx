@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
   Image,
@@ -15,6 +14,8 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { LogoLoader } from '../components/LogoLoader';
+import { colors } from '../theme/colors';
 
 // Platform icon config
 const platformConfig: Record<string, { bg: string; icon: string }> = {
@@ -25,20 +26,32 @@ const platformConfig: Record<string, { bg: string; icon: string }> = {
 
 interface VideoSubmission {
   id: string;
-  campaign_id: string;
+  source_id: string;
+  source_type: 'campaign' | 'boost';
   video_url: string;
   platform: string;
   status: 'pending_review' | 'approved' | 'rejected' | 'paid';
-  total_views: number;
-  total_earned: number;
+  views: number;
+  payout_amount: number;
   created_at: string;
-  campaign: {
+  title: string | null;
+  // Joined campaign data (when source_type is 'campaign')
+  campaign?: {
     id: string;
     title: string;
     brand_name: string;
     brand_color: string;
     rpm_rate: number;
-  };
+  } | null;
+  // Joined boost data (when source_type is 'boost')
+  boost?: {
+    id: string;
+    title: string;
+    brands?: {
+      name: string;
+      logo_url: string | null;
+    } | null;
+  } | null;
 }
 
 function formatViews(views: number): string {
@@ -97,31 +110,23 @@ export function MyCampaignsScreen() {
         .from('video_submissions')
         .select(`
           id,
-          campaign_id,
+          source_id,
+          source_type,
           video_url,
           platform,
           status,
-          total_views,
-          total_earned,
+          views,
+          payout_amount,
           created_at,
-          campaigns:campaign_id (
-            id,
-            title,
-            brand_name,
-            brand_color,
-            rpm_rate
-          )
+          title
         `)
-        .eq('user_id', user.id)
+        .eq('creator_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      return (data || []).map((item: any) => ({
-        ...item,
-        campaign: item.campaigns,
-      }));
+      return (data || []) as VideoSubmission[];
     },
     enabled: !!user?.id,
   });
@@ -133,15 +138,16 @@ export function MyCampaignsScreen() {
   const handleSubmissionPress = useCallback(
     (submission: VideoSubmission) => {
       // @ts-expect-error - Navigation types not set up yet
-      navigation.navigate('CampaignDetail', { campaignId: submission.campaign_id });
+      navigation.navigate('SubmissionDetail', { submissionId: submission.id });
     },
     [navigation]
   );
 
   const renderSubmission = ({ item }: { item: VideoSubmission }) => {
     const statusConfig = getStatusConfig(item.status);
-    const earned = item.total_earned || 0;
+    const earned = item.payout_amount || 0;
     const platConfig = getPlatformConfig(item.platform);
+    const sourceColor = item.source_type === 'boost' ? '#8b5cf6' : '#6366f1';
 
     return (
       <TouchableOpacity
@@ -149,26 +155,31 @@ export function MyCampaignsScreen() {
         onPress={() => handleSubmissionPress(item)}
         activeOpacity={0.7}
       >
-        {/* Header with brand color stripe */}
+        {/* Header with source type color stripe */}
         <View
           style={[
             styles.colorStripe,
-            { backgroundColor: item.campaign?.brand_color || '#6366f1' },
+            { backgroundColor: sourceColor },
           ]}
         />
 
         <View style={styles.cardContent}>
-          {/* Top Row: Campaign Info */}
+          {/* Top Row: Submission Info */}
           <View style={styles.topRow}>
             <View style={styles.campaignInfo}>
               <View style={styles.brandNameRow}>
-                <Icon name="domain" size={12} color="#666" style={styles.brandIcon} />
+                <Icon
+                  name={item.source_type === 'boost' ? 'lightning-bolt' : 'bullhorn'}
+                  size={12}
+                  color="#666"
+                  style={styles.brandIcon}
+                />
                 <Text style={styles.brandName} numberOfLines={1}>
-                  {item.campaign?.brand_name || 'Unknown Brand'}
+                  {item.source_type === 'boost' ? 'Boost' : 'Campaign'}
                 </Text>
               </View>
               <Text style={styles.campaignTitle} numberOfLines={1}>
-                {item.campaign?.title || 'Unknown Campaign'}
+                {item.title || 'Video Submission'}
               </Text>
             </View>
             <View style={[styles.platformBadge, { backgroundColor: platConfig.bg }]}>
@@ -184,7 +195,7 @@ export function MyCampaignsScreen() {
                 <Icon name="eye-outline" size={12} color="#666" />
                 <Text style={styles.statLabel}>Views</Text>
               </View>
-              <Text style={styles.statValue}>{formatViews(item.total_views || 0)}</Text>
+              <Text style={styles.statValue}>{formatViews(item.views || 0)}</Text>
             </View>
 
             {/* Earned */}
@@ -228,8 +239,8 @@ export function MyCampaignsScreen() {
         total: acc.total + 1,
         approved: acc.approved + (s.status === 'approved' || s.status === 'paid' ? 1 : 0),
         pending: acc.pending + (s.status === 'pending_review' ? 1 : 0),
-        views: acc.views + (s.total_views || 0),
-        earned: acc.earned + (s.total_earned || 0),
+        views: acc.views + (s.views || 0),
+        earned: acc.earned + (s.payout_amount || 0),
       }),
       { total: 0, approved: 0, pending: 0, views: 0, earned: 0 }
     );
@@ -240,7 +251,7 @@ export function MyCampaignsScreen() {
       {/* Stats Cards */}
       <View style={styles.statsCards}>
         <View style={styles.statCard}>
-          <Icon name="check-circle-outline" size={20} color="#22c55e" style={styles.statCardIcon} />
+          <Icon name="check-circle-outline" size={20} color={colors.primary} style={styles.statCardIcon} />
           <Text style={styles.statCardValue}>{stats.approved}</Text>
           <Text style={styles.statCardLabel}>Approved</Text>
         </View>
@@ -281,7 +292,7 @@ export function MyCampaignsScreen() {
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>My Campaigns</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <LogoLoader size={56} />
         </View>
       </SafeAreaView>
     );

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -15,6 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
+import { LogoLoader } from '../components/LogoLoader';
 
 interface PaymentLedgerEntry {
   id: string;
@@ -110,7 +110,7 @@ export function WalletScreen() {
         };
       }
 
-      // Fetch payment ledger entries with campaign info
+      // Fetch payment ledger entries
       const { data: entries, error } = await supabase
         .from('payment_ledger')
         .select(`
@@ -122,14 +122,30 @@ export function WalletScreen() {
           paid_amount,
           payment_type,
           created_at,
-          clearing_ends_at,
-          campaigns:source_id (title)
+          clearing_ends_at
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
+
+      // Fetch campaign/boost titles separately based on source_type
+      const campaignIds = (entries || []).filter(e => e.source_type === 'campaign').map(e => e.source_id);
+      const boostIds = (entries || []).filter(e => e.source_type === 'boost').map(e => e.source_id);
+
+      const [campaignsData, boostsData] = await Promise.all([
+        campaignIds.length > 0
+          ? supabase.from('campaigns').select('id, title').in('id', campaignIds)
+          : { data: [] },
+        boostIds.length > 0
+          ? supabase.from('bounty_campaigns').select('id, title').in('id', boostIds)
+          : { data: [] },
+      ]);
+
+      const titleMap: Record<string, string> = {};
+      (campaignsData.data || []).forEach((c: any) => { titleMap[c.id] = c.title; });
+      (boostsData.data || []).forEach((b: any) => { titleMap[b.id] = b.title; });
 
       // Calculate summary from entries
       let available = 0;
@@ -159,7 +175,7 @@ export function WalletScreen() {
 
         return {
           ...entry,
-          campaign_title: entry.campaigns?.title || 'Unknown Campaign',
+          campaign_title: titleMap[entry.source_id] || 'Unknown Campaign',
         };
       });
 
@@ -247,7 +263,7 @@ export function WalletScreen() {
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Wallet</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <LogoLoader size={56} />
         </View>
       </SafeAreaView>
     );
