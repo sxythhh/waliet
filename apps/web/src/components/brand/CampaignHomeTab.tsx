@@ -167,7 +167,7 @@ export function CampaignHomeTab({
         // Build all queries
         const brandQuery = supabase.from('brands').select('collection_name').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags, shortimize_collection_name, rpm_rate').eq('id', campaignId).single();
-        const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
+        const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at, type').eq('metadata->>campaign_id', campaignId).in('type', ['earning', 'balance_correction']);
         
         // Query video_submissions directly for accurate metrics (refreshed every 8 hours from Shortimize)
         // Include payout_status to calculate paid vs unpaid views directly
@@ -607,7 +607,7 @@ export function CampaignHomeTab({
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         {/* Views Generated Card */}
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="text-xs font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
@@ -684,7 +684,7 @@ export function CampaignHomeTab({
         */}
 
         {/* Effective CPM Card */}
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="text-xs font-medium text-foreground tracking-[-0.5px]">Effective CPM</p>
             <div className="flex items-center justify-between">
@@ -708,7 +708,7 @@ export function CampaignHomeTab({
         */}
 
         {/* Total Payouts Card */}
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="text-xs font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
             <div className="flex items-center justify-between">
@@ -730,7 +730,7 @@ export function CampaignHomeTab({
         */}
 
         {/* Submissions Card */}
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="text-xs font-medium text-foreground tracking-[-0.5px]">Submissions</p>
             <div className="flex items-center justify-between">

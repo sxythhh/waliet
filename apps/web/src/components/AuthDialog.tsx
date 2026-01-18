@@ -36,7 +36,7 @@ export default function AuthDialog({
       if (!session) return;
       const {
         data: profile
-      } = await supabase.from("profiles").select("account_type, phone_number").eq("id", session.user.id).single();
+      } = await supabase.from("profiles").select("account_type, phone_number").eq("id", session.user.id).maybeSingle();
 
       // Show onboarding if user doesn't have phone number set
       if (profile && !profile.phone_number) {
@@ -95,7 +95,7 @@ export default function AuthDialog({
   };
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[380px] border-0 bg-white dark:bg-[#050505] shadow-2xl p-6">
+        <DialogContent className="sm:max-w-[380px] border-0 bg-white dark:bg-[#0a0a0a] shadow-2xl p-6">
           <div className="rounded-xl">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex items-center justify-center gap-2">

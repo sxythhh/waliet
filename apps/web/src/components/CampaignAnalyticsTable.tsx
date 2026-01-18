@@ -294,7 +294,6 @@ export function CampaignAnalyticsTable({
 
       // Batch fetch all data at once for better performance
       const userIds = [...new Set((data || []).filter(item => item.user_id).map(item => item.user_id))];
-      console.log('User IDs from analytics:', userIds.length, userIds.slice(0, 5));
 
       // Get all unique username+platform combinations from analytics for global lookup
       const analyticsUsernamePlatforms = (data || []).map(item => ({
@@ -377,7 +376,6 @@ export function CampaignAnalyticsTable({
 
       // Collect all user IDs from analytics records AND matched social accounts
       const allUserIds = [...new Set([...userIds, ...(allCampaignAccounts || []).filter((item: CampaignAccountWithSocialAccount) => item.social_accounts?.user_id).map((item: CampaignAccountWithSocialAccount) => item.social_accounts.user_id), ...Array.from(socialAccountsByUsernameMap.values()).filter((acc: SocialAccount) => acc.user_id).map((acc: SocialAccount) => acc.user_id)])];
-      console.log('All user IDs to fetch profiles for:', allUserIds.length, allUserIds.slice(0, 5));
 
       // Fetch profiles for all linked accounts (batch to avoid query limits)
       const profilesMap = new Map();
@@ -394,7 +392,6 @@ export function CampaignAnalyticsTable({
           }
           (profiles || []).forEach(p => profilesMap.set(p.id, p));
         }
-        console.log('Profiles fetched total:', profilesMap.size);
       }
 
       // Fetch ALL demographic submissions for all matched social accounts (batched to avoid limits)
@@ -416,13 +413,6 @@ export function CampaignAnalyticsTable({
         }
       }
 
-      // Debug: log what we found
-      console.log('Campaign accounts found:', allCampaignAccounts?.length || 0);
-      console.log('Social accounts map size:', socialAccountsByUsernameMap.size);
-      console.log('Profiles map size:', profilesMap.size);
-      console.log('Demographic submissions map size:', submissionsMap.size);
-      console.log('All social account IDs count:', allSocialAccountIds.length);
-
       // Map everything together efficiently and collect records that need user_id updates
       const recordsToUpdate: {
         id: string;
@@ -439,11 +429,6 @@ export function CampaignAnalyticsTable({
           profile = profilesMap.get(item.user_id);
           const accountKey = `${item.user_id}_${normalizedPlatform}_${normalizedAnalyticsUsername}`;
           account = socialAccountsMap.get(accountKey);
-
-          // Debug first few items
-          if (idx < 3) {
-            console.log(`Item ${idx}: ${item.account_username}, user_id: ${item.user_id}, profile found: ${!!profile}`);
-          }
         }
 
         // If no match by user_id, try matching by username + platform (globally)
@@ -481,7 +466,6 @@ export function CampaignAnalyticsTable({
 
       // Batch update analytics records that were matched by username but didn't have user_id
       if (recordsToUpdate.length > 0) {
-        console.log(`Auto-linking ${recordsToUpdate.length} analytics records...`);
         for (const record of recordsToUpdate) {
           await supabase.from("campaign_account_analytics").update({
             user_id: record.user_id
@@ -578,7 +562,6 @@ export function CampaignAnalyticsTable({
 
       // If no matching social account exists, create one
       if (!existingAccount) {
-        console.log('Creating social account for user:', userId, 'platform:', selectedAnalyticsAccount.platform);
         const insertData = {
           user_id: userId,
           platform: selectedAnalyticsAccount.platform,
@@ -779,19 +762,16 @@ export function CampaignAnalyticsTable({
   };
   const fetchTransactions = useCallback(async () => {
     try {
+      // Filter by campaign_id server-side using JSONB contains to avoid Supabase's default 1000 row limit
       const {
         data,
         error
-      } = await supabase.from("wallet_transactions").select("*").in('type', ['earning', 'balance_correction']).order('created_at', {
+      } = await supabase.from("wallet_transactions").select("*").in('type', ['earning', 'balance_correction']).contains('metadata', { campaign_id: campaignId }).order('created_at', {
         ascending: false
       });
       if (error) throw error;
 
-      // Filter by campaign_id in metadata (handle both formats)
-      const campaignTransactions = data?.filter((txn) => {
-        const metadata = (txn.metadata || {}) as TransactionMetadata;
-        return metadata.campaign_id === campaignId;
-      }) || [];
+      const campaignTransactions = data || [];
 
       // Fetch user profiles separately
       if (campaignTransactions && campaignTransactions.length > 0) {
@@ -860,7 +840,6 @@ export function CampaignAnalyticsTable({
         data: isRelevant
       } = await supabase.from('social_account_campaigns').select('id').eq('campaign_id', campaignId).eq('social_account_id', socialAccountId).eq('status', 'active').single();
       if (isRelevant) {
-        console.log('Relevant demographic submission changed, refreshing analytics');
         fetchAnalytics();
       }
     }).subscribe();
@@ -1004,17 +983,11 @@ export function CampaignAnalyticsTable({
       }).eq("id", selectedUser.id);
       if (analyticsError) throw analyticsError;
 
-      // Update campaign budget_used
-      const {
-        data: campaignData,
-        error: campaignFetchError
-      } = await supabase.from("campaigns").select("budget_used").eq("id", campaignId).single();
-      if (campaignFetchError) throw campaignFetchError;
-      const {
-        error: campaignUpdateError
-      } = await supabase.from("campaigns").update({
-        budget_used: (campaignData.budget_used || 0) + amount
-      }).eq("id", campaignId);
+      // Update campaign budget_used atomically to prevent race conditions
+      const { error: campaignUpdateError } = await supabase.rpc('increment_campaign_budget_used', {
+        p_campaign_id: campaignId,
+        p_amount: amount,
+      });
       if (campaignUpdateError) throw campaignUpdateError;
       // Optimistic update for immediate UI feedback BEFORE closing dialog
       const paymentTimestamp = new Date().toISOString();
@@ -1130,17 +1103,11 @@ export function CampaignAnalyticsTable({
       }).eq("id", selectedTransaction.metadata.analytics_id);
       if (analyticsError) throw analyticsError;
 
-      // 4. Update campaign budget_used
-      const {
-        data: campaignData,
-        error: campaignFetchError
-      } = await supabase.from("campaigns").select("budget_used").eq("id", campaignId).single();
-      if (campaignFetchError) throw campaignFetchError;
-      const {
-        error: campaignUpdateError
-      } = await supabase.from("campaigns").update({
-        budget_used: Math.max(0, (campaignData.budget_used || 0) - amount)
-      }).eq("id", campaignId);
+      // 4. Update campaign budget_used atomically to prevent race conditions
+      const { error: campaignUpdateError } = await supabase.rpc('decrement_campaign_budget_used', {
+        p_campaign_id: campaignId,
+        p_amount: amount,
+      });
       if (campaignUpdateError) throw campaignUpdateError;
       toast.success(`Transaction of $${amount.toFixed(2)} successfully reverted`);
       setRevertDialogOpen(false);
@@ -1655,9 +1622,22 @@ export function CampaignAnalyticsTable({
 
             {/* Transaction History Section */}
             <Card className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border">
-                <h3 className="text-sm font-semibold tracking-[-0.3px]">Payment History</h3>
-                <p className="text-xs text-muted-foreground tracking-[-0.2px] mt-0.5">All payments made to creators for this campaign</p>
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold tracking-[-0.3px]">Payment History</h3>
+                  <p className="text-xs text-muted-foreground tracking-[-0.2px] mt-0.5">All payments made to creators for this campaign</p>
+                </div>
+                {filteredTransactions.length > 0 && (
+                  <Button
+                    onClick={exportTransactionsToCSV}
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 gap-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Export CSV
+                  </Button>
+                )}
               </div>
               <CardContent className="p-0">
                 {filteredTransactions.length === 0 ? (

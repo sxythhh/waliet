@@ -102,11 +102,15 @@ interface BoostApplication {
   application_text: string | null;
   status: string;
   applied_at: string;
+  approved_rate?: number | null;
   boost_campaigns: {
     id: string;
     title: string;
     monthly_retainer: number;
     videos_per_month: number;
+    payment_model?: 'retainer' | 'flat_rate' | null;
+    flat_rate_min?: number | null;
+    flat_rate_max?: number | null;
     banner_url: string | null;
     blueprint_id?: string | null;
     blueprint_embed_url?: string | null;
@@ -114,6 +118,8 @@ interface BoostApplication {
     brands?: {
       name: string;
       logo_url: string | null;
+      is_verified?: boolean;
+      slug?: string;
     };
     blueprint?: Blueprint | null;
   };
@@ -473,6 +479,9 @@ export function CampaignsTab({
               title,
               monthly_retainer,
               videos_per_month,
+              payment_model,
+              flat_rate_min,
+              flat_rate_max,
               banner_url,
               brand_id,
               blueprint_id,
@@ -529,7 +538,6 @@ export function CampaignsTab({
       data: submissions,
       error: submissionsError
     } = await supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", user.id).in("status", ["approved", "pending"]);
-    console.log("All submissions:", submissions);
     if (submissionsError) {
       console.error("Submissions error:", submissionsError);
       toast({
@@ -542,7 +550,6 @@ export function CampaignsTab({
     }
     const campaignIds = submissions?.map(s => s.campaign_id) || [];
     const submissionStatusMap = new Map(submissions?.map(s => [s.campaign_id, s.status]) || []);
-    console.log("Campaign IDs from submissions:", campaignIds);
     if (campaignIds.length === 0) {
       setCampaigns([]);
       setLoading(false);
@@ -702,7 +709,6 @@ export function CampaignsTab({
       if (linkedAccounts && linkedAccounts.length > 0) {
         for (const link of linkedAccounts) {
           try {
-            console.log('Stopping Shortimize tracking for account...');
             const {
               error: untrackError
             } = await supabase.functions.invoke('untrack-shortimize-account', {
@@ -845,66 +851,11 @@ export function CampaignsTab({
       </div>
       )}
 
-      {/* Your Campaigns & Boosts Section - Combined */}
-      {(campaigns.length > 0 || boostApplications.filter(app => app.status === 'accepted').length > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* Boosts displayed as cards */}
-            {boostApplications.filter(app => app.status === 'accepted').map(application => (
-              <BoostCardCompact
-                key={`boost-${application.boost_campaigns.id}`}
-                id={application.boost_campaigns.id}
-                title={application.boost_campaigns.title}
-                brand_name={application.boost_campaigns.brands?.name || ''}
-                brand_logo_url={application.boost_campaigns.brands?.logo_url || null}
-                brand_is_verified={application.boost_campaigns.brands?.is_verified}
-                brand_slug={application.boost_campaigns.brands?.slug}
-                banner_url={application.boost_campaigns.banner_url || null}
-                monthly_retainer={application.boost_campaigns.monthly_retainer}
-                videos_per_month={application.boost_campaigns.videos_per_month}
-                onClick={() => navigate(`/dashboard/boost/${application.boost_campaigns.id}`, {
-                  state: {
-                    boost: {
-                      ...application.boost_campaigns,
-                      brand_name: application.boost_campaigns.brands?.name,
-                      brand_logo_url: application.boost_campaigns.brands?.logo_url
-                    }
-                  }
-                })}
-              />
-            ))}
-            {/* Regular campaigns */}
-            {campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                id={campaign.id}
-                title={campaign.title}
-                brand_name={campaign.brand_name}
-                brand_logo_url={campaign.brand_logo_url}
-                brand_is_verified={campaign.brand_is_verified}
-                brand_slug={campaign.brand_slug}
-                banner_url={campaign.banner_url}
-                budget={campaign.budget}
-                budget_used={campaign.budget_used}
-                is_infinite_budget={campaign.is_infinite_budget}
-                platforms={campaign.allowed_platforms || []}
-                isEnded={campaign.status === 'ended'}
-                showBookmark={false}
-                showFullscreen={false}
-                onClick={() => navigate(`/dashboard/campaign/${campaign.id}`, { state: { campaign } })}
-              />
-            ))}
-        </div>
-      )}
-
-      {/* Received Pitches (Brand Invitations) */}
+      {/* Received Pitches (Brand Invitations) - Show First */}
       <ReceivedPitchesWidget />
 
       {/* Sent Pitches Widget */}
       <CreatorPitchesWidget />
-
-      {/* Campaigns Content */}
-      <>
-
 
       {/* Boost Applications Section - Pending/Rejected Only */}
       {boostApplications.filter(app => app.status !== 'accepted').length > 0 && <div className="space-y-3">
@@ -938,15 +889,35 @@ export function CampaignsTab({
 
                   {/* Stats Row */}
                   <div className="flex items-center justify-between text-xs border-t border-border/50 pt-3 mt-auto">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground">Retainer</span>
-                      <span className="font-semibold">${application.boost_campaigns.monthly_retainer.toLocaleString()}/mo</span>
-                    </div>
-                    <div className="w-px h-3 bg-border/50" />
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground">Videos</span>
-                      <span className="font-semibold">{application.boost_campaigns.videos_per_month}/mo</span>
-                    </div>
+                    {application.boost_campaigns.payment_model === 'flat_rate' ? (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Rate</span>
+                          <span className="font-semibold">${application.boost_campaigns.flat_rate_min || 0} - ${application.boost_campaigns.flat_rate_max || 0}/post</span>
+                        </div>
+                        {application.approved_rate && (
+                          <>
+                            <div className="w-px h-3 bg-border/50" />
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-muted-foreground">Your rate</span>
+                              <span className="font-semibold text-primary">${application.approved_rate}/post</span>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Retainer</span>
+                          <span className="font-semibold">${application.boost_campaigns.monthly_retainer.toLocaleString()}/mo</span>
+                        </div>
+                        <div className="w-px h-3 bg-border/50" />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Videos</span>
+                          <span className="font-semibold">{application.boost_campaigns.videos_per_month}/mo</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Re-apply Button for Rejected Applications */}
@@ -965,8 +936,63 @@ export function CampaignsTab({
               </Card>)}
           </div>
         </div>}
-    </>
-    
+
+      {/* Your Campaigns & Boosts Section - Combined */}
+      {(campaigns.length > 0 || boostApplications.filter(app => app.status === 'accepted').length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Boosts displayed as cards */}
+            {boostApplications.filter(app => app.status === 'accepted').map(application => (
+              <BoostCardCompact
+                key={`boost-${application.boost_campaigns.id}`}
+                id={application.boost_campaigns.id}
+                title={application.boost_campaigns.title}
+                brand_name={application.boost_campaigns.brands?.name || ''}
+                brand_logo_url={application.boost_campaigns.brands?.logo_url || null}
+                brand_is_verified={application.boost_campaigns.brands?.is_verified}
+                brand_slug={application.boost_campaigns.brands?.slug}
+                banner_url={application.boost_campaigns.banner_url || null}
+                monthly_retainer={application.boost_campaigns.monthly_retainer}
+                videos_per_month={application.boost_campaigns.videos_per_month}
+                payment_model={application.boost_campaigns.payment_model}
+                flat_rate_min={application.boost_campaigns.flat_rate_min}
+                flat_rate_max={application.boost_campaigns.flat_rate_max}
+                approved_rate={application.approved_rate}
+                onClick={() => navigate(`/dashboard/boost/${application.boost_campaigns.id}`, {
+                  state: {
+                    boost: {
+                      ...application.boost_campaigns,
+                      brand_name: application.boost_campaigns.brands?.name,
+                      brand_logo_url: application.boost_campaigns.brands?.logo_url,
+                      approved_rate: application.approved_rate
+                    }
+                  }
+                })}
+              />
+            ))}
+            {/* Regular campaigns */}
+            {campaigns.map((campaign) => (
+              <CampaignCard
+                key={campaign.id}
+                id={campaign.id}
+                title={campaign.title}
+                brand_name={campaign.brand_name}
+                brand_logo_url={campaign.brand_logo_url}
+                brand_is_verified={campaign.brand_is_verified}
+                brand_slug={campaign.brand_slug}
+                banner_url={campaign.banner_url}
+                budget={campaign.budget}
+                budget_used={campaign.budget_used}
+                is_infinite_budget={campaign.is_infinite_budget}
+                platforms={campaign.allowed_platforms || []}
+                isEnded={campaign.status === 'ended'}
+                showBookmark={false}
+                showFullscreen={false}
+                onClick={() => navigate(`/dashboard/campaign/${campaign.id}`, { state: { campaign } })}
+              />
+            ))}
+        </div>
+      )}
+
     {/* Link Account Dialog */}
     {selectedCampaignId && (
       <LinkAccountDialog

@@ -23,6 +23,9 @@ interface SourceDetailsContextValue {
   // Source type
   sourceType: SourceType;
 
+  // Public view mode (no auth required, hides personal data)
+  isPublicView: boolean;
+
   // Navigation
   activeSection: SourceDetailsSection;
   setActiveSection: (section: SourceDetailsSection) => void;
@@ -58,12 +61,14 @@ interface SourceDetailsSidebarProviderProps {
   children: React.ReactNode;
   sourceType: SourceType;
   defaultSection?: SourceDetailsSection;
+  isPublicView?: boolean;
 }
 
 export function SourceDetailsSidebarProvider({
   children,
   sourceType,
-  defaultSection = { type: "overview" }
+  defaultSection = { type: "overview" },
+  isPublicView = false
 }: SourceDetailsSidebarProviderProps) {
   const isMobile = useIsMobile();
 
@@ -114,6 +119,7 @@ export function SourceDetailsSidebarProvider({
   const contextValue = React.useMemo<SourceDetailsContextValue>(
     () => ({
       sourceType,
+      isPublicView,
       activeSection,
       setActiveSection,
       leftSidebarOpen,
@@ -129,6 +135,7 @@ export function SourceDetailsSidebarProvider({
     }),
     [
       sourceType,
+      isPublicView,
       activeSection,
       leftSidebarOpen,
       leftSidebarCollapsed,

@@ -301,7 +301,7 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
             </p>
           </div>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} size="sm" variant="outline" className="gap-1.5 h-8 font-inter tracking-[-0.5px]">
+        <Button onClick={() => setShowCreateDialog(true)} size="sm" variant="outline" className="gap-1.5 h-8 font-inter tracking-[-0.5px] border-0 bg-muted hover:bg-muted/80">
           <Plus className="h-3.5 w-3.5" />
           Add
         </Button>

@@ -26,6 +26,8 @@ import xIcon from "@/assets/x-logo.png";
 import xIconLight from "@/assets/x-logo-light.png";
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
 import { TransactionsTable, Transaction } from "@/components/dashboard/TransactionsTable";
+import { AssetLibrary, AssetRequestDialog, AssetUploadDialog, AssetDeleteDialog, AssetDetailPanel } from "@/components/assets";
+import type { BrandAsset } from "@/types/assets";
 import {
   SourceDetailsSidebarProvider,
   useSourceDetails,
@@ -153,11 +155,18 @@ function CampaignDetailsContent() {
   const [blueprintContent, setBlueprintContent] = useState<string | null>(null);
   const [blueprintAssets, setBlueprintAssets] = useState<AssetLink[] | null>(null);
   const [showSubmitVideoDialog, setShowSubmitVideoDialog] = useState(false);
+  const [showAssetRequestDialog, setShowAssetRequestDialog] = useState(false);
+  const [showAssetUploadDialog, setShowAssetUploadDialog] = useState(false);
+  const [deleteAsset, setDeleteAsset] = useState<BrandAsset | null>(null);
+  const [editAsset, setEditAsset] = useState<BrandAsset | null>(null);
+  const [selectedAssetForPanel, setSelectedAssetForPanel] = useState<BrandAsset | null>(null);
+  const [isBrandAdmin, setIsBrandAdmin] = useState(false);
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
   const [approvedSubmissions, setApprovedSubmissions] = useState(0);
   const [memberCount, setMemberCount] = useState(0);
   const [earnings, setEarnings] = useState<Transaction[]>([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [calculatedBudgetUsed, setCalculatedBudgetUsed] = useState<number | null>(null);
   const [members, setMembers] = useState<Array<{
     id: string;
     name: string;
@@ -170,6 +179,13 @@ function CampaignDetailsContent() {
 
   // Training hook
   const training = useTrainingCompletion(campaign?.blueprint_id || undefined);
+
+  // Clear selected asset when navigating away from assets tab
+  useEffect(() => {
+    if (activeSection.type !== 'assets') {
+      setSelectedAssetForPanel(null);
+    }
+  }, [activeSection.type]);
 
   // Account management state
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false);
@@ -239,17 +255,21 @@ function CampaignDetailsContent() {
   // Track if we've fetched complete data
   const [hasFetchedComplete, setHasFetchedComplete] = useState(false);
 
+  // Reset fetch flag when campaign ID changes (keep existing content visible during transition)
+  useEffect(() => {
+    setHasFetchedComplete(false);
+  }, [id]);
+
   // Fetch campaign data (always fetch to ensure complete data including asset_links)
   useEffect(() => {
     const fetchCampaign = async () => {
       if (!id) return;
-      // Skip if we've already fetched complete data
-      if (hasFetchedComplete) return;
+      // Skip if we've already fetched complete data for THIS campaign
+      // (campaign?.id check ensures we refetch when switching to a different campaign)
+      if (hasFetchedComplete && campaign?.id === id) return;
 
-      // If we have passed campaign, show it immediately but still fetch full data
-      if (passedCampaign) {
-        setLoading(false);
-      } else {
+      // Only show loading spinner on initial load, not when switching campaigns
+      if (!campaign) {
         setLoading(true);
       }
 
@@ -341,7 +361,9 @@ function CampaignDetailsContent() {
         accountLinksResult,
         blueprintResult,
         discordResult,
-        metricsResult
+        metricsResult,
+        brandMembershipResult,
+        campaignBudgetResult
       ] = await Promise.all([
         // 1. Submission stats
         supabase
@@ -375,10 +397,12 @@ function CampaignDetailsContent() {
           .order('created_at', { ascending: true })
           .limit(20),
 
-        // 5. Blueprint data
+        // 5. Blueprint data - fetch by blueprint_id if set, otherwise by brand_id
         campaign.blueprint_id
-          ? supabase.from('blueprints').select('content, assets').eq('id', campaign.blueprint_id).single()
-          : Promise.resolve({ data: null }),
+          ? supabase.from('blueprints').select('id, content, assets').eq('id', campaign.blueprint_id).maybeSingle()
+          : campaign.brand_id
+            ? supabase.from('blueprints').select('id, content, assets').eq('brand_id', campaign.brand_id).maybeSingle()
+            : Promise.resolve({ data: null }),
 
         // 6. Discord status
         supabase.from('profiles').select('discord_id').eq('id', user.id).single(),
@@ -389,7 +413,24 @@ function CampaignDetailsContent() {
           .select('total_views, recorded_at')
           .eq('campaign_id', campaign.id)
           .order('recorded_at', { ascending: false })
-          .limit(1)
+          .limit(1),
+
+        // 8. Brand membership check (for asset management)
+        campaign.brand_id
+          ? supabase
+              .from('brand_members')
+              .select('role')
+              .eq('brand_id', campaign.brand_id)
+              .eq('user_id', user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+
+        // 9. Campaign budget from wallet_transactions (includes balance_corrections)
+        supabase
+          .from('wallet_transactions')
+          .select('amount, type')
+          .eq('metadata->>campaign_id', campaign.id)
+          .in('type', ['earning', 'balance_correction'])
       ]);
 
       // Process submission stats
@@ -501,10 +542,28 @@ function CampaignDetailsContent() {
       } else {
         setExpectedPayout(null);
       }
+
+      // Process brand membership (for asset management permissions)
+      if (brandMembershipResult.data) {
+        const role = brandMembershipResult.data.role;
+        setIsBrandAdmin(role === 'owner' || role === 'admin');
+      } else {
+        setIsBrandAdmin(false);
+      }
+
+      // Process campaign budget from wallet_transactions
+      if (campaignBudgetResult.data && campaignBudgetResult.data.length > 0) {
+        const totalBudgetUsed = campaignBudgetResult.data.reduce((sum, txn) => {
+          return sum + (Number(txn.amount) || 0);
+        }, 0);
+        setCalculatedBudgetUsed(totalBudgetUsed);
+      } else {
+        setCalculatedBudgetUsed(null);
+      }
     };
 
     fetchAllSecondaryData();
-  }, [campaign?.id, campaign?.blueprint_id, campaign?.rpm_rate, campaign?.title, campaign?.brand_name, campaign?.brand_logo_url]);
+  }, [campaign?.id, campaign?.blueprint_id, campaign?.rpm_rate, campaign?.title, campaign?.brand_name, campaign?.brand_logo_url, campaign?.brand_id]);
 
   const handleLeaveCampaign = async () => {
     if (!campaign?.id) return;
@@ -1105,20 +1164,37 @@ function CampaignDetailsContent() {
 
   // Render assets content
   const renderAssetsContent = () => {
+    // Use the new AssetLibrary component with the brand_id
+    if (campaign.brand_id) {
+      return (
+        <div className="space-y-6">
+          <AssetLibrary
+            brandId={campaign.brand_id}
+            isAdmin={isBrandAdmin}
+            selectedAsset={selectedAssetForPanel}
+            onSelectAsset={setSelectedAssetForPanel}
+            onUpload={isBrandAdmin ? () => setShowAssetUploadDialog(true) : undefined}
+            onRequestAsset={() => setShowAssetRequestDialog(true)}
+            onEdit={isBrandAdmin ? (asset) => setEditAsset(asset) : undefined}
+            onDelete={isBrandAdmin ? (asset) => setDeleteAsset(asset) : undefined}
+          />
+        </div>
+      );
+    }
+
+    // Fallback for legacy assets (blueprintAssets / asset_links)
     const assets = blueprintAssets || campaign.asset_links || [];
 
     if (assets.length === 0) {
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold text-foreground mb-1 font-inter tracking-[-0.5px]">Assets</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-1 font-inter tracking-[-0.5px]">Folders</h2>
             <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Brand resources and materials</p>
           </div>
           <div className="flex flex-col items-center justify-center py-12 px-4 bg-muted/30 rounded-xl">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
+              <Icon icon="material-symbols:folder-outline" className="w-6 h-6 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground font-inter text-center">No assets available for this campaign</p>
           </div>
@@ -1129,7 +1205,7 @@ function CampaignDetailsContent() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-1 font-inter tracking-[-0.5px]">Assets</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1 font-inter tracking-[-0.5px]">Folders</h2>
           <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Brand resources and materials for your content</p>
         </div>
         <div className="grid gap-3">
@@ -1217,7 +1293,7 @@ function CampaignDetailsContent() {
       completedModuleIds={training.completedModuleIds}
       trainingProgress={training.progress}
       budget={campaign.budget}
-      budgetUsed={campaign.budget_used || 0}
+      budgetUsed={calculatedBudgetUsed ?? campaign.budget_used ?? 0}
       submissionCount={pendingSubmissions + approvedSubmissions}
       memberCount={memberCount}
       brandName={campaign.brand_name}
@@ -1274,7 +1350,7 @@ function CampaignDetailsContent() {
           completedModuleIds={training.completedModuleIds}
           trainingProgress={training.progress}
           budget={campaign.budget}
-          budgetUsed={campaign.budget_used || 0}
+          budgetUsed={calculatedBudgetUsed ?? campaign.budget_used ?? 0}
           submissionCount={pendingSubmissions + approvedSubmissions}
           // Right panel for mobile
           rightPanel={
@@ -1323,7 +1399,7 @@ function CampaignDetailsContent() {
             completedModuleIds={training.completedModuleIds}
             trainingProgress={training.progress}
             budget={campaign.budget}
-            budgetUsed={campaign.budget_used || 0}
+            budgetUsed={calculatedBudgetUsed ?? campaign.budget_used ?? 0}
             submissionCount={pendingSubmissions + approvedSubmissions}
             memberCount={memberCount}
             brandName={campaign.brand_name}
@@ -1355,36 +1431,50 @@ function CampaignDetailsContent() {
             </div>
           </main>
 
-          {/* Right Panel */}
-          <SourceDetailsRightPanel
-            members={members}
-            memberCount={memberCount}
-            currentUserId={currentUserId}
-            announcements={realAnnouncements}
-            onReaction={toggleReaction}
-            creatorStats={{
-              views: expectedPayout?.views || 0,
-              earnings: totalEarnings,
-              videos: approvedSubmissions,
-              percentile: memberCount > 10 && approvedSubmissions > 0
-                ? Math.min(95, Math.max(5, Math.floor((1 - (approvedSubmissions / Math.max(1, memberCount))) * 100)))
-                : undefined,
-            }}
-            deadlines={[
-              {
-                id: 'next-payout',
-                label: 'Next payout cycle',
-                date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-                type: 'payout' as const,
-              },
-              ...(campaign.end_date ? [{
-                id: 'campaign-end',
-                label: 'Campaign ends',
-                date: campaign.end_date,
-                type: 'campaign_end' as const,
-              }] : []),
-            ]}
-          />
+          {/* Right Panel - conditionally show asset detail or member panel */}
+          {activeSection.type === 'assets' && selectedAssetForPanel ? (
+            <AssetDetailPanel
+              asset={selectedAssetForPanel}
+              onClose={() => setSelectedAssetForPanel(null)}
+              onDownload={() => {
+                // Download handled by the panel itself
+              }}
+              onEdit={isBrandAdmin ? () => setEditAsset(selectedAssetForPanel) : undefined}
+              onDelete={isBrandAdmin ? () => setDeleteAsset(selectedAssetForPanel) : undefined}
+              className="h-full"
+              fullHeight
+            />
+          ) : (
+            <SourceDetailsRightPanel
+              members={members}
+              memberCount={memberCount}
+              currentUserId={currentUserId}
+              announcements={realAnnouncements}
+              onReaction={toggleReaction}
+              creatorStats={{
+                views: expectedPayout?.views || 0,
+                earnings: totalEarnings,
+                videos: approvedSubmissions,
+                percentile: memberCount > 10 && approvedSubmissions > 0
+                  ? Math.min(95, Math.max(5, Math.floor((1 - (approvedSubmissions / Math.max(1, memberCount))) * 100)))
+                  : undefined,
+              }}
+              deadlines={[
+                {
+                  id: 'next-payout',
+                  label: 'Next payout cycle',
+                  date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+                  type: 'payout' as const,
+                },
+                ...(campaign.end_date ? [{
+                  id: 'campaign-end',
+                  label: 'Campaign ends',
+                  date: campaign.end_date,
+                  type: 'campaign_end' as const,
+                }] : []),
+              ]}
+            />
+          )}
         </div>
       )}
 
@@ -1419,6 +1509,46 @@ function CampaignDetailsContent() {
           fetchStats();
         }}
       />
+
+      {/* Asset Request Dialog */}
+      {campaign.brand_id && (
+        <AssetRequestDialog
+          brandId={campaign.brand_id}
+          open={showAssetRequestDialog}
+          onOpenChange={setShowAssetRequestDialog}
+        />
+      )}
+
+      {/* Asset Upload Dialog (for brand admins) */}
+      {campaign.brand_id && isBrandAdmin && (
+        <AssetUploadDialog
+          brandId={campaign.brand_id}
+          open={showAssetUploadDialog || !!editAsset}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowAssetUploadDialog(false);
+              setEditAsset(null);
+            } else {
+              setShowAssetUploadDialog(true);
+            }
+          }}
+          editAsset={editAsset || undefined}
+          onEditComplete={() => {
+            setShowAssetUploadDialog(false);
+            setEditAsset(null);
+          }}
+        />
+      )}
+
+      {/* Asset Delete Dialog (for brand admins) */}
+      {campaign.brand_id && deleteAsset && (
+        <AssetDeleteDialog
+          asset={deleteAsset}
+          brandId={campaign.brand_id}
+          open={!!deleteAsset}
+          onOpenChange={(open) => !open && setDeleteAsset(null)}
+        />
+      )}
 
       {/* Link Account Dialog */}
       <LinkAccountDialog

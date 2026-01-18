@@ -56,16 +56,17 @@ import { MarkAsPostedDialog } from "./MarkAsPostedDialog";
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  rectIntersection,
   useSensor,
   useSensors,
   PointerSensor,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
+  useDraggable,
+  useDroppable,
 } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
-import { useDroppable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
+import { createPortal } from "react-dom";
 
 interface BoostVideoReviewQueueProps {
   boostId: string;
@@ -157,15 +158,20 @@ function DroppableColumn({
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({
-    id: column.id,
+    id: `column-${column.id}`,
+    data: {
+      type: "column",
+      columnId: column.id,
+    },
   });
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "flex-1 space-y-2 overflow-y-auto min-h-[200px] pr-0.5 rounded-lg transition-colors",
-        isOver && "bg-primary/5 ring-2 ring-primary/20 ring-inset"
+        "flex-1 space-y-2 overflow-y-auto min-h-[200px] pr-0.5 rounded-lg",
+        "transition-all duration-200 ease-out",
+        isOver && "bg-primary/10 ring-2 ring-primary/30 ring-inset"
       )}
     >
       {children}
@@ -205,17 +211,15 @@ function DraggableCard({
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
     isDragging,
-  } = useSortable({
+  } = useDraggable({
     id: submission.id,
+    data: {
+      type: "card",
+      submission,
+      columnId,
+    },
   });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
 
   const nextColumn = getNextColumn(columnId);
   const canMoveNext = nextColumn && (
@@ -227,12 +231,12 @@ function DraggableCard({
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      onClick={() => onOpenDrawer(submission)}
+      onClick={() => !isDragging && onOpenDrawer(submission)}
       className={cn(
-        "group rounded-lg border border-border/40 bg-card hover:border-border/60 transition-all cursor-pointer overflow-hidden",
+        "group rounded-lg border border-border/40 bg-card hover:border-border/60 cursor-pointer overflow-hidden",
+        "transition-[border-color,box-shadow,opacity] duration-200 ease-out",
         updating === submission.id && "opacity-50 pointer-events-none",
-        isDragging && "opacity-50 shadow-lg ring-2 ring-primary/30"
+        isDragging && "opacity-40 border-dashed border-primary/50"
       )}
     >
       {/* Video Thumbnail - Use iframe preview for better quality */}
@@ -287,9 +291,9 @@ function DraggableCard({
             {...attributes}
             {...listeners}
             onClick={(e) => e.stopPropagation()}
-            className="mt-0.5 p-0.5 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors touch-none"
+            className="mt-0.5 p-1.5 -ml-1.5 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-muted/50 rounded transition-colors touch-none select-none"
           >
-            <GripVertical className="w-3.5 h-3.5" />
+            <GripVertical className="w-4 h-4" />
           </button>
           <Avatar className="h-7 w-7 rounded-md border border-border/30 shrink-0">
             <AvatarImage src={submission.creator?.avatar_url || undefined} />
@@ -485,30 +489,36 @@ export function BoostVideoReviewQueue({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     })
   );
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    // Add grabbing cursor to body during drag
+    document.body.style.cursor = 'grabbing';
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    document.body.style.cursor = '';
 
     if (!over) return;
 
+    // Get the target column from the droppable's data
+    const overData = over.data.current;
+    if (!overData || overData.type !== "column") return;
+
+    const targetColumn = overData.columnId as KanbanColumn;
     const submissionId = active.id as string;
-    const targetColumn = over.id as KanbanColumn;
 
-    // Find the current submission
-    const submission = submissions.find(s => s.id === submissionId);
-    if (!submission) return;
+    // Get the source column from the draggable's data
+    const activeData = active.data.current;
+    const currentColumn = activeData?.columnId as KanbanColumn;
 
-    // Check if dropping in a different column
-    const currentColumn = submission.status as KanbanColumn;
+    // Don't do anything if dropping in the same column
     if (currentColumn === targetColumn) return;
 
     // Check permissions
@@ -999,7 +1009,7 @@ export function BoostVideoReviewQueue({
       {/* Kanban Board with Drag & Drop */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={rectIntersection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -1062,31 +1072,64 @@ export function BoostVideoReviewQueue({
           </div>
         </div>
 
-        {/* Drag Overlay */}
-        <DragOverlay>
-          {activeSubmission ? (
-            <div className="rounded-lg border border-primary/50 bg-card shadow-xl opacity-90 w-[200px]">
-              <div className="p-3">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6 rounded-md border border-border/30 shrink-0">
-                    <AvatarImage src={activeSubmission.creator?.avatar_url || undefined} />
-                    <AvatarFallback className="rounded-md bg-muted text-[9px] font-medium">
-                      {activeSubmission.creator?.username?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="font-medium text-xs font-inter tracking-[-0.2px] text-foreground truncate">
-                    {activeSubmission.creator?.full_name || activeSubmission.creator?.username || "Unknown"}
-                  </p>
+        {/* Drag Overlay - rendered in portal to appear above everything */}
+        {createPortal(
+          <DragOverlay
+            dropAnimation={{
+              duration: 200,
+              easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+            }}
+            style={{ zIndex: 9999 }}
+          >
+            {activeSubmission ? (
+              <div className="rounded-lg border-2 border-primary bg-card shadow-2xl w-[240px] cursor-grabbing rotate-2">
+                {/* Video Thumbnail */}
+                {activeSubmission.gdrive_file_id ? (
+                  <div className="relative aspect-video w-full bg-muted overflow-hidden rounded-t-lg">
+                    <img
+                      src={`https://drive.google.com/thumbnail?id=${activeSubmission.gdrive_file_id}&sz=w400`}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    {activeSubmission.duration_seconds && (
+                      <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-medium rounded font-inter tabular-nums">
+                        {Math.floor(activeSubmission.duration_seconds / 60)}:{(activeSubmission.duration_seconds % 60).toString().padStart(2, "0")}
+                      </span>
+                    )}
+                  </div>
+                ) : activeSubmission.gdrive_url ? (
+                  <div className="relative aspect-video w-full bg-muted/50 flex items-center justify-center rounded-t-lg">
+                    <Video className="w-8 h-8 text-muted-foreground/40" />
+                  </div>
+                ) : null}
+                <div className="p-3">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-7 w-7 rounded-md border border-border/30 shrink-0">
+                      <AvatarImage src={activeSubmission.creator?.avatar_url || undefined} />
+                      <AvatarFallback className="rounded-md bg-muted text-[10px] font-medium">
+                        {activeSubmission.creator?.username?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-xs font-inter tracking-[-0.2px] text-foreground truncate">
+                        {activeSubmission.creator?.full_name || activeSubmission.creator?.username || "Unknown"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-inter">
+                        {formatDistanceToNow(new Date(activeSubmission.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                  {cleanCaption(activeSubmission.caption) && (
+                    <p className="text-[11px] text-foreground/80 font-inter line-clamp-2 mt-2">
+                      {cleanCaption(activeSubmission.caption)}
+                    </p>
+                  )}
                 </div>
-                {activeSubmission.caption && (
-                  <p className="text-[10px] text-foreground/70 font-inter line-clamp-1 mt-2">
-                    {activeSubmission.caption}
-                  </p>
-                )}
               </div>
-            </div>
-          ) : null}
-        </DragOverlay>
+            ) : null}
+          </DragOverlay>,
+          document.body
+        )}
       </DndContext>
 
       {/* Feedback Dialog */}

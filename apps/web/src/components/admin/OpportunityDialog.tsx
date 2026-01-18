@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AdminConfirmDialog } from "@/components/admin/design-system/AdminDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,7 @@ export function OpportunityDialog({
   const [valuePeriod, setValuePeriod] = useState<"one_time" | "monthly" | "annual">("one_time");
   const [confidence, setConfidence] = useState(50);
   const [note, setNote] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const createOpp = useCreateOpportunity();
   const updateOpp = useUpdateOpportunity();
@@ -114,18 +116,23 @@ export function OpportunityDialog({
 
   const handleDelete = () => {
     if (!opportunity) return;
+    setDeleteConfirmOpen(true);
+  };
 
-    if (confirm("Are you sure you want to delete this opportunity? This cannot be undone.")) {
-      deleteOpp.mutate(
-        {
-          brandId,
-          closeOpportunityId: opportunity.close_opportunity_id,
+  const executeDelete = () => {
+    if (!opportunity) return;
+    deleteOpp.mutate(
+      {
+        brandId,
+        closeOpportunityId: opportunity.close_opportunity_id,
+      },
+      {
+        onSuccess: () => {
+          setDeleteConfirmOpen(false);
+          onOpenChange(false);
         },
-        {
-          onSuccess: () => onOpenChange(false),
-        }
-      );
-    }
+      }
+    );
   };
 
   const getStatusColor = (statusId: string) => {
@@ -297,6 +304,17 @@ export function OpportunityDialog({
           </div>
         </form>
       </DialogContent>
+
+      <AdminConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Opportunity"
+        description="Are you sure you want to delete this opportunity? This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={executeDelete}
+        variant="destructive"
+        loading={isDeleting}
+      />
     </Dialog>
   );
 }

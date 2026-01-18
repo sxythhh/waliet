@@ -56,10 +56,7 @@ export function DiscordServerSettings({
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const [rolesError, setRolesError] = useState<string | null>(null);
 
-  console.log('[DiscordServerSettings] Component rendered with brandId:', brandId);
-
   useEffect(() => {
-    console.log('[DiscordServerSettings] useEffect triggered, calling fetchGuildInfo');
     fetchGuildInfo();
   }, [brandId]);
 
@@ -88,26 +85,14 @@ export function DiscordServerSettings({
         hasCustom = !!customPlanResult.data;
       } catch {
         // Custom plan check failed (likely RLS), continue without it
-        console.log('[DiscordServerSettings] Custom plan check failed, continuing...');
       }
 
       // Determine if brand has an active plan
       const hasActiveStatus = brand?.subscription_status === 'active';
       const hasPlan = Boolean(brand?.subscription_plan);
 
-      console.log('[DiscordServerSettings] Brand data:', {
-        brandId,
-        subscription_status: brand?.subscription_status,
-        subscription_plan: brand?.subscription_plan,
-        hasCustom,
-        hasActiveStatus,
-        hasPlan,
-        result: hasActiveStatus || hasPlan || hasCustom
-      });
-
       // Allow Discord if any plan indicator is present
       const activePlanResult = hasActiveStatus || hasPlan || hasCustom;
-      console.log('[DiscordServerSettings] Setting hasActivePlan to:', activePlanResult);
       setHasActivePlan(activePlanResult);
 
       if (brand?.discord_guild_id) {

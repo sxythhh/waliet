@@ -161,13 +161,19 @@ export function CampaignRowCard({
 
             {/* Budget Progress */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground whitespace-nowrap font-semibold">
-                {formatCurrency(budgetUsed)}/{formatCurrency(budget)}
+              <span className="text-xs whitespace-nowrap font-semibold text-foreground">
+                {formatCurrency(Math.max(0, budget - budgetUsed))} left
               </span>
-              <div className="flex-1 max-w-32">
-                <Progress value={budgetPercentage} className="h-1.5" />
+              {/* Continuous progress bar */}
+              <div className="flex-1 max-w-32 h-1 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, budgetPercentage)}%` }}
+                />
               </div>
-              
+              <span className="text-xs text-muted-foreground">
+                {Math.round(budgetPercentage)}%
+              </span>
             </div>
 
             {/* Tags Row */}

@@ -49,6 +49,7 @@ import {
   TRANSITIONS,
   TABLE,
 } from "@/components/admin/design-system";
+import { AdminConfirmDialog } from "@/components/admin/design-system/AdminDialog";
 
 interface TransactionMetadata {
   campaign_id?: string;
@@ -268,6 +269,10 @@ export default function FinanceOverviewContent() {
   const [undoingTransaction, setUndoingTransaction] = useState<string | null>(null);
   const [processingPayout, setProcessingPayout] = useState<string | null>(null);
 
+  // Undo confirmation dialog
+  const [undoConfirmOpen, setUndoConfirmOpen] = useState(false);
+  const [transactionToUndo, setTransactionToUndo] = useState<string | null>(null);
+
   // Budget adjustment dialog
   const [budgetAdjustmentDialogOpen, setBudgetAdjustmentDialogOpen] = useState(false);
 
@@ -450,17 +455,24 @@ export default function FinanceOverviewContent() {
   }, [fetchUserData]);
 
   // Transaction actions
-  const handleUndoTransaction = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to undo this transaction?')) return;
-    setUndoingTransaction(transactionId);
+  const requestUndoTransaction = (transactionId: string) => {
+    setTransactionToUndo(transactionId);
+    setUndoConfirmOpen(true);
+  };
+
+  const executeUndoTransaction = async () => {
+    if (!transactionToUndo) return;
+    setUndoingTransaction(transactionToUndo);
     try {
       const { error } = await supabase.functions.invoke('undo-transaction', {
-        body: { transaction_id: transactionId }
+        body: { transaction_id: transactionToUndo }
       });
       if (error) throw error;
       toast({ title: "Transaction undone successfully" });
       fetchTransactions();
       setContextOpen(false);
+      setUndoConfirmOpen(false);
+      setTransactionToUndo(null);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast({ variant: "destructive", title: "Error", description: errorMessage });
@@ -921,7 +933,7 @@ export default function FinanceOverviewContent() {
                               </TableCell>
                               <TableCell className="py-3 text-right" onClick={e => e.stopPropagation()}>
                                 {!tx.metadata?.reversed && (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" aria-label="Undo transaction" onClick={() => handleUndoTransaction(tx.id)} disabled={undoingTransaction === tx.id}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10" aria-label="Undo transaction" onClick={() => requestUndoTransaction(tx.id)} disabled={undoingTransaction === tx.id}>
                                     {undoingTransaction === tx.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
                                   </Button>
                                 )}
@@ -1079,7 +1091,7 @@ export default function FinanceOverviewContent() {
                   </div>
 
                   {!selectedTransaction.metadata?.reversed && (
-                    <Button variant="outline" className="w-full gap-2 text-rose-500 hover:text-rose-600 border-rose-500/30 hover:bg-rose-500/10" onClick={() => handleUndoTransaction(selectedTransaction.id)} disabled={undoingTransaction === selectedTransaction.id}>
+                    <Button variant="outline" className="w-full gap-2 text-rose-500 hover:text-rose-600 border-rose-500/30 hover:bg-rose-500/10" onClick={() => requestUndoTransaction(selectedTransaction.id)} disabled={undoingTransaction === selectedTransaction.id}>
                       {undoingTransaction === selectedTransaction.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
                       Undo Transaction
                     </Button>
@@ -1320,6 +1332,21 @@ export default function FinanceOverviewContent() {
           open={budgetAdjustmentDialogOpen}
           onOpenChange={setBudgetAdjustmentDialogOpen}
           onSuccess={fetchAllData}
+        />
+
+        {/* Undo Transaction Confirmation */}
+        <AdminConfirmDialog
+          open={undoConfirmOpen}
+          onOpenChange={(open) => {
+            setUndoConfirmOpen(open);
+            if (!open) setTransactionToUndo(null);
+          }}
+          title="Undo Transaction"
+          description="Are you sure you want to undo this transaction? This will reverse the transaction and update wallet balances."
+          confirmLabel="Undo"
+          onConfirm={executeUndoTransaction}
+          variant="destructive"
+          loading={!!undoingTransaction}
         />
       </div>
     </>

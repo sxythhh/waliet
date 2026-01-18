@@ -293,14 +293,6 @@ export function SettingsTab() {
       return;
     }
     if (accounts) {
-      console.log('Fetched social accounts:', accounts.length, 'accounts');
-      // Log demographic submissions for debugging
-      accounts.forEach(acc => {
-        if (acc.demographic_submissions?.length) {
-          console.log(`Account ${acc.username}: ${acc.demographic_submissions.length} demographic submissions`);
-        }
-      });
-
       // Fetch connected campaigns for each account
       const accountsWithCampaigns = await Promise.all(accounts.map(async account => {
         const {
@@ -787,49 +779,6 @@ export function SettingsTab() {
           }}
         />
       )}
-
-      {/* Connected Accounts */}
-      <Card ref={connectedAccountsRef} className="bg-background border-0">
-        <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between py-[5px]">
-            <CardTitle className="text-lg">Connected Accounts</CardTitle>
-            <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="font-inter font-medium tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7] rounded-md">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Account
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="px-0 pt-3">
-          {socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center py-8 border border-border rounded-xl">
-              <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <img alt="" className="w-7 h-7" src={resolvedTheme === 'dark' ? noAccountsIcon : noAccountsIconBlack} />
-              </div>
-              <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
-              <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
-            </div> : <SocialAccountsTable
-              accounts={socialAccounts}
-              onRefresh={fetchSocialAccounts}
-              onManageAccount={account => {
-                setSelectedAccountForManage(account);
-                setShowManageAccountDialog(true);
-              }}
-              onUnlinkCampaign={handleUnlinkCampaign}
-              onVerifyAccount={account => {
-                setSelectedAccountForVerification(account);
-                setShowVerifyAccountDialog(true);
-              }}
-              onSubmitDemographics={account => {
-                setSelectedAccountForDemographics(account);
-                setShowDemographicsDialog(true);
-              }}
-              // zkTLS verification disabled - TikTok blocks attestor IPs
-              // onVerifyZkTLS={account => {
-              //   setSelectedAccountForZkTLS(account);
-              //   setShowZkTLSDialog(true);
-              // }}
-            />}
-        </CardContent>
-      </Card>
 
       {/* Public Profile Link */}
       

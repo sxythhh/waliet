@@ -91,19 +91,15 @@ export function useReclaimVerification({
   // Check if the browser extension is installed
   useEffect(() => {
     const checkExtension = async () => {
-      console.log('[zkTLS] Checking for extension, ID:', EXTENSION_ID);
       if (!EXTENSION_ID) {
-        console.log('[zkTLS] No extension ID configured');
         setIsExtensionAvailable(false);
         return;
       }
       try {
-        console.log('[zkTLS] Calling isExtensionInstalled...');
         const installed = await reclaimExtensionSDK.isExtensionInstalled({
           extensionID: EXTENSION_ID,
           timeout: 5000,
         });
-        console.log('[zkTLS] Extension installed:', installed);
         setIsExtensionAvailable(installed);
       } catch (err) {
         console.error('[zkTLS] Extension check failed:', err);
@@ -338,10 +334,6 @@ export function useReclaimVerification({
     try {
       // Check if this platform is known to block attestor datacenter IPs
       const platformBlocked = isPlatformBlocked(platform);
-
-      if (platformBlocked) {
-        console.log(`[zkTLS] Platform "${platform}" blocks attestor IPs, using mobile QR flow`);
-      }
 
       // Use mobile QR code flow for blocked platforms, or if extension not available
       if (platformBlocked || !isExtensionAvailable || !EXTENSION_ID) {

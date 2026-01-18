@@ -118,7 +118,11 @@ export function ConnectedAccountsScreen() {
                         style={styles.accountAvatar}
                       />
                     ) : (
-                      <Icon name={config.icon} size={20} color={colors.foreground} />
+                      <Image
+                        source={config.logoWhite}
+                        style={styles.platformLogo}
+                        resizeMode="contain"
+                      />
                     )}
                   </View>
                   <View style={styles.accountInfo}>
@@ -176,10 +180,13 @@ export function ConnectedAccountsScreen() {
                     isConnected && styles.platformChipConnected,
                   ]}
                 >
-                  <Icon
-                    name={config.icon}
-                    size={16}
-                    color={isConnected ? colors.success : colors.mutedForeground}
+                  <Image
+                    source={config.logoBlack}
+                    style={[
+                      styles.platformChipLogo,
+                      isConnected && styles.platformChipLogoConnected,
+                    ]}
+                    resizeMode="contain"
                   />
                   <Text
                     style={[
@@ -303,6 +310,10 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
   },
+  platformLogo: {
+    width: 24,
+    height: 24,
+  },
   accountInfo: {
     flex: 1,
   },
@@ -398,5 +409,14 @@ const styles = StyleSheet.create({
   },
   platformChipTextConnected: {
     color: colors.success,
+  },
+  platformChipLogo: {
+    width: 16,
+    height: 16,
+    opacity: 0.6,
+  },
+  platformChipLogoConnected: {
+    opacity: 1,
+    tintColor: colors.success,
   },
 });

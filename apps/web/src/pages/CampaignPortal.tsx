@@ -77,6 +77,9 @@ interface BountyCampaign {
   status: string;
   blueprint_id: string | null;
   slug: string | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
 }
 
 interface Blueprint {
@@ -395,14 +398,24 @@ export default function CampaignPortal() {
   const stats: { icon: React.ReactNode; label: string; value: string }[] = [];
 
   if (isBoost && boostCampaign) {
+    const isFlatRate = boostCampaign.payment_model === 'flat_rate';
+
     if (settings.show_budget) {
-      stats.push({
-        icon: <DollarSign className="h-4 w-4" />,
-        label: "Monthly Pay",
-        value: `$${boostCampaign.monthly_retainer.toLocaleString()}`,
-      });
+      if (isFlatRate) {
+        stats.push({
+          icon: <DollarSign className="h-4 w-4" />,
+          label: "Per Post",
+          value: `$${boostCampaign.flat_rate_min || 0} - $${boostCampaign.flat_rate_max || 0}`,
+        });
+      } else {
+        stats.push({
+          icon: <DollarSign className="h-4 w-4" />,
+          label: "Monthly Pay",
+          value: `$${boostCampaign.monthly_retainer.toLocaleString()}`,
+        });
+      }
     }
-    if (settings.show_video_count) {
+    if (settings.show_video_count && boostCampaign.videos_per_month > 0) {
       stats.push({
         icon: <Video className="h-4 w-4" />,
         label: "Videos",
@@ -410,11 +423,12 @@ export default function CampaignPortal() {
       });
     }
     if (settings.show_creator_count) {
-      const spotsLeft = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
+      const hasMaxCreators = boostCampaign.max_accepted_creators > 0;
+      const spotsLeft = hasMaxCreators ? boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count : -1;
       stats.push({
         icon: <Users className="h-4 w-4" />,
         label: "Spots Left",
-        value: `${spotsLeft}`,
+        value: spotsLeft < 0 ? "Unlimited" : `${spotsLeft}`,
       });
     }
   } else if (campaign) {

@@ -18,8 +18,12 @@ export interface BoostDiscoverCardProps {
   videos_per_month: number;
   max_accepted_creators: number;
   accepted_creators_count: number;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
   isEnded?: boolean;
   isBookmarked?: boolean;
+  hasApplied?: boolean;
   slug?: string;
   created_at?: string;
   tags?: string[] | null;
@@ -40,8 +44,13 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   videos_per_month,
   max_accepted_creators,
   accepted_creators_count,
+  payment_model,
+  flat_rate_min,
+  flat_rate_max,
   isEnded,
   isBookmarked,
+  hasApplied,
+  slug,
   created_at,
   tags,
   content_distribution,
@@ -51,10 +60,12 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
 }: BoostDiscoverCardProps) {
   const isEditorBoost = content_distribution === 'brand_accounts';
   const navigate = useNavigate();
-  const spotsRemaining = max_accepted_creators - accepted_creators_count;
-  const isFull = spotsRemaining <= 0;
+  const isFlatRate = payment_model === 'flat_rate';
+  const hasMaxCreators = max_accepted_creators > 0;
+  const spotsRemaining = hasMaxCreators ? max_accepted_creators - accepted_creators_count : -1;
+  const isFull = hasMaxCreators && spotsRemaining <= 0;
   const perVideoRate = videos_per_month > 0 ? monthly_retainer / videos_per_month : 0;
-  return <div className={cn("group relative rounded-xl overflow-hidden transition-all duration-200", "border border-border/60 hover:border-border", "bg-transparent hover:bg-muted/20", isEnded ? "opacity-50 cursor-not-allowed" : "cursor-pointer")} onClick={onClick}>
+  return <div className={cn("group relative rounded-xl overflow-hidden transition-all duration-200 flex flex-col", "border border-border/60 hover:border-border", "bg-transparent hover:bg-muted/20", isEnded ? "opacity-50 cursor-not-allowed" : "cursor-pointer")} onClick={onClick}>
       {/* Bookmark & Fullscreen Buttons - Always visible on mobile, hover on desktop */}
       <div className="absolute top-3 right-3 z-[5] flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
         {onFullscreenClick && <button onClick={onFullscreenClick} className="md:hidden p-1.5 rounded-md bg-background/90 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -80,18 +91,30 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         {/* Stats */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-inter tracking-[-0.5px]">
-              <span className="text-foreground font-medium">${monthly_retainer}</span>/mo
-            </span>
-            <span className="text-border">·</span>
-            <span className="font-inter tracking-[-0.5px]">
-              <span className="text-foreground font-medium">{videos_per_month}</span>
-              <span className="text-muted-foreground">videos</span>
-            </span>
-            <span className="text-border">·</span>
-            <span className="font-inter tracking-[-0.5px]">
-              <span className="text-foreground font-medium">${perVideoRate.toFixed(0)}</span>/video
-            </span>
+            {isFlatRate ? (
+              <span className="font-inter tracking-[-0.5px]">
+                <span className="text-foreground font-medium">${flat_rate_min || 0} - ${flat_rate_max || 0}</span>/post
+              </span>
+            ) : (
+              <>
+                <span className="font-inter tracking-[-0.5px]">
+                  <span className="text-foreground font-medium">${monthly_retainer}</span>/mo
+                </span>
+                {videos_per_month > 0 && (
+                  <>
+                    <span className="text-border">·</span>
+                    <span className="font-inter tracking-[-0.5px]">
+                      <span className="text-foreground font-medium">{videos_per_month}</span>
+                      <span className="text-muted-foreground">videos</span>
+                    </span>
+                    <span className="text-border">·</span>
+                    <span className="font-inter tracking-[-0.5px]">
+                      <span className="text-foreground font-medium">${perVideoRate.toFixed(0)}</span>/video
+                    </span>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -117,19 +140,23 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
 
         {/* Spots Info */}
         <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
-          {isEnded ? <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+          {hasApplied ? <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">
+              Applied
+            </span> : isEnded ? <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
               Ended
             </span> : isFull ? <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
               No spots available
+            </span> : !hasMaxCreators ? <span className="text-xs text-muted-foreground">
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">Unlimited</span> spots
             </span> : <span className="text-xs text-muted-foreground">
               <span className="text-emerald-600 dark:text-emerald-400 font-medium">{spotsRemaining}</span> spots left
             </span>}
-          
+
         </div>
       </div>
 
       {/* Brand Footer */}
-      <div className="px-3 py-2 bg-muted/40 dark:bg-muted border-t border-border/40 flex items-center justify-between gap-2">
+      <div className="px-3 py-2 bg-muted/40 dark:bg-[#0e0e0e] border-t border-border/40 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {brand_logo_url ? <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 bg-background">
               <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-cover" />

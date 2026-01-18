@@ -228,28 +228,36 @@ export function calculateTierProgress(
       name: 'Months Active',
       current: currentMetrics.months_active || 0,
       required: nextTierCriteria.min_months_active,
-      progress: Math.min(100, ((currentMetrics.months_active || 0) / nextTierCriteria.min_months_active) * 100),
+      progress: nextTierCriteria.min_months_active > 0
+        ? Math.min(100, ((currentMetrics.months_active || 0) / nextTierCriteria.min_months_active) * 100)
+        : 100,
       met: (currentMetrics.months_active || 0) >= nextTierCriteria.min_months_active,
     },
     {
       name: 'Avg Views',
       current: currentMetrics.avg_views || 0,
       required: nextTierCriteria.min_avg_views,
-      progress: Math.min(100, ((currentMetrics.avg_views || 0) / nextTierCriteria.min_avg_views) * 100),
+      progress: nextTierCriteria.min_avg_views > 0
+        ? Math.min(100, ((currentMetrics.avg_views || 0) / nextTierCriteria.min_avg_views) * 100)
+        : 100,
       met: (currentMetrics.avg_views || 0) >= nextTierCriteria.min_avg_views,
     },
     {
       name: 'Completion Rate',
       current: (currentMetrics.completion_rate || 0) * 100,
       required: nextTierCriteria.min_completion_rate * 100,
-      progress: Math.min(100, ((currentMetrics.completion_rate || 0) / nextTierCriteria.min_completion_rate) * 100),
+      progress: nextTierCriteria.min_completion_rate > 0
+        ? Math.min(100, ((currentMetrics.completion_rate || 0) / nextTierCriteria.min_completion_rate) * 100)
+        : 100,
       met: (currentMetrics.completion_rate || 0) >= nextTierCriteria.min_completion_rate,
     },
     {
       name: 'Engagement Rate',
       current: (currentMetrics.engagement_rate || 0) * 100,
       required: nextTierCriteria.min_engagement_rate * 100,
-      progress: Math.min(100, ((currentMetrics.engagement_rate || 0) / nextTierCriteria.min_engagement_rate) * 100),
+      progress: nextTierCriteria.min_engagement_rate > 0
+        ? Math.min(100, ((currentMetrics.engagement_rate || 0) / nextTierCriteria.min_engagement_rate) * 100)
+        : 100,
       met: (currentMetrics.engagement_rate || 0) >= nextTierCriteria.min_engagement_rate,
     },
   ];

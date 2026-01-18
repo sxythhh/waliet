@@ -27,17 +27,40 @@ export function WalletDropdown({
   const [balance, setBalance] = useState<number>(0);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<number>(0);
   const [pendingBoostEarnings, setPendingBoostEarnings] = useState<number>(0);
+  const [effectiveUserId, setEffectiveUserId] = useState<string | undefined>(user?.id);
+
+  // Sync effectiveUserId with user from context, or fetch directly if context is stale
+  useEffect(() => {
+    const syncUserId = async () => {
+      if (user?.id) {
+        setEffectiveUserId(user.id);
+      } else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          setEffectiveUserId(session.user.id);
+        }
+      }
+    };
+    syncUserId();
+  }, [user?.id]);
+
   const {
     summary: ledgerSummary
-  } = usePaymentLedger(user?.id);
+  } = usePaymentLedger(effectiveUserId);
 
   const fetchWalletData = useCallback(async () => {
-    if (!user) return;
+    // Get userId from state or fetch directly
+    let userId = effectiveUserId;
+    if (!userId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id;
+    }
+    if (!userId) return;
 
     // Fetch wallet balance
     const {
       data: walletData
-    } = await supabase.from("wallets").select("balance").eq("user_id", user.id).single();
+    } = await supabase.from("wallets").select("balance").eq("user_id", userId).single();
     if (walletData) {
       setBalance(walletData.balance || 0);
     }
@@ -45,7 +68,7 @@ export function WalletDropdown({
     // Fetch pending withdrawals (in transit)
     const {
       data: payoutRequests
-    } = await supabase.from("payout_requests").select("amount").eq("user_id", user.id).in("status", ["pending", "in_transit"]);
+    } = await supabase.from("payout_requests").select("amount").eq("user_id", userId).in("status", ["pending", "in_transit"]);
     if (payoutRequests) {
       const totalPending = payoutRequests.reduce((sum, req) => sum + (req.amount || 0), 0);
       setPendingWithdrawals(totalPending);
@@ -54,18 +77,18 @@ export function WalletDropdown({
     // Fetch pending boost earnings
     const {
       data: boostSubmissions
-    } = await supabase.from("boost_video_submissions").select("payout_amount").eq("user_id", user.id).eq("status", "approved");
+    } = await supabase.from("boost_video_submissions").select("payout_amount").eq("user_id", userId).eq("status", "approved");
     if (boostSubmissions) {
       const totalBoost = boostSubmissions.reduce((sum, sub) => sum + (sub.payout_amount || 0), 0);
       setPendingBoostEarnings(totalBoost);
     }
-  }, [user]);
+  }, [effectiveUserId]);
 
   useEffect(() => {
-    if (user) {
+    if (effectiveUserId) {
       fetchWalletData();
     }
-  }, [user, fetchWalletData]);
+  }, [effectiveUserId, fetchWalletData]);
   const handleWithdraw = () => {
     setOpen(false);
     setWithdrawDialogOpen(true);

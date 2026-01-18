@@ -173,7 +173,19 @@ serve(async (req) => {
       });
     }
 
-    const companyData = JSON.parse(companyResponseText);
+    let companyData;
+    try {
+      companyData = JSON.parse(companyResponseText);
+    } catch (parseError) {
+      console.error('Failed to parse Whop company response:', companyResponseText);
+      return new Response(JSON.stringify({
+        error: 'Invalid response from Whop API',
+        details: 'Failed to parse company creation response'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const newCompanyId = companyData.id;
     console.log('Whop company created:', newCompanyId);
 
@@ -218,7 +230,19 @@ serve(async (req) => {
       });
     }
 
-    const accountLinkData = JSON.parse(linkResponseText);
+    let accountLinkData;
+    try {
+      accountLinkData = JSON.parse(linkResponseText);
+    } catch (parseError) {
+      console.error('Failed to parse Whop account link response:', linkResponseText);
+      return new Response(JSON.stringify({
+        error: 'Invalid response from Whop API',
+        details: 'Failed to parse account link response'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     console.log('Whop account link created:', accountLinkData);
 
     return new Response(JSON.stringify({ 

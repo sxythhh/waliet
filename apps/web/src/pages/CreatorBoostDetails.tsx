@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,8 @@ import youtubeIcon from "@/assets/youtube-logo-white.png";
 import youtubeIconBlack from "@/assets/youtube-logo-black-new.png";
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
 import { TransactionsTable, Transaction } from "@/components/dashboard/TransactionsTable";
+import { AssetLibrary, AssetRequestDialog, AssetUploadDialog, AssetDeleteDialog, AssetDetailPanel } from "@/components/assets";
+import type { BrandAsset } from "@/types/assets";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
 import {
   SourceDetailsSidebarProvider,
@@ -40,11 +42,14 @@ interface CreatorContract {
   title: string | null;
   monthly_rate: number | null;
   videos_per_month: number | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  per_post_rate?: number | null;
 }
 
 interface Boost {
   id: string;
   title: string;
+  brand_id?: string;
   monthly_retainer: number;
   videos_per_month: number;
   content_style_requirements?: string | null;
@@ -56,6 +61,10 @@ interface Boost {
   brand_color?: string | null;
   discord_guild_id?: string | null;
   content_distribution?: string | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
+  slug?: string | null;
   brands?: {
     name: string;
     logo_url: string | null;
@@ -108,6 +117,7 @@ function BoostDetailsContent() {
   const [earnings, setEarnings] = useState<Transaction[]>([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [contract, setContract] = useState<CreatorContract | null>(null);
+  const [approvedRate, setApprovedRate] = useState<number | null>(null);
   const [members, setMembers] = useState<Array<{
     id: string;
     name: string;
@@ -129,7 +139,20 @@ function BoostDetailsContent() {
   // Editor status for GDrive video submission
   const [isEditor, setIsEditor] = useState(false);
   const [showGDriveSubmitDialog, setShowGDriveSubmitDialog] = useState(false);
+  const [showAssetRequestDialog, setShowAssetRequestDialog] = useState(false);
+  const [showAssetUploadDialog, setShowAssetUploadDialog] = useState(false);
+  const [deleteAsset, setDeleteAsset] = useState<BrandAsset | null>(null);
+  const [editAsset, setEditAsset] = useState<BrandAsset | null>(null);
+  const [selectedAssetForPanel, setSelectedAssetForPanel] = useState<BrandAsset | null>(null);
+  const [isBrandAdmin, setIsBrandAdmin] = useState(false);
   const [brandId, setBrandId] = useState<string | null>(null);
+
+  // Clear selected asset when navigating away from assets tab
+  useEffect(() => {
+    if (activeSection.type !== 'assets') {
+      setSelectedAssetForPanel(null);
+    }
+  }, [activeSection.type]);
 
   // Conversation state
   const [creatingConversation, setCreatingConversation] = useState(false);
@@ -164,7 +187,7 @@ function BoostDetailsContent() {
       if (brandColor && brandLogo) return;
 
       const { data: boostData } = await supabase
-        .from("boost_campaigns")
+        .from("bounty_campaigns")
         .select("brand_id, brands(brand_color, logo_url)")
         .eq("id", boost.id)
         .single();
@@ -188,18 +211,32 @@ function BoostDetailsContent() {
     fetchBrandData();
   }, [boost?.id]);
 
-  // Fetch boost data only if not passed via navigation state or missing critical fields
+  // Track the last fetched ID to avoid duplicate fetches
+  const lastFetchedIdRef = useRef<string | null>(null);
+
+  // Fetch boost data when ID changes
   useEffect(() => {
     const fetchBoost = async () => {
       if (!id) return;
-      // Skip fetch if we already have complete boost data from navigation
-      // Always fetch if content_distribution is missing (needed for determining submission type)
-      if (boost && boost.content_distribution !== undefined) {
+
+      // Skip fetch if we already fetched this exact ID and have complete data
+      if (lastFetchedIdRef.current === id && boost && boost.id === id && boost.content_distribution !== undefined) {
         setLoading(false);
         return;
       }
 
+      // Reset secondary state when switching to a different boost
+      if (boost && boost.id !== id) {
+        setSubmissions([]);
+        setEarnings([]);
+        setContract(null);
+        setMembers([]);
+        setMemberCount(0);
+        setApprovedRate(null);
+      }
+
       setLoading(true);
+      lastFetchedIdRef.current = id;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -209,7 +246,7 @@ function BoostDetailsContent() {
 
       // Fetch boost details
       const { data: boostData, error } = await supabase
-        .from("boost_campaigns")
+        .from("bounty_campaigns")
         .select(`
           *,
           brands (
@@ -218,14 +255,6 @@ function BoostDetailsContent() {
             is_verified,
             slug,
             brand_color
-          ),
-          blueprints (
-            content,
-            hooks,
-            talking_points,
-            dos_and_donts,
-            call_to_action,
-            content_guidelines
           )
         `)
         .eq("id", id)
@@ -241,8 +270,18 @@ function BoostDetailsContent() {
         return;
       }
 
+      // Fetch blueprint separately if blueprint_id exists
+      let blueprintData = null;
+      if (boostData.blueprint_id) {
+        const { data: blueprint } = await supabase
+          .from("blueprints")
+          .select("content, hooks, talking_points, dos_and_donts, call_to_action, content_guidelines")
+          .eq("id", boostData.blueprint_id)
+          .single();
+        blueprintData = blueprint;
+      }
+
       const brandData = boostData.brands as any;
-      const blueprintData = boostData.blueprints as any;
       setBoost({
         ...boostData,
         brand_name: brandData?.name,
@@ -259,7 +298,7 @@ function BoostDetailsContent() {
     };
 
     fetchBoost();
-  }, [id, navigate, toast, boost]);
+  }, [id, navigate, toast]);
 
   // Consolidated fetch for all secondary data - runs in parallel for faster loading
   useEffect(() => {
@@ -278,7 +317,9 @@ function BoostDetailsContent() {
         applicationsResult,
         discordResult,
         boostDataResult,
-        earningsResult
+        earningsResult,
+        brandMembershipResult,
+        userApplicationResult
       ] = await Promise.all([
         // 1. Submissions
         supabase
@@ -292,7 +333,7 @@ function BoostDetailsContent() {
         // 2. Contract
         supabase
           .from("creator_contracts")
-          .select("id, status, contract_url, custom_terms, signed_at, sent_at, signature_url, title, monthly_rate, videos_per_month")
+          .select("id, status, contract_url, custom_terms, signed_at, sent_at, signature_url, title, monthly_rate, videos_per_month, payment_model, per_post_rate")
           .eq("boost_id", boost.id)
           .eq("creator_id", user.id)
           .maybeSingle(),
@@ -310,7 +351,7 @@ function BoostDetailsContent() {
         supabase.from('profiles').select('discord_id').eq('id', user.id).single(),
 
         // 5. Boost brand_id for editor check
-        supabase.from('boost_campaigns').select('brand_id').eq('id', boost.id).single(),
+        supabase.from('bounty_campaigns').select('brand_id').eq('id', boost.id).single(),
 
         // 6. Earnings
         supabase
@@ -318,7 +359,19 @@ function BoostDetailsContent() {
           .select('*')
           .eq('user_id', user.id)
           .in('type', ['earning', 'boost_earning'])
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+
+        // 7. Brand membership check (for asset management) - will be processed after boostDataResult
+        Promise.resolve({ data: null }), // Placeholder, will fetch after getting brand_id
+
+        // 8. Current user's application (for approved_rate in flat-rate boosts)
+        supabase
+          .from('bounty_applications')
+          .select('approved_rate')
+          .eq('bounty_campaign_id', boost.id)
+          .eq('user_id', user.id)
+          .eq('status', 'accepted')
+          .maybeSingle()
       ]);
 
       // Process submissions
@@ -331,24 +384,48 @@ function BoostDetailsContent() {
         setContract(contractResult.data as CreatorContract);
       }
 
+      // Process user's application approved_rate (for flat-rate boosts)
+      if (userApplicationResult.data?.approved_rate) {
+        setApprovedRate(userApplicationResult.data.approved_rate);
+      }
+
       // Process Discord status
       setHasUserDiscord(!!discordResult.data?.discord_id);
 
-      // Process brand ID and editor status
+      // Process brand ID, editor status, and brand admin status
       if (boostDataResult.data?.brand_id) {
-        setBrandId(boostDataResult.data.brand_id);
+        const fetchedBrandId = boostDataResult.data.brand_id;
+        setBrandId(fetchedBrandId);
 
-        // Check editor status
-        const { data: assignments } = await supabase
-          .from('boost_editor_accounts')
-          .select('id')
-          .eq('boost_id', boost.id)
-          .eq('user_id', user.id)
-          .limit(1);
+        // Check editor status and brand membership in parallel
+        const [editorResult, membershipResult] = await Promise.all([
+          supabase
+            .from('boost_editor_accounts')
+            .select('id')
+            .eq('boost_id', boost.id)
+            .eq('user_id', user.id)
+            .limit(1),
+          supabase
+            .from('brand_members')
+            .select('role')
+            .eq('brand_id', fetchedBrandId)
+            .eq('user_id', user.id)
+            .maybeSingle()
+        ]);
 
-        if (assignments && assignments.length > 0) {
+        if (editorResult.data && editorResult.data.length > 0) {
           setIsEditor(true);
         }
+
+        // Process brand membership (for asset management permissions)
+        if (membershipResult.data) {
+          const role = membershipResult.data.role;
+          setIsBrandAdmin(role === 'owner' || role === 'admin');
+        } else {
+          setIsBrandAdmin(false);
+        }
+      } else {
+        setIsBrandAdmin(false);
       }
 
       // Process earnings
@@ -438,10 +515,10 @@ function BoostDetailsContent() {
 
       // Update boost application status
       const { error } = await supabase
-        .from("boost_applications")
+        .from("bounty_applications")
         .update({ status: 'withdrawn' })
-        .eq("boost_id", boost.id)
-        .eq("creator_id", user.id);
+        .eq("bounty_campaign_id", boost.id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
 
@@ -527,8 +604,11 @@ function BoostDetailsContent() {
     return null;
   }
 
-  // Calculate stats
-  const payoutPerVideo = boost.monthly_retainer / boost.videos_per_month;
+  // Calculate stats - handle flat-rate and retainer payment models
+  const isFlatRate = boost.payment_model === 'flat_rate';
+  const payoutPerVideo = isFlatRate
+    ? (contract?.per_post_rate || approvedRate || boost.flat_rate_min || 0)
+    : (boost.videos_per_month > 0 ? boost.monthly_retainer / boost.videos_per_month : 0);
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -540,14 +620,14 @@ function BoostDetailsContent() {
   const pendingThisMonth = thisMonthSubmissions.filter(s => s.status === "pending").length;
   const activeSubmissionsThisMonth = approvedThisMonth + pendingThisMonth;
   const earnedThisMonth = approvedThisMonth * payoutPerVideo;
-  const dailyLimit = Math.ceil(boost.videos_per_month / 30);
+  const dailyLimit = boost.videos_per_month > 0 ? Math.ceil(boost.videos_per_month / 30) : 999;
   const last24Hours = submissions.filter(s => {
     const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
     return hoursDiff < 24 && s.status !== "rejected";
   });
   const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
-  const requiredPosts = Math.max(0, boost.videos_per_month - activeSubmissionsThisMonth);
-  const earnedPercent = approvedThisMonth / boost.videos_per_month * 100;
+  const requiredPosts = boost.videos_per_month > 0 ? Math.max(0, boost.videos_per_month - activeSubmissionsThisMonth) : 0;
+  const earnedPercent = boost.videos_per_month > 0 ? (approvedThisMonth / boost.videos_per_month * 100) : 0;
   const pendingPercent = pendingThisMonth / boost.videos_per_month * 100;
 
   // Progress stats for sidebar
@@ -655,102 +735,6 @@ function BoostDetailsContent() {
         <div className="text-center hidden sm:block">
           <p className="text-[10px] text-muted-foreground/60 mb-1 uppercase tracking-wide font-inter">Max Monthly</p>
           <p className="font-semibold text-sm text-foreground font-inter tracking-[-0.5px]">${boost.monthly_retainer}</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Render Progress Content
-  const renderProgressContent = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-foreground font-inter tracking-[-0.5px]">Monthly Progress</h2>
-
-      {/* Progress Section */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {/* Semi-circle Progress Chart */}
-          <div className="relative w-32 h-20 flex-shrink-0">
-            <svg viewBox="0 0 100 55" className="w-full h-full overflow-visible">
-              <defs>
-                <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                  <rect width="3" height="6" fill="#f97316" />
-                  <rect x="3" width="3" height="6" fill="#fb923c" />
-                </pattern>
-              </defs>
-
-              {/* Background arc */}
-              <path d="M 8 50 A 42 42 0 0 1 92 50" fill="none" className="stroke-muted" strokeWidth="8" strokeLinecap="butt" />
-
-              {/* Approved arc (green) */}
-              {approvedThisMonth > 0 && (
-                <path
-                  d="M 8 50 A 42 42 0 0 1 92 50"
-                  fill="none"
-                  stroke="#22c55e"
-                  strokeWidth="8"
-                  strokeLinecap="butt"
-                  strokeDasharray={`${(approvedThisMonth / boost.videos_per_month) * 131.95} 131.95`}
-                  className="transition-all duration-500"
-                />
-              )}
-
-              {/* Pending arc (orange) */}
-              {pendingThisMonth > 0 && (
-                <path
-                  d="M 8 50 A 42 42 0 0 1 92 50"
-                  fill="none"
-                  stroke="#f97316"
-                  strokeWidth="8"
-                  strokeLinecap="butt"
-                  strokeDasharray={`${(pendingThisMonth / boost.videos_per_month) * 131.95} 131.95`}
-                  strokeDashoffset={`${-(approvedThisMonth / boost.videos_per_month) * 131.95}`}
-                  className="transition-all duration-500"
-                />
-              )}
-            </svg>
-            {/* Center text */}
-            <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
-              <span className="text-lg font-bold">{activeSubmissionsThisMonth}/{boost.videos_per_month}</span>
-            </div>
-          </div>
-
-          {/* Progress Legend */}
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Monthly Progress</span>
-              <span className="font-semibold">{activeSubmissionsThisMonth} / {boost.videos_per_month} videos</span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-              {approvedThisMonth > 0 && <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${earnedPercent}%` }} />}
-              {pendingThisMonth > 0 && <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${pendingPercent}%` }} />}
-            </div>
-            <div className="flex items-center gap-4 text-[10px]">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-muted-foreground">{approvedThisMonth} Approved</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-orange-500" />
-                <span className="text-muted-foreground">{pendingThisMonth} Pending</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-muted" />
-                <span className="text-muted-foreground">{requiredPosts} Remaining</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Earnings Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl border border-border/50 bg-muted/30 dark:bg-muted/20">
-          <p className="text-xs text-muted-foreground mb-1">Earned This Month</p>
-          <p className="text-2xl font-bold text-green-500">${earnedThisMonth.toFixed(2)}</p>
-        </div>
-        <div className="p-4 rounded-xl border border-border/50 bg-muted/30 dark:bg-muted/20">
-          <p className="text-xs text-muted-foreground mb-1">Potential Remaining</p>
-          <p className="text-2xl font-bold text-foreground">${(requiredPosts * payoutPerVideo).toFixed(2)}</p>
         </div>
       </div>
     </div>
@@ -879,6 +863,100 @@ function BoostDetailsContent() {
         </div>
       )}
 
+      {/* Monthly Progress Section */}
+      <div>
+        <h2 className="text-xl font-semibold text-foreground font-inter tracking-[-0.5px] mb-4">Monthly Progress</h2>
+
+        {/* Progress Section */}
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            {/* Semi-circle Progress Chart */}
+            <div className="relative w-32 h-20 flex-shrink-0">
+              <svg viewBox="0 0 100 55" className="w-full h-full overflow-visible">
+                <defs>
+                  <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                    <rect width="3" height="6" fill="#f97316" />
+                    <rect x="3" width="3" height="6" fill="#fb923c" />
+                  </pattern>
+                </defs>
+
+                {/* Background arc */}
+                <path d="M 8 50 A 42 42 0 0 1 92 50" fill="none" className="stroke-muted" strokeWidth="8" strokeLinecap="butt" />
+
+                {/* Approved arc (green) */}
+                {approvedThisMonth > 0 && (
+                  <path
+                    d="M 8 50 A 42 42 0 0 1 92 50"
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="8"
+                    strokeLinecap="butt"
+                    strokeDasharray={`${(approvedThisMonth / boost.videos_per_month) * 131.95} 131.95`}
+                    className="transition-all duration-500"
+                  />
+                )}
+
+                {/* Pending arc (orange) */}
+                {pendingThisMonth > 0 && (
+                  <path
+                    d="M 8 50 A 42 42 0 0 1 92 50"
+                    fill="none"
+                    stroke="#f97316"
+                    strokeWidth="8"
+                    strokeLinecap="butt"
+                    strokeDasharray={`${(pendingThisMonth / boost.videos_per_month) * 131.95} 131.95`}
+                    strokeDashoffset={`${-(approvedThisMonth / boost.videos_per_month) * 131.95}`}
+                    className="transition-all duration-500"
+                  />
+                )}
+              </svg>
+              {/* Center text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
+                <span className="text-lg font-bold">{activeSubmissionsThisMonth}/{boost.videos_per_month}</span>
+              </div>
+            </div>
+
+            {/* Progress Legend */}
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Monthly Progress</span>
+                <span className="font-semibold">{activeSubmissionsThisMonth} / {boost.videos_per_month} videos</span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                {approvedThisMonth > 0 && <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${earnedPercent}%` }} />}
+                {pendingThisMonth > 0 && <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${pendingPercent}%` }} />}
+              </div>
+              <div className="flex items-center gap-4 text-[10px]">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="text-muted-foreground">{approvedThisMonth} Approved</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  <span className="text-muted-foreground">{pendingThisMonth} Pending</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-muted" />
+                  <span className="text-muted-foreground">{requiredPosts} Remaining</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Earnings Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          <div className="p-4 rounded-xl border border-border/50 bg-muted/30 dark:bg-muted/20">
+            <p className="text-xs text-muted-foreground mb-1">Earned This Month</p>
+            <p className="text-2xl font-bold text-green-500">${earnedThisMonth.toFixed(2)}</p>
+          </div>
+          <div className="p-4 rounded-xl border border-border/50 bg-muted/30 dark:bg-muted/20">
+            <p className="text-xs text-muted-foreground mb-1">Potential Remaining</p>
+            <p className="text-2xl font-bold text-foreground">${(requiredPosts * payoutPerVideo).toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+
       <h2 className="text-xl font-semibold text-foreground font-inter tracking-[-0.5px]">Your Submissions</h2>
       <SubmissionsTab boostId={boost.id} compact />
     </div>
@@ -922,7 +1000,7 @@ function BoostDetailsContent() {
 
     const { data: contractData } = await supabase
       .from("creator_contracts")
-      .select("id, status, contract_url, custom_terms, signed_at, sent_at, signature_url, title, monthly_rate, videos_per_month")
+      .select("id, status, contract_url, custom_terms, signed_at, sent_at, signature_url, title, monthly_rate, videos_per_month, payment_model, per_post_rate")
       .eq("boost_id", boost.id)
       .eq("creator_id", user.id)
       .maybeSingle();
@@ -994,13 +1072,52 @@ function BoostDetailsContent() {
     </div>
   );
 
+  // Render Assets Content
+  const renderAssetsContent = () => {
+    // Use brand_id from boost object directly since it's already loaded
+    const effectiveBrandId = brandId || boost.brand_id;
+
+    if (effectiveBrandId) {
+      return (
+        <div className="space-y-6">
+          <AssetLibrary
+            brandId={effectiveBrandId}
+            isAdmin={isBrandAdmin}
+            selectedAsset={selectedAssetForPanel}
+            onSelectAsset={setSelectedAssetForPanel}
+            onUpload={isBrandAdmin ? () => setShowAssetUploadDialog(true) : undefined}
+            onRequestAsset={() => setShowAssetRequestDialog(true)}
+            onEdit={isBrandAdmin ? (asset) => setEditAsset(asset) : undefined}
+            onDelete={isBrandAdmin ? (asset) => setDeleteAsset(asset) : undefined}
+          />
+        </div>
+      );
+    }
+
+    // Fallback for when no brand is linked - should rarely happen
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-1 font-inter tracking-[-0.5px]">Folders</h2>
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Brand resources and materials</p>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 px-4 bg-muted/30 rounded-xl">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+            <Icon icon="material-symbols:folder-outline" className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground font-inter text-center">No assets available for this boost</p>
+        </div>
+      </div>
+    );
+  };
+
   // Render content based on active section
   const renderContent = () => {
     switch (activeSection.type) {
-      case 'progress':
-        return renderProgressContent();
       case 'blueprint':
         return renderBlueprintContent();
+      case 'assets':
+        return renderAssetsContent();
       case 'submissions':
         return renderSubmissionsContent();
       case 'earnings':
@@ -1034,7 +1151,7 @@ function BoostDetailsContent() {
           onLeave={() => setLeaveBoostDialogOpen(true)}
           brandSlug={boost.brands?.slug}
           blueprintId={boost.blueprint_id}
-          canSubmit={activeSubmissionsThisMonth < boost.videos_per_month && dailyRemaining > 0 && (!contract || contract.status === 'signed')}
+          canSubmit={(boost.videos_per_month === 0 || activeSubmissionsThisMonth < boost.videos_per_month) && dailyRemaining > 0 && (!contract || contract.status === 'signed')}
           // Discord props
           hasDiscordServer={!!boost.discord_guild_id}
           hasDiscordConnected={hasUserDiscord}
@@ -1105,7 +1222,7 @@ function BoostDetailsContent() {
             onLeave={() => setLeaveBoostDialogOpen(true)}
             brandSlug={boost.brands?.slug}
             blueprintId={boost.blueprint_id}
-            canSubmit={activeSubmissionsThisMonth < boost.videos_per_month && dailyRemaining > 0 && (!contract || contract.status === 'signed')}
+            canSubmit={(boost.videos_per_month === 0 || activeSubmissionsThisMonth < boost.videos_per_month) && dailyRemaining > 0 && (!contract || contract.status === 'signed')}
             // Discord props
             hasDiscordServer={!!boost.discord_guild_id}
             hasDiscordConnected={hasUserDiscord}
@@ -1121,38 +1238,49 @@ function BoostDetailsContent() {
             </div>
           </main>
 
-          {/* Right Panel */}
-          <SourceDetailsRightPanel
-            members={members}
-            memberCount={memberCount}
-            currentUserId={currentUserId}
-            announcements={realAnnouncements}
-            onReaction={toggleReaction}
-            creatorStats={{
-              views: submissions.reduce((sum, s) => sum + (s.payout_amount || 0), 0) > 0
-                ? Math.floor(Math.random() * 50000) + 10000 // Placeholder - would need actual view data
-                : 0,
-              earnings: totalEarnings,
-              videos: submissions.filter(s => s.status === 'approved').length,
-              percentile: memberCount > 10
-                ? Math.min(95, Math.max(5, Math.floor((1 - (submissions.filter(s => s.status === 'approved').length / Math.max(1, memberCount))) * 100)))
-                : undefined,
-            }}
-            deadlines={[
-              {
-                id: 'next-payout',
-                label: 'Next payout cycle',
-                date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                type: 'payout' as const,
-              },
-              ...(boost.videos_per_month && requiredPosts > 0 ? [{
-                id: 'monthly-target',
-                label: `${requiredPosts} videos needed this month`,
-                date: endOfMonth(new Date()).toISOString(),
-                type: 'submission' as const,
-              }] : []),
-            ]}
-          />
+          {/* Right Panel - Conditionally show AssetDetailPanel or SourceDetailsRightPanel */}
+          {activeSection.type === 'assets' && selectedAssetForPanel ? (
+            <AssetDetailPanel
+              asset={selectedAssetForPanel}
+              onClose={() => setSelectedAssetForPanel(null)}
+              onEdit={isBrandAdmin ? () => setEditAsset(selectedAssetForPanel) : undefined}
+              onDelete={isBrandAdmin ? () => setDeleteAsset(selectedAssetForPanel) : undefined}
+              className="h-full"
+              fullHeight
+            />
+          ) : (
+            <SourceDetailsRightPanel
+              members={members}
+              memberCount={memberCount}
+              currentUserId={currentUserId}
+              announcements={realAnnouncements}
+              onReaction={toggleReaction}
+              creatorStats={{
+                views: submissions.reduce((sum, s) => sum + (s.payout_amount || 0), 0) > 0
+                  ? Math.floor(Math.random() * 50000) + 10000 // Placeholder - would need actual view data
+                  : 0,
+                earnings: totalEarnings,
+                videos: submissions.filter(s => s.status === 'approved').length,
+                percentile: memberCount > 10
+                  ? Math.min(95, Math.max(5, Math.floor((1 - (submissions.filter(s => s.status === 'approved').length / Math.max(1, memberCount))) * 100)))
+                  : undefined,
+              }}
+              deadlines={[
+                {
+                  id: 'next-payout',
+                  label: 'Next payout cycle',
+                  date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                  type: 'payout' as const,
+                },
+                ...(boost.videos_per_month && requiredPosts > 0 ? [{
+                  id: 'monthly-target',
+                  label: `${requiredPosts} videos needed this month`,
+                  date: endOfMonth(new Date()).toISOString(),
+                  type: 'submission' as const,
+                }] : []),
+              ]}
+            />
+          )}
         </div>
       )}
 
@@ -1204,6 +1332,46 @@ function BoostDetailsContent() {
         />
       )}
 
+      {/* Asset Request Dialog */}
+      {boost && (brandId || boost.brand_id) && (
+        <AssetRequestDialog
+          brandId={brandId || boost.brand_id!}
+          open={showAssetRequestDialog}
+          onOpenChange={setShowAssetRequestDialog}
+        />
+      )}
+
+      {/* Asset Upload Dialog (for brand admins) */}
+      {boost && (brandId || boost.brand_id) && isBrandAdmin && (
+        <AssetUploadDialog
+          brandId={brandId || boost.brand_id!}
+          open={showAssetUploadDialog || !!editAsset}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowAssetUploadDialog(false);
+              setEditAsset(null);
+            } else {
+              setShowAssetUploadDialog(true);
+            }
+          }}
+          editAsset={editAsset || undefined}
+          onEditComplete={() => {
+            setShowAssetUploadDialog(false);
+            setEditAsset(null);
+          }}
+        />
+      )}
+
+      {/* Asset Delete Dialog (for brand admins) */}
+      {boost && (brandId || boost.brand_id) && deleteAsset && (
+        <AssetDeleteDialog
+          asset={deleteAsset}
+          brandId={brandId || boost.brand_id!}
+          open={!!deleteAsset}
+          onOpenChange={(open) => !open && setDeleteAsset(null)}
+        />
+      )}
+
       {/* Leave Boost Confirmation Dialog */}
       <AlertDialog open={leaveBoostDialogOpen} onOpenChange={setLeaveBoostDialogOpen}>
         <AlertDialogContent>
@@ -1231,11 +1399,13 @@ function BoostDetailsContent() {
   );
 }
 
-// Main export wraps with provider
+// Main export wraps with provider and forces remount on ID change
 export default function CreatorBoostDetails() {
+  const { id } = useParams<{ id: string }>();
+
   return (
-    <SourceDetailsSidebarProvider sourceType="boost">
-      <BoostDetailsContent />
+    <SourceDetailsSidebarProvider sourceType="boost" key={id}>
+      <BoostDetailsContent key={`content-${id}`} />
     </SourceDetailsSidebarProvider>
   );
 }

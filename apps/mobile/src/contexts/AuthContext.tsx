@@ -14,6 +14,8 @@ interface AuthContextType {
   signInWithEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
   verifyEmailOTP: (email: string, token: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
+  linkDiscord: () => Promise<void>;
+  linkX: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +27,8 @@ const AuthContext = createContext<AuthContextType>({
   signInWithEmail: async () => ({ success: false }),
   verifyEmailOTP: async () => ({ success: false }),
   signOut: async () => {},
+  linkDiscord: async () => {},
+  linkX: async () => {},
 });
 
 export const useAuth = () => {
@@ -241,11 +245,114 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  // Link Discord account (for connecting social account, not sign-in)
+  const linkDiscord = useCallback(async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'You must be signed in to link Discord');
+      return;
+    }
+
+    const DISCORD_CLIENT_ID = '1307072439679295529';
+    const redirectUri = 'virality://auth/social-callback/discord';
+    const scope = 'identify email';
+    const state = user.id;
+
+    const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(oauthUrl);
+      if (canOpen) {
+        await Linking.openURL(oauthUrl);
+      } else {
+        Alert.alert('Error', 'Cannot open Discord authorization page');
+      }
+    } catch (error) {
+      console.error('Error opening Discord OAuth:', error);
+      Alert.alert('Error', 'Failed to open Discord authorization');
+    }
+  }, [user?.id]);
+
+  // Link X/Twitter account (for connecting social account, not sign-in)
+  const linkX = useCallback(async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'You must be signed in to link X');
+      return;
+    }
+
+    // X OAuth is more complex - for now, show a message
+    Alert.alert(
+      'Coming Soon',
+      'X/Twitter OAuth integration is being set up. Please connect via the web app for now.',
+      [{ text: 'OK' }]
+    );
+  }, [user?.id]);
+
+  // Handle social account linking callback
+  const handleSocialLinkCallback = useCallback(async (platform: 'discord' | 'x', code: string) => {
+    if (!user?.id || !session?.access_token) {
+      Alert.alert('Error', 'You must be signed in to link accounts');
+      return;
+    }
+
+    const endpoint = platform === 'discord' ? 'discord-oauth' : 'x-oauth';
+    const redirectUri = `virality://auth/social-callback/${platform}`;
+
+    try {
+      const response = await fetch(
+        `${config.supabase.url}/functions/v1/${endpoint}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            code,
+            userId: user.id,
+            redirectUri,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        Alert.alert('Success', `${platform === 'discord' ? 'Discord' : 'X'} account linked successfully!`);
+      } else {
+        Alert.alert('Error', result.error || `Failed to link ${platform === 'discord' ? 'Discord' : 'X'} account`);
+      }
+    } catch (error) {
+      console.error(`Error linking ${platform}:`, error);
+      Alert.alert('Error', `Failed to link ${platform === 'discord' ? 'Discord' : 'X'} account`);
+    }
+  }, [user?.id, session?.access_token]);
+
   // Handle deep links for OAuth callback
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
       const url = event.url;
       console.log('Deep link received:', url);
+
+      // Handle social account linking callbacks (Discord, X)
+      const socialCallbackMatch = url.match(/social-callback\/(discord|x)/);
+      if (socialCallbackMatch) {
+        const platform = socialCallbackMatch[1] as 'discord' | 'x';
+        const codeMatch = url.match(/code=([^&]+)/);
+
+        if (codeMatch) {
+          const code = decodeURIComponent(codeMatch[1]);
+          console.log(`Social callback for ${platform} with code`);
+          handleSocialLinkCallback(platform, code);
+        } else {
+          const errorMatch = url.match(/error=([^&]+)/);
+          const errorDescMatch = url.match(/error_description=([^&]+)/);
+          if (errorMatch) {
+            const errorMsg = decodeURIComponent(errorDescMatch?.[1] || errorMatch[1]).replace(/\+/g, ' ');
+            Alert.alert('Link Failed', errorMsg);
+          }
+        }
+        return;
+      }
 
       if (url.includes('auth/callback') || url.includes('code=') || url.includes('access_token') || url.includes('error')) {
         // Check for error in URL first
@@ -318,7 +425,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [handleSocialLinkCallback]);
 
   useEffect(() => {
     // Set up auth state listener
@@ -372,6 +479,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signInWithEmail,
         verifyEmailOTP,
         signOut,
+        linkDiscord,
+        linkX,
       }}
     >
       {children}

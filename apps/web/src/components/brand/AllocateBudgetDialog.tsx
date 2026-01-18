@@ -2,18 +2,15 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertCircle, Loader2, ChevronDown, Megaphone, Zap, Check } from "lucide-react";
+import { Loader2, ChevronDown, Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 interface AllocateBudgetDialogProps {
@@ -232,159 +229,153 @@ export function AllocateBudgetDialog({
 
   const parsedAmount = parseFloat(amount) || 0;
   const selectedItem = getSelectedItem();
-  const campaigns = items.filter(i => i.type === 'campaign');
-  const boosts = items.filter(i => i.type === 'boost');
-
-  const insufficientBalance = parsedAmount > walletBalance && parsedAmount > 0;
+  const insufficientBalance = !loadingBalance && parsedAmount > walletBalance && parsedAmount > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[440px] bg-card border-0 p-0 overflow-hidden rounded-2xl font-inter tracking-[-0.5px]">
+      <DialogContent className="sm:max-w-[400px] bg-white dark:bg-[#0a0a0a] border border-border/40 p-0 overflow-hidden rounded-2xl font-inter gap-0">
         {/* Header */}
-        <div className="px-6 pt-6">
-          <DialogHeader className="space-y-1">
-            <DialogTitle className="text-lg font-semibold tracking-tight">
-              Fund Campaign
-            </DialogTitle>
-            <p className="text-sm text-muted-foreground text-left">
-              Transfer funds from your brand wallet to a campaign or boost.
-            </p>
-          </DialogHeader>
-        </div>
+        <DialogHeader className="px-5 pt-5 pb-4 border-b border-border/40">
+          <DialogTitle className="text-[15px] font-semibold tracking-[-0.3px] text-foreground">
+            Fund Campaign
+          </DialogTitle>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
+            Transfer from your brand wallet
+          </p>
+        </DialogHeader>
 
         {/* Content */}
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-5 py-4 space-y-4">
           {/* Campaign/Boost Selector */}
-          <div className="space-y-2">
-            <Label className="text-sm text-foreground">Select Destination</Label>
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">
+              Destination
+            </label>
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full h-12 justify-between px-4 bg-transparent border-border hover:bg-muted/30 text-left font-normal rounded-xl transition-colors",
+                    "w-full h-11 justify-between px-3.5 bg-transparent border-border/60 hover:bg-muted/30 hover:border-border text-left font-normal rounded-xl transition-all",
                     !selectedItem && "text-muted-foreground"
                   )}
                 >
                   {fetchingData ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="flex items-center gap-2 text-[13px]">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       Loading...
                     </span>
                   ) : selectedItem ? (
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-foreground">{selectedItem.title}</span>
-                    </div>
+                    <span className="text-[13px] font-medium text-foreground truncate">
+                      {selectedItem.title}
+                    </span>
                   ) : (
-                    <span>Choose a campaign or boost</span>
+                    <span className="text-[13px]">Select campaign or boost</span>
                   )}
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="start" 
-                className="w-[392px] bg-popover border-border p-1 max-h-[300px] overflow-y-auto"
+              <DropdownMenuContent
+                align="start"
+                className="w-[calc(100vw-40px)] sm:w-[360px] bg-popover border-border/60 p-1.5 max-h-[280px] overflow-y-auto rounded-xl"
               >
                 {items.length === 0 && !fetchingData ? (
-                  <div className="p-4 text-sm text-muted-foreground text-center">
-                    No active campaigns or boosts
+                  <div className="p-4 text-[13px] text-muted-foreground text-center">
+                    No campaigns or boosts found
                   </div>
                 ) : (
-                  <>
-                    {items.map((item) => (
-                      <DropdownMenuItem
-                        key={item.id}
-                        onClick={() => {
-                          setSelectedId(item.id);
-                          setDropdownOpen(false);
-                        }}
-                        className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">Budget: {formatCurrency(item.budget)}</p>
-                        </div>
-                        {selectedId === item.id && (
-                          <Check className="w-4 h-4 text-emerald-500" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </>
+                  items.map((item) => (
+                    <DropdownMenuItem
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedId(item.id);
+                        setDropdownOpen(false);
+                      }}
+                      className="flex items-center justify-between gap-3 p-2.5 rounded-lg cursor-pointer"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-foreground truncate">{item.title}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {item.type === 'boost' ? 'Boost' : 'Campaign'} · {formatCurrency(item.budget)} budget
+                        </p>
+                      </div>
+                      {selectedId === item.id && (
+                        <Check className="w-4 h-4 text-primary shrink-0" />
+                      )}
+                    </DropdownMenuItem>
+                  ))
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
           {/* Amount Input */}
-          <div className="space-y-3">
-            <Label className="text-sm text-foreground">Amount</Label>
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">
+              Amount
+            </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">$</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] font-medium text-muted-foreground/60">$</span>
               <Input
                 type="number"
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-9 h-14 bg-transparent border-border text-2xl font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-xl transition-colors"
+                className="pl-8 h-12 bg-transparent border-border/60 text-[22px] font-semibold placeholder:text-muted-foreground/30 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary rounded-xl transition-colors tabular-nums"
               />
             </div>
+
             {/* Quick Amount Buttons */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
               {QUICK_AMOUNTS.map((value) => (
-                <Button
+                <button
                   key={value}
                   type="button"
-                  variant="ghost"
-                  size="sm"
                   onClick={() => handleQuickAmount(value)}
                   className={cn(
-                    "flex-1 h-9 text-sm font-medium rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors",
-                    parseFloat(amount) === value && "bg-primary text-white hover:bg-primary/90"
+                    "h-8 text-[12px] font-medium rounded-lg transition-all",
+                    parseFloat(amount) === value
+                      ? "bg-primary text-white"
+                      : "bg-muted/50 dark:bg-muted/30 text-foreground hover:bg-muted dark:hover:bg-muted/50"
                   )}
                 >
                   ${value}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Insufficient Balance Warning - Only shows when amount exceeds balance */}
+          {/* Insufficient Balance Warning */}
           {insufficientBalance && (
-            <div className="flex items-center gap-2.5 text-destructive text-sm bg-destructive/10 rounded-xl p-3.5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <div>
-                <span>Insufficient balance. </span>
-                <span className="text-destructive/70">
-                  Available: {loadingBalance ? "..." : formatCurrency(walletBalance)}
-                </span>
-              </div>
+            <div className="flex items-center gap-2 text-[12px] text-red-500 dark:text-red-400 bg-red-500/10 rounded-lg p-2.5">
+              <span className="font-medium">Insufficient balance</span>
+              <span className="text-red-500/70 dark:text-red-400/70">
+                · Need {formatCurrency(parsedAmount - walletBalance)} more
+              </span>
             </div>
           )}
 
-          {/* Summary */}
+          {/* Transfer Summary */}
           {selectedItem && parsedAmount > 0 && !insufficientBalance && (
-            <div className="bg-muted/30 rounded-xl p-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Funding</span>
-                <span className="text-foreground font-medium">{selectedItem.title}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Current budget</span>
-                <span className="text-muted-foreground">
-                  {formatCurrency(selectedItem.budget)}
+            <div className="bg-muted/40 dark:bg-muted/20 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-background flex items-center justify-center text-[11px] font-semibold text-muted-foreground">
+                    {formatCurrency(selectedItem.budget).replace('$', '')}
+                  </div>
+                  <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                  <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(selectedItem.budget + parsedAmount).replace('$', '')}
+                  </div>
+                </div>
+                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  +{formatCurrency(parsedAmount)}
                 </span>
               </div>
-              <div className="h-px bg-border" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">New budget</span>
-                <span className="text-emerald-500 font-medium">
-                  {formatCurrency(selectedItem.budget + parsedAmount)}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Remaining balance</span>
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-muted-foreground">{selectedItem.title}</span>
                 <span className="text-muted-foreground">
-                  {formatCurrency(walletBalance - parsedAmount)}
+                  Balance after: {formatCurrency(walletBalance - parsedAmount)}
                 </span>
               </div>
             </div>
@@ -392,26 +383,28 @@ export function AllocateBudgetDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-6 flex items-center justify-end gap-3">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            onClick={() => handleClose(false)} 
-            className="h-10 px-5 text-sm font-medium text-muted-foreground hover:text-muted-foreground hover:bg-muted/50"
+        <div className="px-5 pb-5 pt-1 flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => handleClose(false)}
+            className="flex-1 h-10 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAllocate}
             disabled={loading || !selectedId || parsedAmount <= 0 || insufficientBalance || loadingBalance}
-            className="h-10 px-6 text-sm font-medium bg-primary text-white hover:bg-primary/90 border-t border-white/30 rounded-lg disabled:opacity-30"
+            className="flex-1 h-10 text-[13px] font-medium bg-primary hover:bg-primary/90 text-white rounded-xl disabled:opacity-40"
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Funding...
               </span>
-            ) : 'Fund Campaign'}
+            ) : (
+              `Fund ${parsedAmount > 0 ? formatCurrency(parsedAmount) : 'Campaign'}`
+            )}
           </Button>
         </div>
       </DialogContent>

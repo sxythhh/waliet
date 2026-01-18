@@ -43,6 +43,7 @@ import { EarningsChart } from "./EarningsChart";
 import { addDays } from "date-fns";
 import { UsdWithLocal } from "@/components/LocalCurrencyAmount";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
+import { CreatorMilestonesCard } from "@/components/dashboard/CreatorMilestonesCard";
 import { TransactionsTable, Transaction as TransactionType } from "@/components/dashboard/TransactionsTable";
 import { DashboardProfileHeader } from "@/components/dashboard/DashboardProfileHeader";
 import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
@@ -52,6 +53,13 @@ import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
+import { ManageAccountDialog } from "@/components/ManageAccountDialog";
+import { SubmitAudienceInsightsDialog } from "@/components/SubmitAudienceInsightsDialog";
+import { VerifyAccountDialog } from "@/components/VerifyAccountDialog";
+import { useTheme } from "@/components/ThemeProvider";
+import noAccountsIcon from "@/assets/no-accounts-icon.svg";
+import noAccountsIconBlack from "@/assets/no-accounts-icon-black.svg";
 interface UserProfile {
   username?: string;
   avatar_url?: string;
@@ -94,6 +102,39 @@ interface WithdrawalDataPoint {
   earnings: number;
   withdrawals: number;
 }
+
+// Full social account type for Connected Accounts section
+interface FullSocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link: string | null;
+  follower_count: number | null;
+  is_verified: boolean;
+  connected_at: string;
+  bio: string | null;
+  avatar_url: string | null;
+  hidden_from_public: boolean;
+  connected_campaigns?: Array<{
+    connection_id: string;
+    campaign: {
+      id: string;
+      title: string;
+      brand_name: string;
+      brand_logo_url: string | null;
+    };
+  }>;
+  demographic_submissions?: Array<{
+    id: string;
+    tier1_percentage: number;
+    status: string;
+    score: number | null;
+    submitted_at: string;
+    reviewed_at: string | null;
+    screenshot_url: string | null;
+  }>;
+}
+
 // Type for wallet transaction metadata
 interface TransactionMetadata {
   campaign_id?: string;
@@ -308,6 +349,23 @@ export function ProfileTab() {
     is_verified: boolean;
     account_link: string | null;
   }>>([]);
+  // Full social accounts for Connected Accounts section
+  const [fullSocialAccounts, setFullSocialAccounts] = useState<FullSocialAccount[]>([]);
+  const [showManageAccountDialog, setShowManageAccountDialog] = useState(false);
+  const [selectedAccountForManage, setSelectedAccountForManage] = useState<FullSocialAccount | null>(null);
+  const [showDemographicsDialog, setShowDemographicsDialog] = useState(false);
+  const [selectedAccountForDemographics, setSelectedAccountForDemographics] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
+  const [showVerifyAccountDialog, setShowVerifyAccountDialog] = useState(false);
+  const [selectedAccountForVerification, setSelectedAccountForVerification] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
+  const { resolvedTheme } = useTheme();
   const [campaignParticipations, setCampaignParticipations] = useState<Array<{
     id: string;
     campaign_id: string;
@@ -450,6 +508,58 @@ export function ProfileTab() {
     setSocialAccounts(socialData || []);
     setSocialAccountsCount(socialData?.length || 0);
 
+    // Fetch FULL social accounts with connected campaigns for Connected Accounts section
+    const { data: fullAccounts } = await supabase
+      .from("social_accounts")
+      .select(`
+        *,
+        demographic_submissions(
+          id,
+          tier1_percentage,
+          status,
+          score,
+          submitted_at,
+          reviewed_at,
+          screenshot_url
+        )
+      `)
+      .eq("user_id", session.user.id)
+      .order("connected_at", { ascending: false });
+
+    if (fullAccounts) {
+      // Fetch connected campaigns for each account
+      const accountsWithCampaigns = await Promise.all(fullAccounts.map(async account => {
+        const { data: connections } = await supabase
+          .from("social_account_campaigns")
+          .select(`
+            id,
+            campaigns(
+              id,
+              title,
+              brand_name,
+              brand_logo_url,
+              brands(logo_url)
+            )
+          `)
+          .eq("social_account_id", account.id)
+          .eq("status", "active");
+
+        return {
+          ...account,
+          connected_campaigns: connections?.map(conn => ({
+            connection_id: conn.id,
+            campaign: {
+              id: (conn.campaigns as any).id,
+              title: (conn.campaigns as any).title,
+              brand_name: (conn.campaigns as any).brand_name,
+              brand_logo_url: (conn.campaigns as any).brand_logo_url || (conn.campaigns as any).brands?.logo_url
+            }
+          })) || []
+        };
+      }));
+      setFullSocialAccounts(accountsWithCampaigns);
+    }
+
     // Check for approved demographics (via social_accounts since demographic_submissions uses social_account_id)
     const { data: demographics } = await supabase
       .from("social_accounts")
@@ -588,6 +698,30 @@ export function ProfileTab() {
       title: "Tools saved",
       description: "Your editing tools have been updated."
     });
+  };
+
+  const handleUnlinkCampaign = async (connectionId: string, campaignTitle: string) => {
+    const { error } = await supabase
+      .from("social_account_campaigns")
+      .update({
+        status: "disconnected",
+        disconnected_at: new Date().toISOString()
+      })
+      .eq("id", connectionId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to unlink account from campaign"
+      });
+    } else {
+      toast({
+        title: "Account unlinked",
+        description: `Successfully unlinked from ${campaignTitle}`
+      });
+      fetchOnboardingData();
+    }
   };
 
   const fetchClearingPayouts = useCallback(async () => {
@@ -1219,7 +1353,6 @@ export function ProfileTab() {
       schema: 'public',
       table: 'payout_requests'
     }, payload => {
-      console.log('Payout request updated:', payload);
       // Refetch wallet and transactions when payout request changes
       fetchWallet();
       fetchTransactions();
@@ -1261,16 +1394,10 @@ export function ProfileTab() {
       method,
       details
     }];
-    console.log("Adding payout method:", {
-      method,
-      details
-    });
-    console.log("Updated methods array:", updatedMethods);
     const payoutDetailsPayload = updatedMethods.map(m => ({
       method: m.method,
       details: m.details
     }));
-    console.log("Payload to Supabase:", payoutDetailsPayload);
     const {
       error
     } = await supabase.from("wallets").update({
@@ -1285,7 +1412,6 @@ export function ProfileTab() {
         description: `Failed to add payout method: ${error.message}`
       });
     } else {
-      console.log("Payout method added successfully");
       toast({
         title: "Success",
         description: "Payout method added successfully"
@@ -1641,10 +1767,72 @@ export function ProfileTab() {
           }}
           socialAccounts={socialAccounts}
           onEditProfile={() => setEditProfileDialogOpen(true)}
-          onAddAccount={() => setAddSocialDialogOpen(true)}
+          onAddAccount={() => {
+            setShowManageAccountDialog(false);
+            setSelectedAccountForManage(null);
+            setAddSocialDialogOpen(true);
+          }}
           onAvatarUpdated={fetchOnboardingData}
         />
       )}
+
+      {/* Connected Accounts Section */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+        <Card className="bg-card rounded-xl border-0 shadow-none">
+          <CardHeader className="pb-3 px-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold tracking-[-0.5px]">Connected Accounts</CardTitle>
+                <p className="text-sm text-muted-foreground mt-0.5 tracking-[-0.3px]">
+                  Manage your connected social media accounts
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setShowManageAccountDialog(false);
+                  setSelectedAccountForManage(null);
+                  setAddSocialDialogOpen(true);
+                }}
+                size="sm"
+                className="font-inter font-medium tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7] rounded-md"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Account
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0 px-0">
+            {fullSocialAccounts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 border border-border rounded-xl">
+                <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                  <img alt="" className="w-7 h-7" src={resolvedTheme === 'dark' ? noAccountsIcon : noAccountsIconBlack} />
+                </div>
+                <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
+                <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Connect your social media accounts to get started</p>
+              </div>
+            ) : (
+              <SocialAccountsTable
+                accounts={fullSocialAccounts}
+                onRefresh={fetchOnboardingData}
+                onManageAccount={account => {
+                  setAddSocialDialogOpen(false);
+                  setSelectedAccountForManage(account);
+                  setShowManageAccountDialog(true);
+                }}
+                onUnlinkCampaign={handleUnlinkCampaign}
+                onVerifyAccount={account => {
+                  setSelectedAccountForVerification(account);
+                  setShowVerifyAccountDialog(true);
+                }}
+                onSubmitDemographics={account => {
+                  setSelectedAccountForDemographics(account);
+                  setShowDemographicsDialog(true);
+                }}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Stats Cards - Hidden for now */}
 
@@ -1711,6 +1899,13 @@ export function ProfileTab() {
         </div>
       )}
 
+      {/* Creator Milestones Card */}
+      {onboardingProfile?.id && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+          <CreatorMilestonesCard userId={onboardingProfile.id} />
+        </div>
+      )}
+
       {/* Portfolio Builder Section - Hidden for now */}
       {false && onboardingProfile && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
@@ -1751,6 +1946,86 @@ export function ProfileTab() {
         selectedTools={onboardingProfile?.editing_tools || []}
         onSave={handleSaveEditingTools}
       />
+
+      {/* Manage Account Dialog */}
+      {selectedAccountForManage && (
+        <ManageAccountDialog
+          open={showManageAccountDialog}
+          onOpenChange={open => {
+            setShowManageAccountDialog(open);
+            if (!open) setSelectedAccountForManage(null);
+          }}
+          account={{
+            id: selectedAccountForManage.id,
+            username: selectedAccountForManage.username,
+            platform: selectedAccountForManage.platform,
+            account_link: selectedAccountForManage.account_link,
+            follower_count: selectedAccountForManage.follower_count,
+            is_verified: selectedAccountForManage.is_verified,
+            hidden_from_public: selectedAccountForManage.hidden_from_public,
+          }}
+          demographicStatus={
+            selectedAccountForManage.demographic_submissions?.length
+              ? (selectedAccountForManage.demographic_submissions.sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                )[0]?.status as 'approved' | 'pending' | 'rejected')
+              : null
+          }
+          daysUntilNext={null}
+          lastSubmissionDate={
+            selectedAccountForManage.demographic_submissions?.length
+              ? selectedAccountForManage.demographic_submissions.sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                )[0]?.submitted_at
+              : null
+          }
+          nextSubmissionDate={null}
+          onUpdate={fetchOnboardingData}
+          onSubmitDemographics={() => {
+            setSelectedAccountForDemographics({
+              id: selectedAccountForManage.id,
+              platform: selectedAccountForManage.platform,
+              username: selectedAccountForManage.username
+            });
+            setShowDemographicsDialog(true);
+          }}
+          onReconnect={() => {
+            setSelectedAccountForVerification({
+              id: selectedAccountForManage.id,
+              platform: selectedAccountForManage.platform,
+              username: selectedAccountForManage.username
+            });
+            setShowVerifyAccountDialog(true);
+          }}
+        />
+      )}
+
+      {/* Audience Insights Dialog */}
+      {selectedAccountForDemographics && (
+        <SubmitAudienceInsightsDialog
+          open={showDemographicsDialog}
+          onOpenChange={setShowDemographicsDialog}
+          onSuccess={fetchOnboardingData}
+          socialAccountId={selectedAccountForDemographics.id}
+          platform={selectedAccountForDemographics.platform}
+          username={selectedAccountForDemographics.username}
+        />
+      )}
+
+      {/* Verify Account Dialog */}
+      {selectedAccountForVerification && (
+        <VerifyAccountDialog
+          open={showVerifyAccountDialog}
+          onOpenChange={open => {
+            setShowVerifyAccountDialog(open);
+            if (!open) setSelectedAccountForVerification(null);
+          }}
+          onSuccess={fetchOnboardingData}
+          accountId={selectedAccountForVerification.id}
+          platform={selectedAccountForVerification.platform}
+          username={selectedAccountForVerification.username}
+        />
+      )}
 
       {/* Hidden legacy content below - kept for potential future use */}
       <div className="hidden">

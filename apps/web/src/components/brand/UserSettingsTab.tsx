@@ -13,6 +13,7 @@ import stackedInboxIcon from "@/assets/stacked-inbox-icon.svg";
 import mailNotificationIcon from "@/assets/mail-notification-icon.svg";
 import { useNavigate } from "react-router-dom";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -48,7 +49,7 @@ const PLAN_PRICES: Record<string, number> = {
   'starter': 99,
   'growth': 249
 };
-const BRAND_COLORS = ["#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899", "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"];
+const BRAND_COLORS = ["#8B5CF6", "#3B82F6", "#14B8A6", "#22C55E", "#F97316", "#EF4444", "#EC4899", "#64748B"];
 const COUNTRIES = [{
   code: "AF",
   name: "Afghanistan"
@@ -673,6 +674,7 @@ export function UserSettingsTab() {
   const {
     isAdmin
   } = useAdminCheck();
+  const { isDemoMode, demoBrand, demoWallet } = useDemoData();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -729,11 +731,24 @@ export function UserSettingsTab() {
     fetchProfile();
   }, []);
   useEffect(() => {
-    if (isBrandMode && currentBrand?.id) {
+    if (isDemoMode || (isBrandMode && currentBrand?.id)) {
       fetchBrand();
     }
-  }, [isBrandMode, currentBrand?.id]);
+  }, [isBrandMode, currentBrand?.id, isDemoMode]);
   const fetchBrand = async () => {
+    // In demo mode, use mock brand data
+    if (isDemoMode) {
+      setBrand(demoBrand as any);
+      setEditedBrandName(demoBrand.name);
+      setEditedSlug(demoBrand.slug);
+      setEditedDescription(demoBrand.description || "");
+      setNotifyNewApplication(true);
+      setNotifyNewSale(true);
+      setNotifyNewMessage(true);
+      setBrandColor("#8B5CF6");
+      return;
+    }
+
     if (!currentBrand?.id) return;
     try {
       // Fetch brand data (non-secret fields)
@@ -924,6 +939,19 @@ export function UserSettingsTab() {
     }
   };
   const fetchProfile = async () => {
+    // In demo mode, use mock data
+    if (isDemoMode) {
+      setUserEmail("demo@virality.gg");
+      setProfile({
+        billing_address: "123 Demo Street, San Francisco, CA 94102",
+        legal_business_name: "Demo Brand Inc.",
+        vat_number: "",
+        billing_country: "US"
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const {
@@ -1012,7 +1040,7 @@ export function UserSettingsTab() {
     setShowCreateBrandDialog(false);
   };
   const Spacer = () => <div className="h-6" />;
-  return <div className="w-full p-1.5 h-full">
+  return <div data-tour-target="brand-settings" className="w-full p-1.5 h-full">
       <div className="border border-border rounded-xl bg-card overflow-hidden h-full flex flex-col">
         {/* Sticky Header & Tabs */}
         <div className="sticky top-0 z-10 bg-card">
@@ -1066,344 +1094,407 @@ export function UserSettingsTab() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
         {/* General Tab */}
-        <TabsContent value="general" className="mt-6">
+        <TabsContent value="general" className="mt-0">
           {isBrandMode && brand && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column - Brand Identity & Business Info */}
-              <div className="space-y-6">
-                {/* Brand Identity Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
-                  <h3 className="text-sm font-medium tracking-[-0.5px] text-foreground">Brand Identity</h3>
+            <div className="space-y-8">
+              {/* Brand Profile Section */}
+              <section className="space-y-5">
+                <div className="flex items-center gap-5">
+                  {/* Logo */}
+                  <div
+                    className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity ring-1 ring-border/50"
+                    style={{ backgroundColor: brand.logo_url ? undefined : brandColor }}
+                    onClick={() => document.getElementById('brand-logo-upload')?.click()}
+                  >
+                    {brand.logo_url ? (
+                      <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-lg font-semibold font-inter">
+                        {brand.name?.slice(0, 2).toUpperCase() || "B"}
+                      </span>
+                    )}
+                  </div>
 
-                  {/* Icon Section */}
-                  <div className="flex items-center gap-2.5">
-                    {/* Logo Preview or Initials with Color */}
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity" style={{
-                    backgroundColor: brand.logo_url ? undefined : brandColor
-                  }} onClick={() => document.getElementById('brand-logo-upload')?.click()}>
-                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" /> : <span className="text-white text-sm font-semibold font-inter">
-                          {brand.name?.slice(0, 2).toUpperCase() || "B"}
-                        </span>}
-                    </div>
-
-                    {/* Color Picker */}
-                    <div className="grid grid-cols-7 gap-0.5">
-                      {BRAND_COLORS.map(color => <button key={color} type="button" className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`} style={{
-                      backgroundColor: color
-                    }} onClick={() => setBrandColor(color)} />)}
-                    </div>
-
-                    {/* Upload/Remove Buttons */}
+                  <div className="flex-1 space-y-2">
+                    {/* Color Swatches */}
                     <div className="flex items-center gap-1">
-                      <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-muted dark:bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-muted/80 dark:hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
-                        <Upload className="h-3 w-3" />
-                        {brand.logo_url ? 'Change' : 'Upload'}
-                        <input id="brand-logo-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-                      </label>
+                      {BRAND_COLORS.map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={`w-6 h-6 rounded transition-all flex-shrink-0 border-2 ${
+                            brandColor === color ? 'border-white/50' : 'border-transparent hover:border-white/20'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setBrandColor(color)}
+                        />
+                      ))}
                     </div>
-                  </div>
 
-                  {/* Brand Name */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Brand name</Label>
-                    <Input value={editedBrandName} onChange={e => setEditedBrandName(e.target.value)} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" />
+                    {/* Upload Button */}
+                    <label className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium font-inter tracking-[-0.3px] bg-muted hover:bg-muted/80 text-foreground rounded-lg cursor-pointer transition-colors">
+                      <Upload className="h-3.5 w-3.5" />
+                      {brand.logo_url ? 'Change logo' : 'Upload logo'}
+                      <input id="brand-logo-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
+                    </label>
                   </div>
+                </div>
 
-                  {/* Public URL */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Public URL</Label>
+                {/* Brand Name & URL */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Brand name</Label>
+                    <Input
+                      value={editedBrandName}
+                      onChange={e => setEditedBrandName(e.target.value)}
+                      className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">URL</Label>
                     <div className="flex items-center">
-                      <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-background dark:bg-[#080808] border-0 rounded-r-none tracking-[-0.5px]" />
-                      <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-background dark:bg-[#080808] rounded-r-lg tracking-[-0.5px]">
+                      <Input
+                        value={editedSlug}
+                        onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 rounded-r-none tracking-[-0.3px] text-sm"
+                      />
+                      <span className="h-10 px-3 flex items-center text-xs text-muted-foreground bg-muted/50 dark:bg-[#0a0a0a] rounded-r-lg tracking-[-0.3px]">
                         .virality.gg
                       </span>
                     </div>
                   </div>
-
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Description</Label>
-                    <Textarea
-                      value={editedDescription}
-                      onChange={e => setEditedDescription(e.target.value)}
-                      className="min-h-[80px] bg-background dark:bg-[#080808] border-0 tracking-[-0.5px] resize-none text-sm"
-                      placeholder="Tell creators about your brand..."
-                      maxLength={500}
-                    />
-                    <p className="text-[10px] text-muted-foreground">{editedDescription.length}/500</p>
-                  </div>
-
-                  {/* Website URL (readonly) */}
-                  {brand.home_url && (
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Website</Label>
-                      <Input value={brand.home_url} readOnly className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" />
-                    </div>
-                  )}
                 </div>
 
-                {/* Business Information Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
-                  <h3 className="text-sm font-medium tracking-[-0.5px] text-foreground">Business Information</h3>
-
-                  {/* Legal Business Name */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Legal Business Name</Label>
-                    <Input value={profile.legal_business_name} onChange={e => setProfile({
-                    ...profile,
-                    legal_business_name: e.target.value
-                  })} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Description</Label>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">{editedDescription.length}/500</span>
                   </div>
-
-                  {/* Billing Address */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Billing Address</Label>
-                    <Input value={profile.billing_address} onChange={e => setProfile({
-                    ...profile,
-                    billing_address: e.target.value
-                  })} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
-                  </div>
-
-                  {/* Country */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Country</Label>
-                    <Select value={profile.billing_country} onValueChange={value => setProfile({
-                    ...profile,
-                    billing_country: value
-                  })}>
-                      <SelectTrigger className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]">
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[300px]">
-                        {COUNTRIES.map(country => <SelectItem key={country.code} value={country.code}>
-                            {country.name}
-                          </SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* VAT Number */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">VAT Number</Label>
-                    <Input value={profile.vat_number} onChange={e => setProfile({
-                    ...profile,
-                    vat_number: e.target.value
-                  })} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" placeholder="EU123456789" />
-                  </div>
+                  <Textarea
+                    value={editedDescription}
+                    onChange={e => setEditedDescription(e.target.value)}
+                    className="min-h-[100px] bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] resize-none text-sm"
+                    placeholder="Tell creators about your brand..."
+                    maxLength={500}
+                  />
                 </div>
-              </div>
 
-              {/* Right Column - Social Media & Danger Zone */}
-              <div className="space-y-6">
-                {/* Social Media Card */}
-                <div className="p-4 rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] space-y-4">
-                  <h3 className="text-sm font-medium tracking-[-0.5px] text-foreground">Social Media</h3>
+                {/* Website */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Website</Label>
+                  <Input
+                    value={websiteUrl}
+                    onChange={e => setWebsiteUrl(e.target.value)}
+                    className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm"
+                    placeholder="https://yourwebsite.com"
+                  />
+                </div>
+              </section>
 
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Social Links Section */}
+              <section className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium tracking-[-0.3px]">Social Links</h3>
+                  <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-0.5">Connect your social profiles</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Instagram */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Instagram</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Instagram</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                      <Input value={instagramHandle} onChange={e => {
-                        let value = e.target.value;
-                        // Extract handle from URL if pasted
-                        const instagramMatch = value.match(/(?:instagram\.com|instagr\.am)\/([^\/\?]+)/i);
-                        if (instagramMatch) value = instagramMatch[1];
-                        setInstagramHandle(value.replace(/^@/, '').trim());
-                      }} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
-                    </div>
-                  </div>
-
-                  {/* LinkedIn */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">LinkedIn</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                      <Input value={linkedinHandle} onChange={e => {
-                        let value = e.target.value;
-                        // Extract handle from URL if pasted
-                        const linkedinMatch = value.match(/linkedin\.com\/(?:in|company)\/([^\/\?]+)/i);
-                        if (linkedinMatch) value = linkedinMatch[1];
-                        setLinkedinHandle(value.replace(/^@/, '').trim());
-                      }} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">@</span>
+                      <Input
+                        value={instagramHandle}
+                        onChange={e => {
+                          let value = e.target.value;
+                          const instagramMatch = value.match(/(?:instagram\.com|instagr\.am)\/([^\/\?]+)/i);
+                          if (instagramMatch) value = instagramMatch[1];
+                          setInstagramHandle(value.replace(/^@/, '').trim());
+                        }}
+                        className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] pl-7 text-sm"
+                        placeholder="username"
+                      />
                     </div>
                   </div>
 
                   {/* TikTok */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">TikTok</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">TikTok</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                      <Input value={tiktokHandle} onChange={e => {
-                        let value = e.target.value;
-                        // Extract handle from URL if pasted
-                        const tiktokMatch = value.match(/tiktok\.com\/@?([^\/\?]+)/i);
-                        if (tiktokMatch) value = tiktokMatch[1];
-                        setTiktokHandle(value.replace(/^@/, '').trim());
-                      }} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">@</span>
+                      <Input
+                        value={tiktokHandle}
+                        onChange={e => {
+                          let value = e.target.value;
+                          const tiktokMatch = value.match(/tiktok\.com\/@?([^\/\?]+)/i);
+                          if (tiktokMatch) value = tiktokMatch[1];
+                          setTiktokHandle(value.replace(/^@/, '').trim());
+                        }}
+                        className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] pl-7 text-sm"
+                        placeholder="username"
+                      />
                     </div>
                   </div>
 
-                  {/* App Store URL */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">App Store URL</Label>
-                    <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
+                  {/* LinkedIn */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">LinkedIn</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">@</span>
+                      <Input
+                        value={linkedinHandle}
+                        onChange={e => {
+                          let value = e.target.value;
+                          const linkedinMatch = value.match(/linkedin\.com\/(?:in|company)\/([^\/\?]+)/i);
+                          if (linkedinMatch) value = linkedinMatch[1];
+                          setLinkedinHandle(value.replace(/^@/, '').trim());
+                        }}
+                        className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] pl-7 text-sm"
+                        placeholder="username"
+                      />
+                    </div>
                   </div>
+
+                  {/* App Store */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">App Store</Label>
+                    <Input
+                      value={appStoreUrl}
+                      onChange={e => setAppStoreUrl(e.target.value)}
+                      className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm"
+                      placeholder="https://apps.apple.com/..."
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Business Information Section */}
+              <section className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium tracking-[-0.3px]">Business Information</h3>
+                  <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-0.5">For invoicing and tax purposes</p>
                 </div>
 
-                {/* Danger Zone - Delete Workspace */}
-                <div className="space-y-4 p-4 rounded-xl bg-destructive/5">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-medium tracking-[-0.5px] text-destructive">Danger Zone</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-                      Once you delete a workspace, there is no going back. Please be certain.
-                    </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Legal Name */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Legal business name</Label>
+                    <Input
+                      value={profile.legal_business_name}
+                      onChange={e => setProfile({ ...profile, legal_business_name: e.target.value })}
+                      className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm"
+                      placeholder="Company Name LLC"
+                    />
                   </div>
-                  <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full h-10 tracking-[-0.5px]">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Workspace
-                  </Button>
+
+                  {/* VAT */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">VAT number</Label>
+                    <Input
+                      value={profile.vat_number}
+                      onChange={e => setProfile({ ...profile, vat_number: e.target.value })}
+                      className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm"
+                      placeholder="EU123456789"
+                    />
+                  </div>
+
+                  {/* Billing Address - Full width */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Billing address</Label>
+                    <Input
+                      value={profile.billing_address}
+                      onChange={e => setProfile({ ...profile, billing_address: e.target.value })}
+                      className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm"
+                      placeholder="123 Main St, City, State, ZIP"
+                    />
+                  </div>
+
+                  {/* Country */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Country</Label>
+                    <Select
+                      value={profile.billing_country}
+                      onValueChange={value => setProfile({ ...profile, billing_country: value })}
+                    >
+                      <SelectTrigger className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {COUNTRIES.map(country => (
+                          <SelectItem key={country.code} value={country.code}>
+                            {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
+              </section>
+
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Danger Zone */}
+              <section className="space-y-3">
+                <div>
+                  <h3 className="text-sm font-medium tracking-[-0.3px] text-destructive">Danger Zone</h3>
+                  <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-0.5">
+                    Permanently delete this workspace and all its data
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="h-9 px-4 bg-red-600 hover:bg-red-700 text-white tracking-[-0.5px] text-sm"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Delete workspace
+                </Button>
+              </section>
             </div>
           )}
         </TabsContent>
 
         {/* Integrations Tab */}
-        <TabsContent value="integrations" className="mt-6">
+        <TabsContent value="integrations" className="mt-0">
           {isBrandMode && brand && (
-            <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column - Analytics Integrations */}
-              <div className="space-y-6">
-                {/* Shortimize API Key */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
-                  <div className="flex items-center gap-3">
-                    <img src={shortimizeLogo} alt="Shortimize" className="w-10 h-10 rounded-lg object-cover" />
-                    <div>
-                      <h3 className="font-medium tracking-[-0.5px]">Shortimize</h3>
-                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Connect to track video analytics</p>
+            <div className="space-y-8">
+              {/* Analytics Integrations Section */}
+              <section className="space-y-5">
+                <div>
+                  <h3 className="text-sm font-medium tracking-[-0.5px]">Analytics</h3>
+                  <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-0.5">Connect video and link tracking services</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Shortimize */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <img src={shortimizeLogo} alt="Shortimize" className="w-5 h-5 rounded object-cover" />
+                      <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Shortimize API Key</Label>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">API Key</Label>
                     <div className="relative">
-                      <Input type={showShortimizeKey ? "text" : "password"} value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Shortimize API key" />
+                      <Input type={showShortimizeKey ? "text" : "password"} value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] pr-10 text-sm" placeholder="Enter API key" />
                       <button type="button" onClick={() => setShowShortimizeKey(!showShortimizeKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showShortimizeKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showShortimizeKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Default Collection Name</Label>
-                    <Input value={shortimizeCollectionName} onChange={e => setShortimizeCollectionName(e.target.value)} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" placeholder="e.g., Campaign Videos" />
-                    <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                      Videos will be organized into this collection by default
-                    </p>
-                  </div>
-                </div>
 
-                {/* Dub.co Link Tracking */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
-                  <div className="flex items-center gap-3">
-                    <img src={dubLogo} alt="Dub" className="w-10 h-10 rounded-lg object-cover bg-white p-1" />
-                    <div>
-                      <h3 className="font-medium tracking-[-0.5px]">Dub.co</h3>
-                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Create short links and track click analytics</p>
-                    </div>
+                  {/* Shortimize Collection */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Default Collection</Label>
+                    <Input value={shortimizeCollectionName} onChange={e => setShortimizeCollectionName(e.target.value)} className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm" placeholder="e.g., Campaign Videos" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">API Key</Label>
+
+                  {/* Dub.co */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <img src={dubLogo} alt="Dub" className="w-5 h-5 rounded object-cover bg-white p-0.5" />
+                      <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Dub.co API Key</Label>
+                    </div>
                     <div className="relative">
-                      <Input type={showDubKey ? "text" : "password"} value={dubApiKey} onChange={e => setDubApiKey(e.target.value)} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Dub.co API key" />
+                      <Input type={showDubKey ? "text" : "password"} value={dubApiKey} onChange={e => setDubApiKey(e.target.value)} className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] pr-10 text-sm" placeholder="Enter API key" />
                       <button type="button" onClick={() => setShowDubKey(!showDubKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showDubKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showDubKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                       </button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Get your API key from <a href="https://dub.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dub.co/settings/tokens</a>
+                    <p className="text-[10px] text-muted-foreground tracking-[-0.3px]">
+                      Get key from <a href="https://dub.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dub.co/settings/tokens</a>
                     </p>
                   </div>
-                </div>
 
-                {/* Slack Webhook */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
-                  <div className="flex items-center gap-3">
-                    <img alt="Slack" className="w-10 h-10 rounded-lg object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
-                    <div>
-                      <h3 className="font-medium tracking-[-0.5px]">Slack</h3>
-                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
+                  {/* Slack */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <img alt="Slack" className="w-5 h-5 rounded object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
+                      <Label className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Slack Webhook</Label>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Webhook URL</Label>
-                    <Input type="url" value={slackWebhookUrl} onChange={e => setSlackWebhookUrl(e.target.value)} className="h-11 bg-background dark:bg-[#080808] border-0 tracking-[-0.5px]" placeholder="https://hooks.slack.com/services/..." />
+                    <Input type="url" value={slackWebhookUrl} onChange={e => setSlackWebhookUrl(e.target.value)} className="h-10 bg-muted/50 dark:bg-[#0a0a0a] border-0 tracking-[-0.3px] text-sm" placeholder="https://hooks.slack.com/..." />
                   </div>
                 </div>
+              </section>
 
-              </div>
+              {/* Divider */}
+              <div className="border-t border-border/50" />
 
-              {/* Right Column - Custom Webhooks & Notifications */}
-              <div className="space-y-6">
-                {/* Custom Webhooks Section */}
+              {/* Custom Webhooks Section */}
+              <section className="space-y-4">
                 <CustomWebhooksTab brandId={brand.id} />
+              </section>
 
-                {/* Notifications Section */}
-                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-white dark:bg-[#0e0e0e]">
-                  <div>
-                    <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive webhook and email alerts</p>
-                  </div>
-                  <div className="divide-y divide-border/50">
-                    {/* New partner application */}
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-3">
-                        <img src={framePersonIcon} alt="" className="h-5 w-5 opacity-60" />
-                        <div>
-                          <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
-                          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
-                        </div>
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Notifications Section */}
+              <section className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium tracking-[-0.5px]">Notifications</h3>
+                  <p className="text-xs text-muted-foreground tracking-[-0.3px] mt-0.5">Configure webhook and email alerts</p>
+                </div>
+
+                <div className="space-y-1">
+                  {/* New creator application */}
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                        <img src={framePersonIcon} alt="" className="h-4 w-4 opacity-70" />
                       </div>
-                      <Switch checked={notifyNewApplication} onCheckedChange={checked => {
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.3px]">When a creator applies to your program</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifyNewApplication} onCheckedChange={checked => {
                       setNotifyNewApplication(checked);
                       handleSaveNotifications();
                     }} />
-                    </div>
+                  </div>
 
-                    {/* New boost submission */}
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-3">
-                        <img src={stackedInboxIcon} alt="" className="h-5 w-5 opacity-60" />
-                        <div>
-                          <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
-                          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
-                        </div>
+                  {/* New boost submission */}
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                        <img src={stackedInboxIcon} alt="" className="h-4 w-4 opacity-70" />
                       </div>
-                      <Switch checked={notifyNewSale} onCheckedChange={checked => {
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.3px]">When a submission is made to your boost</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifyNewSale} onCheckedChange={checked => {
                       setNotifyNewSale(checked);
                       handleSaveNotifications();
                     }} />
-                    </div>
+                  </div>
 
-                    {/* New message from partner */}
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-3">
-                        <img src={mailNotificationIcon} alt="" className="h-5 w-5 opacity-60" />
-                        <div>
-                          <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
-                          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
-                        </div>
+                  {/* New message */}
+                  <div className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                        <img src={mailNotificationIcon} alt="" className="h-4 w-4 opacity-70" />
                       </div>
-                      <Switch checked={notifyNewMessage} onCheckedChange={checked => {
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.3px]">When you receive a new message</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifyNewMessage} onCheckedChange={checked => {
                       setNotifyNewMessage(checked);
                       handleSaveNotifications();
                     }} />
-                    </div>
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
-            </>
           )}
         </TabsContent>
 
@@ -1480,26 +1571,9 @@ export function UserSettingsTab() {
                 </div>
               </div>
 
-              {/* Low Balance Protection - Collapsible */}
+              {/* Low Balance Protection */}
               {currentBrand && (
-                <Collapsible defaultOpen={false}>
-                  <div className="rounded-xl border border-border/50 bg-white dark:bg-[#0e0e0e] overflow-hidden">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/30 transition-colors">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-rounded text-[18px] text-muted-foreground" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>
-                          shield
-                        </span>
-                        <span className="text-sm font-medium tracking-[-0.5px]">Low Balance Protection</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="px-4 pb-4">
-                        <LowBalanceSettingsTab ref={lowBalanceRef} brandId={currentBrand.id} />
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
+                <LowBalanceSettingsTab ref={lowBalanceRef} brandId={currentBrand.id} />
               )}
             </div>
           )}

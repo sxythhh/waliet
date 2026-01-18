@@ -109,7 +109,6 @@ const DEFAULT_SETTINGS: BrandSettings = {
 };
 
 export function BrandSettingsTab({ brandId, subscriptionStatus }: BrandSettingsTabProps) {
-  console.log('[BrandSettingsTab] Rendered with brandId:', brandId, 'subscriptionStatus:', subscriptionStatus);
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState<BrandSettings>(DEFAULT_SETTINGS);

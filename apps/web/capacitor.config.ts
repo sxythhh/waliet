@@ -6,8 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     // Enable this for live reload during development
-    // url: 'http://YOUR_LOCAL_IP:8080',
-    // cleartext: true,
+    url: 'http://192.168.232.170:8080',
+    cleartext: true,
     androidScheme: 'https',
   },
   ios: {

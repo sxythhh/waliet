@@ -69,9 +69,7 @@ const [showLeaveDialog, setShowLeaveDialog] = useState(false);
       let submissionData = null;
       let retries = 0;
       const maxRetries = 3;
-      
-      console.log('Checking access for campaign:', id, 'user:', user.id);
-      
+
       while (!submissionData && retries < maxRetries) {
         const { data } = await supabase
           .from("campaign_submissions")
@@ -81,8 +79,7 @@ const [showLeaveDialog, setShowLeaveDialog] = useState(false);
           .eq("status", "approved")
           .limit(1)
           .maybeSingle();
-        
-        console.log(`Retry ${retries + 1}:`, { found: !!data, data });
+
         submissionData = data;
         
         if (!submissionData && retries < maxRetries - 1) {
@@ -104,12 +101,6 @@ const [showLeaveDialog, setShowLeaveDialog] = useState(false);
           .eq("status", "pending")
           .limit(1)
           .maybeSingle();
-
-        console.log('Access denied - no approved submission found', { 
-          campaignId: id, 
-          userId: user.id, 
-          hasPending: !!pendingSubmission 
-        });
 
         toast({
           variant: "destructive",
@@ -140,7 +131,6 @@ const [showLeaveDialog, setShowLeaveDialog] = useState(false);
           .from("campaign_submissions")
           .delete()
           .in("id", duplicateIds);
-        console.log('Cleaned up duplicate submissions:', duplicateIds);
       }
 
       // Fetch campaign only if user has access

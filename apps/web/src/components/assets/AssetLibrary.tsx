@@ -376,9 +376,6 @@ export function AssetLibrary({
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto">
-          {/* Loading state */}
-          {isLoading && <LoadingSkeleton />}
-
           {/* Error state */}
           {error && !isLoading && (
             <div className="py-12 text-center">
@@ -597,10 +594,12 @@ function EmptyState({ isAdmin, onUpload, onRequestAsset }: EmptyStateProps) {
           Upload Asset
         </Button>
       ) : onRequestAsset ? (
-        <Button onClick={onRequestAsset} variant="outline" className="gap-2">
-          <Icon icon="material-symbols:chat-add-on-outline" className="w-4 h-4" />
+        <button
+          onClick={onRequestAsset}
+          className="h-8 px-4 text-xs font-medium font-inter tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors"
+        >
           Request an Asset
-        </Button>
+        </button>
       ) : null}
     </div>
   );
@@ -635,10 +634,12 @@ function NoResultsState({ searchQuery, onClear, onRequestAsset }: NoResultsState
           Clear search
         </Button>
         {onRequestAsset && (
-          <Button onClick={onRequestAsset} variant="outline" size="sm" className="gap-1.5">
-            <Icon icon="material-symbols:chat-add-on-outline" className="w-4 h-4" />
+          <button
+            onClick={onRequestAsset}
+            className="h-8 px-4 text-xs font-medium font-inter tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors"
+          >
             Request Asset
-          </Button>
+          </button>
         )}
       </div>
     </div>

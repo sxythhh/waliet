@@ -115,7 +115,6 @@ export function ManageCampaignsDialog({
 
   const trackAccountInShortimize = async (campaignId: string) => {
     if (!accountLink) {
-      console.log('No account link available for Shortimize tracking');
       return;
     }
 
@@ -129,8 +128,6 @@ export function ManageCampaignsDialog({
 
       if (error) {
         console.error('Error tracking account in Shortimize:', error);
-      } else {
-        console.log('Shortimize tracking result:', data);
       }
     } catch (err) {
       console.error('Failed to track account in Shortimize:', err);
@@ -139,7 +136,7 @@ export function ManageCampaignsDialog({
 
   const untrackAccountFromShortimize = async (campaignId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('untrack-shortimize-account', {
+      const { error } = await supabase.functions.invoke('untrack-shortimize-account', {
         body: {
           campaignId,
           socialAccountId: accountId,
@@ -148,8 +145,6 @@ export function ManageCampaignsDialog({
 
       if (error) {
         console.error('Error untracking account from Shortimize:', error);
-      } else {
-        console.log('Shortimize untracking result:', data);
       }
     } catch (err) {
       console.error('Failed to untrack account from Shortimize:', err);

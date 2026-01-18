@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +20,9 @@ interface Application {
   status: string;
   applied_at: string;
   reviewed_at: string | null;
+  proposed_rate: number | null;
+  approved_rate: number | null;
+  rate_status: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -35,6 +39,9 @@ interface BountyApplicationsSheetProps {
   currentAccepted: number;
   brandId: string;
   subscriptionPlan?: string | null;
+  paymentModel?: string | null;
+  flatRateMin?: number | null;
+  flatRateMax?: number | null;
 }
 
 export function BountyApplicationsSheet({
@@ -45,12 +52,18 @@ export function BountyApplicationsSheet({
   maxAccepted,
   currentAccepted,
   brandId,
-  subscriptionPlan
+  subscriptionPlan,
+  paymentModel,
+  flatRateMin,
+  flatRateMax,
 }: BountyApplicationsSheetProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [counterRates, setCounterRates] = useState<Record<string, string>>({});
   const { canHireCreator } = useBrandUsage(brandId, subscriptionPlan);
+
+  const isFlatRate = paymentModel === 'flat_rate';
 
   useEffect(() => {
     if (open) {
@@ -87,6 +100,77 @@ export function BountyApplicationsSheet({
       toast.error("Failed to load applications");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle approving a creator's proposed rate
+  const handleApproveRate = async (applicationId: string) => {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application || !application.proposed_rate) return;
+
+    setProcessing(applicationId);
+    try {
+      const { error } = await supabase
+        .from('bounty_applications')
+        .update({
+          approved_rate: application.proposed_rate,
+          rate_status: 'approved',
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+      toast.success(`Rate of $${application.proposed_rate} approved`);
+      fetchApplications();
+    } catch (error: any) {
+      console.error("Error approving rate:", error);
+      toast.error("Failed to approve rate");
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  // Handle sending a counter offer
+  const handleCounterOffer = async (applicationId: string) => {
+    const counterRate = counterRates[applicationId];
+    if (!counterRate) {
+      toast.error("Please enter a counter rate");
+      return;
+    }
+
+    const rate = parseFloat(counterRate);
+    if (isNaN(rate) || rate <= 0) {
+      toast.error("Please enter a valid rate");
+      return;
+    }
+
+    if (flatRateMin && rate < flatRateMin) {
+      toast.error(`Rate must be at least $${flatRateMin}`);
+      return;
+    }
+    if (flatRateMax && rate > flatRateMax) {
+      toast.error(`Rate cannot exceed $${flatRateMax}`);
+      return;
+    }
+
+    setProcessing(applicationId);
+    try {
+      const { error } = await supabase
+        .from('bounty_applications')
+        .update({
+          approved_rate: rate,
+          rate_status: 'countered',
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+      toast.success(`Counter offer of $${rate} sent`);
+      setCounterRates(prev => ({ ...prev, [applicationId]: '' }));
+      fetchApplications();
+    } catch (error: any) {
+      console.error("Error sending counter offer:", error);
+      toast.error("Failed to send counter offer");
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -131,18 +215,38 @@ export function BountyApplicationsSheet({
 
       if (error) throw error;
 
-      // If accepted, try to add user to Discord server
+      // If accepted, handle integrations (Discord, Analytics tracking)
       if (newStatus === 'accepted') {
         try {
-          // Get bounty campaign details including discord_guild_id and discord_role_id
+          // Get bounty campaign details including discord and analytics settings
           const { data: bounty, error: bountyError } = await supabase
             .from('bounty_campaigns')
-            .select('discord_guild_id, discord_role_id')
+            .select('discord_guild_id, discord_role_id, auto_track_shortimize, analytics_provider')
             .eq('id', bountyId)
             .single();
 
           if (bountyError) throw bountyError;
 
+          // Determine analytics provider (use new column with fallback to legacy)
+          const analyticsProvider = bounty?.analytics_provider || (bounty?.auto_track_shortimize ? 'shortimize' : 'none');
+
+          // Track in analytics provider if configured
+          if (analyticsProvider !== 'none') {
+            try {
+              const functionName = analyticsProvider === 'viral' ? 'track-boost-user-viral' : 'track-boost-user';
+              await supabase.functions.invoke(functionName, {
+                body: {
+                  bountyId,
+                  userId: application.user_id
+                }
+              });
+            } catch (trackError) {
+              console.error(`Analytics tracking error (${analyticsProvider}):`, trackError);
+              // Don't show error toast - tracking is non-blocking
+            }
+          }
+
+          // Add to Discord server if configured
           if (bounty?.discord_guild_id) {
             const { data, error: discordError } = await supabase.functions.invoke('add-to-discord-server', {
               body: {
@@ -271,6 +375,70 @@ export function BountyApplicationsSheet({
                     </div>
                   )}
 
+                  {/* Rate Proposal Section - Only for flat_rate boosts */}
+                  {isFlatRate && application.proposed_rate && (
+                    <div className="p-3 rounded bg-[#0a0a0a] border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-white/50 mb-1">Proposed Rate</p>
+                          <p className="text-lg font-semibold text-white">${application.proposed_rate.toLocaleString()}/post</p>
+                        </div>
+                        {application.rate_status === 'approved' && (
+                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                            <Check className="h-3 w-3 mr-1" />
+                            Rate Approved
+                          </Badge>
+                        )}
+                        {application.rate_status === 'countered' && application.approved_rate && (
+                          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                            Counter: ${application.approved_rate}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Rate Approval/Counter UI for pending applications */}
+                      {application.status === 'pending' && application.rate_status !== 'approved' && (
+                        <div className="space-y-2 pt-2 border-t border-white/10">
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleApproveRate(application.id)}
+                              disabled={processing === application.id}
+                              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                              size="sm"
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Accept ${application.proposed_rate}
+                            </Button>
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50 text-sm">$</span>
+                              <Input
+                                type="number"
+                                value={counterRates[application.id] || ''}
+                                onChange={(e) => setCounterRates(prev => ({ ...prev, [application.id]: e.target.value }))}
+                                placeholder={`${Math.round(((flatRateMin || 0) + (flatRateMax || 0)) / 2)}`}
+                                className="pl-6 h-8 bg-[#1a1a1a] border-white/10 text-white text-sm"
+                              />
+                            </div>
+                            <Button
+                              onClick={() => handleCounterOffer(application.id)}
+                              disabled={processing === application.id || !counterRates[application.id]}
+                              variant="outline"
+                              className="bg-[#1a1a1a] border-white/10 text-white hover:bg-white/5"
+                              size="sm"
+                            >
+                              Counter
+                            </Button>
+                          </div>
+                          {flatRateMin !== undefined && flatRateMax !== undefined && (
+                            <p className="text-[10px] text-white/40">Your range: ${flatRateMin} - ${flatRateMax} per post</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Video Link */}
                   <div>
                     <Button
@@ -305,10 +473,22 @@ export function BountyApplicationsSheet({
                           <span>Hire limit reached. Upgrade your plan to accept more creators.</span>
                         </div>
                       )}
+                      {/* Rate approval warning for flat_rate boosts */}
+                      {isFlatRate && application.proposed_rate && application.rate_status !== 'approved' && application.rate_status !== 'countered' && (
+                        <div className="flex items-center gap-2 p-2 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400">
+                          <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                          <span>Please approve or counter the rate before accepting this creator.</span>
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                          disabled={processing === application.id || acceptedCount >= maxAccepted || !canHireCreator}
+                          disabled={
+                            processing === application.id ||
+                            acceptedCount >= maxAccepted ||
+                            !canHireCreator ||
+                            (isFlatRate && application.proposed_rate && application.rate_status !== 'approved' && application.rate_status !== 'countered')
+                          }
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                           size="sm"
                         >

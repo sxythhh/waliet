@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, Easing, Image } from 'react-native';
-import { colors } from '../theme/colors';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ghostLogo = require('../assets/virality-ghost-logo.png');
@@ -85,6 +84,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    tintColor: colors.primary,
+    // Logo already has correct colors, no tint needed
   },
 });

@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
 interface Contract {
   id: string;
   title: string;
@@ -41,6 +42,9 @@ interface Boost {
   title: string;
   monthly_retainer: number;
   videos_per_month: number;
+  payment_model?: string | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
 }
 interface Template {
   id: string;
@@ -143,6 +147,7 @@ function expandTemplateContent(
 export function CreatorContractsTab({
   brandId
 }: CreatorContractsTabProps) {
+  const { isDemoMode, demoContracts, demoBrand } = useDemoData();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [boosts, setBoosts] = useState<Boost[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -218,6 +223,32 @@ export function CreatorContractsTab({
   });
   const fetchData = useCallback(async () => {
     setLoading(true);
+
+    // In demo mode, use mock data
+    if (isDemoMode) {
+      setBrandName(demoBrand.name);
+      const mockContracts: Contract[] = demoContracts.map(c => ({
+        id: c.id,
+        title: c.title,
+        creator_id: c.id,
+        creator_name: c.creator_name,
+        creator_avatar: c.creator_avatar,
+        boost_id: null,
+        boost_title: c.boost_title,
+        status: c.status as Contract['status'],
+        monthly_rate: c.monthly_rate,
+        videos_per_month: c.videos_per_month,
+        start_date: c.start_date,
+        end_date: null,
+        created_at: c.created_at,
+        signed_at: (c as any).signed_at || null,
+        terms: c.terms,
+      }));
+      setContracts(mockContracts);
+      setLoading(false);
+      return;
+    }
+
     try {
       // Fetch brand name
       const { data: brandData } = await supabase
@@ -232,7 +263,7 @@ export function CreatorContractsTab({
       // Fetch boosts/job posts
       const {
         data: boostsData
-      } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month').eq('brand_id', brandId).eq('status', 'active');
+      } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month, payment_model, flat_rate_min, flat_rate_max').eq('brand_id', brandId).eq('status', 'active');
       setBoosts(boostsData || []);
 
       // Fetch templates
@@ -314,7 +345,7 @@ export function CreatorContractsTab({
     } finally {
       setLoading(false);
     }
-  }, [brandId]);
+  }, [brandId, isDemoMode, demoContracts, demoBrand]);
 
   useEffect(() => {
     fetchData();
@@ -354,6 +385,10 @@ export function CreatorContractsTab({
       additional_terms: newContract.custom_terms || undefined,
     });
 
+    // Determine payment model and rate based on boost settings
+    const isFlatRate = boost?.payment_model === 'flat_rate';
+    const perPostRate = isFlatRate ? (parseFloat(newContract.monthly_rate) || boost?.flat_rate_min || 0) : null;
+
     try {
       const {
         error
@@ -363,13 +398,15 @@ export function CreatorContractsTab({
         boost_id: newContract.boost_id || null,
         creator_email: newContract.creator_email,
         title: boost ? `${boost.title} - Creator Agreement` : template ? template.name : 'Creator Agreement',
-        monthly_rate: monthlyRate,
+        monthly_rate: isFlatRate ? 0 : monthlyRate,
         videos_per_month: videosPerMonth,
         start_date: newContract.start_date,
         end_date: endDate.toISOString().split('T')[0],
         duration_months: durationMonths,
         custom_terms: expandedContent,
-        status: 'sent'
+        status: 'sent',
+        payment_model: isFlatRate ? 'flat_rate' : 'retainer',
+        per_post_rate: perPostRate,
       });
       if (error) throw error;
 
@@ -542,7 +579,7 @@ export function CreatorContractsTab({
   if (loading) {
     return null;
   }
-  return <div className="h-full flex flex-col">
+  return <div data-tour-target="contracts-list" className="h-full flex flex-col">
       <ScrollArea className="flex-1">
         <div className="p-4 md:p-6 space-y-6">
           {/* Header */}
@@ -645,7 +682,29 @@ export function CreatorContractsTab({
 
           {/* Contracts List */}
           <div className="space-y-3">
-            {filteredContracts.map(contract => {
+            {filteredContracts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 px-4">
+                <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
+                  <DescriptionOutlinedIcon className="text-muted-foreground/50" style={{ fontSize: 24 }} />
+                </div>
+                <h3 className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground mb-1">
+                  No contracts yet
+                </h3>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] text-center max-w-[240px] mb-4">
+                  {searchQuery || statusFilter !== 'all'
+                    ? 'No contracts match your filters'
+                    : 'Create a contract to formalize agreements with your creators'}
+                </p>
+                {!searchQuery && statusFilter === 'all' && (
+                  <button
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="h-8 px-4 text-xs font-inter tracking-[-0.5px] rounded-lg bg-foreground text-background hover:bg-foreground/90 dark:bg-muted/50 dark:text-foreground dark:hover:bg-muted transition-colors"
+                  >
+                    Create Contract
+                  </button>
+                )}
+              </div>
+            ) : filteredContracts.map(contract => {
             const StatusIcon = statusConfig[contract.status].icon;
             return <div key={contract.id} className="group flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:bg-muted/20 transition-all cursor-pointer" onClick={() => handleViewContract(contract)}>
                     <Avatar className="h-10 w-10 shrink-0">
@@ -859,10 +918,10 @@ export function CreatorContractsTab({
           </div>
 
           <DialogFooter className="px-6 py-4 border-t border-border/30 shrink-0">
-            <Button variant="ghost" size="sm" onClick={() => setCreateDialogOpen(false)} className="font-inter tracking-[-0.5px]">
+            <Button variant="ghost" size="sm" onClick={() => setCreateDialogOpen(false)} className="font-inter tracking-[-0.5px] hover:bg-muted/50 hover:text-foreground">
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateContract} className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90">
+            <Button size="sm" onClick={handleCreateContract} className="font-inter tracking-[-0.5px] bg-primary text-primary-foreground hover:bg-primary/90">
               Create & Send
             </Button>
           </DialogFooter>
@@ -1040,10 +1099,10 @@ export function CreatorContractsTab({
           </div>
 
           <DialogFooter className="px-6 py-4 border-t border-border/30 shrink-0">
-            <Button variant="ghost" size="sm" onClick={() => setTemplateDialogOpen(false)} className="font-inter tracking-[-0.5px]">
+            <Button variant="ghost" size="sm" onClick={() => setTemplateDialogOpen(false)} className="font-inter tracking-[-0.5px] hover:bg-muted/50 hover:text-foreground">
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSaveTemplate} className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90">
+            <Button size="sm" onClick={handleSaveTemplate} className="font-inter tracking-[-0.5px] bg-primary text-primary-foreground hover:bg-primary/90">
               {editingTemplate ? "Save Changes" : "Create Template"}
             </Button>
           </DialogFooter>

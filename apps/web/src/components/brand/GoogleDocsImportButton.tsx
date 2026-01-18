@@ -83,7 +83,6 @@ export function GoogleDocsImportButton({
       // First check if user is authenticated
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) {
-        console.log("No session found, skipping Google Docs connection check");
         setIsConnected(false);
         return;
       }

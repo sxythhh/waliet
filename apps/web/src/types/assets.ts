@@ -223,7 +223,7 @@ export const SUPPORTED_FILE_TYPES: Record<AssetType, string[]> = {
  */
 export const FILE_SIZE_LIMITS: Record<AssetType, number> = {
   image: 25 * 1024 * 1024, // 25 MB
-  video: 100 * 1024 * 1024, // 100 MB
+  video: 300 * 1024 * 1024, // 300 MB
   document: 50 * 1024 * 1024, // 50 MB
   link: 0, // Not applicable
 };

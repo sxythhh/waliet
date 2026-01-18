@@ -78,7 +78,7 @@ export function DataExportDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="gap-2 font-inter tracking-[-0.5px]">
           <Download className="h-4 w-4" />
           Export My Data
         </Button>

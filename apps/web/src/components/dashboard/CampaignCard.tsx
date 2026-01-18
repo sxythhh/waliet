@@ -20,6 +20,8 @@ export interface CampaignCardProps {
   platforms?: string[];
   isEnded?: boolean;
   isBookmarked?: boolean;
+  isJoined?: boolean;
+  isApplied?: boolean;
   slug?: string;
   brand_slug?: string;
   onClick?: () => void;
@@ -43,6 +45,8 @@ export const CampaignCard = memo(function CampaignCard({
   platforms = [],
   isEnded,
   isBookmarked,
+  isJoined,
+  isApplied,
   slug,
   brand_slug,
   onClick,
@@ -124,14 +128,18 @@ export const CampaignCard = memo(function CampaignCard({
 
             {/* Status Indicator - Minimal dot style */}
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium shrink-0 ${
-              isEnded
+              isJoined
+                ? 'bg-primary/10 text-primary'
+                : isApplied
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                : isEnded
                 ? 'bg-muted text-muted-foreground'
                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${
-                isEnded ? 'bg-muted-foreground' : 'bg-emerald-500 animate-pulse'
+                isJoined ? 'bg-primary' : isApplied ? 'bg-amber-500' : isEnded ? 'bg-muted-foreground' : 'bg-emerald-500 animate-pulse'
               }`} />
-              {isEnded ? 'Ended' : 'Live'}
+              {isJoined ? 'Joined' : isApplied ? 'Applied' : isEnded ? 'Ended' : 'Live'}
             </div>
           </div>
 

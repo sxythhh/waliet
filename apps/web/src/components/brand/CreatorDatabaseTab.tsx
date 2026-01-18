@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, GripVertical, Settings, Star, Copy, Tag, DollarSign, RotateCcw } from "lucide-react";
 import { Icon } from "@iconify/react";
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -44,6 +45,7 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
 import discordWhiteIcon from "@/assets/discord-white-icon.webp";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
 interface Creator {
   id: string;
   relationship_id: string;
@@ -290,6 +292,7 @@ export function CreatorDatabaseTab({
   } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
+  const { isDemoMode, demoCreators } = useDemoData();
 
   // Mode toggle
   const [showFindCreators, setShowFindCreators] = useState(false);
@@ -533,6 +536,41 @@ export function CreatorDatabaseTab({
 
   const fetchCreators = useCallback(async () => {
     setLoading(true);
+
+    // In demo mode, use mock data
+    if (isDemoMode) {
+      const mockCreators: Creator[] = demoCreators.map((c, idx) => ({
+        id: c.id,
+        relationship_id: `demo-rel-${idx}`,
+        username: c.username,
+        full_name: c.name,
+        avatar_url: c.avatar_url,
+        email: `${c.username.replace('@', '')}@example.com`,
+        phone_number: null,
+        discord_username: null,
+        country: "United States",
+        city: null,
+        is_external: false,
+        external_name: null,
+        external_email: null,
+        external_platform: null,
+        external_handle: null,
+        source_type: "campaign",
+        source_campaign_title: "Summer Product Launch",
+        first_interaction_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        social_accounts: [{ platform: "tiktok", username: c.username, account_link: null, follower_count: c.followers }],
+        total_views: c.avg_views * 10,
+        total_earnings: c.avg_views * 0.01,
+        date_joined: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        campaigns: [{ id: "demo-campaign-1", title: "Summer Product Launch", type: "campaign" as const }],
+        demographic_score: 75 + Math.random() * 20,
+        reliability_score: 80 + Math.random() * 15,
+      }));
+      setCreators(mockCreators);
+      setLoading(false);
+      return;
+    }
+
     try {
       // First fetch campaigns to avoid race condition
       const [campaignsResult, boostsResult] = await Promise.all([supabase.from('campaigns').select('id, title').eq('brand_id', brandId), supabase.from('bounty_campaigns').select('id, title').eq('brand_id', brandId)]);
@@ -698,7 +736,7 @@ export function CreatorDatabaseTab({
     } finally {
       setLoading(false);
     }
-  }, [brandId]);
+  }, [brandId, isDemoMode, demoCreators]);
 
   useEffect(() => {
     fetchCreators();
@@ -1342,7 +1380,7 @@ export function CreatorDatabaseTab({
     setCreatorToRemove(creator);
     setRemoveCreatorDialogOpen(true);
   };
-  return <div className="h-full flex flex-col pb-20 md:pb-0">
+  return <div data-tour-target="creators-database" className="h-full flex flex-col pb-20 md:pb-0">
       {/* Header */}
       <div className="bg-white dark:bg-transparent border-b border-border px-[7px] py-[5px]">
         {/* Filters & Actions - Single Row */}
@@ -1368,7 +1406,7 @@ export function CreatorDatabaseTab({
           </button>
 
           {/* Search Bar */}
-          <div className="relative flex-1 max-w-xs">
+          <div data-tour-target="creators-search" className="relative flex-1 max-w-xs">
             <Icon icon="material-symbols:search" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search creators..."
@@ -1705,19 +1743,40 @@ export function CreatorDatabaseTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCreators.length === 0 && (searchQuery || selectedCampaignFilter !== 'all') ? (
+                  {filteredCreators.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={orderedVisibleColumns.length + 1}
-                        className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]"
+                        className="h-[400px]"
                       >
-                        No creators match your filters
+                        <div className="flex flex-col items-center justify-center py-16 px-4">
+                          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
+                            <PeopleOutlinedIcon className="text-muted-foreground/50" style={{ fontSize: 24 }} />
+                          </div>
+                          <h3 className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground mb-1">
+                            {searchQuery || selectedCampaignFilter !== 'all' ? 'No results' : 'No creators yet'}
+                          </h3>
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] text-center max-w-[240px] mb-4">
+                            {searchQuery || selectedCampaignFilter !== 'all'
+                              ? 'No creators match your filters'
+                              : 'Add creators manually or invite them to apply to your campaigns'}
+                          </p>
+                          {!searchQuery && selectedCampaignFilter === 'all' && (
+                            <button
+                              onClick={() => setAddCreatorsDialogOpen(true)}
+                              className="h-8 px-4 text-xs font-inter tracking-[-0.5px] rounded-lg bg-foreground text-background hover:bg-foreground/90 dark:bg-muted/50 dark:text-foreground dark:hover:bg-muted transition-colors"
+                            >
+                              Add Creator
+                            </button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCreators.map(creator => (
+                    filteredCreators.map((creator, index) => (
                       <TableRow
                         key={creator.id}
+                        data-tour-target={index === 0 ? "creator-card" : undefined}
                         className={`bg-white hover:bg-muted/30 dark:bg-transparent dark:hover:bg-muted/20 border-b border-border/30 group cursor-pointer ${
                           selectedCreatorPanel?.id === creator.id ? 'bg-muted/30 dark:bg-muted/30' : ''
                         }`}
@@ -2247,10 +2306,6 @@ export function CreatorDatabaseTab({
             <button onClick={() => setAddToCampaignDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-sm">
               <Plus className="h-3 w-3" />
               Add to Campaign
-            </button>
-            <button onClick={() => setBulkPitchDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-emerald-600 rounded-md hover:bg-emerald-700 transition-all flex items-center gap-1.5 shadow-sm">
-              <MessageSquare className="h-3 w-3" />
-              Invite to Campaign
             </button>
           </div>
         </div>}

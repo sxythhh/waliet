@@ -596,17 +596,6 @@ export function AppSidebar() {
 
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#fdfdfd] dark:bg-background shrink-0 border-r border-border dark:border-border transition-all duration-200 overflow-visible`}>
-        {/* Logo - hidden when collapsed */}
-        {!isCollapsed && (
-          <div className="flex items-center px-[14px] pl-[17px] py-[8px]">
-            <Link to="/" className="flex items-center gap-0 hover:opacity-80 transition-opacity">
-              <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover mr-[2px]" />
-              <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">
-                VIRALITY
-              </span>
-            </Link>
-          </div>
-        )}
 
         {/* Workspace Toggle */}
         {!isCollapsed ? <div className="px-2 py-[5px]">

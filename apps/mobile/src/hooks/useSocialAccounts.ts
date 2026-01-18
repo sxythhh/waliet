@@ -1,7 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ImageSourcePropType } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { config } from '../config';
 import { useAuth } from '../contexts/AuthContext';
+
+// Platform logo images
+const tiktokLogoWhite = require('../assets/tiktok-logo-white.png');
+const tiktokLogoBlack = require('../assets/tiktok-logo-black-new.png');
+const instagramLogoWhite = require('../assets/instagram-logo-white.png');
+const instagramLogoBlack = require('../assets/instagram-logo-black.png');
+const youtubeLogoWhite = require('../assets/youtube-logo-white.png');
+const youtubeLogoBlack = require('../assets/youtube-logo-black-new.png');
+const discordLogo = require('../assets/discord-logo.png');
+const xLogo = require('../assets/x-logo.png');
+const xLogoLight = require('../assets/x-logo-light.png');
 
 export type Platform = 'tiktok' | 'instagram' | 'youtube' | 'twitter' | 'discord';
 
@@ -332,13 +344,51 @@ export function getPlatformUrl(platform: Platform, username: string): string {
   }
 }
 
-// Platform configuration
-export const platformConfig: Record<Platform, { name: string; icon: string; bg: string }> = {
-  tiktok: { name: 'TikTok', icon: 'music-note', bg: '#000000' },
-  instagram: { name: 'Instagram', icon: 'instagram', bg: '#E1306C' },
-  youtube: { name: 'YouTube', icon: 'youtube', bg: '#FF0000' },
-  twitter: { name: 'X', icon: 'twitter', bg: '#000000' },
-  discord: { name: 'Discord', icon: 'discord', bg: '#5865F2' },
+// Platform configuration with logo images
+export interface PlatformConfig {
+  name: string;
+  icon: string; // Fallback icon name from MaterialCommunityIcons
+  bg: string;
+  logoWhite: ImageSourcePropType;
+  logoBlack: ImageSourcePropType;
+}
+
+export const platformConfig: Record<Platform, PlatformConfig> = {
+  tiktok: {
+    name: 'TikTok',
+    icon: 'music-note',
+    bg: '#000000',
+    logoWhite: tiktokLogoWhite,
+    logoBlack: tiktokLogoBlack,
+  },
+  instagram: {
+    name: 'Instagram',
+    icon: 'instagram',
+    bg: '#E1306C',
+    logoWhite: instagramLogoWhite,
+    logoBlack: instagramLogoBlack,
+  },
+  youtube: {
+    name: 'YouTube',
+    icon: 'youtube',
+    bg: '#FF0000',
+    logoWhite: youtubeLogoWhite,
+    logoBlack: youtubeLogoBlack,
+  },
+  twitter: {
+    name: 'X',
+    icon: 'twitter',
+    bg: '#000000',
+    logoWhite: xLogoLight,
+    logoBlack: xLogo,
+  },
+  discord: {
+    name: 'Discord',
+    icon: 'discord',
+    bg: '#5865F2',
+    logoWhite: discordLogo,
+    logoBlack: discordLogo,
+  },
 };
 
 // Generate a 6-character verification code

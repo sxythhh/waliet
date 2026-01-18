@@ -109,7 +109,6 @@ export function NotionImportButton({
       // First check if user is authenticated
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) {
-        console.log("No session found, skipping Notion connection check");
         if (isMountedRef.current) setIsConnected(false);
         return;
       }

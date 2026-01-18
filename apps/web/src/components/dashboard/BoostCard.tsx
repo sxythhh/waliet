@@ -47,6 +47,10 @@ interface BoostCardProps {
     title: string;
     monthly_retainer: number;
     videos_per_month: number;
+    payment_model?: 'retainer' | 'flat_rate' | null;
+    flat_rate_min?: number | null;
+    flat_rate_max?: number | null;
+    approved_rate?: number | null;
     content_style_requirements?: string;
     blueprint_id?: string | null;
     blueprint_embed_url?: string | null;
@@ -168,7 +172,12 @@ export function BoostCard({
         return <Badge className={`${baseClasses} text-yellow-500`}>Pending</Badge>;
     }
   };
-  const payoutPerVideo = boost.monthly_retainer / boost.videos_per_month;
+  const isFlatRate = boost.payment_model === 'flat_rate';
+  const hasUnlimitedVideos = !boost.videos_per_month || boost.videos_per_month === 0;
+  // For flat-rate: use approved_rate, for retainer: calculate from monthly_retainer / videos_per_month
+  const payoutPerVideo = isFlatRate
+    ? (boost.approved_rate || boost.flat_rate_min || 0)
+    : (hasUnlimitedVideos ? boost.monthly_retainer : boost.monthly_retainer / boost.videos_per_month);
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -181,19 +190,19 @@ export function BoostCard({
   // Only count approved + pending toward the quota (rejected videos don't count)
   const activeSubmissionsThisMonth = approvedThisMonth + pendingThisMonth;
   const earnedThisMonth = approvedThisMonth * payoutPerVideo;
-  const dailyLimit = Math.ceil(boost.videos_per_month / 30);
+  const dailyLimit = hasUnlimitedVideos ? Infinity : Math.ceil(boost.videos_per_month / 30);
   // Only count approved + pending submissions in last 24 hours (rejected don't count against daily limit)
   const last24Hours = submissions.filter(s => {
     const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
     return hoursDiff < 24 && s.status !== "rejected";
   });
-  const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
+  const dailyRemaining = hasUnlimitedVideos ? Infinity : Math.max(0, dailyLimit - last24Hours.length);
   // Remaining posts should be based on active submissions (approved + pending), not all submissions
-  const requiredPosts = Math.max(0, boost.videos_per_month - activeSubmissionsThisMonth);
-  const totalQuota = boost.videos_per_month;
-  const earnedPercent = approvedThisMonth / totalQuota * 100;
-  const pendingPercent = pendingThisMonth / totalQuota * 100;
-  const requiredPercent = requiredPosts / totalQuota * 100;
+  const requiredPosts = hasUnlimitedVideos ? 0 : Math.max(0, boost.videos_per_month - activeSubmissionsThisMonth);
+  const totalQuota = hasUnlimitedVideos ? Math.max(1, activeSubmissionsThisMonth) : boost.videos_per_month;
+  const earnedPercent = hasUnlimitedVideos ? 0 : (approvedThisMonth / totalQuota * 100);
+  const pendingPercent = hasUnlimitedVideos ? 0 : (pendingThisMonth / totalQuota * 100);
+  const requiredPercent = hasUnlimitedVideos ? 0 : (requiredPosts / totalQuota * 100);
   return <>
       <Card className="bg-card border overflow-hidden font-inter tracking-[-0.5px]">
         <CardContent className="p-4 space-y-4">
@@ -214,13 +223,13 @@ export function BoostCard({
             </div>
 
             {/* Submit Button - Desktop only */}
-            <Button onClick={() => setSubmitDialogOpen(true)} size="sm" className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={(approvedThisMonth + pendingThisMonth) >= boost.videos_per_month || dailyRemaining === 0}>
+            <Button onClick={() => setSubmitDialogOpen(true)} size="sm" className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={!hasUnlimitedVideos && ((approvedThisMonth + pendingThisMonth) >= boost.videos_per_month || dailyRemaining === 0)}>
               Submit post
             </Button>
           </div>
 
           {/* Submit Button - Mobile only (full width at bottom) */}
-          <Button onClick={() => setSubmitDialogOpen(true)} className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={(approvedThisMonth + pendingThisMonth) >= boost.videos_per_month || dailyRemaining === 0}>
+          <Button onClick={() => setSubmitDialogOpen(true)} className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={!hasUnlimitedVideos && ((approvedThisMonth + pendingThisMonth) >= boost.videos_per_month || dailyRemaining === 0)}>
             Submit post
           </Button>
 
@@ -236,12 +245,30 @@ export function BoostCard({
               <p className="text-[10px] text-muted-foreground">Pending payout</p>
             </div>
             <div className="bg-white dark:bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-lg font-bold">${payoutPerVideo.toFixed(0)}</p>
-              <p className="text-[10px] text-muted-foreground">Per video</p>
+              {isFlatRate ? (
+                <>
+                  <p className="text-lg font-bold">${boost.approved_rate || boost.flat_rate_min || 0}</p>
+                  <p className="text-[10px] text-muted-foreground">Per post</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-bold">${payoutPerVideo.toFixed(0)}</p>
+                  <p className="text-[10px] text-muted-foreground">Per video</p>
+                </>
+              )}
             </div>
             <div className="bg-white dark:bg-muted/30 rounded-xl p-3 text-center">
-              <p className="text-lg font-bold">${boost.monthly_retainer}</p>
-              <p className="text-[10px] text-muted-foreground">Max monthly</p>
+              {isFlatRate ? (
+                <>
+                  <p className="text-lg font-bold">${boost.flat_rate_min || 0} - ${boost.flat_rate_max || 0}</p>
+                  <p className="text-[10px] text-muted-foreground">Rate range</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-bold">${boost.monthly_retainer}</p>
+                  <p className="text-[10px] text-muted-foreground">Max monthly</p>
+                </>
+              )}
             </div>
           </div>
 
@@ -319,15 +346,15 @@ export function BoostCard({
                       <rect x="3" width="3" height="6" fill="#fb923c" />
                     </pattern>
                   </defs>
-                  
+
                   {/* Background arc */}
                   <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" className="stroke-black/10 dark:stroke-white/10" strokeWidth="8" strokeLinecap="round" />
-                  
+
                   {/* Approved arc (green) */}
-                  {approvedThisMonth > 0 && <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${approvedThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />}
-                  
+                  {approvedThisMonth > 0 && !hasUnlimitedVideos && <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${approvedThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />}
+
                   {/* Pending arc (orange animated stripes) */}
-                  {pendingThisMonth > 0 && <g style={{
+                  {pendingThisMonth > 0 && !hasUnlimitedVideos && <g style={{
                   transform: `rotate(${approvedThisMonth / boost.videos_per_month * 180}deg)`,
                   transformOrigin: '50px 50px'
                 }}>
@@ -336,7 +363,9 @@ export function BoostCard({
                 </svg>
                 {/* Center text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
-                  <span className="text-lg font-bold">{approvedThisMonth + pendingThisMonth}/{boost.videos_per_month}</span>
+                  <span className="text-lg font-bold">
+                    {hasUnlimitedVideos ? (approvedThisMonth + pendingThisMonth) : `${approvedThisMonth + pendingThisMonth}/${boost.videos_per_month}`}
+                  </span>
                 </div>
               </div>
 
@@ -344,16 +373,23 @@ export function BoostCard({
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Monthly Progress</span>
-                  <span className="font-semibold">{approvedThisMonth + pendingThisMonth} / {boost.videos_per_month} videos</span>
+                  <span className="font-semibold">
+                    {hasUnlimitedVideos
+                      ? `${approvedThisMonth + pendingThisMonth} videos submitted`
+                      : `${approvedThisMonth + pendingThisMonth} / ${boost.videos_per_month} videos`
+                    }
+                  </span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                  {approvedThisMonth > 0 && <div className="h-full bg-green-500 transition-all duration-500" style={{
-                  width: `${earnedPercent}%`
-                }} />}
-                  {pendingThisMonth > 0 && <div className="h-full bg-orange-500 transition-all duration-500" style={{
-                  width: `${pendingPercent}%`
-                }} />}
-                </div>
+                {!hasUnlimitedVideos && (
+                  <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                    {approvedThisMonth > 0 && <div className="h-full bg-green-500 transition-all duration-500" style={{
+                    width: `${earnedPercent}%`
+                  }} />}
+                    {pendingThisMonth > 0 && <div className="h-full bg-orange-500 transition-all duration-500" style={{
+                    width: `${pendingPercent}%`
+                  }} />}
+                  </div>
+                )}
                 <div className="flex items-center gap-4 text-[10px]">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -363,10 +399,12 @@ export function BoostCard({
                     <div className="w-2 h-2 rounded-full bg-orange-500" />
                     <span className="text-muted-foreground">{pendingThisMonth} Pending</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-muted" />
-                    <span className="text-muted-foreground">{requiredPosts} Remaining</span>
-                  </div>
+                  {!hasUnlimitedVideos && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-muted" />
+                      <span className="text-muted-foreground">{requiredPosts} Remaining</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -384,7 +422,7 @@ export function BoostCard({
           title: boost.title,
           brand_name: boost.brands?.name,
           payment_model: 'pay_per_post',
-          post_rate: boost.monthly_retainer / boost.videos_per_month,
+          post_rate: payoutPerVideo,
           allowed_platforms: ['tiktok', 'instagram', 'youtube'],
           guidelines: boost.content_style_requirements,
           sourceType: 'boost'

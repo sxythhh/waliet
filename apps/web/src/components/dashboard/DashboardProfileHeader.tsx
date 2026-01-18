@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Calendar, Camera, Plus, Link2, Check, MapPin } from "lucide-react";
+import { Calendar, Camera, Plus, Link2, Check, MapPin, X } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -55,6 +55,7 @@ export function DashboardProfileHeader({
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [removingBanner, setRemovingBanner] = useState(false);
   const [copied, setCopied] = useState(false);
   const { resolvedTheme } = useTheme();
 
@@ -189,6 +190,27 @@ export function DashboardProfileHeader({
     }
   };
 
+  const handleRemoveBanner = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRemovingBanner(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ banner_url: null })
+        .eq("id", profile.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Banner removed");
+      onAvatarUpdated();
+    } catch (error: any) {
+      console.error("Error removing banner:", error);
+      toast.error("Failed to remove banner");
+    } finally {
+      setRemovingBanner(false);
+    }
+  };
+
   const displayName = profile.full_name || profile.username || "Creator";
 
   return (
@@ -209,7 +231,7 @@ export function DashboardProfileHeader({
           {/* Upload overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
-              {uploadingBanner ? (
+              {uploadingBanner || removingBanner ? (
                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
               ) : (
                 <>
@@ -219,6 +241,22 @@ export function DashboardProfileHeader({
               )}
             </div>
           </div>
+
+          {/* Remove banner button - only show when custom banner exists */}
+          {profile.banner_url && (
+            <button
+              onClick={handleRemoveBanner}
+              disabled={removingBanner}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 z-10"
+              title="Remove banner"
+            >
+              {removingBanner ? (
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+              ) : (
+                <X className="h-4 w-4" />
+              )}
+            </button>
+          )}
         </div>
 
         <input

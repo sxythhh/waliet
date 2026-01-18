@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { Card, Badge } from '../components/ui';
 import { LogoLoader } from '../components/LogoLoader';
+import { platformConfig } from '../hooks/useSocialAccounts';
 
 type RootStackParamList = {
   SubmissionDetail: { submissionId: string };
@@ -85,17 +86,9 @@ function getStatusConfig(status: Submission['status']): { variant: 'success' | '
   }
 }
 
-function getPlatformConfig(platform: string): { name: string; icon: string; bg: string } {
-  switch (platform.toLowerCase()) {
-    case 'tiktok':
-      return { name: 'TikTok', icon: 'music-note', bg: '#000' };
-    case 'instagram':
-      return { name: 'Instagram', icon: 'instagram', bg: '#E1306C' };
-    case 'youtube':
-      return { name: 'YouTube', icon: 'youtube', bg: '#FF0000' };
-    default:
-      return { name: platform, icon: 'web', bg: colors.muted };
-  }
+function getPlatformConfigLocal(platform: string) {
+  const p = platform.toLowerCase() as keyof typeof platformConfig;
+  return platformConfig[p] || null;
 }
 
 export function SubmissionDetailScreen() {
@@ -193,7 +186,7 @@ export function SubmissionDetailScreen() {
   }
 
   const statusConfig = getStatusConfig(submission.status);
-  const platformConfig = getPlatformConfig(submission.platform);
+  const platformCfg = getPlatformConfigLocal(submission.platform);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -219,8 +212,16 @@ export function SubmissionDetailScreen() {
             <Badge variant={statusConfig.variant} size="default">
               {statusConfig.label}
             </Badge>
-            <View style={[styles.platformBadge, { backgroundColor: platformConfig.bg }]}>
-              <Icon name={platformConfig.icon} size={16} color={colors.foreground} />
+            <View style={[styles.platformBadge, { backgroundColor: platformCfg?.bg || colors.muted }]}>
+              {platformCfg ? (
+                <Image
+                  source={platformCfg.logoWhite}
+                  style={styles.platformLogoImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Icon name="web" size={16} color={colors.foreground} />
+              )}
             </View>
           </View>
           <Text style={styles.submittedDate}>
@@ -306,11 +307,19 @@ export function SubmissionDetailScreen() {
           <TouchableOpacity onPress={handleOpenVideo} activeOpacity={0.7}>
             <Card variant="bordered" style={styles.videoCard}>
               <View style={styles.videoContent}>
-                <View style={[styles.videoIcon, { backgroundColor: platformConfig.bg }]}>
-                  <Icon name={platformConfig.icon} size={24} color={colors.foreground} />
+                <View style={[styles.videoIcon, { backgroundColor: platformCfg?.bg || colors.muted }]}>
+                  {platformCfg ? (
+                    <Image
+                      source={platformCfg.logoWhite}
+                      style={styles.videoLogoImage}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Icon name="web" size={24} color={colors.foreground} />
+                  )}
                 </View>
                 <View style={styles.videoInfo}>
-                  <Text style={styles.videoLabel}>View on {platformConfig.name}</Text>
+                  <Text style={styles.videoLabel}>View on {platformCfg?.name || submission.platform}</Text>
                   <Text style={styles.videoUrl} numberOfLines={1}>
                     {submission.video_url}
                   </Text>
@@ -450,6 +459,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  platformLogoImage: {
+    width: 18,
+    height: 18,
+  },
   submittedDate: {
     fontSize: 14,
     color: colors.mutedForeground,
@@ -569,6 +582,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  videoLogoImage: {
+    width: 26,
+    height: 26,
   },
   videoInfo: {
     flex: 1,

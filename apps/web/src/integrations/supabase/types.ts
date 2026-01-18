@@ -1213,6 +1213,9 @@ export type Database = {
           bounty_campaign_id: string
           created_at: string
           id: string
+          proposed_rate: number | null
+          approved_rate: number | null
+          rate_status: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -1229,6 +1232,9 @@ export type Database = {
           bounty_campaign_id: string
           created_at?: string
           id?: string
+          proposed_rate?: number | null
+          approved_rate?: number | null
+          rate_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -1245,6 +1251,9 @@ export type Database = {
           bounty_campaign_id?: string
           created_at?: string
           id?: string
+          proposed_rate?: number | null
+          approved_rate?: number | null
+          rate_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -1352,6 +1361,9 @@ export type Database = {
           max_waitlist_size: number | null
           monthly_retainer: number
           paused_at: string | null
+          payment_model: string | null
+          flat_rate_min: number | null
+          flat_rate_max: number | null
           payout_type: string
           position_type: string | null
           public_application_enabled: boolean | null
@@ -1406,6 +1418,9 @@ export type Database = {
           max_waitlist_size?: number | null
           monthly_retainer: number
           paused_at?: string | null
+          payment_model?: string | null
+          flat_rate_min?: number | null
+          flat_rate_max?: number | null
           payout_type?: string
           position_type?: string | null
           public_application_enabled?: boolean | null
@@ -1460,6 +1475,9 @@ export type Database = {
           max_waitlist_size?: number | null
           monthly_retainer?: number
           paused_at?: string | null
+          payment_model?: string | null
+          flat_rate_min?: number | null
+          flat_rate_max?: number | null
           payout_type?: string
           position_type?: string | null
           public_application_enabled?: boolean | null
@@ -4285,6 +4303,8 @@ export type Database = {
           end_date: string | null
           id: string
           monthly_rate: number
+          payment_model: string | null
+          per_post_rate: number | null
           sent_at: string | null
           signature_url: string | null
           signed_at: string | null
@@ -4307,6 +4327,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           monthly_rate?: number
+          payment_model?: string | null
+          per_post_rate?: number | null
           sent_at?: string | null
           signature_url?: string | null
           signed_at?: string | null
@@ -4329,6 +4351,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           monthly_rate?: number
+          payment_model?: string | null
+          per_post_rate?: number | null
           sent_at?: string | null
           signature_url?: string | null
           signed_at?: string | null
@@ -7541,6 +7565,9 @@ export type Database = {
           utm_term: string | null
           vat_number: string | null
           views_score: number | null
+          whop_email: string | null
+          whop_linked_at: string | null
+          whop_user_id: string | null
           zktls_trust_level: string | null
           zktls_verified_at: string | null
         }
@@ -7633,6 +7660,9 @@ export type Database = {
           utm_term?: string | null
           vat_number?: string | null
           views_score?: number | null
+          whop_email?: string | null
+          whop_linked_at?: string | null
+          whop_user_id?: string | null
           zktls_trust_level?: string | null
           zktls_verified_at?: string | null
         }
@@ -7725,6 +7755,9 @@ export type Database = {
           utm_term?: string | null
           vat_number?: string | null
           views_score?: number | null
+          whop_email?: string | null
+          whop_linked_at?: string | null
+          whop_user_id?: string | null
           zktls_trust_level?: string | null
           zktls_verified_at?: string | null
         }

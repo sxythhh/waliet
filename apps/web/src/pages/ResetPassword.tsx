@@ -24,8 +24,6 @@ export default function ResetPassword() {
     // Listen for auth state changes - this catches the PASSWORD_RECOVERY event
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth event:", event, "Session:", !!session);
-        
         if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
           if (session) {
             setValidSession(true);

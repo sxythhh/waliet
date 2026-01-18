@@ -17,42 +17,52 @@ export const useAdminCheck = () => {
       return;
     }
 
-    // No user = not admin
-    if (!user) {
-      setIsAdmin(false);
-      setLoading(false);
-      lastCheckedUserId.current = null;
-      return;
-    }
-
-    // Skip if we already checked this user
-    if (lastCheckedUserId.current === user.id) {
-      return;
-    }
-
-    // Check cache first
-    if (adminCache.has(user.id)) {
-      setIsAdmin(adminCache.get(user.id)!);
-      setLoading(false);
-      lastCheckedUserId.current = user.id;
-      return;
-    }
-
     const checkAdmin = async () => {
+      // Get user ID from context or fetch directly if context is stale
+      let userId = user?.id;
+
+      if (!userId) {
+        // Context might be stale - fetch session directly
+        const { data: { session } } = await supabase.auth.getSession();
+        userId = session?.user?.id;
+      }
+
+      // No user = not admin
+      if (!userId) {
+        setIsAdmin(false);
+        setLoading(false);
+        lastCheckedUserId.current = null;
+        return;
+      }
+
+      // Skip if we already checked this user
+      if (lastCheckedUserId.current === userId) {
+        setLoading(false);
+        return;
+      }
+
+      // Check cache first
+      if (adminCache.has(userId)) {
+        setIsAdmin(adminCache.get(userId)!);
+        setLoading(false);
+        lastCheckedUserId.current = userId;
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from("user_roles")
           .select("role")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("role", "admin")
           .maybeSingle();
 
         if (error) throw error;
 
         const adminStatus = !!data;
-        adminCache.set(user.id, adminStatus);
+        adminCache.set(userId, adminStatus);
         setIsAdmin(adminStatus);
-        lastCheckedUserId.current = user.id;
+        lastCheckedUserId.current = userId;
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsAdmin(false);

@@ -259,7 +259,7 @@ export function CreatorLeaderboardTab({ brandId }: CreatorLeaderboardTabProps) {
 
 
   return (
-    <div className="h-full flex flex-col">
+    <div data-tour-target="leaderboard-table" className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-border">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

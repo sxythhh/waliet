@@ -16,6 +16,13 @@ import { queryClient } from './src/lib/queryClient';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { supabase } from './src/lib/supabase';
+import { usePushNotifications } from './src/hooks/usePushNotifications';
+
+// Push notifications initializer component
+function PushNotificationsInitializer({ children }: { children: React.ReactNode }) {
+  usePushNotifications();
+  return <>{children}</>;
+}
 
 // Deep linking configuration
 const linking: LinkingOptions<ReactNavigation.RootParamList> = {
@@ -91,12 +98,14 @@ function App(): React.JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <SafeAreaProvider>
-            <NavigationContainer linking={linking}>
-              <StatusBar barStyle="light-content" backgroundColor="#000" />
-              <AppNavigator />
-            </NavigationContainer>
-          </SafeAreaProvider>
+          <PushNotificationsInitializer>
+            <SafeAreaProvider>
+              <NavigationContainer linking={linking}>
+                <StatusBar barStyle="light-content" backgroundColor="#000" />
+                <AppNavigator />
+              </NavigationContainer>
+            </SafeAreaProvider>
+          </PushNotificationsInitializer>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

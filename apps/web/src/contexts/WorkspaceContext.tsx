@@ -25,19 +25,31 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentBrand, setCurrentBrand] = useState<Brand | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   const workspaceParam = searchParams.get("workspace") || "creator";
   const currentWorkspace = workspaceParam;
   const isCreatorMode = currentWorkspace === "creator";
   const isBrandMode = !isCreatorMode;
+  const isDemoMode = searchParams.get("demo") === "active";
 
   useEffect(() => {
+    // In demo mode, use mock brand data
+    if (isDemoMode && isBrandMode) {
+      setCurrentBrand({
+        id: "demo-brand-id",
+        name: "Acme Corp",
+        slug: "demo-brand",
+        logo_url: null,
+      });
+      return;
+    }
+
     if (isBrandMode && currentWorkspace) {
       fetchBrandBySlug(currentWorkspace);
     } else {
       setCurrentBrand(null);
     }
-  }, [currentWorkspace, isBrandMode, refreshTrigger]);
+  }, [currentWorkspace, isBrandMode, refreshTrigger, isDemoMode]);
 
   const fetchBrandBySlug = async (slug: string) => {
     const { data, error } = await supabase

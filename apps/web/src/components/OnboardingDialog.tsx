@@ -113,7 +113,7 @@ export function OnboardingDialog({
         .from("profiles")
         .select("full_name, avatar_url, username")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
       if (profile?.full_name) {
         const nameParts = profile.full_name.split(" ");
         setFirstName(nameParts[0] || "");
@@ -169,9 +169,8 @@ export function OnboardingDialog({
           setCity(data.city);
         }
         setLocationDetected(true);
-      } catch (err) {
+      } catch {
         // Silently fail - location detection is optional
-        console.log("Location detection failed:", err);
       }
     };
 

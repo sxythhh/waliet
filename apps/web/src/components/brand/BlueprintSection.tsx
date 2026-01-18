@@ -13,6 +13,7 @@ interface BlueprintSectionProps {
   children: ReactNode;
   onRemove?: () => void;
   defaultOpen?: boolean;
+  readOnly?: boolean;
 }
 
 export function BlueprintSection({
@@ -23,7 +24,8 @@ export function BlueprintSection({
   statusCount,
   children,
   onRemove,
-  defaultOpen = true
+  defaultOpen = true,
+  readOnly = false
 }: BlueprintSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const isMobile = useIsMobile();
@@ -65,8 +67,8 @@ export function BlueprintSection({
           {title}
         </span>
 
-        {/* Drag Handle - hidden on mobile */}
-        {!isMobile && (
+        {/* Drag Handle - hidden on mobile and in readOnly mode */}
+        {!isMobile && !readOnly && (
           <div
             {...attributes}
             {...listeners}

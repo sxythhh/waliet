@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { useCreateAssetRequest } from "@/hooks/assets/useAssetRequests";
 import type { AssetType, AssetRequestPriority } from "@/types/assets";
+import { cn } from "@/lib/utils";
 
 const requestSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title too long"),
@@ -60,9 +61,9 @@ const PRIORITY_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: "low", label: "Low", description: "No rush, whenever possible" },
-  { value: "normal", label: "Normal", description: "Standard timeline" },
-  { value: "high", label: "High", description: "Needed soon for upcoming content" },
+  { value: "low", label: "Low", description: "No rush" },
+  { value: "normal", label: "Normal", description: "Standard" },
+  { value: "high", label: "High", description: "Urgent" },
 ];
 
 export function AssetRequestDialog({
@@ -109,30 +110,35 @@ export function AssetRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Request an Asset</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-md bg-card dark:bg-[#090909] border-border/50">
+        <DialogHeader className="space-y-1.5">
+          <DialogTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">
+            Request an Asset
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
             Let the brand know what materials you need for your content.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-2">
             {/* Title */}
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>What do you need?</FormLabel>
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-medium font-inter tracking-[-0.5px]">
+                    What do you need?
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g., High-resolution product photos"
+                      className="h-11 bg-muted/30 dark:bg-muted/20 border-border/50 rounded-lg font-inter tracking-[-0.3px] placeholder:text-muted-foreground/50"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs font-inter" />
                 </FormItem>
               )}
             />
@@ -142,101 +148,119 @@ export function AssetRequestDialog({
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Describe what you're looking for</FormLabel>
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-sm font-medium font-inter tracking-[-0.5px]">
+                    Description
+                  </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Provide details about what you need and how you plan to use it..."
-                      rows={4}
+                      placeholder="Provide details about what you need..."
+                      rows={3}
+                      className="bg-muted/30 dark:bg-muted/20 border-border/50 rounded-lg font-inter tracking-[-0.3px] placeholder:text-muted-foreground/50 resize-none"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs font-inter" />
                 </FormItem>
               )}
             />
 
-            {/* Asset Type (optional) */}
-            <FormField
-              control={form.control}
-              name="asset_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Asset Type (optional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {TYPE_OPTIONS.map(({ value, label }) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Priority */}
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Priority</FormLabel>
-                  <FormControl>
-                    <RadioGroup
+            {/* Asset Type & Priority Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Asset Type (optional) */}
+              <FormField
+                control={form.control}
+                name="asset_type"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-medium font-inter tracking-[-0.5px]">
+                      Type <span className="text-muted-foreground font-normal">(optional)</span>
+                    </FormLabel>
+                    <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      className="grid grid-cols-3 gap-2"
                     >
-                      {PRIORITY_OPTIONS.map(({ value, label, description }) => (
-                        <Label
-                          key={value}
-                          htmlFor={`priority-${value}`}
-                          className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-3 transition-colors ${
-                            field.value === value
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <RadioGroupItem
+                      <FormControl>
+                        <SelectTrigger className="h-11 bg-muted/30 dark:bg-muted/20 border-border/50 rounded-lg font-inter tracking-[-0.3px]">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover dark:bg-[#0e0e0e] border-border/50">
+                        {TYPE_OPTIONS.map(({ value, label }) => (
+                          <SelectItem
+                            key={value}
                             value={value}
-                            id={`priority-${value}`}
-                            className="sr-only"
-                          />
-                          <span className="text-sm font-medium">{label}</span>
-                          <span className="text-center text-xs text-muted-foreground">
-                            {description}
-                          </span>
-                        </Label>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                            className="font-inter tracking-[-0.3px]"
+                          >
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs font-inter" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Priority */}
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm font-medium font-inter tracking-[-0.5px]">
+                      Priority
+                    </FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex gap-1.5"
+                      >
+                        {PRIORITY_OPTIONS.map(({ value, label }) => (
+                          <Label
+                            key={value}
+                            htmlFor={`priority-${value}`}
+                            className={cn(
+                              "flex-1 cursor-pointer rounded-lg px-3 py-2.5 text-center transition-all duration-200",
+                              "border border-transparent bg-muted/30 hover:bg-muted/50",
+                              field.value === value && "bg-white dark:bg-white text-black dark:text-black"
+                            )}
+                          >
+                            <RadioGroupItem
+                              value={value}
+                              id={`priority-${value}`}
+                              className="sr-only"
+                            />
+                            <span className="text-xs font-medium font-inter tracking-[-0.3px]">
+                              {label}
+                            </span>
+                          </Label>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage className="text-xs font-inter" />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => handleOpenChange(false)}
                 disabled={createMutation.isPending}
+                className="font-inter tracking-[-0.5px] hover:bg-muted/50 hover:text-foreground"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending}
+                className="font-inter tracking-[-0.5px]"
+              >
                 {createMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}

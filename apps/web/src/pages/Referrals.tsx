@@ -80,6 +80,11 @@ export default function Referrals() {
       setTotalEarned(total);
     } catch (error) {
       console.error("Error fetching transactions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load earnings data",
+        variant: "destructive",
+      });
     }
   };
 

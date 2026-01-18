@@ -47,6 +47,7 @@ interface CampaignGridCardProps {
   onShare?: () => void;
   onPreview?: () => void;
   slug?: string;
+  dataTourTarget?: string;
 }
 
 export function CampaignGridCard({
@@ -68,6 +69,7 @@ export function CampaignGridCard({
   onShare,
   onPreview,
   slug,
+  dataTourTarget,
 }: CampaignGridCardProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -82,15 +84,11 @@ export function CampaignGridCard({
   const isWarning = budget > 0 && budgetPercentage >= 75 && budgetPercentage < 90;
 
   const getBarColor = () => {
-    if (isDepleted || isCritical) return "bg-red-500";
-    if (isWarning) return "bg-amber-500";
-    return "bg-emerald-500";
+    return "bg-primary";
   };
 
   const getTextColor = () => {
-    if (isDepleted || isCritical) return "text-red-500";
-    if (isWarning) return "text-amber-500";
-    return "text-emerald-500";
+    return "text-foreground";
   };
 
   // Status badge - matching /c/ page design
@@ -98,29 +96,29 @@ export function CampaignGridCard({
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-emerald-600 hover:bg-emerald-600 border-t border-t-emerald-400 gap-1 text-white font-inter tracking-[-0.5px]">
+          <Badge className="rounded-md bg-emerald-600 hover:bg-emerald-600 border-t border-t-emerald-400 gap-1 text-white font-inter tracking-[-0.5px]">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             Active
           </Badge>
         );
       case "under_review":
         return (
-          <Badge className="bg-emerald-600 hover:bg-emerald-600 border-t border-t-emerald-400 gap-1 text-white font-inter tracking-[-0.5px]">
+          <Badge className="rounded-md bg-emerald-600 hover:bg-emerald-600 border-t border-t-emerald-400 gap-1 text-white font-inter tracking-[-0.5px]">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             Under Review
           </Badge>
         );
       case "draft":
         return (
-          <Badge variant="secondary" className="border-t border-t-border/80 font-inter tracking-[-0.5px]">Draft</Badge>
+          <Badge variant="secondary" className="rounded-md border-t border-t-border/80 font-inter tracking-[-0.5px]">Draft</Badge>
         );
       case "paused":
         return (
-          <Badge variant="secondary" className="border-t border-t-border/80 font-inter tracking-[-0.5px]">Paused</Badge>
+          <Badge variant="secondary" className="rounded-md border-t border-t-border/80 font-inter tracking-[-0.5px]">Paused</Badge>
         );
       case "ended":
         return (
-          <Badge className="bg-red-600 hover:bg-red-600 border-t border-t-red-400 text-white font-inter tracking-[-0.5px]">Ended</Badge>
+          <Badge className="rounded-md bg-red-600 hover:bg-red-600 border-t border-t-red-400 text-white font-inter tracking-[-0.5px]">Ended</Badge>
         );
       default:
         return null;
@@ -148,6 +146,7 @@ export function CampaignGridCard({
 
   return (
     <Card
+      data-tour-target={dataTourTarget}
       className="group bg-card hover:bg-muted/30 dark:bg-[#0e0e0e] dark:hover:bg-[#121212] transition-all duration-200 overflow-hidden cursor-pointer border border-border/50 dark:border-transparent rounded-xl"
       onClick={onClick}
     >
@@ -157,7 +156,7 @@ export function CampaignGridCard({
           <OptimizedImage
             src={bannerUrl}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div
@@ -190,13 +189,13 @@ export function CampaignGridCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 px-2.5 text-xs bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white shadow-lg gap-1 font-inter tracking-[-0.5px]"
+              className="h-7 px-2.5 text-xs bg-card dark:bg-[#0e0e0e] hover:bg-muted dark:hover:bg-[#1a1a1a] text-foreground hover:text-foreground shadow-lg gap-1 font-inter tracking-[-0.5px]"
               onClick={(e) => {
                 e.stopPropagation();
                 onPreview();
               }}
             >
-              <Icon icon="material-symbols:visibility-outline" className="w-3.5 h-3.5" />
+              <span className="material-symbols-rounded text-[14px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 500" }}>open_in_new</span>
               Preview
             </Button>
           )}
@@ -220,7 +219,7 @@ export function CampaignGridCard({
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <button
-                className="w-7 h-7 rounded-md bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="w-7 h-7 rounded-md bg-card dark:bg-[#0e0e0e] hover:bg-muted dark:hover:bg-[#1a1a1a] flex items-center justify-center text-foreground shadow-lg transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Icon icon="material-symbols:more-vert" className="w-3.5 h-3.5" />
@@ -299,28 +298,23 @@ export function CampaignGridCard({
           </div>
         </div>
 
-        {/* Budget progress - segmented bar */}
+        {/* Budget progress - continuous bar */}
         {budget > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className={cn("text-xs font-medium font-inter tracking-[-0.5px]", getTextColor())}>
+              <span className="text-xs font-medium font-inter tracking-[-0.5px] text-foreground">
                 {formatCurrency(budgetRemaining)} left
               </span>
               <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 {Math.round(budgetPercentage)}% used
               </span>
             </div>
-            {/* Segmented progress bar */}
-            <div className="flex gap-0.5">
-              {[0, 25, 50, 75].map((threshold) => (
-                <div
-                  key={threshold}
-                  className={cn(
-                    "h-1 flex-1 rounded-full transition-colors",
-                    budgetPercentage > threshold ? getBarColor() : "bg-muted"
-                  )}
-                />
-              ))}
+            {/* Continuous progress bar */}
+            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, budgetPercentage)}%` }}
+              />
             </div>
           </div>
         )}
@@ -337,7 +331,7 @@ export function CampaignGridCard({
               {members.slice(0, 3).map((member, index) => (
                 <Avatar
                   key={member.id}
-                  className="w-6 h-6 border-2 border-card dark:border-[#0e0e0e] ring-0"
+                  className="w-6 h-6 rounded-full ring-0"
                   style={{ zIndex: 3 - index }}
                 >
                   <AvatarImage src={member.avatar_url || undefined} />

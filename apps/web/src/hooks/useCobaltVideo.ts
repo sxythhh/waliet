@@ -85,8 +85,6 @@ export function useCobaltVideo() {
 
         // YouTube and others - use Cobalt for direct video URL
         if (cobaltApiUrl) {
-          console.log("[Cobalt] Fetching video:", videoUrl);
-
           const response = await fetch(cobaltApiUrl, {
             method: "POST",
             headers: {
@@ -100,7 +98,6 @@ export function useCobaltVideo() {
           });
 
           const data: CobaltResponse = await response.json();
-          console.log("[Cobalt] Response:", data);
 
           if (data.status === "error") {
             const errorCode = typeof data.error === "object" ? data.error.code : data.error;

@@ -288,12 +288,7 @@ export function JoinCampaignSheet({
     setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
   };
   const handleSubmit = async () => {
-    console.log('=== SUBMIT STARTED ===');
-    console.log('Campaign:', campaign);
-    console.log('Selected Accounts:', selectedAccounts);
-    console.log('Answers:', answers);
     if (!campaign || selectedAccounts.length === 0) {
-      console.log('Validation failed: No campaign or accounts');
       toast.error("Please select at least one social account");
       return;
     }
@@ -307,33 +302,26 @@ export function JoinCampaignSheet({
       }
     } = await supabase.auth.getUser();
     if (!user) {
-      console.log('Validation failed: No user');
       toast.error("Please sign in to join campaigns");
       return;
     }
 
     // Validate application questions only if campaign requires application
     const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
-    console.log('Application questions:', questions);
-    console.log('Requires application:', campaign.requires_application);
     if (campaign.requires_application !== false && questions.length > 0) {
       const unansweredQuestions = questions.filter((q, idx) => {
         const answer = answers[idx];
         return !answer || answer.trim().length === 0;
       });
-      console.log('Unanswered questions:', unansweredQuestions);
       if (unansweredQuestions.length > 0) {
-        console.log('Validation failed: Unanswered questions');
         toast.error("Please answer all application questions");
         return;
       }
     }
-    console.log('All validations passed, starting submission...');
     setSubmitting(true);
     try {
       // Determine submission status based on campaign type
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
-      console.log('Submission status:', submissionStatus);
 
       // Delete any withdrawn submissions to start fresh
       await supabase.from("campaign_submissions").delete().eq("campaign_id", campaign.id).eq("creator_id", user.id).eq("status", "withdrawn");
@@ -342,7 +330,6 @@ export function JoinCampaignSheet({
       const {
         data: existingData
       } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn");
-      console.log('Existing submissions:', existingData);
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
 
       // Track if any submissions were actually created
@@ -356,11 +343,9 @@ export function JoinCampaignSheet({
       // Process each selected account
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
-        console.log('Processing account:', account);
 
         // Skip if already submitted for this platform
         if (existingPlatforms.has(account.platform)) {
-          console.log('Skipping - already submitted for platform:', account.platform);
           continue;
         }
 
@@ -371,7 +356,7 @@ export function JoinCampaignSheet({
         })) || [];
         const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
 
-        // Create new submission
+        // Create new submission (use upsert to handle race conditions)
         const submissionData = {
           campaign_id: campaign.id,
           creator_id: user.id,
@@ -380,11 +365,22 @@ export function JoinCampaignSheet({
           status: submissionStatus,
           application_answers: formattedAnswers
         };
-        console.log('Inserting submission:', submissionData);
         const {
           error: submissionError
-        } = await supabase.from("campaign_submissions").insert(submissionData);
+        } = await supabase.from("campaign_submissions").upsert(submissionData, {
+          onConflict: 'campaign_id,creator_id,platform',
+          ignoreDuplicates: false
+        });
         if (submissionError) {
+          // Handle duplicate submission gracefully (409 conflict or unique constraint violation)
+          const isConflict = submissionError.code === '23505'
+            || submissionError.code === '409'
+            || (submissionError as any).status === 409
+            || submissionError.message?.includes('duplicate')
+            || submissionError.message?.includes('conflict');
+          if (isConflict) {
+            continue;
+          }
           console.error('Submission error:', submissionError);
           throw submissionError;
         }
@@ -401,7 +397,6 @@ export function JoinCampaignSheet({
             user_id: user.id,
             status: 'active'
           };
-          console.log('Linking account:', linkData);
           const {
             error: linkError
           } = await supabase.from("social_account_campaigns").insert(linkData);
@@ -433,7 +428,6 @@ export function JoinCampaignSheet({
       // Track accounts in Shortimize if auto-approved
       if (!campaign.requires_application && submissionsCreated > 0) {
         try {
-          console.log('Tracking accounts in Shortimize...');
           const {
             error: trackError
           } = await supabase.functions.invoke('track-campaign-user', {
@@ -444,8 +438,6 @@ export function JoinCampaignSheet({
           });
           if (trackError) {
             console.error('Error tracking accounts:', trackError);
-          } else {
-            console.log('Successfully tracked accounts in Shortimize');
           }
         } catch (error) {
           console.error('Error calling track function:', error);
@@ -461,7 +453,6 @@ export function JoinCampaignSheet({
             .single();
 
           if (campaignData?.discord_guild_id) {
-            console.log('Adding user to Discord server...');
             const { error: discordError } = await supabase.functions.invoke('add-to-discord-server', {
               body: {
                 userId: user.id,
@@ -473,8 +464,6 @@ export function JoinCampaignSheet({
             if (discordError) {
               console.error('Error adding to Discord:', discordError);
               // Don't fail the submission if Discord join fails
-            } else {
-              console.log('Successfully added to Discord server');
             }
           }
         } catch (error) {
@@ -485,8 +474,6 @@ export function JoinCampaignSheet({
       // Send Discord notification if submissions were created
       if (submissionsCreated > 0) {
         try {
-          console.log('Preparing to send Discord notification...');
-
           // Get user profile
           const {
             data: profile,
@@ -505,17 +492,10 @@ export function JoinCampaignSheet({
             console.error('Brand fetch error:', brandError);
           }
           const brandSlug = brandData?.slug || '';
-          console.log('Brand slug:', brandSlug);
           const formattedAnswers = campaign.application_questions?.map((question, index) => ({
             question,
             answer: answers[index] || ""
           })) || [];
-          console.log('Invoking edge function with data:', {
-            username: profile?.username,
-            campaign_name: campaign.title,
-            brand_slug: brandSlug,
-            accounts_count: submittedAccountsData.length
-          });
           const {
             data: functionData,
             error: functionError
@@ -535,16 +515,12 @@ export function JoinCampaignSheet({
           });
           if (functionError) {
             console.error('Edge function error:', functionError);
-          } else {
-            console.log('Discord notification sent successfully:', functionData);
           }
         } catch (webhookError) {
           console.error('Failed to send Discord notification:', webhookError);
           // Don't fail the submission if webhook fails
         }
       }
-      console.log('=== SUBMISSION COMPLETE ===');
-      console.log('Submissions created:', submissionsCreated);
 
       // Show appropriate message based on what happened
       if (submissionsCreated === 0) {
@@ -559,8 +535,7 @@ export function JoinCampaignSheet({
       onSuccess?.();
       navigate("/dashboard?tab=campaigns");
     } catch (error) {
-      console.error('=== SUBMISSION FAILED ===');
-      console.error('Error details:', error);
+      console.error('Submission error:', error);
       toast.error(error instanceof Error ? error.message : "Failed to submit application");
     } finally {
       setSubmitting(false);

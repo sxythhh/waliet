@@ -131,28 +131,18 @@ Deno.serve(async (req) => {
     const metadata = originalTx.metadata as any;
     if (metadata?.campaign_id && originalTx.type === 'earning') {
       const campaignId = metadata.campaign_id;
-      
-      // Get current campaign budget
-      const { data: campaign, error: campaignFetchError } = await adminClient
-        .from('campaigns')
-        .select('budget_used, budget')
-        .eq('id', campaignId)
-        .single();
 
-      if (campaign && !campaignFetchError) {
-        // Reverse the budget_used - if we paid out, budget_used increased, so we decrease it
-        const newBudgetUsed = Math.max(0, (campaign.budget_used || 0) - originalTx.amount);
-        
-        const { error: campaignError } = await adminClient
-          .from('campaigns')
-          .update({ budget_used: newBudgetUsed })
-          .eq('id', campaignId);
+      // Atomically decrement the budget_used to prevent race conditions
+      const { data: newBudgetUsed, error: campaignError } = await adminClient
+        .rpc('decrement_campaign_budget_used', {
+          p_campaign_id: campaignId,
+          p_amount: originalTx.amount,
+        });
 
-        if (campaignError) {
-          console.error('Failed to update campaign budget:', campaignError);
-        } else {
-          undoActions.push(`Reversed campaign budget_used: $${campaign.budget_used?.toFixed(2)} → $${newBudgetUsed.toFixed(2)}`);
-        }
+      if (campaignError) {
+        console.error('Failed to update campaign budget:', campaignError);
+      } else {
+        undoActions.push(`Reversed campaign budget_used to $${newBudgetUsed?.toFixed(2)}`);
       }
 
       // Also check if this was an account-based payout and update campaign_account_analytics
@@ -199,26 +189,18 @@ Deno.serve(async (req) => {
     // 3. Handle boost/bounty campaign budget reversal
     if (metadata?.boost_id && originalTx.type === 'earning') {
       const boostId = metadata.boost_id;
-      
-      const { data: boost, error: boostFetchError } = await adminClient
-        .from('bounty_campaigns')
-        .select('budget_used, budget')
-        .eq('id', boostId)
-        .single();
 
-      if (boost && !boostFetchError) {
-        const newBudgetUsed = Math.max(0, (boost.budget_used || 0) - originalTx.amount);
-        
-        const { error: boostError } = await adminClient
-          .from('bounty_campaigns')
-          .update({ budget_used: newBudgetUsed })
-          .eq('id', boostId);
+      // Atomically decrement the budget_used to prevent race conditions
+      const { data: newBoostBudgetUsed, error: boostError } = await adminClient
+        .rpc('decrement_boost_budget_used', {
+          p_boost_id: boostId,
+          p_amount: originalTx.amount,
+        });
 
-        if (boostError) {
-          console.error('Failed to update boost budget:', boostError);
-        } else {
-          undoActions.push(`Reversed boost budget_used: $${boost.budget_used?.toFixed(2)} → $${newBudgetUsed.toFixed(2)}`);
-        }
+      if (boostError) {
+        console.error('Failed to update boost budget:', boostError);
+      } else {
+        undoActions.push(`Reversed boost budget_used to $${newBoostBudgetUsed?.toFixed(2)}`);
       }
     }
 

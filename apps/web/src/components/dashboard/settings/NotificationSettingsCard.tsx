@@ -65,7 +65,6 @@ export function NotificationSettingsCard() {
 
       if (error) {
         // If columns don't exist yet, use defaults
-        console.log("Using default notification preferences");
         return;
       }
 

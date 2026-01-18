@@ -153,7 +153,7 @@ export function PerformanceChart({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
           {/* Metric Toggles */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-[#0a0a0a] text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-[#0a0a0a] dark:bg-[#131313] text-white' : 'text-muted-foreground hover:text-foreground'}`}>
 
                 <span className="capitalize">{metric}</span>
               </button>)}
@@ -161,10 +161,10 @@ export function PerformanceChart({
 
           {/* Daily/Cumulative Toggle */}
           <div className="flex items-center gap-0 bg-transparent rounded-lg p-0.5 self-start sm:self-auto">
-            <button onClick={() => setChartMode('daily')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'daily' ? 'bg-[#0a0a0a] text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setChartMode('daily')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'daily' ? 'bg-[#0a0a0a] dark:bg-[#131313] text-white' : 'text-muted-foreground hover:text-foreground'}`}>
               Daily
             </button>
-            <button onClick={() => setChartMode('cumulative')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-[#0a0a0a] text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setChartMode('cumulative')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-[#0a0a0a] dark:bg-[#131313] text-white' : 'text-muted-foreground hover:text-foreground'}`}>
               Cumulative
             </button>
           </div>

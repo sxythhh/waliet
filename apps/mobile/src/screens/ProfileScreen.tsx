@@ -21,6 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { colors } from '../theme/colors';
 import { LogoLoader } from '../components/LogoLoader';
+import { platformConfig as socialPlatformConfig } from '../hooks/useSocialAccounts';
 
 interface CreatorStats {
   totalSubmissions: number;
@@ -56,20 +57,12 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-function getPlatformConfig(platform: string): { name: string; icon: string; bg: string } {
-  switch (platform.toLowerCase()) {
-    case 'tiktok':
-      return { name: 'TikTok', icon: 'music-note', bg: colors.background };
-    case 'instagram':
-      return { name: 'Instagram', icon: 'instagram', bg: '#E1306C' };
-    case 'youtube':
-      return { name: 'YouTube', icon: 'youtube', bg: '#FF0000' };
-    case 'twitter':
-    case 'x':
-      return { name: 'X', icon: 'twitter', bg: colors.background };
-    default:
-      return { name: platform, icon: 'web', bg: colors.muted };
+function getPlatformConfigLocal(platform: string) {
+  const p = platform.toLowerCase() as keyof typeof socialPlatformConfig;
+  if (socialPlatformConfig[p]) {
+    return socialPlatformConfig[p];
   }
+  return null;
 }
 
 function getPlatformUrl(platform: string, username: string): string {
@@ -510,42 +503,59 @@ export function ProfileScreen() {
           {/* Connected Accounts - Only show when signed in */}
           {user && (
             <View style={styles.section}>
-              <View style={styles.sectionTitleRow}>
-                <Icon name="link-variant" size={18} color={colors.foreground} />
-                <Text style={styles.sectionTitle}>Connected Accounts</Text>
-              </View>
-              <View style={styles.accountsList}>
+              <Text style={styles.sectionTitle}>Connected Accounts</Text>
+              <TouchableOpacity
+                style={styles.accountsList}
+                onPress={() => {
+                  // @ts-expect-error - Navigation types not set up yet
+                  navigation.navigate('ConnectedAccounts');
+                }}
+              >
                 {socialAccounts && socialAccounts.length > 0 ? (
-                  socialAccounts.map((account) => {
-                    const platformConfig = getPlatformConfig(account.platform);
-                    const platformUrl = getPlatformUrl(account.platform, account.username);
-                    return (
-                      <TouchableOpacity
-                        key={account.id}
-                        style={styles.accountItem}
-                        onPress={() => handleOpenLink(platformUrl)}
-                      >
-                        <View style={[styles.accountIcon, { backgroundColor: platformConfig.bg }]}>
-                          <Icon name={platformConfig.icon} size={18} color={colors.foreground} />
+                  <>
+                    {socialAccounts.slice(0, 2).map((account) => {
+                      const platformConfigItem = getPlatformConfigLocal(account.platform);
+                      return (
+                        <View
+                          key={account.id}
+                          style={styles.accountItem}
+                        >
+                          <View style={[styles.accountIcon, { backgroundColor: platformConfigItem?.bg || colors.muted }]}>
+                            {platformConfigItem ? (
+                              <Image
+                                source={platformConfigItem.logoWhite}
+                                style={styles.accountLogoImage}
+                                resizeMode="contain"
+                              />
+                            ) : (
+                              <Icon name="web" size={18} color={colors.foreground} />
+                            )}
+                          </View>
+                          <View style={styles.accountInfo}>
+                            <Text style={styles.accountName}>{platformConfigItem?.name || account.platform}</Text>
+                            <Text style={styles.accountHandle}>@{account.username}</Text>
+                          </View>
+                          <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
                         </View>
-                        <View style={styles.accountInfo}>
-                          <Text style={styles.accountName}>{platformConfig.name}</Text>
-                          <Text style={styles.accountHandle}>@{account.username}</Text>
-                        </View>
-                        <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
-                      </TouchableOpacity>
-                    );
-                  })
+                      );
+                    })}
+                    {socialAccounts.length > 2 && (
+                      <View style={styles.moreAccountsRow}>
+                        <Text style={styles.moreAccountsText}>
+                          +{socialAccounts.length - 2} more accounts
+                        </Text>
+                        <Text style={styles.manageText}>Manage</Text>
+                      </View>
+                    )}
+                  </>
                 ) : (
-                  <TouchableOpacity
-                    style={styles.connectButton}
-                    onPress={() => handleOpenLink('https://virality.so/settings')}
-                  >
+                  <View style={styles.connectButton}>
                     <Icon name="plus-circle-outline" size={18} color={colors.primary} style={styles.connectIcon} />
                     <Text style={styles.connectButtonText}>Connect your social accounts</Text>
-                  </TouchableOpacity>
+                    <Icon name="chevron-right" size={18} color={colors.primary} />
+                  </View>
                 )}
-              </View>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -906,6 +916,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.foreground,
+    marginBottom: 12,
   },
   accountsList: {
     backgroundColor: colors.card,
@@ -927,6 +938,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  accountLogoImage: {
+    width: 20,
+    height: 20,
   },
   accountInfo: {
     flex: 1,
@@ -952,6 +967,24 @@ const styles = StyleSheet.create({
   connectButtonText: {
     color: colors.primary,
     fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  moreAccountsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  moreAccountsText: {
+    fontSize: 13,
+    color: colors.mutedForeground,
+  },
+  manageText: {
+    fontSize: 13,
+    color: colors.primary,
     fontWeight: '500',
   },
   settingsList: {

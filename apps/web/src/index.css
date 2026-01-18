@@ -409,6 +409,15 @@ All colors MUST be HSL.
     word-wrap: normal;
     direction: ltr;
     -webkit-font-feature-settings: 'liga';
+    /* Prevent flash of icon name text before font loads */
+    opacity: 0;
+    animation: material-icon-fade-in 0.15s ease-out 0.05s forwards;
+  }
+
+  @keyframes material-icon-fade-in {
+    to {
+      opacity: 1;
+    }
   }
 }
 

@@ -109,7 +109,7 @@ export function AccountDeletionDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" className="gap-2">
+        <Button variant="destructive" size="sm" className="gap-2 font-inter tracking-[-0.5px]">
           <Trash2 className="h-4 w-4" />
           Delete Account
         </Button>

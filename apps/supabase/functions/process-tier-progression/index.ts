@@ -137,7 +137,7 @@ serve(async (req) => {
 
       // Get all creator assignments for this boost
       const { data: assignments, error: assignmentsError } = await supabase
-        .from("boost_tier_assignments")
+        .from("creator_tier_assignments")
         .select("*")
         .eq("bounty_campaign_id", boost.id);
 
@@ -174,7 +174,7 @@ serve(async (req) => {
         if (evaluation.action === "maintain") {
           // Just increment months in tier
           await supabase
-            .from("boost_tier_assignments")
+            .from("creator_tier_assignments")
             .update({
               months_in_tier: assignment.months_in_tier + 1,
             })
@@ -194,7 +194,7 @@ serve(async (req) => {
 
           // Increment months in tier
           await supabase
-            .from("boost_tier_assignments")
+            .from("creator_tier_assignments")
             .update({
               months_in_tier: assignment.months_in_tier + 1,
             })
@@ -216,7 +216,7 @@ serve(async (req) => {
 
           // Update assignment
           await supabase
-            .from("boost_tier_assignments")
+            .from("creator_tier_assignments")
             .update({
               tier_id: evaluation.new_tier_id,
               previous_tier_id: assignment.tier_id,

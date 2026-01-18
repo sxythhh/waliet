@@ -281,14 +281,14 @@ export function AllProgramsAnalytics({
         // Fetch transactions for each program in batches to avoid hitting limits
         const transactionPromises = [];
 
-        // Fetch campaign transactions
+        // Fetch campaign transactions (including balance corrections)
         for (const campaignId of campaignIds) {
-          transactionPromises.push(supabase.from('wallet_transactions').select('amount, created_at').eq('type', 'earning').eq('metadata->>campaign_id', campaignId));
+          transactionPromises.push(supabase.from('wallet_transactions').select('amount, created_at, type').in('type', ['earning', 'balance_correction']).eq('metadata->>campaign_id', campaignId));
         }
 
-        // Fetch boost transactions
+        // Fetch boost transactions (including balance corrections)
         for (const boostId of boostIds) {
-          transactionPromises.push(supabase.from('wallet_transactions').select('amount, created_at').eq('type', 'earning').eq('metadata->>boost_id', boostId));
+          transactionPromises.push(supabase.from('wallet_transactions').select('amount, created_at, type').in('type', ['earning', 'balance_correction']).eq('metadata->>boost_id', boostId));
         }
         const transactionResults = await Promise.all(transactionPromises);
         brandTransactions = transactionResults.flatMap(r => r.data || []);
@@ -361,7 +361,7 @@ export function AllProgramsAnalytics({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Views Generated</p>
             <div className="flex items-center justify-between">
@@ -372,7 +372,7 @@ export function AllProgramsAnalytics({
           </div>
         </Card>
 
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Effective CPM</p>
             <div className="flex items-center justify-between">
@@ -382,7 +382,7 @@ export function AllProgramsAnalytics({
           </div>
         </Card>
 
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Payouts</p>
             <div className="flex items-center justify-between">
@@ -393,7 +393,7 @@ export function AllProgramsAnalytics({
           </div>
         </Card>
 
-        <Card className="p-4 bg-card/30 border border-border dark:border-transparent">
+        <Card className="p-4 bg-card/30 border border-border dark:border-[#141414]">
           <div className="space-y-2">
             <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Submissions</p>
             <div className="flex items-center justify-between">

@@ -95,6 +95,7 @@ interface Boost {
   discord_role_id?: string | null;
   shortimize_collection_name?: string | null;
   view_bonuses_enabled?: boolean | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
 }
 interface BrandCampaignDetailViewProps {
   brandId?: string;
@@ -102,7 +103,7 @@ interface BrandCampaignDetailViewProps {
   boostId?: string;
   onBack?: () => void;
 }
-type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "messages" | "broadcasts";
+type DetailTab = "home" | "members" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "messages" | "broadcasts";
 type EntitySelection = "all" | {
   type: "campaign";
   id: string;
@@ -131,7 +132,7 @@ export function BrandCampaignDetailView({
   const [userRole, setUserRole] = useState<"owner" | "admin" | "poster" | "member">("member");
   useEffect(() => {
     const subtab = searchParams.get("subtab");
-    if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts" || subtab === "links" || subtab === "messages" || subtab === "broadcasts" || subtab === "settings" || subtab === "rules") {
+    if (subtab === "home" || subtab === "members" || subtab === "videos" || subtab === "creators" || subtab === "payouts" || subtab === "links" || subtab === "messages" || subtab === "broadcasts" || subtab === "settings" || subtab === "rules") {
       setActiveDetailTab(subtab);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,15 +151,22 @@ export function BrandCampaignDetailView({
   const isAllMode = !!brandId && !campaignId && !boostId;
   const isBoost = !!boostId;
   const entityId = isBoost ? boostId : campaignId;
-  const entityTitle = isAllMode ? "All Programs" : isBoost ? boost?.title : campaign?.title;
+  const entityTitle = isAllMode ? "All Campaigns" : isBoost ? boost?.title : campaign?.title;
   const entityBrandId = isAllMode ? brandId : isBoost ? boost?.brand_id : campaign?.brand_id;
   useEffect(() => {
+    // Clear previous state immediately when switching campaigns/boosts
+    setCampaign(null);
+    setBoost(null);
+    setLoading(true);
+
     if (isAllMode && brandId) {
-      fetchAllCampaignsAndBoosts();
-    } else if (isBoost) {
-      fetchBoost();
+      fetchAllCampaignsAndBoosts(brandId);
+    } else if (boostId) {
+      fetchBoost(boostId);
     } else if (campaignId) {
-      fetchCampaign();
+      fetchCampaign(campaignId);
+    } else {
+      setLoading(false);
     }
     fetchPendingApplicationsCount();
   }, [campaignId, boostId, brandId, isAllMode]);
@@ -211,25 +219,25 @@ export function BrandCampaignDetailView({
     };
     fetchUserRole();
   }, [entityBrandId, brandId]);
-  const fetchAllCampaignsAndBoosts = async () => {
-    if (!brandId) return;
+  const fetchAllCampaignsAndBoosts = async (id: string) => {
+    if (!id) return;
     setLoading(true);
-    const [campaignsResult, boostsResult] = await Promise.all([supabase.from("campaigns").select("*").eq("brand_id", brandId).order("created_at", {
+    const [campaignsResult, boostsResult] = await Promise.all([supabase.from("campaigns").select("*").eq("brand_id", id).order("created_at", {
       ascending: false
-    }), supabase.from("bounty_campaigns").select("*").eq("brand_id", brandId).order("created_at", {
+    }), supabase.from("bounty_campaigns").select("*").eq("brand_id", id).order("created_at", {
       ascending: false
     })]);
     if (campaignsResult.data) setCampaigns(campaignsResult.data);
     if (boostsResult.data) setBoosts(boostsResult.data);
     setLoading(false);
   };
-  const fetchCampaign = async () => {
-    if (!campaignId) return;
+  const fetchCampaign = async (id: string) => {
+    if (!id) return;
     setLoading(true);
     const {
       data,
       error
-    } = await supabase.from("campaigns").select("*").eq("id", campaignId).single();
+    } = await supabase.from("campaigns").select("*").eq("id", id).single();
     if (error) {
       console.error("Error fetching campaign:", error);
     } else {
@@ -247,13 +255,13 @@ export function BrandCampaignDetailView({
     }
     setLoading(false);
   };
-  const fetchBoost = async () => {
-    if (!boostId) return;
+  const fetchBoost = async (id: string) => {
+    if (!id) return;
     setLoading(true);
     const {
       data,
       error
-    } = await supabase.from("bounty_campaigns").select("*").eq("id", boostId).single();
+    } = await supabase.from("bounty_campaigns").select("*").eq("id", id).single();
     if (error) {
       console.error("Error fetching boost:", error);
     } else {
@@ -350,11 +358,11 @@ export function BrandCampaignDetailView({
     });
   }
 
-  // Add applications tab (always available in all mode, or when specific entity allows)
-  if (isAllMode || isBoost || campaign?.requires_application !== false) {
+  // Add members tab (only when specific entity is selected, not in all mode)
+  if (!isAllMode && (isBoost || campaign?.requires_application !== false)) {
     detailTabs.push({
-      id: "applications",
-      label: "Applications",
+      id: "members",
+      label: "Members",
       count: pendingApplicationsCount
     });
   }
@@ -420,7 +428,7 @@ export function BrandCampaignDetailView({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-72 z-50 bg-white dark:bg-[#080808] rounded-xl shadow-xl dark:shadow-2xl dark:shadow-black/50 p-1.5">
-                {/* All Programs option */}
+                {/* All Campaigns option */}
                 <DropdownMenuItem
                   onClick={() => handleSelectEntity("all")}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 ${
@@ -429,7 +437,7 @@ export function BrandCampaignDetailView({
                       : "hover:bg-muted/60 dark:hover:bg-[#0d0d0d]"
                   }`}
                 >
-                  <span className="font-medium flex-1">All Programs</span>
+                  <span className="font-medium flex-1">All Campaigns</span>
                   {isAllMode && <Check className="h-4 w-4 text-primary" />}
                 </DropdownMenuItem>
 
@@ -517,14 +525,14 @@ export function BrandCampaignDetailView({
           boostId={isBoost && boostId ? boostId : undefined}
           initialType={isBoost ? "boost" : "cpm"}
           onSuccess={() => {
-            if (isBoost) fetchBoost();
-            else fetchCampaign();
+            if (isBoost && boostId) fetchBoost(boostId);
+            else if (campaignId) fetchCampaign(campaignId);
             setEditDialogOpen(false);
           }}
         />}
 
         {/* Boost Top Up Dialog */}
-        {isBoost && boost && <TopUpBalanceDialog boostId={boostId!} boostTitle={boost.title} currentBalance={boost.budget || 0} open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} onSuccess={fetchBoost} />}
+        {isBoost && boost && boostId && <TopUpBalanceDialog boostId={boostId} boostTitle={boost.title} currentBalance={boost.budget || 0} open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} onSuccess={() => fetchBoost(boostId)} />}
 
         {/* Tab Navigation */}
         <div className="flex-shrink-0 border-b border-border bg-background">
@@ -545,7 +553,7 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} brandId={boost.brand_id} userRole={userRole} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
+          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} timeframe={timeframe} onSelectProgram={(id, type) => handleSelectEntity({ type, id })} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "members" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} brandId={boost.brand_id} userRole={userRole} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} boostPaymentModel={boost.payment_model} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
           ...campaign,
           hashtags: campaign.hashtags || []
         }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : activeDetailTab === "settings" ? isAllMode && brandId ? <BrandSettingsTab brandId={brandId} /> : null : null}
@@ -554,13 +562,15 @@ export function BrandCampaignDetailView({
     </div>;
 }
 
-// All Programs Home Content - shows aggregated analytics
+// All Campaigns Home Content - shows aggregated analytics
 function AllProgramsHomeContent({
   brandId,
-  timeframe
+  timeframe,
+  onSelectProgram
 }: {
   brandId: string;
   timeframe: TimeframeOption;
+  onSelectProgram?: (id: string, type: "campaign" | "boost") => void;
 }) {
-  return <BrandPerformanceDashboard brandId={brandId} timeframe={timeframe} />;
+  return <BrandPerformanceDashboard brandId={brandId} timeframe={timeframe} onSelectProgram={onSelectProgram} />;
 }

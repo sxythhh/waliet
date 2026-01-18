@@ -16,6 +16,10 @@ export interface BoostCardCompactProps {
   banner_url: string | null;
   monthly_retainer: number;
   videos_per_month: number;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
+  approved_rate?: number | null;
   onClick?: () => void;
 }
 
@@ -29,6 +33,10 @@ export const BoostCardCompact = memo(function BoostCardCompact({
   banner_url,
   monthly_retainer,
   videos_per_month,
+  payment_model,
+  flat_rate_min,
+  flat_rate_max,
+  approved_rate,
   onClick
 }: BoostCardCompactProps) {
   const navigate = useNavigate();
@@ -62,6 +70,8 @@ export const BoostCardCompact = memo(function BoostCardCompact({
   }, [id]);
 
   const totalSubmitted = submissionStats.approved + submissionStats.pending;
+  const hasUnlimitedVideos = !videos_per_month || videos_per_month === 0;
+  const isFlatRate = payment_model === 'flat_rate';
 
   return (
     <div className="group h-full">
@@ -132,25 +142,31 @@ export const BoostCardCompact = memo(function BoostCardCompact({
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] text-muted-foreground font-medium">
                 <span className="text-foreground font-semibold">{totalSubmitted}</span>
-                <span className="text-muted-foreground"> / {videos_per_month} videos</span>
+                {hasUnlimitedVideos ? (
+                  <span className="text-muted-foreground"> videos submitted</span>
+                ) : (
+                  <span className="text-muted-foreground"> / {videos_per_month} videos</span>
+                )}
               </span>
             </div>
-            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#f4f4f4] dark:bg-[#1b1b1b] border-t border-t-[#e0e0e0] dark:border-t-[#262626]">
-              <div className="h-full flex">
-                {submissionStats.approved > 0 && (
-                  <div
-                    className="h-full bg-green-500 transition-all duration-300"
-                    style={{ width: `${(submissionStats.approved / videos_per_month) * 100}%` }}
-                  />
-                )}
-                {submissionStats.pending > 0 && (
-                  <div
-                    className="h-full bg-orange-500 transition-all duration-300"
-                    style={{ width: `${(submissionStats.pending / videos_per_month) * 100}%` }}
-                  />
-                )}
+            {!hasUnlimitedVideos && (
+              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#f4f4f4] dark:bg-[#1b1b1b] border-t border-t-[#e0e0e0] dark:border-t-[#262626]">
+                <div className="h-full flex">
+                  {submissionStats.approved > 0 && (
+                    <div
+                      className="h-full bg-green-500 transition-all duration-300"
+                      style={{ width: `${(submissionStats.approved / videos_per_month) * 100}%` }}
+                    />
+                  )}
+                  {submissionStats.pending > 0 && (
+                    <div
+                      className="h-full bg-orange-500 transition-all duration-300"
+                      style={{ width: `${(submissionStats.pending / videos_per_month) * 100}%` }}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </Card>

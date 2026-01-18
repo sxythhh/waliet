@@ -27,6 +27,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { UnifiedMessagesWidget } from "@/components/shared/UnifiedMessagesWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { DemoDataProvider, ProductTour } from "@/components/tour";
 
 type BrandSummary = {
   id: string;
@@ -70,6 +71,9 @@ export default function Dashboard() {
 
   const { session, loading: authLoading } = useAuth();
   const [oauthCompleting, setOauthCompleting] = useState(false);
+
+  // Check for demo mode - allows unauthenticated access for product tour
+  const isDemoMode = searchParams.get("demo") === "active";
 
   // If we land on /dashboard with implicit tokens in the hash (some OAuth setups),
   // complete the session before applying the auth gate.
@@ -148,25 +152,37 @@ export default function Dashboard() {
   useEffect(() => {
     if (authLoading || oauthCompleting) return;
 
+    // Skip auth in demo mode - use mock data instead
+    if (isDemoMode) {
+      setUserId("demo-user");
+      setProfile({
+        id: "demo-user",
+        username: "demo_user",
+        display_name: "Demo User",
+        onboarding_completed: true,
+      });
+      return;
+    }
+
     const initializeDashboard = async () => {
-      // Double-check session directly to avoid race conditions with context state
-      if (!session) {
+      // Use session from context, or fetch directly if context is stale
+      let activeSession = session;
+
+      if (!activeSession) {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (!currentSession) {
           navigate("/auth", { replace: true });
           return;
         }
-        // If we found a session, the context will update and this effect will re-run
-        // with the correct session value
-        return;
+        activeSession = currentSession;
       }
 
-      setUserId(session.user.id);
+      setUserId(activeSession.user.id);
 
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", session.user.id)
+        .eq("id", activeSession.user.id)
         .single();
 
       setProfile(profileData);
@@ -185,16 +201,28 @@ export default function Dashboard() {
     };
 
     initializeDashboard();
-  }, [authLoading, oauthCompleting, session, navigate, searchParams]);
+  }, [authLoading, oauthCompleting, session, navigate, searchParams, isDemoMode]);
 
   // Fetch brand data when workspace changes
   useEffect(() => {
+    // In demo mode, use mock brand data
+    if (isDemoMode && isBrandMode) {
+      setCurrentBrand({
+        id: "demo-brand-id",
+        name: "Acme Corp",
+        slug: "demo-brand",
+        subscription_status: "active",
+        logo_url: null,
+      });
+      return;
+    }
+
     if (isBrandMode && workspace) {
       fetchBrandBySlug(workspace);
     } else {
       setCurrentBrand(null);
     }
-  }, [workspace, isBrandMode]);
+  }, [workspace, isBrandMode, isDemoMode]);
 
   // Handle brand onboarding completion from URL params
   useEffect(() => {
@@ -293,12 +321,12 @@ export default function Dashboard() {
 
       // Brand mode with selected campaign - show detail view
       if (selectedCampaignId) {
-        return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
+        return <BrandCampaignDetailView key={`campaign-${selectedCampaignId}`} campaignId={selectedCampaignId} />;
       }
 
       // Brand mode with selected boost - show detail view
       if (selectedBoostId) {
-        return <BrandCampaignDetailView boostId={selectedBoostId} />;
+        return <BrandCampaignDetailView key={`boost-${selectedBoostId}`} boostId={selectedBoostId} />;
       }
 
       // Brand mode with selected blueprint - show editor
@@ -311,7 +339,7 @@ export default function Dashboard() {
         case "campaigns":
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} brandSlug={currentBrand.slug} />;
         case "analytics":
-          return <BrandCampaignDetailView brandId={currentBrand.id} />;
+          return <BrandCampaignDetailView key={`brand-${currentBrand.id}`} brandId={currentBrand.id} />;
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
         case "creators":
@@ -356,7 +384,8 @@ export default function Dashboard() {
     }
   };
   // Don't render until auth is resolved to prevent flash of unauthenticated state
-  if (authLoading || oauthCompleting) {
+  // Skip this check in demo mode
+  if ((authLoading || oauthCompleting) && !isDemoMode) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -364,37 +393,46 @@ export default function Dashboard() {
     );
   }
 
-  return <div className="flex h-screen w-full bg-white dark:bg-background">
-      <SEOHead title="Dashboard" description="Your Virality creator dashboard" noIndex={true} />
-      <AppSidebar />
-      
-      {/* Main Content */}
-      <main className="flex-1 h-screen overflow-hidden flex flex-col bg-background">
-        <div className={`
-          pt-14 md:pt-0 flex-1 overflow-y-auto pb-20 md:pb-0 bg-background
-          ${currentTab === "discover" || currentTab === "wallet" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
-        `}>
-          {renderContent()}
-        </div>
-      </main>
+  return (
+    <DemoDataProvider>
+      <div className="flex h-screen w-full bg-white dark:bg-background">
+        <SEOHead title="Dashboard" description="Your Virality creator dashboard" noIndex={true} />
+        <AppSidebar />
 
-      <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
+        {/* Main Content */}
+        <main className="flex-1 h-screen overflow-hidden flex flex-col bg-background">
+          <div
+            data-tour-target="dashboard-main"
+            className={`
+              pt-14 md:pt-0 flex-1 overflow-y-auto pb-20 md:pb-0 bg-background
+              ${currentTab === "discover" || currentTab === "wallet" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
+            `}
+          >
+            {renderContent()}
+          </div>
+        </main>
 
-      {/* Announcements Popup */}
-      {userId && <AnnouncementPopup userId={userId} />}
+        <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
 
-      {/* Brand Creation Dialog - triggered when user selected Brand during onboarding */}
-      <CreateBrandDialog
-        open={showCreateBrandDialog}
-        onOpenChange={setShowCreateBrandDialog}
-        hideTrigger
-      />
+        {/* Announcements Popup */}
+        {userId && <AnnouncementPopup userId={userId} />}
 
-      {/* Creator Chat Widget */}
-      {isCreatorMode && <UnifiedMessagesWidget />}
+        {/* Brand Creation Dialog - triggered when user selected Brand during onboarding */}
+        <CreateBrandDialog
+          open={showCreateBrandDialog}
+          onOpenChange={setShowCreateBrandDialog}
+          hideTrigger
+        />
 
-      {/* Onboarding Dialog - for existing users with reset onboarding */}
-      {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
+        {/* Creator Chat Widget */}
+        {isCreatorMode && <UnifiedMessagesWidget />}
 
-    </div>;
+        {/* Onboarding Dialog - for existing users with reset onboarding */}
+        {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
+
+        {/* Product Tour */}
+        {isBrandMode && <ProductTour />}
+      </div>
+    </DemoDataProvider>
+  );
 }

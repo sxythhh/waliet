@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions, Text, PlatformColor, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions, Text, Image, ImageSourcePropType } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { LiquidGlassView, LiquidGlassContainerView } from '@callstack/liquid-glass';
+import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,22 +9,33 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Match web app's icon style (Material Symbols)
-const TAB_ICONS: Record<string, string> = {
-  Discover: 'book-open-page-variant-outline', // Maps to web's discover icon (book/map style)
-  MyCampaigns: 'home-outline',                 // Home icon for campaigns
-  Wallet: 'credit-card-outline',               // Credit card for wallet
-  Profile: 'account-circle-outline',           // Profile icon
+// Tab icon images - React Native automatically selects @2x/@3x based on device
+const TAB_ICONS: Record<string, { inactive: ImageSourcePropType; active: ImageSourcePropType }> = {
+  Home: {
+    inactive: require('../assets/home-inactive-new.png'),
+    active: require('../assets/home-active-new.png'),
+  },
+  Discover: {
+    inactive: require('../assets/discover-inactive.png'),
+    active: require('../assets/discover-active.png'),
+  },
+  Wallet: {
+    inactive: require('../assets/wallet-inactive.png'),
+    active: require('../assets/wallet-active.png'),
+  },
+  Profile: {
+    inactive: require('../assets/settings-inactive.png'),
+    active: require('../assets/settings-active.png'),
+  },
 };
 
 const TAB_LABELS: Record<string, string> = {
+  Home: 'Home',
   Discover: 'Discover',
-  MyCampaigns: 'Campaigns',
   Wallet: 'Wallet',
   Profile: 'Profile',
 };
@@ -39,7 +50,8 @@ const SPRING_CONFIG = {
 export function LiquidGlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const numTabs = state.routes.length;
-  const tabWidth = (SCREEN_WIDTH - 32) / numTabs; // Account for padding
+  const barWidth = SCREEN_WIDTH - 32;
+  const tabWidth = barWidth / numTabs;
 
   // Animated value for the pill position
   const activeIndex = useSharedValue(state.index);
@@ -60,78 +72,90 @@ export function LiquidGlassTabBar({ state, descriptors, navigation }: BottomTabB
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
-      {/* Full tab bar glass background */}
-      <LiquidGlassView style={styles.tabBarBackground} effect="regular" />
-
-      {/* Content layer with animated pill and tabs */}
-      <View style={styles.contentLayer}>
-        {/* Animated glass pill indicator */}
-        <Animated.View style={[styles.pillContainer, pillAnimatedStyle, { width: tabWidth }]}>
+      <LiquidGlassContainerView style={styles.barContainer}>
+          {/* Full tab bar glass background */}
           <LiquidGlassView
-            style={styles.pill}
-            effect="clear"
-            interactive
+            style={[
+              styles.tabBarBackground,
+              !isLiquidGlassSupported && styles.fallbackBackground,
+            ]}
+            effect="regular"
           />
-        </Animated.View>
 
-        {/* Tab buttons */}
-        <View style={styles.tabsRow}>
-          {state.routes.map((route, index) => {
-            const { options } = descriptors[route.key];
-            const isFocused = state.index === index;
+          {/* Content layer with animated pill and tabs */}
+          <View style={styles.contentLayer}>
+          {/* Animated glass pill indicator - will merge with background on iOS 26+ */}
+          <Animated.View style={[styles.pillContainer, pillAnimatedStyle, { width: tabWidth }]}>
+            <LiquidGlassView
+              style={[
+                styles.pill,
+                !isLiquidGlassSupported && styles.fallbackPill,
+              ]}
+              effect="clear"
+              interactive
+            />
+          </Animated.View>
 
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
+          {/* Tab buttons */}
+          <View style={styles.tabsRow}>
+            {state.routes.map((route, index) => {
+              const { options } = descriptors[route.key];
+              const isFocused = state.index === index;
 
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
-              }
-            };
+              const onPress = () => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
 
-            const onLongPress = () => {
-              navigation.emit({
-                type: 'tabLongPress',
-                target: route.key,
-              });
-            };
+                if (!isFocused && !event.defaultPrevented) {
+                  navigation.navigate(route.name);
+                }
+              };
 
-            const iconName = TAB_ICONS[route.name] || 'circle-outline';
-            const label = TAB_LABELS[route.name] || route.name;
+              const onLongPress = () => {
+                navigation.emit({
+                  type: 'tabLongPress',
+                  target: route.key,
+                });
+              };
 
-            return (
-              <TouchableOpacity
-                key={route.key}
-                accessibilityRole="button"
-                accessibilityState={isFocused ? { selected: true } : {}}
-                accessibilityLabel={options.tabBarAccessibilityLabel}
-                onPress={onPress}
-                onLongPress={onLongPress}
-                style={[styles.tab, { width: tabWidth }]}
-                activeOpacity={0.7}
-              >
-                <Icon
-                  name={iconName}
-                  size={24}
-                  color={isFocused ? colors.foreground : colors.mutedForeground}
-                />
-                <Text
-                  style={[
-                    styles.label,
-                    { color: isFocused ? colors.foreground : colors.mutedForeground },
-                  ]}
-                  numberOfLines={1}
+              const iconSet = TAB_ICONS[route.name];
+              const label = TAB_LABELS[route.name] || route.name;
+
+              return (
+                <TouchableOpacity
+                  key={route.key}
+                  accessibilityRole="button"
+                  accessibilityState={isFocused ? { selected: true } : {}}
+                  accessibilityLabel={options.tabBarAccessibilityLabel}
+                  onPress={onPress}
+                  onLongPress={onLongPress}
+                  style={[styles.tab, { width: tabWidth }]}
+                  activeOpacity={0.7}
                 >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  {iconSet && (
+                    <Image
+                      source={isFocused ? iconSet.active : iconSet.inactive}
+                      style={styles.tabIcon}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.label,
+                      { color: isFocused ? colors.foreground : colors.mutedForeground },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      </LiquidGlassContainerView>
     </View>
   );
 }
@@ -142,13 +166,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
+    alignItems: 'center',
     paddingTop: 8,
+  },
+  barContainer: {
+    width: SCREEN_WIDTH - 32,
   },
   tabBarBackground: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 24,
-    marginHorizontal: 0,
   },
   contentLayer: {
     flexDirection: 'row',
@@ -182,5 +208,16 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     marginTop: 4,
+  },
+  tabIcon: {
+    width: 24,
+    height: 24,
+  },
+  // Fallback styles for non-iOS 26 devices (darker)
+  fallbackBackground: {
+    backgroundColor: 'rgba(15, 15, 15, 0.95)',
+  },
+  fallbackPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 });

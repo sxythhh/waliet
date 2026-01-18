@@ -183,14 +183,11 @@ export function DiscordOAuthCallback() {
 
         // Must exactly match the redirect_uri used in the initial authorize URL
         const redirectUri = `${window.location.origin}/discord/callback`;
-        console.log('Calling discord-auth with redirectUri:', redirectUri);
 
         // Call the discord-auth function to sign in/up
         const { data, error: functionError } = await supabase.functions.invoke('discord-auth', {
           body: { code, redirectUri }
         });
-
-        console.log('Discord auth response:', { data, functionError });
 
         // Check for error in data (edge function might return error in body)
         if (data?.error) {

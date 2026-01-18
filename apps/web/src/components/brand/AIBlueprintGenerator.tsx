@@ -13,12 +13,7 @@ interface BlueprintGeneratedFields {
   brand_voice?: string;
   hooks?: string[];
   talking_points?: string[];
-  dos_and_donts?: {
-    dos: string[];
-    donts: string[];
-  };
   call_to_action?: string;
-  platforms?: string[];
 }
 
 interface AIBlueprintGeneratorProps {
@@ -153,14 +148,6 @@ export function AIBlueprintGenerator({
               <li className="flex items-center gap-2">
                 <ChevronRight className="h-3 w-3 text-primary" />
                 Content hooks and talking points
-              </li>
-              <li className="flex items-center gap-2">
-                <ChevronRight className="h-3 w-3 text-primary" />
-                Do's and don'ts for creators
-              </li>
-              <li className="flex items-center gap-2">
-                <ChevronRight className="h-3 w-3 text-primary" />
-                Recommended platforms
               </li>
             </ul>
           </div>

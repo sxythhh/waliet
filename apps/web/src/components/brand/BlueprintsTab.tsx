@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreHorizontal, FileText, Calendar, Link2, Sparkles, Zap, Hash } from "lucide-react";
+import { Plus, MoreHorizontal, FileText, Calendar, Link2, Sparkles, Zap, Hash, Trash2, Pencil, Copy, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageLoading } from "@/components/ui/loading-bar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,35 +17,37 @@ import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
-import tiktokIcon from "@/assets/tiktok-logo-black.png";
-import instagramIcon from "@/assets/instagram-logo-black.png";
-import youtubeIcon from "@/assets/youtube-logo-black.png";
+import { useAuth } from "@/contexts/AuthContext";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
 interface Blueprint {
   id: string;
   title: string;
   status: string;
   content: string | null;
-  platforms: string[] | null;
   hooks: string[] | null;
   talking_points: string[] | null;
   hashtags: string[] | null;
   created_at: string;
   updated_at: string;
   campaign_id?: string | null;
+  created_by: string | null;
+  creator?: {
+    id: string;
+    username: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
 }
 
 interface BlueprintTemplate {
   title?: string;
   content?: string;
-  platforms?: string[];
   hooks?: string[];
   talking_points?: string[];
-  dos_and_donts?: { dos: string[]; donts: string[] };
   call_to_action?: string;
   hashtags?: string[];
   brand_voice?: string;
   target_personas?: Record<string, unknown>[];
-  assets?: Record<string, unknown>[];
   example_videos?: string[];
   content_guidelines?: string;
 }
@@ -79,6 +83,8 @@ export function BlueprintsTab({
 }: BlueprintsTabProps) {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
+  const { user } = useAuth();
+  const { isDemoMode, demoBlueprints, demoBrand } = useDemoData();
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
@@ -96,8 +102,10 @@ export function BlueprintsTab({
   const [campaignLinks, setCampaignLinks] = useState<Record<string, string>>({});
   useEffect(() => {
     fetchBlueprints();
-    fetchBrandInfo();
-  }, [brandId]);
+    if (!isDemoMode) {
+      fetchBrandInfo();
+    }
+  }, [brandId, isDemoMode]);
   const fetchBrandInfo = async () => {
     const {
       data
@@ -112,10 +120,26 @@ export function BlueprintsTab({
   };
   const fetchBlueprints = async () => {
     setLoading(true);
+
+    // In demo mode, use mock data
+    if (isDemoMode) {
+      setBlueprints(demoBlueprints as Blueprint[]);
+      setBrandInfo({
+        name: demoBrand.name,
+        logoUrl: demoBrand.logo_url || undefined,
+        subscriptionPlan: "pro",
+      });
+      setLoading(false);
+      return;
+    }
+
     const {
       data,
       error
-    } = await supabase.from("blueprints").select("id, title, status, content, platforms, hooks, talking_points, hashtags, created_at, updated_at").eq("brand_id", brandId).order("updated_at", {
+    } = await supabase.from("blueprints").select(`
+      id, title, status, content, hooks, talking_points, hashtags, created_at, updated_at, created_by,
+      creator:profiles(id, username, full_name, avatar_url)
+    `).eq("brand_id", brandId).order("updated_at", {
       ascending: false
     });
     if (error) {
@@ -145,7 +169,8 @@ export function BlueprintsTab({
       error
     } = await supabase.from("blueprints").insert({
       brand_id: brandId,
-      title: "Untitled"
+      title: "",
+      created_by: user?.id
     }).select().single();
     if (error) {
       console.error("Error creating blueprint:", error);
@@ -168,6 +193,31 @@ export function BlueprintsTab({
       return;
     }
     toast.success("Blueprint deleted");
+    fetchBlueprints();
+  };
+  const duplicateBlueprint = async (blueprint: Blueprint) => {
+    const { data, error } = await supabase
+      .from("blueprints")
+      .select("*")
+      .eq("id", blueprint.id)
+      .single();
+    if (error || !data) {
+      toast.error("Failed to duplicate blueprint");
+      return;
+    }
+    const { id, created_at, updated_at, created_by, ...rest } = data;
+    const { error: insertError } = await supabase
+      .from("blueprints")
+      .insert({
+        ...rest,
+        title: `${data.title || "Untitled"} (Copy)`,
+        created_by: user?.id,
+      });
+    if (insertError) {
+      toast.error("Failed to duplicate blueprint");
+      return;
+    }
+    toast.success("Blueprint duplicated");
     fetchBlueprints();
   };
   const openBlueprint = (id: string) => {
@@ -199,17 +249,15 @@ export function BlueprintsTab({
       brand_id: brandId,
       title: template.title || "Untitled",
       content: template.content,
-      platforms: template.platforms,
       hooks: template.hooks,
       talking_points: template.talking_points,
-      dos_and_donts: template.dos_and_donts,
       call_to_action: template.call_to_action,
       hashtags: template.hashtags,
       brand_voice: template.brand_voice,
       target_personas: template.target_personas,
-      assets: template.assets,
       example_videos: template.example_videos,
-      content_guidelines: template.content_guidelines
+      content_guidelines: template.content_guidelines,
+      created_by: user?.id
     }).select().single();
     if (error) {
       console.error("Error creating blueprint from template:", error);
@@ -229,10 +277,8 @@ export function BlueprintsTab({
     target_personas?: Record<string, unknown>[];
     hooks?: string[];
     talking_points?: string[];
-    dos_and_donts?: { dos: string[]; donts: string[] };
     call_to_action?: string;
     hashtags?: string[];
-    platforms?: string[];
   }) => {
     const {
       data,
@@ -241,14 +287,13 @@ export function BlueprintsTab({
       brand_id: brandId,
       title: fields.title || "Imported Blueprint",
       content: fields.content,
-      platforms: fields.platforms,
       hooks: fields.hooks,
       talking_points: fields.talking_points,
-      dos_and_donts: fields.dos_and_donts,
       call_to_action: fields.call_to_action,
       hashtags: fields.hashtags,
       brand_voice: fields.brand_voice,
       target_personas: fields.target_personas,
+      created_by: user?.id
     }).select().single();
     if (error) {
       console.error("Error creating blueprint from import:", error);
@@ -265,7 +310,7 @@ export function BlueprintsTab({
   const getBlueprintStatus = (blueprint: Blueprint): BlueprintStatus => {
     if (campaignLinks[blueprint.id]) return "assigned";
     const hasContent = blueprint.content && blueprint.content.replace(/<[^>]*>/g, "").trim().length > 0;
-    if (hasContent || blueprint.platforms && blueprint.platforms.length > 0) return "draft";
+    if (hasContent) return "draft";
     return "empty";
   };
   const getContentPreview = (content: string | null) => {
@@ -280,25 +325,10 @@ export function BlueprintsTab({
     const isThisYear = date.getFullYear() === now.getFullYear();
     return format(date, isThisYear ? "MMM d" : "MMM d, yyyy");
   };
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case "tiktok":
-        return tiktokIcon;
-      case "instagram":
-      case "instagram reels":
-        return instagramIcon;
-      case "youtube":
-      case "youtube shorts":
-        return youtubeIcon;
-      default:
-        return null;
-    }
-  };
   const getCompletionScore = (blueprint: Blueprint) => {
     let score = 0;
-    let total = 5;
+    let total = 4;
     if (blueprint.content && blueprint.content.replace(/<[^>]*>/g, "").trim().length > 0) score++;
-    if (blueprint.platforms && blueprint.platforms.length > 0) score++;
     if (blueprint.hooks && blueprint.hooks.length > 0) score++;
     if (blueprint.talking_points && blueprint.talking_points.length > 0) score++;
     if (blueprint.hashtags && blueprint.hashtags.length > 0) score++;
@@ -320,9 +350,9 @@ export function BlueprintsTab({
             Content guidelines for your campaigns
           </p>
         </div>
-        <Button onClick={() => setTemplateSelectorOpen(true)} size="sm" className="h-9 px-4 gap-2 font-inter tracking-[-0.3px] text-sm">
+        <Button data-tour-target="create-blueprint-btn" onClick={() => setTemplateSelectorOpen(true)} size="sm" className="h-9 px-4 gap-2 font-inter tracking-[-0.3px] text-sm">
           New Blueprint
-          
+
         </Button>
       </div>
 
@@ -335,29 +365,17 @@ export function BlueprintsTab({
               title="Blueprint Card"
             />
           </div>
-        ) : (
-          <div className={cn("flex flex-col items-center justify-center py-20 px-6", "rounded-2xl border border-dashed border-border/50", "bg-muted/20")}>
-            <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
-              <FileText className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <h3 className="text-base font-medium mb-1">No blueprints yet</h3>
-            <p className="text-sm text-muted-foreground text-center max-w-sm mb-5">
-              Create your first blueprint to define content guidelines for creators
-            </p>
-            <Button onClick={() => setTemplateSelectorOpen(true)} variant="outline" size="sm" className="gap-2 rounded-full">
-              <Plus className="w-4 h-4" />
-              Create Blueprint
-            </Button>
-          </div>
-        )
-      ) : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        ) : null
+      ) : <div data-tour-target="blueprints-grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {blueprints.map(blueprint => {
         const status = getBlueprintStatus(blueprint);
         const statusConfig = getStatusConfig(status);
         const contentPreview = getContentPreview(blueprint.content);
         const completion = getCompletionScore(blueprint);
         const isLinked = !!campaignLinks[blueprint.id];
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={cn("group relative cursor-pointer", "rounded-2xl border border-border/60", "bg-card/60 backdrop-blur-sm", "hover:bg-card dark:hover:bg-[#0e0e0e] hover:shadow-md", "transition-all duration-200 ease-out")}>
+        return <ContextMenu key={blueprint.id}>
+          <ContextMenuTrigger asChild>
+            <div onClick={() => openBlueprint(blueprint.id)} className={cn("group relative cursor-pointer", "rounded-2xl border border-border/60", "bg-card/60 backdrop-blur-sm", "hover:bg-card dark:hover:bg-[#0e0e0e]", "transition-all duration-200 ease-out")}>
                 <div className="p-4">
                   {/* Header row */}
                   <div className="mb-2">
@@ -379,34 +397,72 @@ export function BlueprintsTab({
                     {contentPreview}
                   </p>
 
-                  {/* Quick stats */}
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    {blueprint.hooks && blueprint.hooks.length > 0 && <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground">
-                        {blueprint.hooks.length} hooks
-                      </span>}
-                    {blueprint.talking_points && blueprint.talking_points.length > 0 && <>
-                        {blueprint.hooks && blueprint.hooks.length > 0 && <span className="text-muted-foreground/40">·</span>}
-                        <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground">
-                          {blueprint.talking_points.length} points
-                        </span>
-                      </>}
-                    {blueprint.hashtags && blueprint.hashtags.length > 0 && <>
-                        {(blueprint.hooks && blueprint.hooks.length > 0 || blueprint.talking_points && blueprint.talking_points.length > 0) && <span className="text-muted-foreground/40">·</span>}
-                        <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground">
-                          {blueprint.hashtags.length} tags
-                        </span>
-                      </>}
-                  </div>
 
                   {/* Footer */}
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground/60 font-inter tracking-[-0.5px]">
-                    <span>Updated {formatDistanceToNow(new Date(blueprint.updated_at), {
-                  addSuffix: true
-                })}</span>
-                    <span>{completion.score}/{completion.total} complete</span>
+                    <div className="flex items-center gap-2">
+                      {blueprint.creator && (
+                        <div className="flex items-center gap-1.5">
+                          <Avatar className="h-4 w-4">
+                            <AvatarImage src={blueprint.creator.avatar_url || undefined} />
+                            <AvatarFallback className="text-[8px]">
+                              {(blueprint.creator.full_name || blueprint.creator.username || "?")[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate max-w-[80px]">
+                            {blueprint.creator.full_name || blueprint.creator.username || "Unknown"}
+                          </span>
+                        </div>
+                      )}
+                      <span>{formatDistanceToNow(new Date(blueprint.updated_at), { addSuffix: true })}</span>
+                    </div>
+                    <span>{completion.score}/{completion.total}</span>
                   </div>
                 </div>
-              </div>;
+              </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                openBlueprint(blueprint.id);
+              }}
+            >
+              <Pencil className="mr-2.5 h-4 w-4 text-muted-foreground" />
+              Edit
+            </ContextMenuItem>
+            <ContextMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                duplicateBlueprint(blueprint);
+              }}
+            >
+              <Copy className="mr-2.5 h-4 w-4 text-muted-foreground" />
+              Duplicate
+            </ContextMenuItem>
+            <ContextMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleActivateBlueprint(blueprint.id);
+              }}
+              disabled={isLinked}
+            >
+              <Rocket className="mr-2.5 h-4 w-4 text-muted-foreground" />
+              Create Campaign
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteBlueprint(blueprint.id);
+              }}
+              className="text-red-500 focus:text-red-500 dark:text-red-400 dark:focus:text-red-400"
+            >
+              <Trash2 className="mr-2.5 h-4 w-4" />
+              Delete
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>;
       })}
         </div>}
 

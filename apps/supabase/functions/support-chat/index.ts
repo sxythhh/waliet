@@ -77,6 +77,10 @@ async function generateQueryEmbedding(query: string): Promise<number[]> {
     }
 
     const data = await response.json();
+    if (!data.data || data.data.length === 0) {
+      console.error("RAG: Empty embedding response");
+      return [];
+    }
     return data.data[0].embedding;
   } catch (err) {
     console.error("RAG: Failed to generate embedding:", err);

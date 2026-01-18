@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/components/ThemeProvider";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -170,6 +170,7 @@ interface AddSocialAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialPlatform?: Platform;
 }
 type Step = "input" | "verification";
 
@@ -186,7 +187,8 @@ const generateVerificationCode = (): string => {
 export function AddSocialAccountDialog({
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  initialPlatform
 }: AddSocialAccountDialogProps) {
   const [step, setStep] = useState<Step>("input");
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
@@ -211,8 +213,11 @@ export function AddSocialAccountDialog({
       setIsChecking(false);
       setCopied(false);
       setCooldownRemaining(0);
+      if (initialPlatform) {
+        setSelectedPlatform(initialPlatform);
+      }
     }
-  }, [open]);
+  }, [open, initialPlatform]);
 
   // Cooldown timer
   useEffect(() => {
@@ -421,8 +426,8 @@ export function AddSocialAccountDialog({
       setIsContinuing(false);
     }
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
+  return <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="p-0 overflow-hidden bg-background border-border [&>button]:hidden">
         {step === "input" ? <div className="flex flex-col max-h-[85vh]">
             {/* Scrollable content area */}
             <div className="flex-1 overflow-y-auto">
@@ -556,6 +561,6 @@ export function AddSocialAccountDialog({
               </Button>
             </div>
           </div> : step === "verification" ? <VerificationStep username={username} platform={selectedPlatform} verificationCode={verificationCode} copied={copied} isChecking={isChecking} cooldownRemaining={cooldownRemaining} getPlatformIcon={getPlatformIcon} getPlatformLabel={getPlatformLabel} handleCopyCode={handleCopyCode} handleBack={handleBack} handleCheckVerification={handleCheckVerification} /> : null}
-      </DialogContent>
-    </Dialog>;
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>;
 }

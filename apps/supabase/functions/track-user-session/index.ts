@@ -91,6 +91,27 @@ function getDeviceName(os: string, device: string): string {
   return `${os} Device`;
 }
 
+// Verify Whop token to get user ID
+async function verifyWhopToken(token: string): Promise<string | null> {
+  try {
+    const response = await fetch("https://api.whop.com/api/v5/me", {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data.id;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
@@ -102,11 +123,44 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get request body
-    const { userId, sessionId } = await req.json();
+    const { userId: bodyUserId, sessionId, platform } = await req.json();
+
+    // Check for Whop token auth
+    const whopToken = req.headers.get("x-whop-user-token");
+    let userId = bodyUserId;
+
+    // If using Whop token, verify and get user from profile
+    if (whopToken && !bodyUserId) {
+      const whopUserId = await verifyWhopToken(whopToken);
+      if (!whopUserId) {
+        safeError("Invalid Whop token");
+        return new Response(
+          JSON.stringify({ error: "Invalid Whop token" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Look up the linked Supabase user
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("whop_user_id", whopUserId)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        safeError("User not found for Whop token", profileError);
+        return new Response(
+          JSON.stringify({ error: "User not linked to Whop account" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userId = profile.id;
+    }
 
     if (!userId || !sessionId) {
       safeError("Missing required fields");

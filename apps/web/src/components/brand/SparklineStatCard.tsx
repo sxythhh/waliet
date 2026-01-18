@@ -59,7 +59,7 @@ export function SparklineStatCard({
                   </linearGradient>
                 </defs>
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="value"
                   stroke={color}
                   strokeWidth={1.5}

@@ -1226,7 +1226,6 @@ export function WalletTab() {
       schema: 'public',
       table: 'payout_requests'
     }, payload => {
-      console.log('Payout request updated:', payload);
       // Refetch wallet and transactions when payout request changes
       fetchWallet();
       fetchTransactions();
@@ -1268,16 +1267,10 @@ export function WalletTab() {
       method,
       details
     }];
-    console.log("Adding payout method:", {
-      method,
-      details
-    });
-    console.log("Updated methods array:", updatedMethods);
     const payoutDetailsPayload = updatedMethods.map(m => ({
       method: m.method,
       details: m.details
     }));
-    console.log("Payload to Supabase:", payoutDetailsPayload);
     const {
       error
     } = await supabase.from("wallets").update({
@@ -1292,7 +1285,6 @@ export function WalletTab() {
         description: `Failed to add payout method: ${error.message}`
       });
     } else {
-      console.log("Payout method added successfully");
       toast({
         title: "Success",
         description: "Payout method added successfully"

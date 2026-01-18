@@ -5,10 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
 import { Card, Badge } from '../ui';
+import { platformConfig } from '../../hooks/useSocialAccounts';
 
 export interface VideoSubmission {
   id: string;
@@ -32,12 +34,6 @@ export interface SubmissionCardProps {
   submission: VideoSubmission;
   onPress?: (submission: VideoSubmission) => void;
 }
-
-const platformConfig: Record<string, { bg: string; icon: string }> = {
-  tiktok: { bg: '#000', icon: 'music-note' },
-  instagram: { bg: '#E1306C', icon: 'instagram' },
-  youtube: { bg: '#FF0000', icon: 'youtube' },
-};
 
 function formatViews(views: number): string {
   if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
@@ -74,10 +70,8 @@ function getStatusConfig(status: VideoSubmission['status']): {
 
 export function SubmissionCard({ submission, onPress }: SubmissionCardProps) {
   const statusConfig = getStatusConfig(submission.status);
-  const platConfig = platformConfig[submission.platform?.toLowerCase()] || {
-    bg: '#666',
-    icon: 'web',
-  };
+  const p = submission.platform?.toLowerCase() as keyof typeof platformConfig;
+  const platConfig = platformConfig[p] || null;
 
   const handleOpenVideo = () => {
     if (submission.video_url) {
@@ -120,8 +114,16 @@ export function SubmissionCard({ submission, onPress }: SubmissionCardProps) {
                 {submission.campaign?.title || 'Unknown Campaign'}
               </Text>
             </View>
-            <View style={[styles.platformBadge, { backgroundColor: platConfig.bg }]}>
-              <Icon name={platConfig.icon} size={16} color="#fff" />
+            <View style={[styles.platformBadge, { backgroundColor: platConfig?.bg || '#666' }]}>
+              {platConfig ? (
+                <Image
+                  source={platConfig.logoWhite}
+                  style={styles.platformLogoImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Icon name="web" size={16} color="#fff" />
+              )}
             </View>
           </View>
 
@@ -237,6 +239,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  platformLogoImage: {
+    width: 18,
+    height: 18,
   },
   statsRow: {
     flexDirection: 'row',

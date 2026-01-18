@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TrainingDataImportDialog } from "@/components/admin/TrainingDataImportDialog";
+import { AdminConfirmDialog } from "@/components/admin/design-system/AdminDialog";
 import { Button } from "@/components/ui/button";
+import { Input as AdminInput } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -73,6 +75,14 @@ export function TrainingDataManager() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showInactive, setShowInactive] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+
+  // Confirm dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [clearAllConfirmOpen, setClearAllConfirmOpen] = useState(false);
+  const [clearAllStep, setClearAllStep] = useState<1 | 2>(1);
+  const [clearAllConfirmText, setClearAllConfirmText] = useState("");
+
   const queryClient = useQueryClient();
 
   // Fetch training conversations
@@ -134,16 +144,20 @@ export function TrainingDataManager() {
     queryClient.invalidateQueries({ queryKey: ["training-stats"] });
   };
 
-  // Delete conversation
-  const deleteConversation = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this training conversation?")) {
-      return;
-    }
+  // Request delete confirmation
+  const requestDeleteConversation = (id: string) => {
+    setItemToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Execute delete after confirmation
+  const executeDeleteConversation = async () => {
+    if (!itemToDelete) return;
 
     const { error } = await supabase
       .from("training_conversations")
       .delete()
-      .eq("id", id);
+      .eq("id", itemToDelete);
 
     if (error) {
       toast.error("Failed to delete conversation");
@@ -151,27 +165,35 @@ export function TrainingDataManager() {
     }
 
     toast.success("Conversation deleted");
+    setDeleteConfirmOpen(false);
+    setItemToDelete(null);
     refetch();
     queryClient.invalidateQueries({ queryKey: ["training-stats"] });
   };
 
-  // Clear all training data
-  const clearAllData = async () => {
-    if (!confirm("Are you sure you want to delete ALL training data? This cannot be undone.")) {
-      return;
-    }
+  // Request clear all confirmation (step 1)
+  const requestClearAllData = () => {
+    setClearAllStep(1);
+    setClearAllConfirmText("");
+    setClearAllConfirmOpen(true);
+  };
 
-    // Double confirm for safety
-    if (!confirm("This will permanently delete all Q&A pairs. Type 'DELETE' in the next prompt to confirm.")) {
-      return;
+  // Handle clear all step progression
+  const handleClearAllStep = () => {
+    if (clearAllStep === 1) {
+      setClearAllStep(2);
+    } else {
+      // Step 2: check confirmation text
+      if (clearAllConfirmText !== "DELETE") {
+        toast.error("Deletion cancelled - confirmation text did not match");
+        return;
+      }
+      executeClearAllData();
     }
+  };
 
-    const confirmText = prompt("Type DELETE to confirm:");
-    if (confirmText !== "DELETE") {
-      toast.error("Deletion cancelled - confirmation text did not match");
-      return;
-    }
-
+  // Execute clear all after confirmation
+  const executeClearAllData = async () => {
     setIsClearing(true);
     try {
       const { error } = await supabase
@@ -185,6 +207,9 @@ export function TrainingDataManager() {
       }
 
       toast.success("All training data has been cleared");
+      setClearAllConfirmOpen(false);
+      setClearAllStep(1);
+      setClearAllConfirmText("");
       refetch();
       queryClient.invalidateQueries({ queryKey: ["training-stats"] });
     } catch (error) {
@@ -222,7 +247,7 @@ export function TrainingDataManager() {
             <Button
               variant="outline"
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={clearAllData}
+              onClick={requestClearAllData}
               disabled={isClearing}
             >
               {isClearing ? (
@@ -418,7 +443,7 @@ export function TrainingDataManager() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => deleteConversation(conv.id)}
+                            onClick={() => requestDeleteConversation(conv.id)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -442,6 +467,57 @@ export function TrainingDataManager() {
           queryClient.invalidateQueries({ queryKey: ["training-stats"] });
         }}
       />
+
+      {/* Delete single conversation confirmation */}
+      <AdminConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          setDeleteConfirmOpen(open);
+          if (!open) setItemToDelete(null);
+        }}
+        title="Delete Training Conversation"
+        description="Are you sure you want to delete this training conversation? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={executeDeleteConversation}
+        variant="destructive"
+      />
+
+      {/* Clear all data confirmation (two-step) */}
+      <AdminConfirmDialog
+        open={clearAllConfirmOpen}
+        onOpenChange={(open) => {
+          setClearAllConfirmOpen(open);
+          if (!open) {
+            setClearAllStep(1);
+            setClearAllConfirmText("");
+          }
+        }}
+        title={clearAllStep === 1 ? "Delete All Training Data" : "Confirm Permanent Deletion"}
+        description={
+          clearAllStep === 1
+            ? "Are you sure you want to delete ALL training data? This will permanently remove all Q&A pairs and cannot be undone."
+            : undefined
+        }
+        confirmLabel={clearAllStep === 1 ? "Continue" : "Delete All Data"}
+        onConfirm={handleClearAllStep}
+        variant="destructive"
+        loading={isClearing}
+      >
+        {clearAllStep === 2 && (
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Type <span className="font-mono font-semibold text-foreground">DELETE</span> to confirm permanent deletion of all {stats?.total || 0} Q&A pairs.
+            </p>
+            <AdminInput
+              value={clearAllConfirmText}
+              onChange={(e) => setClearAllConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="font-mono"
+              autoFocus
+            />
+          </div>
+        )}
+      </AdminConfirmDialog>
     </div>
   );
 }

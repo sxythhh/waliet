@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CalendarIcon, Check, Lock, FileText, Plus, X, HelpCircle, ImagePlus, ClipboardCheck } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { ViewBonusesConfig } from "./ViewBonusesConfig";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -218,6 +219,7 @@ export function CampaignWizard({
   const [loadingData, setLoadingData] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Form data - unified state for both types
   const [formData, setFormData] = useState({
@@ -231,6 +233,8 @@ export function CampaignWizard({
     is_private: false,
     payout_type: "on_platform" as "on_platform" | "off_platform",
     shortimize_collection_name: "",
+    auto_track_shortimize: false,
+    analytics_provider: "none" as "none" | "shortimize" | "viral",
     discord_role_id: "",
     application_questions: [] as ApplicationQuestion[],
 
@@ -241,6 +245,9 @@ export function CampaignWizard({
     videos_per_month: "",
     max_accepted_creators: "",
     payment_schedule: "monthly" as "weekly" | "biweekly" | "monthly",
+    boost_payment_model: "retainer" as "retainer" | "flat_rate",
+    flat_rate_min: "",
+    flat_rate_max: "",
     start_date: undefined as Date | undefined,
     end_date: undefined as Date | undefined,
     view_bonuses_enabled: false,
@@ -328,6 +335,13 @@ export function CampaignWizard({
     }
   }, [initialBlueprintId, open]);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [currentStep]);
+
   // Load existing data for edit/clone mode
   useEffect(() => {
     if (!open) return;
@@ -401,6 +415,8 @@ export function CampaignWizard({
       is_private: data.is_private || false,
       payout_type: data.payout_type || "on_platform",
       shortimize_collection_name: data.shortimize_collection_name || "",
+      auto_track_shortimize: data.auto_track_shortimize || false,
+      analytics_provider: data.analytics_provider || "none",
       discord_role_id: data.discord_role_id || "",
       budget: data.budget?.toString() || "",
       is_infinite_budget: data.is_infinite_budget || false,
@@ -437,12 +453,17 @@ export function CampaignWizard({
       is_private: data.is_private || false,
       payout_type: data.payout_type || "on_platform",
       shortimize_collection_name: data.shortimize_collection_name || "",
+      auto_track_shortimize: data.auto_track_shortimize || false,
+      analytics_provider: data.analytics_provider || "none",
       discord_role_id: data.discord_role_id || "",
       position_type: data.position_type || "",
       monthly_retainer: data.monthly_retainer?.toString() || "",
       videos_per_month: data.videos_per_month?.toString() || "",
       max_accepted_creators: data.max_accepted_creators?.toString() || "",
       payment_schedule: data.payment_schedule || "monthly",
+      boost_payment_model: data.payment_model || "retainer",
+      flat_rate_min: data.flat_rate_min?.toString() || "",
+      flat_rate_max: data.flat_rate_max?.toString() || "",
       start_date: data.start_date ? new Date(data.start_date) : undefined,
       end_date: data.end_date ? new Date(data.end_date) : undefined,
       view_bonuses_enabled: data.view_bonuses_enabled || false,
@@ -538,17 +559,30 @@ export function CampaignWizard({
     } else if (currentStep === 2) {
       // Compensation step validation
       if (isBoost) {
-        if (!formData.monthly_retainer || !formData.videos_per_month || !formData.max_accepted_creators) {
-          toast.error("Please fill in all required fields");
-          return;
-        }
-        // Only validate budget against balance when creating (not editing) and paying on-platform
-        if (!isEditMode && formData.payout_type === "on_platform") {
-          const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-          const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
-          const totalBudgetNeeded = monthlyRetainer * maxCreators;
-          if (totalBudgetNeeded > availableBalance) {
-            toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', { minimumFractionDigits: 2 })}) exceeds available balance`);
+        // Validate based on payment model
+        if (formData.boost_payment_model === 'retainer') {
+          if (!formData.monthly_retainer) {
+            toast.error("Please enter the payment amount");
+            return;
+          }
+          // Only validate budget against balance when creating (not editing) and paying on-platform
+          if (!isEditMode && formData.payout_type === "on_platform") {
+            const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
+            const maxCreators = parseInt(formData.max_accepted_creators, 10) || 0;
+            const totalBudgetNeeded = monthlyRetainer * maxCreators;
+            if (totalBudgetNeeded > availableBalance) {
+              toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', { minimumFractionDigits: 2 })}) exceeds available balance`);
+              return;
+            }
+          }
+        } else {
+          // Flat rate validation
+          if (!formData.flat_rate_min || !formData.flat_rate_max) {
+            toast.error("Please enter both minimum and maximum rate");
+            return;
+          }
+          if (parseFloat(formData.flat_rate_min) > parseFloat(formData.flat_rate_max)) {
+            toast.error("Minimum rate cannot be greater than maximum rate");
             return;
           }
         }
@@ -609,8 +643,21 @@ export function CampaignWizard({
       return;
     }
 
-    if (!formData.title || !formData.monthly_retainer || !formData.videos_per_month || !formData.max_accepted_creators) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields based on payment model
+    if (!formData.title) {
+      toast.error("Please enter a title for the boost");
+      return;
+    }
+    if (formData.boost_payment_model === 'retainer' && !formData.monthly_retainer) {
+      toast.error("Please enter the payment amount");
+      return;
+    }
+    if (formData.boost_payment_model === 'flat_rate' && (!formData.flat_rate_min || !formData.flat_rate_max)) {
+      toast.error("Please enter both minimum and maximum rate");
+      return;
+    }
+    if (formData.boost_payment_model === 'flat_rate' && parseFloat(formData.flat_rate_min) > parseFloat(formData.flat_rate_max)) {
+      toast.error("Minimum rate cannot be greater than maximum rate");
       return;
     }
 
@@ -650,22 +697,24 @@ export function CampaignWizard({
         brand_id: brandId,
         title: formData.title,
         description: formData.description || null,
-        monthly_retainer: parseFloat(formData.monthly_retainer),
-        videos_per_month: parseInt(formData.videos_per_month, 10),
+        monthly_retainer: formData.boost_payment_model === 'retainer' ? parseFloat(formData.monthly_retainer) : 0,
+        videos_per_month: parseInt(formData.videos_per_month, 10) || 0,
         content_style_requirements: fullRequirements,
-        max_accepted_creators: parseInt(formData.max_accepted_creators, 10),
+        max_accepted_creators: parseInt(formData.max_accepted_creators, 10) || 0,
         start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : null,
         end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
         banner_url,
         status: isEditMode ? undefined : boostStatus,
         blueprint_embed_url: null,
-        blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
+        blueprint_id: selectedBlueprintId || null,
         is_private: formData.is_private,
         application_questions: formData.application_questions.length > 0 ? formData.application_questions as unknown as any : null,
         content_distribution: formData.content_distribution,
         position_type: finalPositionType || null,
         slug: isEditMode ? undefined : uniqueSlug,
         shortimize_collection_name: formData.shortimize_collection_name || null,
+        auto_track_shortimize: formData.analytics_provider === 'shortimize',
+        analytics_provider: formData.analytics_provider,
         view_bonuses_enabled: formData.view_bonuses_enabled,
         discord_guild_id: brandDiscordGuildId || null,
         discord_role_id: formData.discord_role_id || null,
@@ -673,7 +722,10 @@ export function CampaignWizard({
         content_type: formData.content_type || 'both',
         categories: formData.categories.length > 0 ? formData.categories : null,
         skills: formData.skills.length > 0 ? formData.skills : null,
-        payout_type: formData.payout_type
+        payout_type: formData.payout_type,
+        payment_model: formData.boost_payment_model,
+        flat_rate_min: formData.boost_payment_model === 'flat_rate' ? parseFloat(formData.flat_rate_min) : null,
+        flat_rate_max: formData.boost_payment_model === 'flat_rate' ? parseFloat(formData.flat_rate_max) : null,
       };
 
       let resultId: string;
@@ -798,13 +850,14 @@ export function CampaignWizard({
         access_code: formData.is_private ? formData.access_code : null,
         requires_application: formData.requires_application,
         hashtags: formData.hashtags.length > 0 ? formData.hashtags : null,
-        blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
+        blueprint_id: selectedBlueprintId || null,
         shortimize_collection_name: formData.shortimize_collection_name || null,
+        auto_track_shortimize: formData.analytics_provider === 'shortimize',
+        analytics_provider: formData.analytics_provider,
         discord_guild_id: brandDiscordGuildId || null,
         discord_role_id: formData.discord_role_id || null,
         require_audience_insights: formData.require_audience_insights,
         min_insights_score: formData.require_audience_insights ? formData.min_insights_score : null,
-        require_phone_number: formData.require_phone_number,
         payout_type: formData.payout_type
       };
 
@@ -855,6 +908,8 @@ export function CampaignWizard({
       is_private: false,
       payout_type: "on_platform",
       shortimize_collection_name: "",
+      auto_track_shortimize: false,
+      analytics_provider: "none",
       discord_role_id: "",
       application_questions: [],
       position_type: "",
@@ -895,6 +950,99 @@ export function CampaignWizard({
     setCurrentStep(skipTypeStep ? 2 : 1);
   };
 
+  // Save as draft when closing the dialog
+  const saveDraftOnClose = async () => {
+    // Only save draft in create mode when there's a title
+    if (isEditMode || isCloneMode || !formData.title.trim()) {
+      return;
+    }
+
+    try {
+      const baseSlug = formData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 50);
+      const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
+
+      if (isBoost) {
+        // Save boost as draft
+        const blueprintPlatforms = selectedBlueprint?.platforms || ['tiktok', 'instagram', 'youtube'];
+        const fullRequirements = `PLATFORMS: ${blueprintPlatforms.join(", ")}`;
+        const finalPositionType = formData.position_type === 'other'
+          ? formData.custom_position
+          : formData.position_type;
+
+        await supabase.from('bounty_campaigns').insert({
+          brand_id: brandId,
+          title: formData.title,
+          description: formData.description || null,
+          monthly_retainer: formData.boost_payment_model === 'retainer' && formData.monthly_retainer ? parseFloat(formData.monthly_retainer) : 0,
+          videos_per_month: formData.videos_per_month ? parseInt(formData.videos_per_month, 10) : 1,
+          content_style_requirements: fullRequirements,
+          max_accepted_creators: formData.max_accepted_creators ? parseInt(formData.max_accepted_creators, 10) : 10,
+          start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : null,
+          end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
+          status: 'draft',
+          blueprint_id: selectedBlueprintId || null,
+          is_private: formData.is_private,
+          application_questions: formData.application_questions.length > 0 ? formData.application_questions as unknown as any : null,
+          content_distribution: formData.content_distribution,
+          position_type: finalPositionType || null,
+          slug: uniqueSlug,
+          view_bonuses_enabled: formData.view_bonuses_enabled,
+          experience_level: formData.experience_level || 'any',
+          content_type: formData.content_type || 'both',
+          categories: formData.categories.length > 0 ? formData.categories : null,
+          skills: formData.skills.length > 0 ? formData.skills : null,
+          payout_type: formData.payout_type,
+          payment_model: formData.boost_payment_model,
+          flat_rate_min: formData.boost_payment_model === 'flat_rate' && formData.flat_rate_min ? parseFloat(formData.flat_rate_min) : null,
+          flat_rate_max: formData.boost_payment_model === 'flat_rate' && formData.flat_rate_max ? parseFloat(formData.flat_rate_max) : null,
+        });
+
+        toast.success("Draft saved", { description: "Your boost has been saved as a draft" });
+      } else {
+        // Save CPM campaign as draft
+        await supabase.from('campaigns').insert({
+          brand_id: brandId,
+          title: formData.title,
+          description: formData.description || null,
+          budget: formData.budget ? parseFloat(formData.budget) : null,
+          is_infinite_budget: formData.is_infinite_budget,
+          rpm_rate: formData.rpm_rate ? parseFloat(formData.rpm_rate) : 5,
+          payment_model: formData.payment_model,
+          allowed_platforms: formData.allowed_platforms,
+          category: formData.category || null,
+          requires_application: formData.requires_application,
+          is_private: formData.is_private,
+          access_code: formData.is_private && formData.access_code ? formData.access_code : null,
+          hashtags: formData.hashtags.length > 0 ? formData.hashtags : null,
+          status: 'draft',
+          slug: uniqueSlug,
+          blueprint_id: selectedBlueprintId || null,
+        });
+
+        toast.success("Draft saved", { description: "Your campaign has been saved as a draft" });
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      // Don't show error toast - silent fail for auto-save
+    }
+  };
+
+  // Handle dialog close with draft saving
+  const handleDialogClose = async (open: boolean) => {
+    if (!open && mode === 'create' && formData.title.trim()) {
+      await saveDraftOnClose();
+    }
+    onOpenChange(open);
+    if (!open) {
+      resetForm();
+    }
+  };
+
   // Get title based on mode and type
   const getDialogTitle = () => {
     if (isEditMode) {
@@ -908,7 +1056,7 @@ export function CampaignWizard({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-[540px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
           {/* Hidden file input for banner upload */}
           <input
@@ -961,7 +1109,7 @@ export function CampaignWizard({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-y-auto p-6 py-4">
+          <div ref={contentRef} className="flex-1 overflow-y-auto p-6 py-4">
             {loadingData ? (
               <div className="flex items-center justify-center h-40">
                 <div className="text-muted-foreground">Loading...</div>
@@ -1150,42 +1298,127 @@ export function CampaignWizard({
                           </div>
 
                           <div className="p-4 space-y-4">
-                            {/* Schedule Selector */}
+                            {/* Payment Model Selector */}
                             <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Pay frequency</Label>
-                              <Select value={formData.payment_schedule} onValueChange={(value: any) => setFormData({...formData, payment_schedule: value})}>
-                                <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="weekly">Weekly</SelectItem>
-                                  <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                                  <SelectItem value="monthly">Monthly</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Payment model</Label>
+                              <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({...formData, boost_payment_model: "retainer"})}
+                                  className={cn(
+                                    "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                                    formData.boost_payment_model === "retainer"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                  )}
+                                >
+                                  Monthly Retainer
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({...formData, boost_payment_model: "flat_rate"})}
+                                  className={cn(
+                                    "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                                    formData.boost_payment_model === "flat_rate"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                  )}
+                                >
+                                  Per-Post Rate
+                                </button>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">
+                                {formData.boost_payment_model === "retainer"
+                                  ? "Pay creators a fixed amount per period for a set number of videos."
+                                  : "Pay creators per video. Creators propose a rate within your range."}
+                              </p>
                             </div>
 
-                            {/* Payment Amount */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                                  Payment per {formData.payment_schedule === 'weekly' ? 'week' : formData.payment_schedule === 'biweekly' ? '2 weeks' : 'month'}
-                                </Label>
-                                <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                                  Balance: <span className="text-foreground font-medium">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </span>
-                              </div>
-                              <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium font-geist">$</span>
-                                <Input
-                                  type="number"
-                                  min="10"
-                                  value={formData.monthly_retainer}
-                                  onChange={e => setFormData({...formData, monthly_retainer: e.target.value})}
-                                  className="pl-9 h-12 border border-border/50 !bg-transparent text-xl font-semibold font-geist tracking-[-0.5px]"
-                                />
-                              </div>
-                            </div>
+                            {formData.boost_payment_model === "retainer" ? (
+                              <>
+                                {/* Schedule Selector */}
+                                <div className="space-y-2">
+                                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Pay frequency</Label>
+                                  <Select value={formData.payment_schedule} onValueChange={(value: any) => setFormData({...formData, payment_schedule: value})}>
+                                    <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="weekly">Weekly</SelectItem>
+                                      <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                                      <SelectItem value="monthly">Monthly</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                {/* Payment Amount */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                                      Payment per {formData.payment_schedule === 'weekly' ? 'week' : formData.payment_schedule === 'biweekly' ? '2 weeks' : 'month'}
+                                    </Label>
+                                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                                      Balance: <span className="text-foreground font-medium">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </span>
+                                  </div>
+                                  <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium font-geist">$</span>
+                                    <Input
+                                      type="number"
+                                      min="10"
+                                      value={formData.monthly_retainer}
+                                      onChange={e => setFormData({...formData, monthly_retainer: e.target.value})}
+                                      className="pl-9 h-12 border border-border/50 !bg-transparent text-xl font-semibold font-geist tracking-[-0.5px]"
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                {/* Flat Rate Range */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Rate range per post</Label>
+                                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                                      Balance: <span className="text-foreground font-medium">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">Minimum</Label>
+                                      <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium font-geist">$</span>
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          value={formData.flat_rate_min}
+                                          onChange={e => setFormData({...formData, flat_rate_min: e.target.value})}
+                                          placeholder="50"
+                                          className="pl-7 h-10 border border-border/50 !bg-transparent font-geist tracking-[-0.3px]"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">Maximum</Label>
+                                      <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium font-geist">$</span>
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          value={formData.flat_rate_max}
+                                          onChange={e => setFormData({...formData, flat_rate_max: e.target.value})}
+                                          placeholder="200"
+                                          className="pl-7 h-10 border border-border/50 !bg-transparent font-geist tracking-[-0.3px]"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">
+                                    Creators will propose a rate within this range when applying.
+                                  </p>
+                                </div>
+                              </>
+                            )}
 
                             {/* Payout Type */}
                             <div className="space-y-2">
@@ -1262,24 +1495,24 @@ export function CampaignWizard({
                             {/* Videos & Creators Row */}
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Videos required</Label>
+                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Videos required <span className="text-muted-foreground/50">(optional)</span></Label>
                                 <Input
                                   type="number"
-                                  min="1"
+                                  min="0"
                                   value={formData.videos_per_month}
                                   onChange={e => setFormData({...formData, videos_per_month: e.target.value})}
-                                  placeholder="4"
+                                  placeholder="Leave empty for unlimited"
                                   className="h-10 !bg-transparent border border-border/50 font-geist tracking-[-0.3px]"
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Max creators</Label>
+                                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Max creators <span className="text-muted-foreground/50">(optional)</span></Label>
                                 <Input
                                   type="number"
-                                  min="1"
+                                  min="0"
                                   value={formData.max_accepted_creators}
                                   onChange={e => setFormData({...formData, max_accepted_creators: e.target.value})}
-                                  placeholder="5"
+                                  placeholder="Leave empty for unlimited"
                                   className="h-10 !bg-transparent border border-border/50 font-geist tracking-[-0.3px]"
                                 />
                               </div>
@@ -1795,6 +2028,32 @@ export function CampaignWizard({
                                 onCheckedChange={(checked) => setFormData({...formData, require_phone_number: checked})}
                               />
                             </div>
+
+                            {/* Analytics Provider Selection */}
+                            <div className="px-4 py-3.5 space-y-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                                  <Icon icon="material-symbols:track-changes" className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium font-inter tracking-[-0.3px]">Creator Tracking</p>
+                                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Auto-track approved creators in analytics platform</p>
+                                </div>
+                              </div>
+                              <Select
+                                value={formData.analytics_provider}
+                                onValueChange={(value: "none" | "shortimize" | "viral") => setFormData({...formData, analytics_provider: value})}
+                              >
+                                <SelectTrigger className="h-10 bg-muted/30 dark:bg-muted/20 border-0 font-inter tracking-[-0.3px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Disabled</SelectItem>
+                                  <SelectItem value="shortimize">Shortimize</SelectItem>
+                                  <SelectItem value="viral">viral.app</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1965,6 +2224,32 @@ export function CampaignWizard({
                             </div>
                           )}
                         </div>
+
+                        {/* Analytics Provider Selection (Boost) */}
+                        <div className="rounded-lg bg-muted/30 p-4 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                              <Icon icon="material-symbols:track-changes" className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium font-inter tracking-[-0.3px]">Creator Tracking</p>
+                              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Auto-track accepted creators in analytics platform</p>
+                            </div>
+                          </div>
+                          <Select
+                            value={formData.analytics_provider}
+                            onValueChange={(value: "none" | "shortimize" | "viral") => setFormData({...formData, analytics_provider: value})}
+                          >
+                            <SelectTrigger className="h-10 bg-muted/30 dark:bg-muted/20 border-0 font-inter tracking-[-0.3px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Disabled</SelectItem>
+                              <SelectItem value="shortimize">Shortimize</SelectItem>
+                              <SelectItem value="viral">viral.app</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </>
                     )}
                   </div>
@@ -1993,6 +2278,45 @@ export function CampaignWizard({
                         placeholder="Describe what this entails..."
                         className="min-h-[90px] bg-muted/30 border-0 resize-none"
                       />
+                    </div>
+
+                    {/* Blueprint Selector */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Blueprint</Label>
+                        <span className="text-xs text-muted-foreground">(Optional)</span>
+                      </div>
+                      <Select
+                        value={selectedBlueprintId || "none"}
+                        onValueChange={(value) => setSelectedBlueprintId(value === "none" ? "" : value)}
+                      >
+                        <SelectTrigger className="h-11 bg-muted/30 border-0">
+                          <SelectValue placeholder="Select a blueprint for content guidelines..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            <span className="text-muted-foreground">No blueprint</span>
+                          </SelectItem>
+                          {blueprints.map((bp) => (
+                            <SelectItem key={bp.id} value={bp.id}>
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span>{bp.title}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {blueprints.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          No blueprints available. Create one in the Blueprints section to attach content guidelines.
+                        </p>
+                      )}
+                      {blueprints.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Attach a content blueprint with guidelines, hooks, and talking points for creators.
+                        </p>
+                      )}
                     </div>
 
                     {/* Banner Image */}
@@ -2130,25 +2454,49 @@ export function CampaignWizard({
                             </p>
                           )}
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="font-inter tracking-[-0.5px]">
-                              <span className="text-foreground font-medium">${formData.monthly_retainer || '0'}</span>/mo
-                            </span>
-                            <span className="text-border">·</span>
-                            <span className="font-inter tracking-[-0.5px]">
-                              <span className="text-foreground font-medium">{formData.videos_per_month || '0'}</span> videos
-                            </span>
-                            <span className="text-border">·</span>
-                            <span className="font-inter tracking-[-0.5px]">
-                              <span className="text-foreground font-medium">
-                                ${(parseInt(formData.videos_per_month, 10) || 0) > 0
-                                  ? ((parseFloat(formData.monthly_retainer) || 0) / (parseInt(formData.videos_per_month, 10) || 1)).toFixed(0)
-                                  : '0'}
-                              </span>/video
-                            </span>
+                            {formData.boost_payment_model === 'retainer' ? (
+                              <>
+                                <span className="font-inter tracking-[-0.5px]">
+                                  <span className="text-foreground font-medium">${formData.monthly_retainer || '0'}</span>/mo
+                                </span>
+                                {formData.videos_per_month && parseInt(formData.videos_per_month, 10) > 0 && (
+                                  <>
+                                    <span className="text-border">·</span>
+                                    <span className="font-inter tracking-[-0.5px]">
+                                      <span className="text-foreground font-medium">{formData.videos_per_month}</span> videos
+                                    </span>
+                                    <span className="text-border">·</span>
+                                    <span className="font-inter tracking-[-0.5px]">
+                                      <span className="text-foreground font-medium">
+                                        ${((parseFloat(formData.monthly_retainer) || 0) / parseInt(formData.videos_per_month, 10)).toFixed(0)}
+                                      </span>/video
+                                    </span>
+                                  </>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-inter tracking-[-0.5px]">
+                                  <span className="text-foreground font-medium">${formData.flat_rate_min || '0'}</span> - <span className="text-foreground font-medium">${formData.flat_rate_max || '0'}</span>/post
+                                </span>
+                                {formData.videos_per_month && parseInt(formData.videos_per_month, 10) > 0 && (
+                                  <>
+                                    <span className="text-border">·</span>
+                                    <span className="font-inter tracking-[-0.5px]">
+                                      <span className="text-foreground font-medium">{formData.videos_per_month}</span> videos
+                                    </span>
+                                  </>
+                                )}
+                              </>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
                             <span className="text-xs text-muted-foreground">
-                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">{formData.max_accepted_creators || '0'}</span> spots available
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                {formData.max_accepted_creators && parseInt(formData.max_accepted_creators, 10) > 0
+                                  ? formData.max_accepted_creators
+                                  : 'Unlimited'}
+                              </span> spots available
                             </span>
                           </div>
                         </div>
@@ -2169,6 +2517,7 @@ export function CampaignWizard({
                           </span>
                         </div>
                       </div>
+
                     ) : (
                       /* Campaign Card Style - Matching CampaignCard component */
                       <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
@@ -2249,6 +2598,19 @@ export function CampaignWizard({
                       </div>
                     )}
 
+                    {/* Blueprint Info */}
+                    {selectedBlueprint && (
+                      <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30">
+                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Content Blueprint</p>
+                          <p className="text-sm font-medium text-foreground truncate">{selectedBlueprint.title}</p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Budget Summary */}
                     <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
                       <div className="px-4 py-3 border-b border-border/30">
@@ -2263,13 +2625,17 @@ export function CampaignWizard({
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground font-inter tracking-[-0.3px]">Max creators</span>
-                              <span className="font-medium font-geist tracking-[-0.3px]">{parseInt(formData.max_accepted_creators, 10) || 0}</span>
+                              <span className="font-medium font-geist tracking-[-0.3px]">
+                                {parseInt(formData.max_accepted_creators, 10) > 0 ? formData.max_accepted_creators : 'Unlimited'}
+                              </span>
                             </div>
                             <div className="h-px bg-border/50" />
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-foreground font-medium font-inter tracking-[-0.3px]">Total budget needed</span>
                               <span className="font-bold font-geist tracking-[-0.3px] text-primary">
-                                ${((parseFloat(formData.monthly_retainer) || 0) * (parseInt(formData.max_accepted_creators, 10) || 0)).toLocaleString('en-US', { minimumFractionDigits: 0 })}/{formData.payment_schedule === 'monthly' ? 'mo' : formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'bi_weekly' ? '2wk' : 'mo'}
+                                {parseInt(formData.max_accepted_creators, 10) > 0
+                                  ? `$${((parseFloat(formData.monthly_retainer) || 0) * parseInt(formData.max_accepted_creators, 10)).toLocaleString('en-US', { minimumFractionDigits: 0 })}/${formData.payment_schedule === 'monthly' ? 'mo' : formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'bi_weekly' ? '2wk' : 'mo'}`
+                                  : 'Variable'}
                               </span>
                             </div>
                           </>
@@ -2304,7 +2670,7 @@ export function CampaignWizard({
                               <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Start Date</Label>
                               <Popover>
                                 <PopoverTrigger asChild>
-                                  <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50", !formData.start_date && "text-muted-foreground")}>
+                                  <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50 hover:text-foreground", !formData.start_date && "text-muted-foreground hover:text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     <span className="text-sm">
                                       {formData.start_date ? format(formData.start_date, "MMM d, yyyy") : "Optional"}
@@ -2320,7 +2686,7 @@ export function CampaignWizard({
                               <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">End Date</Label>
                               <Popover>
                                 <PopoverTrigger asChild>
-                                  <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50", !formData.end_date && "text-muted-foreground")}>
+                                  <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50 hover:text-foreground", !formData.end_date && "text-muted-foreground hover:text-muted-foreground")}>
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     <span className="text-sm">
                                       {formData.end_date ? format(formData.end_date, "MMM d, yyyy") : "Optional"}

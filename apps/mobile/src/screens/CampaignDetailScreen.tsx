@@ -16,15 +16,10 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { LogoLoader } from '../components/LogoLoader';
+import { ApplySheet } from '../components/ApplySheet';
 import { colors } from '../theme/colors';
+import { platformConfig, useConnectedAccounts } from '../hooks/useSocialAccounts';
 import type { Campaign } from '@virality/shared-types';
-
-// Platform icon config
-const platformConfig: Record<string, { bg: string; icon: string }> = {
-  tiktok: { bg: '#000', icon: 'music-note' },
-  instagram: { bg: '#E1306C', icon: 'instagram' },
-  youtube: { bg: '#FF0000', icon: 'youtube' },
-};
 
 type RouteParams = {
   campaignId: string;
@@ -36,8 +31,10 @@ export function CampaignDetailScreen() {
   const { campaignId } = route.params as RouteParams;
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: connectedAccounts = [] } = useConnectedAccounts();
 
   const [applySuccess, setApplySuccess] = useState(false);
+  const [showApplySheet, setShowApplySheet] = useState(false);
 
   const {
     data: campaign,
@@ -76,25 +73,30 @@ export function CampaignDetailScreen() {
 
   // Apply mutation - direct submit without confirmation
   const applyMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (accountIds: string[]) => {
       if (!user?.id || !campaign?.id) {
         throw new Error('Must be logged in to apply');
       }
 
-      // Get campaign's allowed platforms to use for submission
-      const campaignData = campaign as any;
-      const platforms = campaignData.allowed_platforms || campaignData.platforms_allowed || ['tiktok'];
-      const platform = platforms[0] || 'tiktok';
+      // Insert a submission for each selected account
+      const submissions = accountIds.map(accountId => {
+        const selectedAccount = connectedAccounts.find(a => a.id === accountId);
+        const platform = selectedAccount?.platform || 'tiktok';
+        const contentUrl = `pending-${Date.now()}-${user.id}-${accountId}`;
 
-      // Insert into campaign_submissions to apply
-      const { error } = await supabase
-        .from('campaign_submissions')
-        .insert({
+        return {
           campaign_id: campaign.id,
           creator_id: user.id,
+          social_account_id: accountId,
           platform: platform,
+          content_url: contentUrl,
           status: 'pending',
-        });
+        };
+      });
+
+      const { error } = await supabase
+        .from('campaign_submissions')
+        .insert(submissions);
 
       if (error) throw error;
     },
@@ -104,22 +106,73 @@ export function CampaignDetailScreen() {
     onSuccess: () => {
       setApplySuccess(true);
       queryClient.invalidateQueries({ queryKey: ['campaignSubmission', campaignId] });
-      // Auto-hide success message after 3 seconds
-      setTimeout(() => setApplySuccess(false), 3000);
     },
   });
 
-  // Direct apply - no nested confirmations
-  const handleApply = useCallback(() => {
+  // Withdraw mutation
+  const withdrawMutation = useMutation({
+    mutationFn: async (submissionId: string) => {
+      if (!user?.id) {
+        throw new Error('Must be logged in to withdraw');
+      }
+
+      const { error } = await supabase
+        .from('campaign_submissions')
+        .update({ status: 'withdrawn' })
+        .eq('id', submissionId)
+        .eq('creator_id', user.id);
+
+      if (error) throw error;
+    },
+    onError: (error: Error) => {
+      Alert.alert('Withdrawal Failed', error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaignSubmission', campaignId] });
+      Alert.alert('Application Withdrawn', 'Your application has been withdrawn successfully.');
+    },
+  });
+
+  // Handle withdraw with confirmation
+  const handleWithdraw = useCallback(() => {
+    if (!existingSubmission?.id) return;
+
+    Alert.alert(
+      'Withdraw Application',
+      'Are you sure you want to withdraw your application? You can reapply later.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Withdraw',
+          style: 'destructive',
+          onPress: () => withdrawMutation.mutate(existingSubmission.id),
+        },
+      ]
+    );
+  }, [existingSubmission?.id, withdrawMutation]);
+
+  // Open apply sheet
+  const handleOpenApplySheet = useCallback(() => {
     if (!user) {
       Alert.alert('Sign In Required', 'Please sign in to apply to campaigns.');
       return;
     }
     if (existingSubmission) {
-      return; // Already applied
+      return;
     }
-    applyMutation.mutate();
-  }, [user, existingSubmission, applyMutation]);
+    setShowApplySheet(true);
+  }, [user, existingSubmission]);
+
+  // Actually submit application from sheet
+  const handleApply = useCallback((accountIds: string[]) => {
+    applyMutation.mutate(accountIds);
+  }, [applyMutation]);
+
+  // Close sheet
+  const handleCloseSheet = useCallback(() => {
+    setShowApplySheet(false);
+    setApplySuccess(false);
+  }, []);
 
   if (isLoading) {
     return (
@@ -214,10 +267,19 @@ export function CampaignDetailScreen() {
             </View>
             <View style={styles.platforms}>
               {platforms.map((platform: string, i: number) => {
-                const config = platformConfig[platform.toLowerCase()] || { bg: '#666', icon: 'web' };
+                const p = platform.toLowerCase() as keyof typeof platformConfig;
+                const config = platformConfig[p];
                 return (
-                  <View key={i} style={[styles.platformBadge, { backgroundColor: config.bg }]}>
-                    <Icon name={config.icon} size={14} color="#fff" />
+                  <View key={i} style={[styles.platformBadge, { backgroundColor: config?.bg || '#666' }]}>
+                    {config ? (
+                      <Image
+                        source={config.logoWhite}
+                        style={styles.platformLogoImage}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <Icon name="web" size={14} color="#fff" />
+                    )}
                   </View>
                 );
               })}
@@ -323,72 +385,80 @@ export function CampaignDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Apply Button - Fixed at bottom with inline feedback */}
+      {/* Apply Button - Fixed at bottom */}
       {isActive && (
         <View style={styles.applyContainer}>
-          {/* Success Toast */}
-          {applySuccess && (
-            <View style={styles.successToast}>
-              <Icon name="check-circle" size={20} color={colors.success} />
-              <Text style={styles.successToastText}>Application submitted!</Text>
-            </View>
-          )}
-
           {existingSubmission ? (
             <View style={styles.applicationStatusCard}>
-              <View style={styles.applicationStatusLeft}>
-                <View style={[
-                  styles.applicationStatusIcon,
-                  existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? styles.applicationStatusIconAccepted :
-                  existingSubmission.status === 'rejected' ? styles.applicationStatusIconRejected :
-                  styles.applicationStatusIconPending
-                ]}>
-                  <Icon
-                    name={
-                      existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'check' :
-                      existingSubmission.status === 'rejected' ? 'close' : 'clock-outline'
-                    }
-                    size={18}
-                    color={
-                      existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? colors.success :
-                      existingSubmission.status === 'rejected' ? colors.destructive : colors.warning
-                    }
-                  />
+              <View style={styles.applicationStatusRow}>
+                <View style={styles.applicationStatusLeft}>
+                  <View style={[
+                    styles.applicationStatusIcon,
+                    existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? styles.applicationStatusIconAccepted :
+                    existingSubmission.status === 'rejected' ? styles.applicationStatusIconRejected :
+                    styles.applicationStatusIconPending
+                  ]}>
+                    <Icon
+                      name={
+                        existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'check' :
+                        existingSubmission.status === 'rejected' ? 'close' : 'clock-outline'
+                      }
+                      size={18}
+                      color={
+                        existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? colors.success :
+                        existingSubmission.status === 'rejected' ? colors.destructive : colors.warning
+                      }
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.applicationStatusTitle}>
+                      {existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'Accepted!' :
+                       existingSubmission.status === 'rejected' ? 'Not Selected' : 'Application Pending'}
+                    </Text>
+                    <Text style={styles.applicationStatusSubtext}>
+                      {existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'You\'re in! Check your dashboard.' :
+                       existingSubmission.status === 'rejected' ? 'Try other opportunities.' : 'Brand is reviewing your profile'}
+                    </Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={styles.applicationStatusTitle}>
-                    {existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'Accepted!' :
-                     existingSubmission.status === 'rejected' ? 'Not Selected' : 'Application Pending'}
-                  </Text>
-                  <Text style={styles.applicationStatusSubtext}>
-                    {existingSubmission.status === 'approved' || existingSubmission.status === 'accepted' ? 'You\'re in! Check your dashboard.' :
-                     existingSubmission.status === 'rejected' ? 'Try other opportunities.' : 'Brand is reviewing your profile'}
-                  </Text>
-                </View>
+                {existingSubmission.status === 'pending' && (
+                  <TouchableOpacity
+                    style={styles.withdrawButton}
+                    onPress={handleWithdraw}
+                    disabled={withdrawMutation.isPending}
+                  >
+                    <Text style={styles.withdrawButtonText}>
+                      {withdrawMutation.isPending ? 'Withdrawing...' : 'Withdraw'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.applyButtonNew, applyMutation.isPending && styles.applyButtonDisabled]}
-              onPress={handleApply}
-              disabled={applyMutation.isPending}
+              style={styles.applyButtonNew}
+              onPress={handleOpenApplySheet}
               activeOpacity={0.8}
             >
-              {applyMutation.isPending ? (
-                <View style={styles.applyButtonContent}>
-                  <LogoLoader size={24} />
-                  <Text style={styles.applyButtonText}>Applying...</Text>
-                </View>
-              ) : (
-                <View style={styles.applyButtonContent}>
-                  <Icon name="send" size={22} color={colors.primaryForeground} />
-                  <Text style={styles.applyButtonText}>Apply Now</Text>
-                </View>
-              )}
+              <Text style={styles.applyButtonText}>Apply Now</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
+
+      {/* Apply Sheet Modal */}
+      <ApplySheet
+        visible={showApplySheet}
+        onClose={handleCloseSheet}
+        onApply={handleApply}
+        isLoading={applyMutation.isPending}
+        isSuccess={applySuccess}
+        title={campaign?.title || ''}
+        brandName={campaign?.brand_name || 'Brand'}
+        brandLogo={campaign?.brand_logo_url}
+        accounts={connectedAccounts}
+        allowedPlatforms={(campaign as any)?.allowed_platforms || (campaign as any)?.platforms_allowed}
+      />
     </SafeAreaView>
   );
 }
@@ -525,6 +595,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  platformLogoImage: {
+    width: 16,
+    height: 16,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
@@ -637,11 +711,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   applyButtonDisabled: {
     opacity: 0.7,
@@ -665,10 +734,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  applicationStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   applicationStatusLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    flex: 1,
+  },
+  withdrawButton: {
+    backgroundColor: colors.destructiveMuted,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  withdrawButtonText: {
+    color: colors.destructive,
+    fontSize: 13,
+    fontWeight: '600',
   },
   applicationStatusIcon: {
     width: 44,

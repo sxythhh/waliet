@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -32,6 +33,9 @@ interface BoostCampaign {
   status: string;
   created_at: string;
   brand_id: string;
+  payment_model?: string | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
 }
 
 interface Application {
@@ -42,6 +46,9 @@ interface Application {
   applied_at: string;
   reviewed_at: string | null;
   user_id: string;
+  proposed_rate: number | null;
+  approved_rate: number | null;
+  rate_status: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -63,6 +70,9 @@ export default function BoostCampaignDetail() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [counterRates, setCounterRates] = useState<Record<string, string>>({});
+
+  const isFlatRate = campaign?.payment_model === 'flat_rate';
 
   useEffect(() => {
     fetchCampaignData();
@@ -136,6 +146,77 @@ export default function BoostCampaignDetail() {
     } catch (error: any) {
       console.error("Error fetching applications:", error);
       toast.error("Failed to load applications");
+    }
+  };
+
+  // Handle approving a creator's proposed rate
+  const handleApproveRate = async (applicationId: string) => {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application || !application.proposed_rate) return;
+
+    setProcessing(applicationId);
+    try {
+      const { error } = await supabase
+        .from('bounty_applications')
+        .update({
+          approved_rate: application.proposed_rate,
+          rate_status: 'approved',
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+      toast.success(`Rate of $${application.proposed_rate} approved`);
+      await fetchCampaignData();
+    } catch (error: any) {
+      console.error("Error approving rate:", error);
+      toast.error("Failed to approve rate");
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  // Handle sending a counter offer
+  const handleCounterOffer = async (applicationId: string) => {
+    const counterRate = counterRates[applicationId];
+    if (!counterRate) {
+      toast.error("Please enter a counter rate");
+      return;
+    }
+
+    const rate = parseFloat(counterRate);
+    if (isNaN(rate) || rate <= 0) {
+      toast.error("Please enter a valid rate");
+      return;
+    }
+
+    if (campaign?.flat_rate_min && rate < campaign.flat_rate_min) {
+      toast.error(`Rate must be at least $${campaign.flat_rate_min}`);
+      return;
+    }
+    if (campaign?.flat_rate_max && rate > campaign.flat_rate_max) {
+      toast.error(`Rate cannot exceed $${campaign.flat_rate_max}`);
+      return;
+    }
+
+    setProcessing(applicationId);
+    try {
+      const { error } = await supabase
+        .from('bounty_applications')
+        .update({
+          approved_rate: rate,
+          rate_status: 'countered',
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+      toast.success(`Counter offer of $${rate} sent`);
+      setCounterRates(prev => ({ ...prev, [applicationId]: '' }));
+      await fetchCampaignData();
+    } catch (error: any) {
+      console.error("Error sending counter offer:", error);
+      toast.error("Failed to send counter offer");
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -364,6 +445,69 @@ export default function BoostCampaignDetail() {
                       </div>
                     )}
 
+                    {/* Rate Proposal Section - Only for flat_rate boosts */}
+                    {isFlatRate && application.proposed_rate && (
+                      <div className="p-4 rounded-lg bg-muted/30 border border-border/50 mb-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Proposed Rate</p>
+                            <p className="text-lg font-semibold">${application.proposed_rate.toLocaleString()}/post</p>
+                          </div>
+                          {application.rate_status === 'approved' && (
+                            <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
+                              <Check className="h-3 w-3 mr-1" />
+                              Rate Approved
+                            </Badge>
+                          )}
+                          {application.rate_status === 'countered' && application.approved_rate && (
+                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                              Counter: ${application.approved_rate}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Rate Approval/Counter UI */}
+                        {application.rate_status !== 'approved' && (
+                          <div className="space-y-2 pt-2 border-t border-border/50">
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleApproveRate(application.id)}
+                                disabled={processing === application.id}
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                                size="sm"
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Accept ${application.proposed_rate}
+                              </Button>
+                            </div>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input
+                                  type="number"
+                                  value={counterRates[application.id] || ''}
+                                  onChange={(e) => setCounterRates(prev => ({ ...prev, [application.id]: e.target.value }))}
+                                  placeholder={`${Math.round(((campaign?.flat_rate_min || 0) + (campaign?.flat_rate_max || 0)) / 2)}`}
+                                  className="pl-6 h-8 text-sm"
+                                />
+                              </div>
+                              <Button
+                                onClick={() => handleCounterOffer(application.id)}
+                                disabled={processing === application.id || !counterRates[application.id]}
+                                variant="outline"
+                                size="sm"
+                              >
+                                Counter
+                              </Button>
+                            </div>
+                            {campaign?.flat_rate_min !== undefined && campaign?.flat_rate_max !== undefined && (
+                              <p className="text-[10px] text-muted-foreground">Your range: ${campaign.flat_rate_min} - ${campaign.flat_rate_max} per post</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 mb-4">
                       <Button
                         variant="outline"
@@ -380,10 +524,22 @@ export default function BoostCampaignDetail() {
                       Applied {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}
                     </div>
 
+                    {/* Rate approval warning for flat_rate boosts */}
+                    {isFlatRate && application.proposed_rate && application.rate_status !== 'approved' && application.rate_status !== 'countered' && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400 mb-3">
+                        <Clock className="h-3 w-3 flex-shrink-0" />
+                        <span>Please approve or counter the rate before accepting this creator.</span>
+                      </div>
+                    )}
+
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleUpdateStatus(application.id, 'accepted')}
-                        disabled={processing === application.id || acceptedCount >= campaign.max_accepted_creators}
+                        disabled={
+                          processing === application.id ||
+                          acceptedCount >= campaign.max_accepted_creators ||
+                          (isFlatRate && application.proposed_rate && application.rate_status !== 'approved' && application.rate_status !== 'countered')
+                        }
                         className="flex-1 bg-green-600 hover:bg-green-700"
                         size="sm"
                       >

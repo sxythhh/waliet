@@ -94,22 +94,14 @@ serve(async (req) => {
       console.error('Error fetching transactions:', txError);
     }
 
+    // Amounts are already signed (negative for debits, positive for credits)
     const calculatedBalance = (transactions || []).reduce((acc, tx) => {
       if (tx.status !== 'completed') return acc;
-      const txAmount = Number(tx.amount) || 0;
-      // Credit types add to balance
-      if (['topup', 'refund', 'admin_credit', 'deposit', 'transfer_in'].includes(tx.type)) {
-        return acc + txAmount;
-      }
-      // Debit types subtract from balance
-      if (['withdrawal', 'campaign_allocation', 'boost_allocation', 'admin_debit', 'transfer_out'].includes(tx.type)) {
-        return acc - txAmount;
-      }
-      return acc;
+      return acc + (Number(tx.amount) || 0);
     }, 0);
 
-    // Use brand_wallets balance if available, otherwise use calculated
-    const localBalance = brandWalletBalance > 0 ? brandWalletBalance : calculatedBalance;
+    // Use brand_wallets balance as primary source, calculated as verification
+    const localBalance = brandWalletBalance;
 
     console.log(`Brand wallet balance for ${brand_id}: $${brandWalletBalance}, calculated: $${calculatedBalance}`);
 

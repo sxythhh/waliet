@@ -399,8 +399,6 @@ export default function CampaignJoin() {
       // Send Discord notification if submissions were created
       if (submissionsCreated > 0) {
         try {
-          console.log('Preparing to send Discord notification...');
-          
           // Get user profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -424,19 +422,11 @@ export default function CampaignJoin() {
           }
 
           const brandSlug = brandData?.slug || '';
-          console.log('Brand slug:', brandSlug);
 
           const formattedAnswers = campaign.application_questions?.map((question, index) => ({
             question,
             answer: answers[index] || ""
           })) || [];
-
-          console.log('Invoking edge function with data:', {
-            username: profile?.username,
-            campaign_name: campaign.title,
-            brand_slug: brandSlug,
-            accounts_count: submittedAccountsData.length
-          });
 
           const { data: functionData, error: functionError } = await supabase.functions.invoke('notify-campaign-application', {
             body: {
@@ -455,8 +445,6 @@ export default function CampaignJoin() {
 
           if (functionError) {
             console.error('Edge function error:', functionError);
-          } else {
-            console.log('Discord notification sent successfully:', functionData);
           }
         } catch (webhookError) {
           console.error('Failed to send Discord notification:', webhookError);

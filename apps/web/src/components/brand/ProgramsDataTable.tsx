@@ -33,6 +33,7 @@ interface ProgramsDataTableProps {
   isToggling?: boolean;
   filters?: Filter[];
   onFiltersChange?: (filters: Filter[]) => void;
+  onSelectProgram?: (id: string, type: "campaign" | "boost") => void;
 }
 
 const formatNumber = (num: number) => {
@@ -55,6 +56,7 @@ export function ProgramsDataTable({
   boosts,
   onToggleStatus,
   isToggling,
+  onSelectProgram,
 }: ProgramsDataTableProps) {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -107,8 +109,12 @@ export function ProgramsDataTable({
             </TableHeader>
             <TableBody>
               {paginatedData.map((program) => (
-                <TableRow key={program.id} className="border-b border-border/30 hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors">
-                  <TableCell className="py-2">
+                <TableRow
+                  key={program.id}
+                  className={`border-b border-border/30 hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors ${onSelectProgram ? "cursor-pointer" : ""}`}
+                  onClick={() => onSelectProgram?.(program.id, program.type)}
+                >
+                  <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
                     <Switch
                       checked={program.status === "active"}
                       onCheckedChange={(checked) => onToggleStatus(program.id, program.type, checked)}
@@ -117,7 +123,7 @@ export function ProgramsDataTable({
                     />
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium font-inter tracking-[-0.5px] text-foreground">{program.title}</span>
+                    <span className={`font-medium font-inter tracking-[-0.5px] text-foreground ${onSelectProgram ? "hover:underline" : ""}`}>{program.title}</span>
                   </TableCell>
                   <TableCell className="text-right font-medium font-inter tracking-[-0.3px]">{formatNumber(program.views)}</TableCell>
                   <TableCell className="text-right font-medium font-inter tracking-[-0.3px]">{formatCurrency(program.spent)}</TableCell>

@@ -126,7 +126,7 @@ export function GlobalBrandSearch({
           const name = r.profiles?.full_name || r.profiles?.username || r.external_name || r.external_handle || '';
           return name.toLowerCase().includes(searchQuery.toLowerCase());
         }).slice(0, 5).map(r => ({
-          id: r.id,
+          id: r.user_id || r.id, // Use user_id for platform creators, relationship id for external
           type: 'creator' as const,
           title: r.profiles?.full_name || r.profiles?.username || r.external_name || 'Unknown Creator',
           subtitle: r.external_handle || r.profiles?.username,
@@ -192,6 +192,7 @@ export function GlobalBrandSearch({
       case 'creator':
         newParams.set("tab", "creators");
         newParams.set("subtab", "database");
+        newParams.set("creator", result.id);
         break;
       case 'video':
         newParams.set("tab", "campaigns");
@@ -233,19 +234,19 @@ export function GlobalBrandSearch({
   }, {} as Record<string, SearchResult[]>);
   return <>
       {/* Search Trigger Bar */}
-      <button onClick={() => setOpen(true)} className="flex items-center gap-3 w-full max-w-xs h-10 px-4 rounded-lg transition-colors bg-[#f0f0f0] dark:bg-[#0e0e0e] hover:bg-[#e5e5e5] dark:hover:bg-[#1a1a1a]">
-        <Search className="h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
-        <span className="flex-1 text-left text-sm font-inter text-muted-foreground dark:text-muted-foreground tracking-tight">
+      <button onClick={() => setOpen(true)} className="flex items-center w-[320px] h-9 px-3 rounded-lg bg-[#f0f0f0] dark:bg-[#0e0e0e]">
+        <Search className="h-4 w-4 text-muted-foreground dark:text-muted-foreground flex-shrink-0" />
+        <span className="flex-1 text-left text-sm font-inter text-muted-foreground dark:text-muted-foreground tracking-tight ml-3">
           Browse workspace
         </span>
-        <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground">
+        <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-muted-foreground dark:text-muted-foreground flex-shrink-0">
           /
         </div>
       </button>
 
       {/* Search Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="p-0 gap-0 overflow-hidden max-w-2xl border-0 bg-white dark:bg-[#0e0e0e]">
+        <DialogContent className="p-0 gap-0 overflow-hidden max-w-2xl border-0 bg-white dark:bg-[#0e0e0e]" hideCloseButton>
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[#e0e0e0] dark:border-[#1f1f1f]">
             <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground dark:text-muted-foreground" />
@@ -266,7 +267,7 @@ export function GlobalBrandSearch({
                 <span className="text-sm font-inter">No results found for "{query}"</span>
               </div> : results.length === 0 ? <div className="p-8 text-center text-muted-foreground dark:text-muted-foreground">
                 <span className="text-sm font-inter">Start typing to search...</span>
-              </div> : <div className="py-2">
+              </div> : <div className="pt-2">
                 {Object.entries(groupedResults).map(([type, items]) => <div key={type}>
                     <div className="px-4 py-1.5">
                       <span className="text-[11px] font-medium text-muted-foreground">

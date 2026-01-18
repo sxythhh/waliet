@@ -85,7 +85,7 @@ export function CryptoNetworkStep({
               onClick={() => onSelectNetwork(network.id)}
               disabled={isLoading}
               className={cn(
-                "p-4 rounded-xl border border-border/50 bg-card text-left",
+                "p-3 rounded-xl border border-border/50 bg-card text-left",
                 "transition-colors duration-150",
                 "hover:bg-muted/50",
                 "focus:outline-none",
@@ -93,9 +93,9 @@ export function CryptoNetworkStep({
                 isLoadingThis && "bg-muted/50"
               )}
             >
-              {/* Network Icon */}
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+              <div className="flex items-center gap-3">
+                {/* Network Icon */}
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                   {isLoadingThis ? (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   ) : (
@@ -109,20 +109,17 @@ export function CryptoNetworkStep({
                     />
                   )}
                 </div>
-                {network.isPopular && (
-                  <span className="text-[10px] text-muted-foreground font-medium">
-                    Popular
-                  </span>
-                )}
-              </div>
 
-              {/* Network Info */}
-              <p className="text-sm font-medium font-inter tracking-[-0.3px] text-foreground">
-                {network.name}
-              </p>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">
-                {network.speed} confirmation
-              </p>
+                {/* Network Info */}
+                <div>
+                  <p className="text-sm font-medium font-inter tracking-[-0.3px] text-foreground">
+                    {network.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                    {network.speed} confirmation
+                  </p>
+                </div>
+              </div>
             </button>
           );
         })}

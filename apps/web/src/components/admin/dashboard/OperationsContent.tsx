@@ -73,14 +73,72 @@ interface TransactionItem {
   profiles?: { username: string };
 }
 
+// Storage stats type
+interface StorageStats {
+  buckets: Array<{
+    bucket_id: string;
+    file_count: number;
+    total_bytes: number;
+    total_mb: number;
+  }>;
+  total: {
+    file_count: number;
+    total_bytes: number;
+    total_mb: number;
+    total_gb: number;
+  };
+}
+
 // System Health Panel
 function SystemHealthPanel() {
-  const [metrics] = useState({
-    database: { status: "healthy", latency: 45 },
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
+  const [dbLatency, setDbLatency] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchHealthMetrics() {
+      try {
+        // Measure database latency
+        const dbStart = performance.now();
+        await supabase.from('profiles').select('id').limit(1).single();
+        const dbEnd = performance.now();
+        setDbLatency(Math.round(dbEnd - dbStart));
+
+        // Fetch storage stats
+        const { data, error } = await supabase.rpc('get_storage_stats');
+        if (!error && data) {
+          setStorageStats(data as StorageStats);
+        }
+      } catch (err) {
+        console.error('Failed to fetch health metrics:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchHealthMetrics();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchHealthMetrics, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate storage percentage (assuming 100GB Pro plan limit)
+  const STORAGE_LIMIT_GB = 100;
+  const storageUsagePercent = storageStats
+    ? Math.round((storageStats.total.total_gb / STORAGE_LIMIT_GB) * 100)
+    : 0;
+  const storageStatus = storageUsagePercent > 90 ? "degraded" : storageUsagePercent > 99 ? "down" : "healthy";
+
+  const metrics = {
+    database: { status: dbLatency && dbLatency > 500 ? "degraded" : "healthy", latency: dbLatency || 0 },
     api: { status: "healthy", latency: 120 },
-    storage: { status: "healthy", usage: 68 },
+    storage: {
+      status: storageStatus,
+      usage: storageStats?.total.total_gb.toFixed(2) || "0",
+      percent: storageUsagePercent
+    },
     realtime: { status: "healthy", connections: 234 },
-  });
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -104,7 +162,7 @@ function SystemHealthPanel() {
         {[
           { label: "Database", status: metrics.database.status, value: `${metrics.database.latency}ms` },
           { label: "API", status: metrics.api.status, value: `${metrics.api.latency}ms` },
-          { label: "Storage", status: metrics.storage.status, value: `${metrics.storage.usage}% used` },
+          { label: "Storage", status: metrics.storage.status, value: `${metrics.storage.usage} GB (${metrics.storage.percent}%)` },
           { label: "Realtime", status: metrics.realtime.status, value: `${metrics.realtime.connections} connections` },
         ].map((item) => (
           <div
@@ -121,6 +179,24 @@ function SystemHealthPanel() {
           </div>
         ))}
       </CardContent>
+
+      {/* Storage Breakdown */}
+      {storageStats && storageStats.buckets && (
+        <CardContent className="pt-0 space-y-2">
+          <div className="text-xs font-medium text-muted-foreground mb-2">Storage Breakdown</div>
+          {storageStats.buckets.map((bucket) => (
+            <div key={bucket.bucket_id} className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground truncate max-w-[140px]">{bucket.bucket_id}</span>
+              <span className="font-mono">
+                {bucket.total_mb > 1024
+                  ? `${(bucket.total_mb / 1024).toFixed(2)} GB`
+                  : `${bucket.total_mb.toFixed(0)} MB`}
+                <span className="text-muted-foreground ml-1">({bucket.file_count})</span>
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      )}
     </Card>
   );
 }

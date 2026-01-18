@@ -215,7 +215,6 @@ export function SubmitAudienceInsightsDialog({
 
             // Check if it's a retryable error (5xx server errors)
             if (uploadResponse.status >= 500 && attempt < MAX_RETRIES) {
-              console.log(`Upload attempt ${attempt} failed with status ${uploadResponse.status}, retrying...`);
               await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
               continue;
             }
@@ -232,7 +231,6 @@ export function SubmitAudienceInsightsDialog({
           const isNetworkError = lastError instanceof TypeError && lastError.message === 'Failed to fetch';
 
           if ((isTimeout || isNetworkError) && attempt < MAX_RETRIES) {
-            console.log(`Upload attempt ${attempt} failed (${isTimeout ? 'timeout' : 'network error'}), retrying...`);
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
             continue;
           }

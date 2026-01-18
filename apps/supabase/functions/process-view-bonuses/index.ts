@@ -226,11 +226,11 @@ Deno.serve(async (req) => {
                 });
             }
 
-            // Update boost budget_used
-            await supabase
-              .from('bounty_campaigns')
-              .update({ budget_used: (boost.budget_used || 0) + amountToPay })
-              .eq('id', boost.id);
+            // Update boost budget_used atomically to prevent race conditions
+            await supabase.rpc('increment_boost_budget_used', {
+              p_boost_id: boost.id,
+              p_amount: amountToPay,
+            });
 
             totalBonusesPaid++;
             totalAmountPaid += amountToPay;
@@ -297,11 +297,11 @@ Deno.serve(async (req) => {
                 transaction_id: transaction?.transaction_id
               });
 
-            // Update boost budget_used
-            await supabase
-              .from('bounty_campaigns')
-              .update({ budget_used: (boost.budget_used || 0) + tier.bonus_amount })
-              .eq('id', boost.id);
+            // Update boost budget_used atomically to prevent race conditions
+            await supabase.rpc('increment_boost_budget_used', {
+              p_boost_id: boost.id,
+              p_amount: tier.bonus_amount,
+            });
 
             totalBonusesPaid++;
             totalAmountPaid += tier.bonus_amount;

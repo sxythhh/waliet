@@ -260,6 +260,8 @@ export default function UsersContent() {
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
+  const [paymentCampaignId, setPaymentCampaignId] = useState<string | null>(null);
+  const [paymentCampaignPopoverOpen, setPaymentCampaignPopoverOpen] = useState(false);
   const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
 
   // Bulk selection state
@@ -676,6 +678,7 @@ export default function UsersContent() {
     setSelectedUser(user);
     setPaymentAmount("");
     setPaymentNotes("");
+    setPaymentCampaignId(null);
     setPayDialogOpen(true);
   };
 
@@ -700,14 +703,38 @@ export default function UsersContent() {
 
       if (walletError) throw walletError;
 
+      // Build metadata with optional campaign_id
+      const metadata: Record<string, unknown> = {
+        admin_id: session.user.id,
+        manual_payment: true
+      };
+
+      if (paymentCampaignId) {
+        metadata.campaign_id = paymentCampaignId;
+      }
+
       // Create transaction record
       await supabase.from("wallet_transactions").insert({
         user_id: selectedUser.id,
         type: "earning",
         amount: amount,
         description: paymentNotes || "Manual payment from admin",
-        metadata: { admin_id: session.user.id, manual_payment: true }
+        metadata
       });
+
+      // If linked to a campaign, update the campaign's budget_used atomically
+      if (paymentCampaignId) {
+        const { error: budgetError } = await supabase.rpc("increment_campaign_budget_used", {
+          p_campaign_id: paymentCampaignId,
+          p_amount: amount,
+        });
+
+        if (budgetError) {
+          console.error("Failed to update campaign budget:", budgetError);
+          // Don't fail the whole payment, but warn
+          toast.warning("Payment sent but campaign budget may not have updated correctly");
+        }
+      }
 
       toast.success(`Paid $${amount.toFixed(2)} to @${selectedUser.username}`);
       setPayDialogOpen(false);
@@ -1491,6 +1518,57 @@ export default function UsersContent() {
                   placeholder="0.00"
                   className="bg-muted/30 border-0"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Campaign (Optional)</Label>
+                <Popover open={paymentCampaignPopoverOpen} onOpenChange={setPaymentCampaignPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between bg-muted/30 border-0"
+                    >
+                      {paymentCampaignId
+                        ? campaigns.find(c => c.id === paymentCampaignId)?.title || "Select campaign..."
+                        : "No campaign (general payment)"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search campaigns..." />
+                      <CommandList>
+                        <CommandEmpty>No campaign found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            onSelect={() => {
+                              setPaymentCampaignId(null);
+                              setPaymentCampaignPopoverOpen(false);
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", !paymentCampaignId ? "opacity-100" : "opacity-0")} />
+                            No campaign (general payment)
+                          </CommandItem>
+                          {campaigns.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              onSelect={() => {
+                                setPaymentCampaignId(c.id);
+                                setPaymentCampaignPopoverOpen(false);
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", paymentCampaignId === c.id ? "opacity-100" : "opacity-0")} />
+                              {c.title}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Link payment to a campaign to track against its budget
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Notes (Optional)</Label>

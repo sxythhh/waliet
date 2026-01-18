@@ -162,8 +162,8 @@ export function TransactionShareDialog({
           patternCtx.drawImage(patternImg, 0, 0);
         }
         patternBase64 = patternCanvas.toDataURL('image/png');
-      } catch (e) {
-        console.log('Failed to load pattern:', e);
+      } catch {
+        // Silently handle pattern load failure
       }
 
       // Load user avatar if available - crop to square for proper circle display
@@ -192,8 +192,8 @@ export function TransactionShareDialog({
               avatarBase64 = avatarCanvas.toDataURL('image/png');
             }
           }
-        } catch (e) {
-          console.log('Failed to load avatar:', e);
+        } catch {
+          // Silently handle avatar load failure
         }
       }
 
@@ -219,8 +219,8 @@ export function TransactionShareDialog({
               brandLogoBase64 = brandLogoCanvas.toDataURL('image/png');
             }
           }
-        } catch (e) {
-          console.log('Failed to load brand logo:', e);
+        } catch {
+          // Silently handle brand logo load failure
         }
       }
       const amountColor = transaction.type === 'earning' || transaction.type === 'boost_earning' || transaction.type === 'transfer_received' || transaction.type === 'referral' ? '#10b981' : transaction.type === 'balance_correction' ? '#f97316' : '#ef4444';

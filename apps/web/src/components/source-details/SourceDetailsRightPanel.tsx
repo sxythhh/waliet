@@ -543,7 +543,7 @@ export function SourceDetailsRightPanel({
   deadlines = [],
   onReaction,
 }: SourceDetailsRightPanelProps) {
-  const { sourceType } = useSourceDetails();
+  const { sourceType, isPublicView } = useSourceDetails();
 
   return (
     <aside
@@ -561,8 +561,8 @@ export function SourceDetailsRightPanel({
           />
         )}
 
-        {/* Stats Section */}
-        {creatorStats && (
+        {/* Stats Section (hidden for public view) */}
+        {!isPublicView && creatorStats && (
           <StatsSection stats={creatorStats} />
         )}
 

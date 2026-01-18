@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -36,6 +38,9 @@ interface BountyCampaign {
   slug?: string | null;
   application_questions?: any;
   public_form_settings?: PublicFormSettings | null;
+  payment_model?: string | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -64,6 +69,7 @@ export function ApplyToBountySheet({
   const [hasPhone, setHasPhone] = useState(false);
   const [blueprint, setBlueprint] = useState<any>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, ApplicationAnswer>>({});
+  const [proposedRate, setProposedRate] = useState("");
   
   const questions = parseApplicationQuestions(bounty?.application_questions);
 
@@ -122,8 +128,9 @@ export function ApplyToBountySheet({
     }
   };
   if (!bounty) return null;
-  const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-  const isFull = spotsRemaining <= 0;
+  const hasMaxCreators = bounty.max_accepted_creators > 0;
+  const spotsRemaining = hasMaxCreators ? bounty.max_accepted_creators - bounty.accepted_creators_count : -1;
+  const isFull = hasMaxCreators && spotsRemaining <= 0;
   const isPaused = bounty.status === 'paused';
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,6 +139,22 @@ export function ApplyToBountySheet({
     if (!meetsContactRequirements()) {
       setShowContactDialog(true);
       return;
+    }
+
+    // Validate rate proposal for flat_rate payment model
+    const isFlatRate = bounty?.payment_model === 'flat_rate';
+    if (isFlatRate) {
+      if (!proposedRate) {
+        toast.error("Please propose your rate per post");
+        return;
+      }
+      const rate = parseFloat(proposedRate);
+      const min = bounty?.flat_rate_min || 0;
+      const max = bounty?.flat_rate_max || Infinity;
+      if (rate < min || rate > max) {
+        toast.error(`Your rate must be between $${min} and $${max}`);
+        return;
+      }
     }
 
     // Validate required application questions
@@ -196,7 +219,9 @@ export function ApplyToBountySheet({
         bounty_campaign_id: bounty.id,
         user_id: session.user.id,
         application_answers: answersToStore as any,
-        status: applicationStatus
+        status: applicationStatus,
+        proposed_rate: isFlatRate ? parseFloat(proposedRate) : null,
+        rate_status: isFlatRate ? 'proposed' : 'pending',
       } as any);
       if (error) throw error;
       toast.success(currentlyFull ? "You've been added to the waitlist!" : "Application submitted successfully!");
@@ -205,6 +230,7 @@ export function ApplyToBountySheet({
 
       // Reset form
       setQuestionAnswers({});
+      setProposedRate("");
     } catch (error: any) {
       console.error("Error submitting application:", error);
       toast.error(error.message || "Failed to submit application");
@@ -268,6 +294,34 @@ export function ApplyToBountySheet({
 
           {/* Application Form */}
           <form onSubmit={handleSubmit} className="space-y-5 pt-2 py-0">
+              {/* Rate Proposal for Flat Rate Campaigns */}
+              {bounty?.payment_model === 'flat_rate' && (
+                <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-3">
+                  <div>
+                    <Label className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Propose your rate</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.3px]">
+                      The brand accepts rates between ${bounty.flat_rate_min?.toLocaleString() || '0'} - ${bounty.flat_rate_max?.toLocaleString() || '0'} per post
+                    </p>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                    <Input
+                      type="number"
+                      min={bounty.flat_rate_min || 0}
+                      max={bounty.flat_rate_max || 10000}
+                      step="0.01"
+                      value={proposedRate}
+                      onChange={e => setProposedRate(e.target.value)}
+                      placeholder={`${Math.round(((bounty.flat_rate_min || 0) + (bounty.flat_rate_max || 0)) / 2)}`}
+                      className="pl-7 h-11 bg-background border-border/50 font-medium"
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">
+                    This is what you'll earn per video. The brand will review and approve or counter your rate.
+                  </p>
+                </div>
+              )}
+
               {/* Custom Application Questions */}
               {questions.length > 0 ? (
                 <ApplicationQuestionsRenderer
@@ -276,13 +330,13 @@ export function ApplyToBountySheet({
                   onChange={setQuestionAnswers}
                   campaignId={bounty?.id}
                 />
-              ) : (
+              ) : bounty?.payment_model !== 'flat_rate' ? (
                 <div className="text-center py-8">
                   <p className="text-sm text-muted-foreground">
                     No application required. Click below to join this campaign.
                   </p>
                 </div>
-              )}
+              ) : null}
 
               <div className="flex gap-3 fixed bottom-0 left-0 right-0 bg-background py-4 px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border sm:left-auto sm:right-0 sm:w-full sm:max-w-xl">
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-inter tracking-[-0.5px]" disabled={submitting || isUploading}>

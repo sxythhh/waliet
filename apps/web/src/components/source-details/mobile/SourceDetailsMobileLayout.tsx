@@ -77,6 +77,7 @@ function MobileHeader({
   avatarUrl,
   displayName,
   hasRightPanel,
+  isPublicView,
 }: {
   title: string;
   logoUrl?: string | null;
@@ -86,6 +87,7 @@ function MobileHeader({
   avatarUrl?: string | null;
   displayName?: string;
   hasRightPanel?: boolean;
+  isPublicView?: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -123,21 +125,33 @@ function MobileHeader({
         <Icon icon="material-symbols:keyboard-arrow-down" className="w-5 h-5 text-muted-foreground flex-shrink-0" />
       </button>
 
-      {/* Right side: Wallet + Profile */}
-      <div className="flex items-center gap-2">
-        <WalletDropdown variant="header" />
+      {/* Right side: Wallet + Profile (hidden for public view) */}
+      {!isPublicView && (
+        <div className="flex items-center gap-2">
+          <WalletDropdown variant="header" />
+          <button
+            onClick={() => navigate("/dashboard?tab=settings")}
+            className="cursor-pointer"
+          >
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={avatarUrl || undefined} alt={displayName || "Profile"} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {getInitial()}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </div>
+      )}
+
+      {/* Public view: Show sign in button */}
+      {isPublicView && (
         <button
-          onClick={() => navigate("/dashboard?tab=settings")}
-          className="cursor-pointer"
+          onClick={() => navigate("/auth")}
+          className="text-sm font-medium text-primary hover:text-primary/80 transition-colors font-inter"
         >
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={avatarUrl || undefined} alt={displayName || "Profile"} />
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              {getInitial()}
-            </AvatarFallback>
-          </Avatar>
+          Sign In
         </button>
-      </div>
+      )}
     </header>
   );
 }
@@ -183,7 +197,7 @@ export function SourceDetailsMobileLayout({
 }: SourceDetailsMobileLayoutProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { mobileNavOpen, setMobileNavOpen, rightPanelOpen, setRightPanelOpen } = useSourceDetails();
+  const { mobileNavOpen, setMobileNavOpen, rightPanelOpen, setRightPanelOpen, isPublicView } = useSourceDetails();
 
   // Profile data for header
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -261,6 +275,7 @@ export function SourceDetailsMobileLayout({
             avatarUrl={avatarUrl}
             displayName={displayName}
             hasRightPanel={!!rightPanel}
+            isPublicView={isPublicView}
           />
 
           {/* Content */}

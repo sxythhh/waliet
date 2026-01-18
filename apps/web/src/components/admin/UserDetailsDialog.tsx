@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AdminConfirmDialog } from "@/components/admin/design-system/AdminDialog";
 import { Users as UsersIcon, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond, ExternalLink, CreditCard, TrendingUp, TrendingDown, DollarSign, Link2, Ban, Shield, LogIn, Plus } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +166,10 @@ export function UserDetailsDialog({
   const [linkFollowerCount, setLinkFollowerCount] = useState("");
   const [isLinkingAccount, setIsLinkingAccount] = useState(false);
 
+  // Delete account confirmation
+  const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<SocialAccount | null>(null);
+
   // Fetch existing IP ban status when dialog opens
   useEffect(() => {
     if (open && user?.id) {
@@ -314,6 +319,11 @@ export function UserDetailsDialog({
       setUnlinkingAccountId(null);
     }
   };
+  const requestDeleteAccount = (account: SocialAccount) => {
+    setAccountToDelete(account);
+    setDeleteAccountConfirmOpen(true);
+  };
+
   const handleDeleteAccount = async (socialAccountId: string) => {
     setDeletingAccountId(socialAccountId);
     try {
@@ -331,6 +341,8 @@ export function UserDetailsDialog({
         title: "Account Deleted",
         description: "Social account has been permanently deleted"
       });
+      setDeleteAccountConfirmOpen(false);
+      setAccountToDelete(null);
       onBalanceUpdated?.();
     } catch (error: any) {
       console.error("Error deleting account:", error);
@@ -734,11 +746,7 @@ export function UserDetailsDialog({
                       }} disabled={unlinkingAccountId === account.id}>
                                 Unlink
                               </Button>}
-                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => {
-                        if (confirm(`Delete @${account.username}?`)) {
-                          handleDeleteAccount(account.id);
-                        }
-                      }} disabled={deletingAccountId === account.id}>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => requestDeleteAccount(account)} disabled={deletingAccountId === account.id}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -1211,6 +1219,21 @@ export function UserDetailsDialog({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Account Confirmation */}
+        <AdminConfirmDialog
+          open={deleteAccountConfirmOpen}
+          onOpenChange={(open) => {
+            setDeleteAccountConfirmOpen(open);
+            if (!open) setAccountToDelete(null);
+          }}
+          title="Delete Social Account"
+          description={accountToDelete ? `Are you sure you want to delete @${accountToDelete.username}? This action cannot be undone.` : ""}
+          confirmLabel="Delete"
+          onConfirm={() => accountToDelete && handleDeleteAccount(accountToDelete.id)}
+          variant="destructive"
+          loading={!!deletingAccountId}
+        />
       </DialogContent>
     </Dialog>;
 }

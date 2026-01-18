@@ -14,6 +14,9 @@ interface BountyCampaign {
   description: string | null;
   monthly_retainer: number;
   videos_per_month: number;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
   content_style_requirements: string;
   max_accepted_creators: number;
   accepted_creators_count: number;
@@ -62,9 +65,10 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {bounties.map((bounty) => {
-        const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-        const isFull = spotsRemaining <= 0;
-        const fillPercentage = (bounty.accepted_creators_count / bounty.max_accepted_creators) * 100;
+        const hasMaxCreators = bounty.max_accepted_creators > 0;
+        const spotsRemaining = hasMaxCreators ? bounty.max_accepted_creators - bounty.accepted_creators_count : -1;
+        const isFull = hasMaxCreators && spotsRemaining <= 0;
+        const fillPercentage = hasMaxCreators ? (bounty.accepted_creators_count / bounty.max_accepted_creators) * 100 : 0;
 
         return (
           <Card
@@ -182,30 +186,40 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
                 </div>
               </div>
 
-              {/* Retainer */}
+              {/* Payment Info */}
               <div className="mb-4">
-                <span className="text-2xl font-semibold text-foreground">${bounty.monthly_retainer.toLocaleString()}</span>
-                <span className="text-sm text-muted-foreground ml-1">/month</span>
+                {bounty.payment_model === 'flat_rate' ? (
+                  <>
+                    <span className="text-2xl font-semibold text-foreground">${bounty.flat_rate_min || 0} - ${bounty.flat_rate_max || 0}</span>
+                    <span className="text-sm text-muted-foreground ml-1">/post</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl font-semibold text-foreground">${bounty.monthly_retainer.toLocaleString()}</span>
+                    <span className="text-sm text-muted-foreground ml-1">/month</span>
+                  </>
+                )}
               </div>
 
               {/* Stats row */}
               <div className="flex items-center gap-4 mb-4 text-sm">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Video className="h-3.5 w-3.5" />
-                  <span>{bounty.videos_per_month} videos/mo</span>
+                  <span>{bounty.videos_per_month > 0 ? `${bounty.videos_per_month} videos/mo` : 'Unlimited videos'}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Users className="h-3.5 w-3.5" />
                   <span className={isFull ? 'text-destructive' : ''}>
-                    {spotsRemaining} spots left
+                    {hasMaxCreators ? `${spotsRemaining} spots left` : 'Unlimited spots'}
                   </span>
                 </div>
               </div>
 
-              {/* Progress bar */}
+              {/* Progress bar - only show if max creators is set */}
+              {hasMaxCreators && (
               <div className="mb-4">
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       isFull ? 'bg-destructive' : 'bg-primary'
                     }`}
@@ -217,6 +231,7 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
                   <span>{bounty.max_accepted_creators} max</span>
                 </div>
               </div>
+              )}
 
               {/* Buttons */}
               <div className="flex gap-2">

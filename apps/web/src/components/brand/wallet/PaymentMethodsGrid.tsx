@@ -22,7 +22,7 @@ const paymentMethods: PaymentMethodConfig[] = [
     title: "From Personal Wallet",
     description: "Transfer from your balance",
     feeLabel: "Free",
-    materialIcon: "account_balance_wallet",
+    materialIcon: "savings",
     estimatedTime: "Instant",
   },
   {
@@ -30,7 +30,7 @@ const paymentMethods: PaymentMethodConfig[] = [
     title: "Wire Transfer",
     description: "ACH or wire from your bank",
     feeLabel: "0% fee",
-    materialIcon: "account_balance",
+    materialIcon: "compare_arrows",
     estimatedTime: "1-3 days",
   },
 ];

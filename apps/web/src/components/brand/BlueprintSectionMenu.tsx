@@ -1,16 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic, MinusCircle, GraduationCap, HelpCircle } from "lucide-react";
+import { Plus, FileText, MessageSquare, ListChecks, Hash, Video, Users, Mic, MinusCircle, GraduationCap, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SectionType =
   | "content"
-  | "platforms"
   | "brand_voice"
   | "hooks"
   | "talking_points"
-  | "dos_and_donts"
   | "call_to_action"
-  | "assets"
   | "example_videos"
   | "training"
   | "faqs";
@@ -28,12 +25,6 @@ const ALL_SECTIONS: SectionDefinition[] = [
     title: "Brief Content",
     description: "Add main campaign brief",
     icon: <FileText className="h-4 w-4" />,
-  },
-  {
-    id: "platforms",
-    title: "Platforms",
-    description: "Select target platforms",
-    icon: <Share2 className="h-4 w-4" />,
   },
   {
     id: "brand_voice",
@@ -54,22 +45,10 @@ const ALL_SECTIONS: SectionDefinition[] = [
     icon: <ListChecks className="h-4 w-4" />,
   },
   {
-    id: "dos_and_donts",
-    title: "Do's & Don'ts",
-    description: "Guidelines for creators",
-    icon: <ThumbsUp className="h-4 w-4" />,
-  },
-  {
     id: "call_to_action",
     title: "Call to Action",
     description: "Desired viewer action",
     icon: <MessageSquare className="h-4 w-4" />,
-  },
-  {
-    id: "assets",
-    title: "Assets & Files",
-    description: "Links to brand assets",
-    icon: <Folder className="h-4 w-4" />,
   },
   {
     id: "example_videos",

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 interface BrandPerformanceDashboardProps {
   brandId: string;
   timeframe?: TimeframeOption;
+  onSelectProgram?: (id: string, type: "campaign" | "boost") => void;
 }
 
 // Metric type for stat cards (subset that makes sense for cards)
@@ -73,9 +74,9 @@ const chartTitles: Record<StatMetricType, string> = {
   videos: "Videos Over Time",
 };
 
-export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: BrandPerformanceDashboardProps) {
+export function BrandPerformanceDashboard({ brandId, timeframe = "all_time", onSelectProgram }: BrandPerformanceDashboardProps) {
   const queryClient = useQueryClient();
-  const [selectedMetric, setSelectedMetric] = useState<StatMetricType>("views");
+  const [selectedMetric, setSelectedMetric] = useState<StatMetricType | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { from: startDate, to: endDate } = useMemo(
@@ -146,14 +147,15 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
             .lte("created_at", endDate.toISOString())
         : { data: [] };
 
-      // Fetch wallet transactions for payouts
+      // Fetch wallet transactions for payouts (including balance_corrections)
       const transactionPromises = [];
       for (const campaignId of campaignIds) {
+        // Fetch earnings
         transactionPromises.push(
           supabase
             .from("wallet_transactions")
-            .select("amount, created_at, user_id")
-            .eq("type", "earning")
+            .select("amount, created_at, user_id, type")
+            .in("type", ["earning", "balance_correction"])
             .eq("metadata->>campaign_id", campaignId)
             .gte("created_at", startDate.toISOString())
             .lte("created_at", endDate.toISOString())
@@ -163,8 +165,8 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
         transactionPromises.push(
           supabase
             .from("wallet_transactions")
-            .select("amount, created_at, user_id")
-            .eq("type", "earning")
+            .select("amount, created_at, user_id, type")
+            .in("type", ["earning", "balance_correction"])
             .eq("metadata->>boost_id", boostId)
             .gte("created_at", startDate.toISOString())
             .lte("created_at", endDate.toISOString())
@@ -180,6 +182,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
       const participants = campaignParticipants || [];
       const applications = bountyApplications || [];
       const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
+      // Sum all transactions (earnings are positive, balance_corrections are typically negative)
       const totalSpent = allTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
 
       // Count unique creators from participants, submissions and applications (not just videos)
@@ -386,11 +389,11 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
             ...campaignParts.map((p) => p.user_id).filter(Boolean),
           ]).size;
 
-          // Get spent for this campaign
+          // Get spent for this campaign (including balance corrections)
           const { data: txData } = await supabase
             .from("wallet_transactions")
             .select("amount")
-            .eq("type", "earning")
+            .in("type", ["earning", "balance_correction"])
             .eq("metadata->>campaign_id", c.id);
           const spent = (txData || []).reduce((sum, t) => sum + (t.amount || 0), 0);
           const cpm = views > 0 ? (spent / views) * 1000 : 0;
@@ -415,11 +418,11 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           const boostApps = applications.filter((a) => a.bounty_campaign_id === b.id);
           const creators = new Set(boostApps.map((a) => a.user_id).filter(Boolean)).size;
 
-          // Get spent for this boost
+          // Get spent for this boost (including balance corrections)
           const { data: txData } = await supabase
             .from("wallet_transactions")
             .select("amount")
-            .eq("type", "earning")
+            .in("type", ["earning", "balance_correction"])
             .eq("metadata->>boost_id", b.id);
           const spent = (txData || []).reduce((sum, t) => sum + (t.amount || 0), 0);
 
@@ -492,8 +495,8 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
   const campaigns = analyticsData?.campaigns || [];
   const boosts = analyticsData?.boosts || [];
 
-  // Get chart metric based on selected stat card
-  const chartMetric = statToChartMetric[selectedMetric];
+  // Get chart metric based on selected stat card (default to views when none selected)
+  const chartMetric = selectedMetric ? statToChartMetric[selectedMetric] : "views";
 
   return (
     <div className="px-4 sm:px-6 md:px-8 py-6 space-y-6">
@@ -504,7 +507,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           value={formatNumber(stats.totalViews)}
           sparklineData={sparklineData.views}
           isSelected={selectedMetric === "views"}
-          onClick={() => setSelectedMetric("views")}
+          onClick={() => setSelectedMetric(selectedMetric === "views" ? null : "views")}
           color="#3b82f6"
         />
         <SparklineStatCard
@@ -512,7 +515,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           value={formatCurrency(stats.totalSpent)}
           sparklineData={sparklineData.spent}
           isSelected={selectedMetric === "spent"}
-          onClick={() => setSelectedMetric("spent")}
+          onClick={() => setSelectedMetric(selectedMetric === "spent" ? null : "spent")}
           color="#22c55e"
         />
         <SparklineStatCard
@@ -520,7 +523,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           value={stats.activeCreators}
           sparklineData={sparklineData.creators}
           isSelected={selectedMetric === "creators"}
-          onClick={() => setSelectedMetric("creators")}
+          onClick={() => setSelectedMetric(selectedMetric === "creators" ? null : "creators")}
           color="#ec4899"
         />
         <SparklineStatCard
@@ -528,7 +531,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           value={stats.totalVideos}
           sparklineData={sparklineData.videos}
           isSelected={selectedMetric === "videos"}
-          onClick={() => setSelectedMetric("videos")}
+          onClick={() => setSelectedMetric(selectedMetric === "videos" ? null : "videos")}
           color="#a855f7"
         />
       </div>
@@ -540,7 +543,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
         onRefresh={handleRefresh}
         defaultMetric={chartMetric}
         singleMetricMode={selectedMetric === "spent" || selectedMetric === "creators"}
-        title={chartTitles[selectedMetric]}
+        title={selectedMetric ? chartTitles[selectedMetric] : "Performance Over Time"}
       />
 
       {/* Programs Data Table */}
@@ -549,6 +552,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
         boosts={boosts}
         onToggleStatus={handleToggleStatus}
         isToggling={toggleStatusMutation.isPending}
+        onSelectProgram={onSelectProgram}
       />
     </div>
   );

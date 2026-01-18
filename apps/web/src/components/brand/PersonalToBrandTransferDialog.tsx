@@ -164,8 +164,8 @@ export function PersonalToBrandTransferDialog({
           </div>
 
           {/* Amount Input */}
-          <div className="relative">
-            <span 
+          <div className="relative flex items-center">
+            <span
               className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
@@ -177,9 +177,21 @@ export function PersonalToBrandTransferDialog({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               max={personalBalance}
-              className="pl-8 h-12 bg-muted/50 border-border text-foreground text-sm tracking-[-0.3px] placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="pl-8 pr-28 h-12 bg-muted/50 border-border text-foreground text-sm tracking-[-0.3px] placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ fontFamily: 'Inter, sans-serif' }}
             />
+            <Button
+              onClick={handleTransfer}
+              disabled={loading || !isValidAmount || loadingBalance}
+              className="absolute right-1.5 h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 font-medium tracking-[-0.3px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              {loading ? (
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                'Transfer'
+              )}
+            </Button>
           </div>
 
           {/* Quick Amount Buttons */}
@@ -213,25 +225,6 @@ export function PersonalToBrandTransferDialog({
             Transfers are instant and free. Funds will be available immediately in your brand wallet.
           </p>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 h-11 text-muted-foreground hover:text-foreground hover:bg-muted font-medium tracking-[-0.5px]"
-              style={{ fontFamily: 'Inter, sans-serif' }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleTransfer}
-              disabled={loading || !isValidAmount || loadingBalance}
-              className="flex-1 h-11 bg-foreground text-background hover:bg-foreground/90 font-medium tracking-[-0.5px]"
-              style={{ fontFamily: 'Inter, sans-serif' }}
-            >
-              {loading ? 'Transferring...' : `Transfer ${formatCurrency(transferAmount)}`}
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

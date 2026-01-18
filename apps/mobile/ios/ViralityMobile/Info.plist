@@ -69,5 +69,9 @@
 		<string>FontAwesome.ttf</string>
 		<string>Ionicons.ttf</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Virality needs access to your photo library to let you choose a profile picture or banner image.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Virality needs access to save images to your photo library.</string>
 </dict>
 </plist>

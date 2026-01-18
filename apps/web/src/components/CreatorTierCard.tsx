@@ -49,7 +49,7 @@ export function CreatorTierCard({
 
       // Fetch user's tier assignment
       const { data: assignmentData, error: assignmentError } = await supabase
-        .from("boost_tier_assignments")
+        .from("creator_tier_assignments")
         .select("*")
         .eq("bounty_campaign_id", boostId)
         .eq("user_id", userId)

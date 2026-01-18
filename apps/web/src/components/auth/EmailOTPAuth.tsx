@@ -394,14 +394,14 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
-            className="h-12 bg-muted/50 dark:bg-black/50 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
+            className="h-12 !bg-transparent border border-border/50 dark:border-white/10 focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground/40"
           />
         </div>
 
         <Button
           type="submit"
           disabled={loading || !email}
-          className="w-full h-12 font-semibold font-inter"
+          className="w-full h-12 font-medium font-inter"
           style={{ letterSpacing: '-0.5px' }}
         >
           {loading ? (

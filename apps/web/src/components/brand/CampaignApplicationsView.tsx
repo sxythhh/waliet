@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft, MessageSquare, StickyNote, CheckSquare, Square, BarChart3 } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft, MessageSquare, StickyNote, CheckSquare, Square, BarChart3, DollarSign, MapPin, ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
 import { RequestAudienceInsightsDialog } from "@/components/brand/RequestAudienceInsightsDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -38,6 +41,10 @@ interface Application {
   application_text?: string | null;
   campaign_title?: string;
   is_boost?: boolean;
+  // Rate negotiation fields for flat-rate boosts
+  proposed_rate?: number | null;
+  approved_rate?: number | null;
+  rate_status?: string | null;
   profile?: {
     id: string;
     username: string;
@@ -46,7 +53,39 @@ interface Application {
     email: string | null;
     trust_score: number | null;
     audience_quality_score: number | null;
+    bio: string | null;
+    city: string | null;
+    country: string | null;
+    content_niches: string[] | null;
   };
+  social_accounts?: {
+    platform: string;
+    username: string;
+    follower_count: number | null;
+    verified: boolean | null;
+    profile_url: string | null;
+  }[];
+  tier_assignment?: {
+    tier_id: string;
+    tier: {
+      name: string;
+      color: string | null;
+      tier_order: number;
+      rpm_multiplier: number;
+      description: string | null;
+    } | null;
+  } | null;
+  submission_stats?: {
+    total_submissions: number;
+    approved_submissions: number;
+    total_views: number;
+  } | null;
+  // Shortimize auto-tracking flags (legacy)
+  campaign_auto_track_shortimize?: boolean;
+  bounty_auto_track_shortimize?: boolean;
+  // Analytics provider selection ('none', 'shortimize', 'viral')
+  campaign_analytics_provider?: string;
+  bounty_analytics_provider?: string;
 }
 interface CampaignApplicationsViewProps {
   campaignId?: string;
@@ -91,7 +130,30 @@ export function CampaignApplicationsView({
   // Shareable campaign link state
   const [shareableCampaignSlug, setShareableCampaignSlug] = useState<string | null>(null);
 
+  // Boost payment model state (for flat-rate boosts)
+  const [boostPaymentInfo, setBoostPaymentInfo] = useState<{
+    payment_model: string | null;
+    flat_rate_min: number | null;
+    flat_rate_max: number | null;
+  } | null>(null);
+  const [counterOfferRate, setCounterOfferRate] = useState<string>("");
+  const [showCounterInput, setShowCounterInput] = useState(false);
+  const [counterProcessing, setCounterProcessing] = useState(false);
+
+  // Tier management state
+  const [availableTiers, setAvailableTiers] = useState<{
+    id: string;
+    name: string;
+    color: string | null;
+    tier_order: number;
+    rpm_multiplier: number;
+    description: string | null;
+  }[]>([]);
+  const [tierSource, setTierSource] = useState<'boost' | 'brand' | null>(null);
+  const [tierChangeProcessing, setTierChangeProcessing] = useState(false);
+
   const isBoost = !!boostId && !brandId;
+  const isFlatRateBoost = isBoost && boostPaymentInfo?.payment_model === 'flat_rate';
 
   // Use the brand ID to get usage limits
   const { canHireCreator, hiresUsed, hiresLimit } = useBrandUsage(currentBrandId || undefined, currentSubscriptionPlan);
@@ -131,6 +193,73 @@ export function CampaignApplicationsView({
     };
     fetchBrandData();
   }, [workspace, brandId, subscriptionPlan]);
+
+  // Fetch boost payment model info for flat-rate boosts
+  useEffect(() => {
+    const fetchBoostPaymentInfo = async () => {
+      if (!boostId) {
+        setBoostPaymentInfo(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('bounty_campaigns')
+        .select('payment_model, flat_rate_min, flat_rate_max')
+        .eq('id', boostId)
+        .single();
+      if (data) {
+        setBoostPaymentInfo(data);
+      }
+    };
+    fetchBoostPaymentInfo();
+  }, [boostId]);
+
+  // Fetch available tiers (brand-level)
+  useEffect(() => {
+    const fetchAvailableTiers = async () => {
+      let targetBrandId: string | null = null;
+
+      // Get brand_id either directly or from boost
+      if (brandId) {
+        targetBrandId = brandId;
+      } else if (boostId) {
+        const { data: boost } = await supabase
+          .from('bounty_campaigns')
+          .select('brand_id')
+          .eq('id', boostId)
+          .single();
+        targetBrandId = boost?.brand_id || null;
+      } else if (workspace) {
+        // Fallback: get brand_id from workspace slug
+        const { data: brand } = await supabase
+          .from('brands')
+          .select('id')
+          .eq('slug', workspace)
+          .single();
+        targetBrandId = brand?.id || null;
+      }
+
+      if (targetBrandId) {
+        const { data: brandTiers } = await supabase
+          .from('creator_tiers')
+          .select('id, name, color, tier_order, rpm_multiplier, description')
+          .eq('brand_id', targetBrandId)
+          .order('tier_order', { ascending: true });
+
+        if (brandTiers && brandTiers.length > 0) {
+          setAvailableTiers(brandTiers);
+          setTierSource('brand');
+        } else {
+          setAvailableTiers([]);
+          setTierSource(null);
+        }
+      } else {
+        setAvailableTiers([]);
+        setTierSource(null);
+      }
+    };
+    fetchAvailableTiers();
+  }, [boostId, brandId, workspace]);
+
   const isAllMode = !!brandId && !campaignId && !boostId;
   useEffect(() => {
     fetchApplications();
@@ -141,9 +270,13 @@ export function CampaignApplicationsView({
       let data: any[] = [];
       let campaignMap = new Map<string, string>();
       let boostCampaignMap = new Map<string, string>();
+      let campaignAutoTrackMap = new Map<string, boolean>();
+      let boostAutoTrackMap = new Map<string, boolean>();
+      let campaignAnalyticsProviderMap = new Map<string, string>();
+      let boostAnalyticsProviderMap = new Map<string, string>();
       if (isAllMode && brandId) {
         // Fetch all applications across all campaigns and boosts for this brand
-        const [campaignsResult, boostCampaignsResult] = await Promise.all([supabase.from("campaigns").select("id, title, slug").eq("brand_id", brandId), supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId)]);
+        const [campaignsResult, boostCampaignsResult] = await Promise.all([supabase.from("campaigns").select("id, title, slug, auto_track_shortimize, analytics_provider").eq("brand_id", brandId), supabase.from("bounty_campaigns").select("id, title, auto_track_shortimize, analytics_provider").eq("brand_id", brandId)]);
 
         // Set the first campaign slug for sharing
         if (campaignsResult.data && campaignsResult.data.length > 0) {
@@ -157,6 +290,10 @@ export function CampaignApplicationsView({
         const boostCampaignIds = boostCampaigns.map(c => c.id);
         campaignMap = new Map(campaigns.map(c => [c.id, c.title]));
         boostCampaignMap = new Map(boostCampaigns.map(c => [c.id, c.title]));
+        campaignAutoTrackMap = new Map(campaigns.map(c => [c.id, c.auto_track_shortimize ?? false]));
+        boostAutoTrackMap = new Map(boostCampaigns.map(c => [c.id, c.auto_track_shortimize ?? false]));
+        campaignAnalyticsProviderMap = new Map(campaigns.map(c => [c.id, c.analytics_provider ?? 'none']));
+        boostAnalyticsProviderMap = new Map(boostCampaigns.map(c => [c.id, c.analytics_provider ?? 'none']));
         const [campaignSubmissionsResult, bountyApplicationsResult] = await Promise.all([campaignIds.length > 0 ? supabase.from("campaign_submissions").select("*").in("campaign_id", campaignIds).order("submitted_at", {
           ascending: false
         }) : Promise.resolve({
@@ -187,7 +324,10 @@ export function CampaignApplicationsView({
           reviewed_at: app.reviewed_at,
           application_answers: app.application_answers as { question: string; answer: string }[] | null,
           application_text: app.application_text,
-          is_boost: true
+          is_boost: true,
+          proposed_rate: app.proposed_rate,
+          approved_rate: app.approved_rate,
+          rate_status: app.rate_status
         }));
         const allSubmissions = [...(campaignSubmissionsResult.data || []).map(app => ({
           ...app,
@@ -198,31 +338,55 @@ export function CampaignApplicationsView({
         allSubmissions.sort((a, b) => new Date(b.submitted_at || b.applied_at).getTime() - new Date(a.submitted_at || a.applied_at).getTime());
         data = allSubmissions.map(app => ({
           ...app,
-          campaign_title: app.is_boost ? boostCampaignMap.get(app.bounty_campaign_id || app.campaign_id) : campaignMap.get(app.campaign_id)
+          campaign_title: app.is_boost ? boostCampaignMap.get(app.bounty_campaign_id || app.campaign_id) : campaignMap.get(app.campaign_id),
+          campaign_auto_track_shortimize: app.is_boost ? undefined : campaignAutoTrackMap.get(app.campaign_id),
+          bounty_auto_track_shortimize: app.is_boost ? boostAutoTrackMap.get(app.bounty_campaign_id || app.campaign_id) : undefined,
+          campaign_analytics_provider: app.is_boost ? undefined : campaignAnalyticsProviderMap.get(app.campaign_id),
+          bounty_analytics_provider: app.is_boost ? boostAnalyticsProviderMap.get(app.bounty_campaign_id || app.campaign_id) : undefined
         }));
       } else if (boostId) {
-        // Fetch all boost applications
+        // Fetch boost info including auto_track_shortimize and analytics_provider
+        const { data: boostInfo } = await supabase
+          .from("bounty_campaigns")
+          .select("auto_track_shortimize, analytics_provider")
+          .eq("id", boostId)
+          .single();
+        const boostAutoTrack = boostInfo?.auto_track_shortimize ?? false;
+        const boostProvider = boostInfo?.analytics_provider ?? 'none';
+        boostAutoTrackMap.set(boostId, boostAutoTrack);
+        boostAnalyticsProviderMap.set(boostId, boostProvider);
+
+        // Fetch all boost applications with rate fields
         const {
           data: boostData,
           error
-        } = await supabase.from("bounty_applications").select("*").eq("bounty_campaign_id", boostId).order("applied_at", {
+        } = await supabase.from("bounty_applications").select("*, proposed_rate, approved_rate, rate_status").eq("bounty_campaign_id", boostId).order("applied_at", {
           ascending: false
         });
         if (error) throw error;
         data = (boostData || []).map(app => ({
           ...app,
-          is_boost: true
+          is_boost: true,
+          proposed_rate: app.proposed_rate,
+          approved_rate: app.approved_rate,
+          rate_status: app.rate_status,
+          bounty_auto_track_shortimize: boostAutoTrack,
+          bounty_analytics_provider: boostProvider
         }));
       } else if (campaignId) {
-        // Fetch campaign slug for sharing
+        // Fetch campaign slug, auto_track_shortimize and analytics_provider for sharing
         const { data: campaignInfo } = await supabase
           .from("campaigns")
-          .select("slug")
+          .select("slug, auto_track_shortimize, analytics_provider")
           .eq("id", campaignId)
           .single();
         if (campaignInfo?.slug) {
           setShareableCampaignSlug(campaignInfo.slug);
         }
+        const campaignAutoTrack = campaignInfo?.auto_track_shortimize ?? false;
+        const campaignProvider = campaignInfo?.analytics_provider ?? 'none';
+        campaignAutoTrackMap.set(campaignId, campaignAutoTrack);
+        campaignAnalyticsProviderMap.set(campaignId, campaignProvider);
 
         // Fetch all campaign applications
         const {
@@ -234,25 +398,120 @@ export function CampaignApplicationsView({
         if (error) throw error;
         data = (campaignData || []).map(app => ({
           ...app,
-          is_boost: false
+          is_boost: false,
+          campaign_auto_track_shortimize: campaignAutoTrack,
+          campaign_analytics_provider: campaignProvider
         }));
       }
 
       // Fetch profiles for all creators
       const creatorIds = [...new Set(data?.map(a => a.creator_id || a.user_id).filter(Boolean) || [])];
       if (creatorIds.length > 0) {
+        // Fetch profiles with expanded fields
         const {
           data: profiles
-        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email, trust_score, audience_quality_score").in("id", creatorIds);
+        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email, trust_score, audience_quality_score, bio, city, country, content_niches").in("id", creatorIds);
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-        const applicationsWithProfiles: Application[] = data?.map(app => ({
-          ...app,
-          application_answers: app.application_answers as {
-            question: string;
-            answer: string;
-          }[] | null,
-          profile: profileMap.get(app.creator_id || app.user_id)
-        })) || [];
+
+        // Fetch social accounts for all creators
+        const { data: socialAccounts } = await supabase
+          .from("social_accounts")
+          .select("user_id, platform, username, follower_count, verified, profile_url")
+          .in("user_id", creatorIds);
+
+        // Group social accounts by user_id
+        const socialAccountsMap = new Map<string, typeof socialAccounts>();
+        (socialAccounts || []).forEach(account => {
+          const existing = socialAccountsMap.get(account.user_id) || [];
+          existing.push(account);
+          socialAccountsMap.set(account.user_id, existing);
+        });
+
+        // Fetch tier assignments (brand-level tiers)
+        let tierAssignmentsMap = new Map<string, Application['tier_assignment']>();
+
+        // Get the brand_id from props, boost, or workspace
+        let tierBrandId: string | null = null;
+        if (brandId) {
+          tierBrandId = brandId;
+        } else if (boostId) {
+          const { data: boostInfo } = await supabase
+            .from("bounty_campaigns")
+            .select("brand_id")
+            .eq("id", boostId)
+            .single();
+          tierBrandId = boostInfo?.brand_id || null;
+        } else if (workspace) {
+          const { data: brand } = await supabase
+            .from("brands")
+            .select("id")
+            .eq("slug", workspace)
+            .single();
+          tierBrandId = brand?.id || null;
+        }
+
+        if (tierBrandId) {
+          // Fetch tier assignments - join to brand-level creator_tiers table
+          const { data: tierAssignments } = await supabase
+            .from("creator_tier_assignments")
+            .select("user_id, tier_id, tier:creator_tiers!tier_id(name, color, tier_order, rpm_multiplier, description)")
+            .eq("brand_id", tierBrandId)
+            .in("user_id", creatorIds);
+
+          (tierAssignments || []).forEach((ta: { user_id: string; tier_id: string; tier: { name: string; color: string | null; tier_order: number; rpm_multiplier: number; description: string | null } | null }) => {
+            tierAssignmentsMap.set(ta.user_id, { tier_id: ta.tier_id, tier: ta.tier });
+          });
+        }
+
+        // Fetch submission stats for accepted creators (boost submissions)
+        let submissionStatsMap = new Map<string, Application['submission_stats']>();
+        const acceptedCreatorIds = data
+          ?.filter(a => a.status === 'accepted' || a.status === 'approved')
+          .map(a => a.creator_id || a.user_id)
+          .filter(Boolean) || [];
+
+        if (boostId && acceptedCreatorIds.length > 0) {
+          const { data: submissions } = await supabase
+            .from("boost_submissions")
+            .select("user_id, status, views")
+            .eq("bounty_campaign_id", boostId)
+            .in("user_id", acceptedCreatorIds);
+
+          // Aggregate stats per user
+          const statsMap = new Map<string, { total: number; approved: number; views: number }>();
+          (submissions || []).forEach(sub => {
+            const existing = statsMap.get(sub.user_id) || { total: 0, approved: 0, views: 0 };
+            existing.total++;
+            if (sub.status === 'approved') {
+              existing.approved++;
+              existing.views += sub.views || 0;
+            }
+            statsMap.set(sub.user_id, existing);
+          });
+
+          statsMap.forEach((stats, userId) => {
+            submissionStatsMap.set(userId, {
+              total_submissions: stats.total,
+              approved_submissions: stats.approved,
+              total_views: stats.views
+            });
+          });
+        }
+
+        const applicationsWithProfiles: Application[] = data?.map(app => {
+          const creatorId = app.creator_id || app.user_id;
+          return {
+            ...app,
+            application_answers: app.application_answers as {
+              question: string;
+              answer: string;
+            }[] | null,
+            profile: profileMap.get(creatorId),
+            social_accounts: socialAccountsMap.get(creatorId) || [],
+            tier_assignment: tierAssignmentsMap.get(creatorId) || null,
+            submission_stats: submissionStatsMap.get(creatorId) || null
+          };
+        }) || [];
         setApplications(applicationsWithProfiles);
 
         // Auto-select first application (prioritize pending)
@@ -283,27 +542,66 @@ export function CampaignApplicationsView({
       const appIsBoost = application.is_boost || !!application.bounty_campaign_id;
       const tableName = appIsBoost ? "bounty_applications" : "campaign_submissions";
       const finalStatus = appIsBoost && newStatus === 'approved' ? 'accepted' : newStatus;
-      const {
-        error
-      } = await supabase.from(tableName).update({
+
+      // Build update payload
+      const updatePayload: Record<string, unknown> = {
         status: finalStatus,
         reviewed_at: new Date().toISOString()
-      }).eq("id", applicationId);
+      };
+
+      // For flat-rate boosts, also approve the rate when accepting
+      if (appIsBoost && (newStatus === 'accepted' || finalStatus === 'accepted') && isFlatRateBoost) {
+        // Use counter rate if set, otherwise use proposed rate
+        const rateToApprove = application.approved_rate ?? application.proposed_rate;
+        if (rateToApprove != null) {
+          updatePayload.approved_rate = rateToApprove;
+          updatePayload.rate_status = 'approved';
+        }
+      }
+
+      const { error } = await supabase.from(tableName).update(updatePayload).eq("id", applicationId);
       if (error) throw error;
 
-      // If approved (campaign), need to track the account in Shortimize
-      if (!appIsBoost && newStatus === 'approved') {
+      // Track in analytics provider if configured
+      // Use analytics_provider column, with fallback to legacy auto_track_shortimize
+      const campaignProvider = application.campaign_analytics_provider || (application.campaign_auto_track_shortimize ? 'shortimize' : 'none');
+      const boostProvider = application.bounty_analytics_provider || (application.bounty_auto_track_shortimize ? 'shortimize' : 'none');
+
+      const shouldTrackCampaign = !appIsBoost && newStatus === 'approved' && campaignProvider !== 'none';
+      const shouldTrackBoost = appIsBoost && (newStatus === 'accepted' || finalStatus === 'accepted') && boostProvider !== 'none';
+
+      if (shouldTrackCampaign) {
         const appCampaignId = application.campaign_id || campaignId;
         if (appCampaignId) {
           try {
-            await supabase.functions.invoke('track-campaign-user', {
+            // Choose the appropriate Edge Function based on provider
+            const functionName = campaignProvider === 'viral' ? 'track-campaign-user-viral' : 'track-campaign-user';
+            await supabase.functions.invoke(functionName, {
               body: {
                 campaignId: appCampaignId,
                 userId: application.creator_id || application.user_id
               }
             });
           } catch (trackError) {
-            console.error('Error tracking account:', trackError);
+            console.error(`Error tracking campaign account (${campaignProvider}):`, trackError);
+          }
+        }
+      }
+
+      if (shouldTrackBoost) {
+        const appBoostId = application.bounty_campaign_id || boostId;
+        if (appBoostId) {
+          try {
+            // Choose the appropriate Edge Function based on provider
+            const functionName = boostProvider === 'viral' ? 'track-boost-user-viral' : 'track-boost-user';
+            await supabase.functions.invoke(functionName, {
+              body: {
+                bountyId: appBoostId,
+                userId: application.user_id || application.creator_id
+              }
+            });
+          } catch (trackError) {
+            console.error(`Error tracking boost account (${boostProvider}):`, trackError);
           }
         }
       }
@@ -314,10 +612,16 @@ export function CampaignApplicationsView({
       const nextApp = nextPendingApp || filteredApplications[currentIndex + 1] || filteredApplications[currentIndex - 1];
 
       // Update status in list instead of removing
-      setApplications(prev => prev.map(a => a.id === applicationId ? {
-        ...a,
-        status: finalStatus
-      } : a));
+      setApplications(prev => prev.map(a => {
+        if (a.id !== applicationId) return a;
+        const updated = { ...a, status: finalStatus };
+        // Also update rate fields if this was a flat-rate boost acceptance
+        if (appIsBoost && (newStatus === 'accepted' || finalStatus === 'accepted') && isFlatRateBoost && a.proposed_rate != null) {
+          updated.approved_rate = a.approved_rate ?? a.proposed_rate;
+          updated.rate_status = 'approved';
+        }
+        return updated;
+      }));
 
       // Auto-select next application
       if (nextApp && nextApp.id !== applicationId) {
@@ -367,6 +671,15 @@ export function CampaignApplicationsView({
   };
   const getAppUrl = (app: Application) => app.content_url || app.video_url;
   const getSubmittedAt = (app: Application) => app.submitted_at || app.applied_at;
+
+  // Format follower count for display
+  const formatFollowerCount = (count: number | null): string => {
+    if (count === null || count === undefined) return "—";
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(0)}K`;
+    return count.toString();
+  };
+
   // Handle mobile application selection
   const handleSelectApp = (appId: string) => {
     setSelectedAppId(appId);
@@ -412,6 +725,163 @@ export function CampaignApplicationsView({
 
     // Navigate to messages tab
     navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=messages`);
+  };
+
+  // Handle approve rate for flat-rate boosts
+  const handleApproveRate = async (applicationId: string, rate: number) => {
+    setCounterProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("bounty_applications")
+        .update({
+          approved_rate: rate,
+          rate_status: 'approved'
+        })
+        .eq("id", applicationId);
+
+      if (error) throw error;
+
+      // Update local state
+      setApplications(prev => prev.map(a =>
+        a.id === applicationId
+          ? { ...a, approved_rate: rate, rate_status: 'approved' }
+          : a
+      ));
+
+      setShowCounterInput(false);
+      setCounterOfferRate("");
+      toast.success(`Rate of $${rate.toFixed(2)} approved`);
+    } catch (error) {
+      console.error("Error approving rate:", error);
+      toast.error("Failed to approve rate");
+    } finally {
+      setCounterProcessing(false);
+    }
+  };
+
+  // Handle counter offer for flat-rate boosts
+  const handleCounterOffer = async (applicationId: string) => {
+    const rate = parseFloat(counterOfferRate);
+    if (isNaN(rate) || rate <= 0) {
+      toast.error("Please enter a valid rate");
+      return;
+    }
+
+    setCounterProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("bounty_applications")
+        .update({
+          approved_rate: rate,
+          rate_status: 'countered'
+        })
+        .eq("id", applicationId);
+
+      if (error) throw error;
+
+      // Update local state
+      setApplications(prev => prev.map(a =>
+        a.id === applicationId
+          ? { ...a, approved_rate: rate, rate_status: 'countered' }
+          : a
+      ));
+
+      setShowCounterInput(false);
+      setCounterOfferRate("");
+      toast.success(`Counter offer of $${rate.toFixed(2)} sent`);
+    } catch (error) {
+      console.error("Error sending counter offer:", error);
+      toast.error("Failed to send counter offer");
+    } finally {
+      setCounterProcessing(false);
+    }
+  };
+
+  // Handle tier change for a creator (brand-level tiers)
+  const handleTierChange = async (userId: string, newTierId: string) => {
+    setTierChangeProcessing(true);
+    try {
+      const newTier = availableTiers.find(t => t.id === newTierId);
+      if (!newTier) throw new Error("Tier not found");
+
+      // Get the brand_id from props, boost, or workspace
+      let targetBrandId: string | null = null;
+
+      if (brandId) {
+        targetBrandId = brandId;
+      } else if (boostId) {
+        const { data: boostInfo } = await supabase
+          .from("bounty_campaigns")
+          .select("brand_id")
+          .eq("id", boostId)
+          .single();
+        targetBrandId = boostInfo?.brand_id || null;
+      } else if (workspace) {
+        const { data: brand } = await supabase
+          .from("brands")
+          .select("id")
+          .eq("slug", workspace)
+          .single();
+        targetBrandId = brand?.id || null;
+      }
+
+      if (!targetBrandId) throw new Error("Brand not found");
+
+      // Check if assignment exists (by brand, not boost)
+      const { data: existingAssignment } = await supabase
+        .from("creator_tier_assignments")
+        .select("id, tier_id")
+        .eq("brand_id", targetBrandId)
+        .eq("user_id", userId)
+        .single();
+
+      if (existingAssignment) {
+        // Update existing assignment
+        const { error } = await supabase
+          .from("creator_tier_assignments")
+          .update({
+            tier_id: newTierId,
+            previous_tier_id: existingAssignment.tier_id,
+            assigned_at: new Date().toISOString(),
+            assigned_by: 'manual'
+          })
+          .eq("id", existingAssignment.id);
+
+        if (error) throw error;
+      } else {
+        // Create new assignment (brand-level)
+        const { error } = await supabase
+          .from("creator_tier_assignments")
+          .insert({
+            brand_id: targetBrandId,
+            user_id: userId,
+            tier_id: newTierId,
+            assigned_at: new Date().toISOString(),
+            assigned_by: 'manual'
+          });
+
+        if (error) throw error;
+      }
+
+      // Update local state
+      setApplications(prev => prev.map(a => {
+        if ((a.creator_id || a.user_id) !== userId) return a;
+        return {
+          ...a,
+          tier_assignment: {
+            tier_id: newTierId,
+            tier: newTier
+          }
+        };
+      }));
+
+      toast.success(`Assigned to ${newTier.name} tier`);
+    } catch (error) {
+      console.error("Error changing tier:", error);
+      toast.error("Failed to change tier");
+    } finally {
+      setTierChangeProcessing(false);
+    }
   };
 
   // Bulk selection helpers
@@ -608,46 +1078,37 @@ export function CampaignApplicationsView({
     <div className="flex h-full">
       {/* Applications List - Left Column (hidden on mobile when detail is shown) */}
       <div className={`w-full md:w-80 border-r border-border flex flex-col ${mobileShowDetail ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {pendingAppsInFilter.length > 0 && (
-                <Checkbox
-                  checked={selectedApps.size === pendingAppsInFilter.length && pendingAppsInFilter.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                  className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-              )}
-              <h3 className="font-semibold">Applications</h3>
-            </div>
-            <Select value={statusFilter} onValueChange={value => setStatusFilter(value as StatusFilter)}>
-              <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs border-0 bg-muted/50 hover:bg-muted focus:ring-0 focus:ring-offset-0 gap-1 px-2.5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border z-50">
-                <SelectItem value="all">All ({totalCount})</SelectItem>
-                <SelectItem value="pending">Pending ({pendingCount})</SelectItem>
-                <SelectItem value="approved">Approved ({approvedCount})</SelectItem>
-                <SelectItem value="rejected">Rejected ({rejectedCount})</SelectItem>
-                {waitlistedCount > 0 && (
-                  <SelectItem value="waitlisted">Waitlisted ({waitlistedCount})</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-2 space-y-1">
-            {filteredApplications.length === 0 ? <div className="p-4 text-center text-sm text-muted-foreground">
+            {loading ? (
+              // Skeleton loader for sidebar
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="p-3 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                </div>
+              ))
+            ) : filteredApplications.length === 0 ? <div className="p-4 text-center text-sm text-muted-foreground">
                 No {statusFilter} applications
               </div> : filteredApplications.map(app => {
             const timeAgo = formatDistanceToNow(new Date(getSubmittedAt(app) || new Date()), {
               addSuffix: true
             });
             const capitalizedTime = timeAgo.charAt(0).toUpperCase() + timeAgo.slice(1);
-            return <button key={app.id} onClick={() => handleSelectApp(app.id)} className={`group w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted/50" : "md:hover:bg-muted/30"}`}>
+            return (
+              <ContextMenu key={app.id}>
+                <ContextMenuTrigger asChild>
+                  <button
+                    onClick={() => handleSelectApp(app.id)}
+                    className={`group w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted/50" : "md:hover:bg-muted/30"}`}
+                  >
                     <div className="flex items-center gap-3">
-                      {/* Avatar with checkbox overlay for pending applications */}
                       <div className="relative flex-shrink-0">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={app.profile?.avatar_url || ""} />
@@ -655,37 +1116,94 @@ export function CampaignApplicationsView({
                             {app.profile?.username?.[0]?.toUpperCase() || "?"}
                           </AvatarFallback>
                         </Avatar>
-                        {app.status === 'pending' && (
+                        {/* Checkbox overlay when in selection mode */}
+                        {selectedApps.size > 0 && app.status === 'pending' && (
                           <div
-                            className={`absolute -top-1 -left-1 transition-opacity ${
-                              selectedApps.has(app.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                            }`}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleAppSelection(app.id);
+                            }}
+                            className="absolute -top-1 -left-1"
                           >
                             <Checkbox
                               checked={selectedApps.has(app.id)}
-                              onCheckedChange={() => toggleAppSelection(app.id)}
-                              className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary bg-background"
+                              className="h-4 w-4 rounded-[4px] border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary bg-background"
                             />
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium tracking-[-0.5px] truncate flex-1 min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium tracking-[-0.5px] truncate max-w-[120px]">
                             {app.profile?.full_name || app.profile?.username || "Unknown"}
                           </p>
-                          {app.status !== 'pending' && <div className="flex-shrink-0">{getStatusBadge(app.status)}</div>}
+                          {app.status !== 'pending' && getStatusBadge(app.status)}
                         </div>
+                        {isFlatRateBoost && app.proposed_rate != null && (
+                          <p className="text-xs font-medium text-foreground/80 tracking-[-0.3px]">
+                            ${app.proposed_rate.toLocaleString()}/post
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                           {capitalizedTime}
                         </p>
                       </div>
                     </div>
-                  </button>;
+                  </button>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  {app.status === 'pending' && (
+                    <>
+                      <ContextMenuItem onClick={() => toggleAppSelection(app.id)} className="gap-2">
+                        <span className="material-symbols-rounded text-[18px]">
+                          {selectedApps.has(app.id) ? 'remove_done' : 'check_box'}
+                        </span>
+                        {selectedApps.has(app.id) ? "Deselect" : "Select"}
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={toggleSelectAll} className="gap-2">
+                        <span className="material-symbols-rounded text-[18px]">select_all</span>
+                        {selectedApps.size === pendingAppsInFilter.length && pendingAppsInFilter.length > 0
+                          ? "Deselect All"
+                          : `Select All (${pendingAppsInFilter.length})`}
+                      </ContextMenuItem>
+                      <ContextMenuItem
+                        onClick={() => handleUpdateStatus(app.id, app.is_boost ? 'accepted' : 'approved')}
+                        disabled={!canHireCreator}
+                        className="gap-2"
+                      >
+                        <span className="material-symbols-rounded text-[18px]">check</span>
+                        Accept
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => handleUpdateStatus(app.id, 'rejected')} className="gap-2">
+                        <span className="material-symbols-rounded text-[18px]">close</span>
+                        Reject
+                      </ContextMenuItem>
+                    </>
+                  )}
+                  {app.status !== 'pending' && (
+                    <ContextMenuItem onClick={() => app.profile?.id && handleMessage(app.profile.id)} className="gap-2">
+                      <span className="material-symbols-rounded text-[18px]">mail</span>
+                      Message
+                    </ContextMenuItem>
+                  )}
+                  <ContextMenuItem onClick={() => setStatusFilter("all")} disabled={statusFilter === "all"} className="gap-2">
+                    <span className="material-symbols-rounded text-[18px]">lists</span>
+                    Show All ({totalCount})
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => setStatusFilter("pending")} disabled={statusFilter === "pending"} className="gap-2">
+                    <span className="material-symbols-rounded text-[18px]">pending</span>
+                    Pending ({pendingCount})
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => setStatusFilter("approved")} disabled={statusFilter === "approved"} className="gap-2">
+                    <span className="material-symbols-rounded text-[18px]">verified</span>
+                    Approved ({approvedCount})
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            );
           })}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Application Details - Right Column (hidden on mobile when list is shown) */}
@@ -733,12 +1251,182 @@ export function CampaignApplicationsView({
                         @{selectedApp.profile?.username}
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
+                      {(selectedApp.profile?.city || selectedApp.profile?.country) && (
+                        <p className="text-xs text-muted-foreground tracking-[-0.2px] flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {[selectedApp.profile?.city, selectedApp.profile?.country].filter(Boolean).join(", ")}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Connected Account */}
-                {getAppUrl(selectedApp) && <a href={getAppUrl(selectedApp)!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group min-w-0 overflow-hidden">
+                {/* Bio & Content Niches */}
+                {(selectedApp.profile?.bio || (selectedApp.profile?.content_niches && selectedApp.profile.content_niches.length > 0)) && (
+                  <div className="space-y-3">
+                    {selectedApp.profile?.bio && (
+                      <p className="text-sm text-foreground/80 tracking-[-0.3px] leading-relaxed">
+                        {selectedApp.profile.bio}
+                      </p>
+                    )}
+                    {selectedApp.profile?.content_niches && selectedApp.profile.content_niches.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedApp.profile.content_niches.map((niche, index) => (
+                          <span
+                            key={index}
+                            className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground"
+                          >
+                            {niche}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Trust & Quality Metrics */}
+                {(selectedApp.profile?.trust_score != null || selectedApp.profile?.audience_quality_score != null) && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Creator Metrics</p>
+                    <div className="flex gap-3">
+                      {selectedApp.profile?.trust_score != null && (
+                        <div className="flex-1 p-3 rounded-xl border border-border/50 bg-muted/20">
+                          <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
+                          <p className="text-lg font-semibold tracking-[-0.5px]">
+                            {Math.round(selectedApp.profile.trust_score)}%
+                          </p>
+                        </div>
+                      )}
+                      {selectedApp.profile?.audience_quality_score != null && (
+                        <div className="flex-1 p-3 rounded-xl border border-border/50 bg-muted/20">
+                          <p className="text-xs text-muted-foreground mb-1">Quality Score</p>
+                          <p className="text-lg font-semibold tracking-[-0.5px]">
+                            {Math.round(selectedApp.profile.audience_quality_score)}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tier Assignment - For Accepted/Approved Members */}
+                {(selectedApp.status === 'accepted' || selectedApp.status === 'approved') && availableTiers.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Tier</p>
+                    <Select
+                      value={selectedApp.tier_assignment?.tier_id || ""}
+                      onValueChange={(value) => {
+                        const userId = selectedApp.creator_id || selectedApp.user_id;
+                        if (userId) handleTierChange(userId, value);
+                      }}
+                      disabled={tierChangeProcessing}
+                    >
+                      <SelectTrigger className="w-full h-auto p-3 rounded-xl border-border/50 bg-muted/20">
+                        {selectedApp.tier_assignment?.tier ? (
+                          <div className="flex items-center gap-3 text-left">
+                            <div
+                              className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                              style={{ backgroundColor: `${selectedApp.tier_assignment.tier.color || '#6366f1'}20`, color: selectedApp.tier_assignment.tier.color || '#6366f1' }}
+                            >
+                              {selectedApp.tier_assignment.tier.tier_order}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium tracking-[-0.3px]" style={{ color: selectedApp.tier_assignment.tier.color || '#6366f1' }}>
+                                {selectedApp.tier_assignment.tier.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {selectedApp.tier_assignment.tier.rpm_multiplier}x RPM
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Select tier...</span>
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTiers.map((tier) => (
+                          <SelectItem key={tier.id} value={tier.id}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="h-5 w-5 rounded flex items-center justify-center text-xs font-bold"
+                                style={{ backgroundColor: `${tier.color || '#6366f1'}20`, color: tier.color || '#6366f1' }}
+                              >
+                                {tier.tier_order}
+                              </div>
+                              <span style={{ color: tier.color || '#6366f1' }}>{tier.name}</span>
+                              <span className="text-muted-foreground text-xs">
+                                {tier.rpm_multiplier}x RPM
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Submission Stats - For Accepted Members */}
+                {(selectedApp.status === 'accepted' || selectedApp.status === 'approved') && selectedApp.submission_stats && selectedApp.submission_stats.total_submissions > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">With This Boost</p>
+                    <div className="flex items-center gap-4 p-3 rounded-xl border border-border/50 bg-muted/20">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium">{selectedApp.submission_stats.total_submissions}</span>
+                        <span className="text-xs text-muted-foreground">submitted</span>
+                      </div>
+                      <div className="w-px h-4 bg-border" />
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium">{selectedApp.submission_stats.approved_submissions}</span>
+                        <span className="text-xs text-muted-foreground">approved</span>
+                      </div>
+                      {selectedApp.submission_stats.total_views > 0 && (
+                        <>
+                          <div className="w-px h-4 bg-border" />
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium">{formatFollowerCount(selectedApp.submission_stats.total_views)}</span>
+                            <span className="text-xs text-muted-foreground">views</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Accounts - Multi-platform */}
+                {selectedApp.social_accounts && selectedApp.social_accounts.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Connected Accounts</p>
+                    <div className="space-y-2">
+                      {selectedApp.social_accounts.map((account, index) => (
+                        <a
+                          key={index}
+                          href={account.profile_url || `https://${account.platform.toLowerCase()}.com/@${account.username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group"
+                        >
+                          {PLATFORM_LOGOS[account.platform?.toLowerCase?.()] && (
+                            <div className="h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-5 w-5" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium tracking-[-0.3px] truncate">@{account.username}</p>
+                            <p className="text-xs text-muted-foreground tracking-[-0.2px] capitalize">{account.platform}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold tracking-[-0.3px]">{formatFollowerCount(account.follower_count)}</p>
+                            <p className="text-xs text-muted-foreground">followers</p>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Connected Account - Fallback when no social accounts */}
+                {(!selectedApp.social_accounts || selectedApp.social_accounts.length === 0) && getAppUrl(selectedApp) && <a href={getAppUrl(selectedApp)!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group min-w-0 overflow-hidden">
                     {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform?.toLowerCase?.()] && <div className="h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0">
                         <img src={PLATFORM_LOGOS[selectedApp.platform.toLowerCase()]} alt={selectedApp.platform} className="h-5 w-5" />
                       </div>}
@@ -775,6 +1463,98 @@ export function CampaignApplicationsView({
                         </div>)}
                     </div>
                   </div>}
+
+                {/* Rate Proposal Section - Only for flat-rate boosts */}
+                {isFlatRateBoost && selectedApp.is_boost && selectedApp.proposed_rate != null && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Rate Proposal</p>
+                    <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-3">
+                      {/* Rate Info */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <DollarSign className="h-4 w-4 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium tracking-[-0.3px]">
+                              {selectedApp.approved_rate != null && selectedApp.rate_status === 'countered'
+                                ? `Counter: $${selectedApp.approved_rate.toFixed(2)}/post`
+                                : `Proposed: $${selectedApp.proposed_rate.toFixed(2)}/post`
+                              }
+                            </p>
+                            {boostPaymentInfo?.flat_rate_min != null && boostPaymentInfo?.flat_rate_max != null && (
+                              <p className="text-xs text-muted-foreground tracking-[-0.2px]">
+                                Your range: ${boostPaymentInfo.flat_rate_min.toFixed(2)} - ${boostPaymentInfo.flat_rate_max.toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {selectedApp.rate_status === 'approved' && (
+                          <Badge variant="outline" className="text-xs text-emerald-500 border-0 bg-emerald-500/10">
+                            Approved
+                          </Badge>
+                        )}
+                        {selectedApp.rate_status === 'countered' && (
+                          <Badge variant="outline" className="text-xs text-amber-500 border-0 bg-amber-500/10">
+                            Countered
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Counter offer input - Only show if pending and user wants to counter */}
+                      {selectedApp.status === 'pending' && (!selectedApp.rate_status || selectedApp.rate_status === 'pending' || selectedApp.rate_status === 'proposed' || selectedApp.rate_status === 'countered') && (
+                        showCounterInput ? (
+                          <div className="pt-2 border-t border-border/50 space-y-2">
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="Your counter rate"
+                                  value={counterOfferRate}
+                                  onChange={(e) => setCounterOfferRate(e.target.value)}
+                                  className="pl-9 h-9"
+                                />
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => handleCounterOffer(selectedApp.id)}
+                                disabled={counterProcessing || !counterOfferRate}
+                                className="h-9"
+                              >
+                                Set
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setShowCounterInput(false);
+                                  setCounterOfferRate("");
+                                }}
+                                disabled={counterProcessing}
+                                className="h-9 px-2"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Set a different rate, then click Accept below
+                            </p>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setShowCounterInput(true)}
+                            className="text-xs text-primary hover:underline pt-1"
+                          >
+                            Counter with different rate
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -45,6 +45,9 @@ export function useAnnouncements({
     setError(null);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-announcements`,
         {
@@ -58,18 +61,29 @@ export function useAnnouncements({
             source_type: sourceType,
             source_id: sourceId,
           }),
+          signal: controller.signal,
         }
       );
+
+      clearTimeout(timeoutId);
+
+      // Handle non-success status codes gracefully
+      if (!response.ok) {
+        setAnnouncements([]);
+        setLoading(false);
+        return;
+      }
 
       const data = await response.json();
       if (data.success) {
         setAnnouncements(data.data || []);
       } else {
-        setError(data.error || "Failed to fetch announcements");
+        // Don't set error - just return empty
+        setAnnouncements([]);
       }
-    } catch (err) {
-      console.error("Error fetching announcements:", err);
-      setError("Failed to fetch announcements");
+    } catch {
+      // Fail completely silently - announcements are not critical
+      setAnnouncements([]);
     } finally {
       setLoading(false);
     }
@@ -95,13 +109,14 @@ export function useAnnouncements({
         }
       );
 
-      const data = await response.json();
-      if (data.success) {
-        // Refetch to get updated reaction counts
-        fetchAnnouncements();
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          fetchAnnouncements();
+        }
       }
-    } catch (err) {
-      console.error("Error toggling reaction:", err);
+    } catch {
+      // Fail silently
     }
   };
 

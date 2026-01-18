@@ -112,7 +112,7 @@ export default function PublicBoostApplication() {
   const brandColor = boost?.brands?.brand_color || DEFAULT_BRAND_COLOR;
   const formSettings = parsePublicFormSettings(boost?.public_form_settings);
   const questions = parseApplicationQuestions(boost?.application_questions);
-  const isFull = boost ? boost.accepted_creators_count >= boost.max_accepted_creators : false;
+  const isFull = boost ? (boost.max_accepted_creators > 0 && boost.accepted_creators_count >= boost.max_accepted_creators) : false;
   const isPaused = boost?.status === "paused";
 
   const validateForm = (): boolean => {

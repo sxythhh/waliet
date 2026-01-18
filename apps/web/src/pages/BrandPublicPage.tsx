@@ -51,6 +51,9 @@ interface Boost {
   slug: string;
   created_at: string;
   tags: string[] | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
 }
 interface CampaignStats {
   totalPaidOut: number;
@@ -403,6 +406,9 @@ export default function BrandPublicPage() {
                       videos_per_month={boost.videos_per_month}
                       max_accepted_creators={boost.max_accepted_creators}
                       accepted_creators_count={boost.accepted_creators_count}
+                      payment_model={boost.payment_model}
+                      flat_rate_min={boost.flat_rate_min}
+                      flat_rate_max={boost.flat_rate_max}
                       isEnded={isEnded}
                       slug={boost.slug}
                       created_at={boost.created_at}

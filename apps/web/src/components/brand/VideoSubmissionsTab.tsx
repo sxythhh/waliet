@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard, Settings, GripVertical, Columns, ExternalLink, MoreHorizontal, ArrowRight } from "lucide-react";
 import { Icon } from "@iconify/react";
-import { useDroppable } from "@dnd-kit/core";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { useDroppable, useDraggable, DragOverlay } from "@dnd-kit/core";
+import { DndContext, closestCenter, rectIntersection, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { createPortal } from "react-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -167,6 +168,7 @@ interface VideoSubmissionsTabProps {
   brandId?: string;
   monthlyRetainer?: number;
   videosPerMonth?: number;
+  boostPaymentModel?: 'retainer' | 'flat_rate' | null;
   userRole?: "owner" | "admin" | "poster" | "member";
   onSubmissionReviewed?: () => void;
 }
@@ -234,15 +236,19 @@ function KanbanDroppableColumn({
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({
-    id: column.id,
+    id: `kanban-column-${column.id}`,
+    data: {
+      type: "column",
+      columnId: column.id,
+    },
   });
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "flex-1 overflow-y-auto min-h-[300px] rounded-xl p-2 transition-colors duration-150",
-        isOver ? "bg-primary/8 ring-2 ring-primary/25" : "bg-muted/5"
+        "flex-1 overflow-y-auto min-h-[300px] rounded-xl p-2 transition-all duration-150",
+        isOver ? "bg-primary/10 ring-2 ring-primary/30" : "bg-muted/5"
       )}
     >
       {children}
@@ -274,24 +280,18 @@ function KanbanDraggableCard({
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
     isDragging,
-  } = useSortable({
+  } = useDraggable({
     id: video.id,
+    data: {
+      type: "card",
+      video,
+      profile,
+      columnId,
+    },
   });
 
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    // Use faster transition during drag for smoother feel
-    transition: isDragging ? 'none' : transition,
-    // GPU acceleration for smooth transforms
-    willChange: isDragging ? 'transform' : 'auto',
-    touchAction: 'none',
-  };
-
   const isPosted = columnId === "posted";
-  const isPending = columnId === "pending";
 
   // Format view count compactly
   const formatViews = (views: number | null | undefined) => {
@@ -304,7 +304,6 @@ function KanbanDraggableCard({
   // Helper to clean caption - removes garbage lines like "0", single chars, just numbers
   const cleanCaption = (text: string | null | undefined): string | null => {
     if (!text) return null;
-    // Split on any line break character (handles \n, \r\n, \r, and Unicode line separators)
     const lines = text.split(/[\r\n\u2028\u2029]+/).map(line => line.trim()).filter(line => {
       if (line.length < 2) return false;
       if (/^\d+$/.test(line)) return false;
@@ -312,7 +311,6 @@ function KanbanDraggableCard({
     });
     const cleaned = lines.join(' ').trim();
     if (cleaned.length < 3) return null;
-    // Final check: if result is just digits/whitespace, return null
     if (/^\d+$/.test(cleaned)) return null;
     return cleaned;
   };
@@ -328,12 +326,11 @@ function KanbanDraggableCard({
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      onClick={() => onOpenVideo(video)}
+      onClick={() => !isDragging && onOpenVideo(video)}
       className={cn(
         "group rounded-lg border border-border/40 bg-card hover:border-border/60 hover:shadow-sm transition-all cursor-pointer",
         updating === video.id && "opacity-50 pointer-events-none",
-        isDragging && "opacity-60 shadow-lg scale-[1.02] ring-2 ring-primary/30"
+        isDragging && "opacity-50 bg-muted/50 border-transparent"
       )}
     >
       <div className="p-3">
@@ -343,7 +340,7 @@ function KanbanDraggableCard({
             {...attributes}
             {...listeners}
             onClick={(e) => e.stopPropagation()}
-            className="p-0.5 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors touch-none"
+            className="p-1 -ml-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-muted/50 rounded transition-colors touch-none select-none"
           >
             <GripVertical className="w-3.5 h-3.5" />
           </div>
@@ -396,12 +393,57 @@ function KanbanDraggableCard({
   );
 }
 
+// Overlay card rendered during drag (static, no hooks)
+function KanbanDragOverlayCard({
+  video,
+  profile,
+}: {
+  video: UnifiedVideo;
+  profile: Profile | undefined;
+}) {
+  const cleanCaption = (text: string | null | undefined): string | null => {
+    if (!text) return null;
+    const lines = text.split(/[\r\n\u2028\u2029]+/).map(line => line.trim()).filter(line => {
+      if (line.length < 2) return false;
+      if (/^\d+$/.test(line)) return false;
+      return true;
+    });
+    const cleaned = lines.join(' ').trim();
+    if (cleaned.length < 3) return null;
+    if (/^\d+$/.test(cleaned)) return null;
+    return cleaned;
+  };
+
+  const getCaption = () => {
+    return cleanCaption(video.caption) || cleanCaption(video.video_title) || cleanCaption(video.submission_notes) || "Untitled video";
+  };
+
+  const creatorName = profile?.full_name || profile?.username || video.video_author_username || "Unknown";
+
+  return (
+    <div className="rounded-lg border-2 border-primary bg-card shadow-2xl w-[220px] cursor-grabbing rotate-2">
+      <div className="p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40" />
+          <span className="text-xs font-medium text-foreground/80 font-inter truncate">
+            {creatorName}
+          </span>
+        </div>
+        <p className="text-[13px] text-foreground font-inter leading-relaxed line-clamp-2 tracking-[-0.1px]">
+          {getCaption()}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function VideoSubmissionsTab({
   campaign,
   boostId,
   brandId: propBrandId,
   monthlyRetainer = 0,
   videosPerMonth = 1,
+  boostPaymentModel = 'retainer',
   userRole = "member",
   onSubmissionReviewed
 }: VideoSubmissionsTabProps) {
@@ -1451,6 +1493,11 @@ export function VideoSubmissionsTab({
   // Keyboard navigation for grid view
   const getFilteredVideos = useCallback(() => {
     let filteredVids = selectedCreator ? allVideos.filter(v => v.user_id === selectedCreator) : allVideos;
+    // For regular campaigns, exclude gdrive-only submissions (they don't apply here)
+    // For boosts, gdrive submissions ARE the primary content so we keep them
+    if (!isBoost) {
+      filteredVids = filteredVids.filter(v => !v.gdrive_url || (v.video_url && !v.video_url.includes('drive.google.com')));
+    }
     if (filterSource !== "all") {
       filteredVids = filteredVids.filter(v => v.source === filterSource);
     }
@@ -1493,7 +1540,7 @@ export function VideoSubmissionsTab({
       }
       return 0;
     });
-  }, [allVideos, selectedCreator, filterSource, filterStatus, filterMinViews, minimumViewsThreshold, selectedDateFilter, dateRange, sortBy, rpmRate]);
+  }, [allVideos, selectedCreator, filterSource, filterStatus, filterMinViews, minimumViewsThreshold, selectedDateFilter, dateRange, sortBy, rpmRate, isBoost]);
 
   // Handle keyboard navigation in grid view
   useEffect(() => {
@@ -1579,8 +1626,8 @@ export function VideoSubmissionsTab({
   }, [focusedVideoIndex, viewMode]);
 
   return <div className="h-full flex flex-col overflow-hidden">
-      {/* Zero Retainer Warning for Boosts */}
-      {isBoost && monthlyRetainer === 0 && (
+      {/* Zero Retainer Warning for Retainer-based Boosts */}
+      {isBoost && boostPaymentModel === 'retainer' && monthlyRetainer === 0 && (
         <div className="flex-shrink-0 px-4 pt-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1945,6 +1992,12 @@ export function VideoSubmissionsTab({
               {(() => {
               // Get filtered videos
               let filteredVids = selectedCreator ? allVideos.filter(v => v.user_id === selectedCreator) : allVideos;
+
+              // For regular campaigns, exclude gdrive-only submissions (they don't apply here)
+              // For boosts, gdrive submissions ARE the primary content so we keep them
+              if (!isBoost) {
+                filteredVids = filteredVids.filter(v => !v.gdrive_url || (v.video_url && !v.video_url.includes('drive.google.com')));
+              }
 
               // Apply source filter
               if (filterSource !== "all") {
@@ -2413,29 +2466,38 @@ export function VideoSubmissionsTab({
                   }
                 };
 
-                const handleKanbanDragStart = (event: any) => {
+                const handleKanbanDragStart = (event: DragStartEvent) => {
                   setActiveKanbanId(event.active.id as string);
+                  document.body.style.cursor = 'grabbing';
                 };
 
-                const handleKanbanDragEnd = (event: any) => {
+                const handleKanbanDragEnd = (event: DragEndEvent) => {
                   const { active, over } = event;
                   setActiveKanbanId(null);
+                  document.body.style.cursor = '';
 
                   if (!over) return;
 
+                  // Get column from droppable data
+                  const overData = over.data.current;
+                  if (!overData || overData.type !== "column") return;
+
+                  const targetColumn = overData.columnId as KanbanColumn;
                   const videoId = active.id as string;
-                  const targetColumn = over.id as KanbanColumn;
 
-                  // Find the current video
-                  const video = submissions.find(v => v.id === videoId);
-                  if (!video) return;
+                  // Get source column from draggable data
+                  const activeData = active.data.current;
+                  const currentColumn = activeData?.columnId as KanbanColumn;
 
-                  // Check if dropping in a different column
-                  const currentColumn = video.status as KanbanColumn;
+                  // Don't do anything if dropping in same column
                   if (currentColumn === targetColumn) return;
 
                   handleKanbanMoveToColumn(videoId, targetColumn);
                 };
+
+                // Get active video for overlay
+                const activeKanbanVideo = activeKanbanId ? filteredVids.find(v => v.id === activeKanbanId) : null;
+                const activeKanbanProfile = activeKanbanVideo?.user_id ? profiles[activeKanbanVideo.user_id] : undefined;
 
                 const handleOpenFeedback = (video: UnifiedVideo) => {
                   setFeedbackSubmission(video);
@@ -2451,7 +2513,7 @@ export function VideoSubmissionsTab({
                 return (
                   <DndContext
                     sensors={kanbanSensors}
-                    collisionDetection={closestCenter}
+                    collisionDetection={rectIntersection}
                     onDragStart={handleKanbanDragStart}
                     onDragEnd={handleKanbanDragEnd}
                   >
@@ -2473,35 +2535,52 @@ export function VideoSubmissionsTab({
 
                             {/* Column Content */}
                             <KanbanDroppableColumn column={column}>
-                              <SortableContext items={columnVideos.map(v => v.id)} strategy={verticalListSortingStrategy}>
-                                <div className="space-y-2">
-                                  {columnVideos.map(video => {
-                                    const profile = video.user_id ? profiles[video.user_id] : undefined;
-                                    return (
-                                      <KanbanDraggableCard
-                                        key={video.id}
-                                        video={video}
-                                        profile={profile}
-                                        columnId={column.id}
-                                        updating={kanbanUpdating}
-                                        onMoveToColumn={handleKanbanMoveToColumn}
-                                        onOpenFeedback={handleOpenFeedback}
-                                        onOpenVideo={handleOpenVideo}
-                                      />
-                                    );
-                                  })}
-                                  {columnVideos.length === 0 && (
-                                    <div className="flex items-center justify-center py-12 text-muted-foreground/40">
-                                      <p className="text-[13px] font-inter">No videos</p>
-                                    </div>
-                                  )}
-                                </div>
-                              </SortableContext>
+                              <div className="space-y-2">
+                                {columnVideos.map(video => {
+                                  const profile = video.user_id ? profiles[video.user_id] : undefined;
+                                  return (
+                                    <KanbanDraggableCard
+                                      key={video.id}
+                                      video={video}
+                                      profile={profile}
+                                      columnId={column.id}
+                                      updating={kanbanUpdating}
+                                      onMoveToColumn={handleKanbanMoveToColumn}
+                                      onOpenFeedback={handleOpenFeedback}
+                                      onOpenVideo={handleOpenVideo}
+                                    />
+                                  );
+                                })}
+                                {columnVideos.length === 0 && (
+                                  <div className="flex items-center justify-center py-12 text-muted-foreground/40">
+                                    <p className="text-[13px] font-inter">No videos</p>
+                                  </div>
+                                )}
+                              </div>
                             </KanbanDroppableColumn>
                           </div>
                         );
                       })}
                     </div>
+
+                    {/* Drag Overlay - rendered in portal above everything */}
+                    {createPortal(
+                      <DragOverlay
+                        dropAnimation={{
+                          duration: 200,
+                          easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+                        }}
+                        style={{ zIndex: 9999 }}
+                      >
+                        {activeKanbanVideo ? (
+                          <KanbanDragOverlayCard
+                            video={activeKanbanVideo}
+                            profile={activeKanbanProfile}
+                          />
+                        ) : null}
+                      </DragOverlay>,
+                      document.body
+                    )}
                   </DndContext>
                 );
               }

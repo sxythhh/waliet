@@ -6,6 +6,9 @@ const ALLOWED_ORIGINS = [
   // Vercel deployment URLs
   'https://virality-nexus.vercel.app',
   'https://virality-nexus-git-main.vercel.app',
+  // Whop iframe origins
+  'https://whop.com',
+  'https://www.whop.com',
   // Allow localhost for development
   'http://localhost:3000',
   'http://localhost:5173',
@@ -27,7 +30,7 @@ export function getCorsHeaders(req: Request): Record<string, string> {
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin || ALLOWED_ORIGINS[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-whop-user-token',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Max-Age': '86400',
   };
@@ -36,7 +39,7 @@ export function getCorsHeaders(req: Request): Record<string, string> {
 // Legacy export for compatibility - still validates origin dynamically
 export const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://virality.gg',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-whop-user-token',
 };
 
 // Handle CORS preflight request

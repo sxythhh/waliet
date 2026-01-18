@@ -88,6 +88,20 @@ export default function AuthCallback() {
             }
           }
 
+          // Check for stored redirect URL (e.g., from invite page) - check both storage types
+          const redirectUrl = sessionStorage.getItem('auth_redirect_url') || localStorage.getItem('auth_redirect_url');
+          if (redirectUrl) {
+            sessionStorage.removeItem('auth_redirect_url');
+            localStorage.removeItem('auth_redirect_url');
+            // If redirecting to a brand invite page, set flag for auto-accept
+            if (redirectUrl.includes('/join/') || redirectUrl.includes('/invite/')) {
+              sessionStorage.setItem('brand_invite_auto_accept', 'true');
+              localStorage.setItem('brand_invite_auto_accept', 'true');
+            }
+            navigate(redirectUrl, { replace: true });
+            return;
+          }
+
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -132,6 +146,20 @@ export default function AuthCallback() {
                 });
               }
             }
+          }
+
+          // Check for stored redirect URL (e.g., from invite page) - check both storage types
+          const redirectUrl2 = sessionStorage.getItem('auth_redirect_url') || localStorage.getItem('auth_redirect_url');
+          if (redirectUrl2) {
+            sessionStorage.removeItem('auth_redirect_url');
+            localStorage.removeItem('auth_redirect_url');
+            // If redirecting to a brand invite page, set flag for auto-accept
+            if (redirectUrl2.includes('/join/') || redirectUrl2.includes('/invite/')) {
+              sessionStorage.setItem('brand_invite_auto_accept', 'true');
+              localStorage.setItem('brand_invite_auto_accept', 'true');
+            }
+            navigate(redirectUrl2, { replace: true });
+            return;
           }
 
           navigate("/dashboard", { replace: true });

@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   Linking,
   ViewStyle,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
 import { Badge } from '../ui';
+import { platformConfig } from '../../hooks/useSocialAccounts';
 
 export type SocialPlatform = 'tiktok' | 'instagram' | 'youtube' | 'twitter' | 'discord';
 
@@ -29,14 +31,6 @@ export interface SocialAccountRowProps {
   style?: ViewStyle;
 }
 
-const platformConfig: Record<SocialPlatform, { icon: string; color: string; name: string }> = {
-  tiktok: { icon: 'music-note', color: '#000', name: 'TikTok' },
-  instagram: { icon: 'instagram', color: '#E1306C', name: 'Instagram' },
-  youtube: { icon: 'youtube', color: '#FF0000', name: 'YouTube' },
-  twitter: { icon: 'twitter', color: '#1DA1F2', name: 'X (Twitter)' },
-  discord: { icon: 'discord', color: '#5865F2', name: 'Discord' },
-};
-
 function formatFollowers(count: number): string {
   if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
   if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
@@ -49,7 +43,7 @@ export function SocialAccountRow({
   onDisconnect,
   style,
 }: SocialAccountRowProps) {
-  const config = platformConfig[account.platform];
+  const config = platformConfig[account.platform as keyof typeof platformConfig];
 
   const handlePress = () => {
     if (account.connected && account.profile_url) {
@@ -66,14 +60,22 @@ export function SocialAccountRow({
       activeOpacity={0.7}
     >
       {/* Platform Icon */}
-      <View style={[styles.iconContainer, { backgroundColor: config.color }]}>
-        <Icon name={config.icon} size={20} color="#fff" />
+      <View style={[styles.iconContainer, { backgroundColor: config?.bg || '#666' }]}>
+        {config ? (
+          <Image
+            source={config.logoWhite}
+            style={styles.platformLogoImage}
+            resizeMode="contain"
+          />
+        ) : (
+          <Icon name="web" size={20} color="#fff" />
+        )}
       </View>
 
       {/* Info */}
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={styles.platformName}>{config.name}</Text>
+          <Text style={styles.platformName}>{config?.name || account.platform}</Text>
           {account.verified && (
             <Icon name="check-decagram" size={14} color={colors.primary} />
           )}
@@ -156,6 +158,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  platformLogoImage: {
+    width: 22,
+    height: 22,
   },
   info: {
     flex: 1,

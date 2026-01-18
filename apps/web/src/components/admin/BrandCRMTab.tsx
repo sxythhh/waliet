@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AdminConfirmDialog } from "@/components/admin/design-system/AdminDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -61,6 +62,7 @@ export function BrandCRMTab({ brandId, brandName }: BrandCRMTabProps) {
   const [opportunityDialogOpen, setOpportunityDialogOpen] = useState(false);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<CloseOpportunity | null>(null);
+  const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
 
   // Queries
   const { data: closeBrand, isLoading: brandLoading } = useCloseBrand(brandId);
@@ -88,9 +90,13 @@ export function BrandCRMTab({ brandId, brandName }: BrandCRMTabProps) {
   };
 
   const handleUnlink = () => {
-    if (confirm("Are you sure you want to unlink this brand from Close CRM? This won't delete the lead in Close.")) {
-      unlinkFromClose.mutate(brandId);
-    }
+    setUnlinkConfirmOpen(true);
+  };
+
+  const executeUnlink = () => {
+    unlinkFromClose.mutate(brandId, {
+      onSuccess: () => setUnlinkConfirmOpen(false),
+    });
   };
 
   const handleStatusChange = (statusId: string) => {
@@ -480,6 +486,17 @@ export function BrandCRMTab({ brandId, brandName }: BrandCRMTabProps) {
         onOpenChange={setActivityDialogOpen}
         brandId={brandId}
         brandName={brandName}
+      />
+
+      <AdminConfirmDialog
+        open={unlinkConfirmOpen}
+        onOpenChange={setUnlinkConfirmOpen}
+        title="Unlink from Close CRM"
+        description="Are you sure you want to unlink this brand from Close CRM? This won't delete the lead in Close."
+        confirmLabel="Unlink"
+        onConfirm={executeUnlink}
+        variant="destructive"
+        loading={unlinkFromClose.isPending}
       />
     </div>
   );

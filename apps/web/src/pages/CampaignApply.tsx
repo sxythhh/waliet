@@ -146,6 +146,9 @@ interface BountyCampaign {
   content_type: string | null;
   categories: string[] | null;
   skills: string[] | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -664,7 +667,7 @@ export default function CampaignApply() {
 
   // Handle boost with embed URL
   if (isBoost && boostCampaign?.blueprint_embed_url) {
-    const isFull = boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators;
+    const isFull = boostCampaign.max_accepted_creators > 0 && boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators;
     const availableSpots = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
     const handleApplyClick = () => {
       if (!user) {
@@ -732,22 +735,41 @@ export default function CampaignApply() {
     description?: string;
   }[] = [];
   if (isBoost && boostCampaign) {
-    stats.push({
-      label: "Monthly Pay",
-      value: `$${boostCampaign.monthly_retainer.toLocaleString()}`,
-      description: "Guaranteed monthly"
-    });
-    stats.push({
-      label: "Videos",
-      value: `${boostCampaign.videos_per_month}/mo`,
-      description: "Content required"
-    });
-    const spotsLeft = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
+    const isFlatRate = boostCampaign.payment_model === 'flat_rate';
+
+    if (isFlatRate) {
+      stats.push({
+        label: "Per Post",
+        value: `$${boostCampaign.flat_rate_min?.toLocaleString() || 0} - $${boostCampaign.flat_rate_max?.toLocaleString() || 0}`,
+        description: "Negotiable rate"
+      });
+    } else {
+      stats.push({
+        label: "Monthly Pay",
+        value: `$${boostCampaign.monthly_retainer.toLocaleString()}`,
+        description: "Guaranteed monthly"
+      });
+    }
+
+    if (boostCampaign.videos_per_month > 0) {
+      stats.push({
+        label: "Videos",
+        value: `${boostCampaign.videos_per_month}/mo`,
+        description: "Content required"
+      });
+    }
+
+    const hasMaxCreators = boostCampaign.max_accepted_creators > 0;
+    const spotsLeft = hasMaxCreators
+      ? boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count
+      : -1; // -1 indicates unlimited
+
     stats.push({
       label: "Spots Left",
-      value: `${spotsLeft}`,
-      description: spotsLeft <= 3 ? "Almost full!" : `of ${boostCampaign.max_accepted_creators} spots`
+      value: spotsLeft < 0 ? "Unlimited" : `${spotsLeft}`,
+      description: spotsLeft < 0 ? "Open enrollment" : (spotsLeft <= 3 ? "Almost full!" : `of ${boostCampaign.max_accepted_creators} spots`)
     });
+
     if (boostCampaign.end_date) {
       stats.push({
         label: "Deadline",
@@ -872,7 +894,7 @@ export default function CampaignApply() {
     }
   };
   const questions = parseApplicationQuestions(campaign?.application_questions);
-  const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
+  const isFull = isBoost && boostCampaign ? (boostCampaign.max_accepted_creators > 0 && boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators) : false;
   const isEnded = status === "ended";
   return <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
       <SEOHead

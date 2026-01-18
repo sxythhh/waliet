@@ -23,6 +23,7 @@ import { BrandOnboardingSteps } from "@/components/brand/BrandOnboardingSteps";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
 interface Campaign {
   id: string;
@@ -76,6 +77,7 @@ export function BrandCampaignsTab({
 }: BrandCampaignsTabProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isDemoMode, demoCampaigns, demoBoosts } = useDemoData();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [campaignMembers, setCampaignMembers] = useState<Record<string, CampaignMember[]>>({});
@@ -125,10 +127,21 @@ export function BrandCampaignsTab({
   };
   useEffect(() => {
     fetchBrandData();
-  }, [brandId]);
+  }, [brandId, isDemoMode]);
   const fetchBrandData = async () => {
     if (!brandId) return;
     setLoading(true);
+
+    // In demo mode, use mock data instead of fetching
+    if (isDemoMode) {
+      setCampaigns(demoCampaigns as Campaign[]);
+      setBounties(demoBoosts as BountyCampaign[]);
+      setSubscriptionStatus("active");
+      setSubscriptionPlan("pro");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Fetch brand info for logo, color and subscription status
       const {
@@ -160,7 +173,6 @@ export function BrandCampaignsTab({
         ascending: false
       });
       if (bountiesError) throw bountiesError;
-      console.log("Fetched bounties:", bountiesData);
 
       // Fetch actual payouts from submission_payout_items
       const campaignIds = (campaignsData || []).map(c => c.id);
@@ -461,23 +473,18 @@ export function BrandCampaignsTab({
       <div className="space-y-6 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-300">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between gap-4">
-          <div className="h-7 w-56 bg-muted/30 rounded-lg animate-pulse" />
+          <div className="h-7 w-40 bg-muted/30 rounded-lg animate-pulse" />
           <div className="flex items-center gap-3 flex-1 justify-end">
-            <div className="h-10 w-full max-w-md bg-muted/30 rounded-lg animate-pulse" />
-            <div className="h-10 w-40 bg-muted/30 rounded-lg animate-pulse shrink-0" />
+            <div className="h-9 w-full max-w-md bg-muted/30 rounded-lg animate-pulse" />
+            <div className="h-8 w-36 bg-muted/30 rounded-lg animate-pulse shrink-0" />
           </div>
-        </div>
-
-        {/* Tabs Skeleton */}
-        <div className="flex gap-0 border-b border-border">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-10 w-16 bg-muted/30 animate-pulse" />)}
         </div>
 
         {/* Campaign Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="rounded-xl overflow-hidden bg-card border border-border/50">
-              <div className="aspect-[16/9] bg-muted/30 animate-pulse" />
+              <div className="h-28 bg-muted/30 animate-pulse" />
               <div className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="h-5 w-32 bg-muted/30 rounded animate-pulse" />
@@ -523,13 +530,16 @@ export function BrandCampaignsTab({
           {/* Header */}
           <div className="flex flex-row items-center justify-between gap-4">
             <h1 className="text-xl font-semibold font-inter tracking-[-0.5px] text-foreground whitespace-nowrap">
-              Your Content Campaigns
+              Your Campaigns
             </h1>
-            <div className="flex items-center gap-3 flex-1 justify-end">
-              <div className="flex-1 max-w-md">
-                <GlobalBrandSearch brandId={brandId} />
-              </div>
-              <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary py-2 px-4 hover:bg-primary/90 shrink-0">
+            <div className="flex items-center gap-2">
+              <GlobalBrandSearch brandId={brandId} />
+              <Button
+                data-tour-target="create-campaign-btn"
+                onClick={() => setCampaignTypeDialogOpen(true)}
+                size="sm"
+                className="gap-2 h-8 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary px-3 hover:bg-primary/90 shrink-0"
+              >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Create Campaign</span>
                 <span className="sm:hidden">Create</span>
@@ -579,7 +589,7 @@ export function BrandCampaignsTab({
               </div>
 
               {/* Campaign grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div data-tour-target="campaigns-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Combined and sorted list */}
                 {[...campaigns.filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
             ...c,
@@ -587,7 +597,7 @@ export function BrandCampaignsTab({
           })), ...bounties.filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
             ...b,
             type: "boost" as const
-          }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(item => {
+          }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((item, index) => {
             if (item.type === "campaign") {
               const campaign = item as Campaign & {
                 type: "campaign";
@@ -604,6 +614,7 @@ export function BrandCampaignsTab({
                 status={campaign.status}
                 slug={campaign.slug}
                 members={campaignMembers[campaign.id] || []}
+                dataTourTarget={index === 0 ? "campaign-card" : undefined}
                 onClick={() => handleCampaignClick(campaign)}
                 onEdit={() => {
                   setWizardMode('edit');
@@ -625,6 +636,7 @@ export function BrandCampaignsTab({
                   setShareData({ id: campaign.id, type: 'campaign', title: campaign.title, slug: campaign.slug, bannerUrl: campaign.banner_url });
                   setShareDialogOpen(true);
                 }}
+                onPreview={campaign.slug ? () => window.open(`/campaign/${campaign.slug}`, '_blank') : undefined}
               />;
             } else {
               const bounty = item as BountyCampaign & {
@@ -642,6 +654,7 @@ export function BrandCampaignsTab({
                 status={bounty.status}
                 slug={bounty.slug || undefined}
                 members={bountyMembers[bounty.id] || []}
+                dataTourTarget={index === 0 ? "campaign-card" : undefined}
                 onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)}
                 onEdit={() => {
                   setWizardMode('edit');
@@ -664,6 +677,7 @@ export function BrandCampaignsTab({
                   setShareData({ id: bounty.id, type: 'boost', title: bounty.title, slug: bounty.slug!, bannerUrl: bounty.banner_url });
                   setShareDialogOpen(true);
                 } : undefined}
+                onPreview={bounty.slug ? () => window.open(`/campaign/${bounty.slug}`, '_blank') : undefined}
               />;
             }
           })}

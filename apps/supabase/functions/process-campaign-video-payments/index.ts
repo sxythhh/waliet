@@ -187,11 +187,11 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Update campaign budget_used
-        await supabase
-          .from('campaigns')
-          .update({ budget_used: (campaign.budget_used || 0) + amountToPay })
-          .eq('id', campaign.id);
+        // Update campaign budget_used atomically to prevent race conditions
+        await supabase.rpc('increment_campaign_budget_used', {
+          p_campaign_id: campaign.id,
+          p_amount: amountToPay,
+        });
 
         totalPaymentsMade++;
         totalAmountPaid += amountToPay;

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, TrendingUp, Award } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,6 +99,82 @@ export function LeaderboardTab() {
 
 
   const topThree = leaderboard.slice(0, 3);
+
+  // Skeleton loading state
+  if (loading) {
+    return (
+      <div className="space-y-8 max-w-5xl mx-auto">
+        {/* Podium Skeleton */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {/* 2nd Place Skeleton */}
+          <Card className="bg-gradient-card border-0 mt-8">
+            <CardHeader className="text-center pb-2">
+              <Skeleton className="h-12 w-12 rounded-full mx-auto mb-2" />
+              <Skeleton className="h-6 w-8 mx-auto mb-1" />
+              <Skeleton className="h-4 w-20 mx-auto" />
+            </CardHeader>
+            <CardContent className="text-center">
+              <Skeleton className="h-8 w-24 mx-auto mb-1" />
+              <Skeleton className="h-3 w-16 mx-auto" />
+            </CardContent>
+          </Card>
+
+          {/* 1st Place Skeleton */}
+          <Card className="bg-gradient-card border-0">
+            <CardHeader className="text-center pb-2">
+              <Skeleton className="h-16 w-16 rounded-full mx-auto mb-2" />
+              <Skeleton className="h-7 w-8 mx-auto mb-1" />
+              <Skeleton className="h-4 w-24 mx-auto" />
+            </CardHeader>
+            <CardContent className="text-center">
+              <Skeleton className="h-10 w-32 mx-auto mb-1" />
+              <Skeleton className="h-3 w-20 mx-auto" />
+            </CardContent>
+          </Card>
+
+          {/* 3rd Place Skeleton */}
+          <Card className="bg-gradient-card border-0 mt-8">
+            <CardHeader className="text-center pb-2">
+              <Skeleton className="h-12 w-12 rounded-full mx-auto mb-2" />
+              <Skeleton className="h-6 w-8 mx-auto mb-1" />
+              <Skeleton className="h-4 w-20 mx-auto" />
+            </CardHeader>
+            <CardContent className="text-center">
+              <Skeleton className="h-8 w-24 mx-auto mb-1" />
+              <Skeleton className="h-3 w-16 mx-auto" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Rankings Skeleton */}
+        <Card className="bg-gradient-card border-0">
+          <CardHeader>
+            <Skeleton className="h-6 w-24 mb-1" />
+            <Skeleton className="h-4 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-8 w-12" />
+                    <div>
+                      <Skeleton className="h-4 w-24 mb-1" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Skeleton className="h-6 w-20 mb-1" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">

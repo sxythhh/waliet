@@ -12,6 +12,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useUtmTracking } from "@/hooks/useUtmTracking";
+import { useOAuthRedirect } from "@/hooks/useOAuthRedirect";
 import { queryClient } from "@/lib/queryClient";
 import { PageLoader, DashboardLoader } from "@/components/PageLoader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -75,6 +76,12 @@ const PublicCampaignPage = lazy(() => import("./pages/PublicCampaignPage"));
 // Component to track UTM params on app load
 function UtmTracker() {
   useUtmTracking();
+  return null;
+}
+
+// Component to handle OAuth redirects when Supabase redirects to root
+function OAuthRedirectHandler() {
+  useOAuthRedirect();
   return null;
 }
 
@@ -188,6 +195,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <UtmTracker />
+              <OAuthRedirectHandler />
               <SubdomainHandler>
               <Suspense fallback={<PageLoader />}>
                 <Routes>

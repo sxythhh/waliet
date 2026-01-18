@@ -7,6 +7,9 @@ const monorepoRoot = path.resolve(projectRoot, '../..');
 
 const defaultConfig = getDefaultConfig(__dirname);
 
+// SVG transformer setup - get resolver from default config
+const { assetExts, sourceExts } = defaultConfig.resolver;
+
 // Force single React 19 version from mobile's local node_modules
 const reactPath = path.resolve(projectRoot, 'node_modules/react');
 const reactDomPath = path.resolve(projectRoot, 'node_modules/react-dom');
@@ -22,6 +25,9 @@ const config = {
   watchFolders: [monorepoRoot],
 
   resolver: {
+    // Add svg to source extensions so they can be transformed as components
+    assetExts: assetExts.filter(ext => ext !== 'svg'),
+    sourceExts: [...sourceExts, 'svg'],
     // Prioritize mobile app's node_modules first
     nodeModulesPaths: [
       path.resolve(projectRoot, 'node_modules'),
@@ -55,6 +61,7 @@ const config = {
   // Ensure TypeScript files are processed from workspace packages
   transformer: {
     ...defaultConfig.transformer,
+    babelTransformerPath: require.resolve('react-native-svg-transformer'),
     getTransformOptions: async () => ({
       transform: {
         experimentalImportSupport: false,

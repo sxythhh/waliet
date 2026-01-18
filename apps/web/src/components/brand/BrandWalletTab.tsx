@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BrandToPersonalTransferDialog } from "./BrandToPersonalTransferDialog";
 import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
 
 // New wallet components
 import {
@@ -53,12 +54,17 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const [cryptoAddress, setCryptoAddress] = useState("");
   const itemsPerPage = 10;
   const { isAdmin } = useAdminCheck();
+  const { isDemoMode, demoWallet, demoTransactions, demoBrand } = useDemoData();
 
   // Deposit flow state machine
   const depositFlow = useDepositFlow();
 
   // Fetch brand name
   useEffect(() => {
+    if (isDemoMode) {
+      setBrandName(demoBrand?.name || "Demo Brand");
+      return;
+    }
     const fetchBrandName = async () => {
       const { data } = await supabase
         .from("brands")
@@ -68,10 +74,14 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       if (data) setBrandName(data.name);
     };
     fetchBrandName();
-  }, [brandId]);
+  }, [brandId, isDemoMode, demoBrand]);
 
   // Fetch personal wallet balance for transfers
   useEffect(() => {
+    if (isDemoMode) {
+      setPersonalBalance(5000); // Demo personal balance
+      return;
+    }
     const fetchPersonalBalance = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -85,20 +95,38 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       if (data) setPersonalBalance(data.balance);
     };
     fetchPersonalBalance();
-  }, []);
+  }, [isDemoMode]);
 
   const fetchWalletData = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session?.access_token) return;
 
       const { data, error } = await supabase.functions.invoke("get-brand-balance", {
         body: { brand_id: brandId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a 401/403 auth error - don't show toast for these
+        // FunctionsHttpError has context as a Response object
+        const status = (error as any)?.context?.status;
+        if (status === 401 || status === 403) {
+          // Silently ignore auth errors - user may not have access to this brand's wallet
+          return;
+        }
+        throw error;
+      }
       setWalletData(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Also check for auth errors in catch block (FunctionsHttpError structure)
+      const status = error?.context?.status;
+      if (status === 401 || status === 403) {
+        // Silently ignore auth errors
+        return;
+      }
       console.error("Error fetching wallet data:", error);
       toast.error("Failed to load wallet data");
     }
@@ -175,13 +203,35 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
 
   // Initial data load
   useEffect(() => {
+    // In demo mode, use mock data instead of fetching
+    if (isDemoMode) {
+      setWalletData(demoWallet);
+      // Convert demo transactions to WalletTransaction format
+      const mockTransactions: WalletTransaction[] = demoTransactions.map(t => ({
+        id: t.id,
+        brand_id: brandId,
+        type: t.type as WalletTransaction['type'],
+        amount: t.amount,
+        description: t.description,
+        status: t.status as WalletTransaction['status'],
+        created_at: t.created_at,
+        updated_at: t.created_at,
+        metadata: null,
+        stripe_payment_intent_id: null,
+        stripe_session_id: null,
+        reference_id: null,
+      }));
+      setTransactions(mockTransactions);
+      setLoading(false);
+      return;
+    }
     const loadData = async () => {
       setLoading(true);
       await Promise.all([fetchWalletData(), fetchTransactions()]);
       setLoading(false);
     };
     loadData();
-  }, [brandId]);
+  }, [brandId, isDemoMode, demoWallet, demoTransactions]);
 
   // Real-time subscription for deposit confirmations
   useEffect(() => {
@@ -287,8 +337,6 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
         },
       });
 
-      console.log("generate-deposit-address response:", { data, error });
-
       if (error) {
         // Try to get more details from the error
         const errorContext = (error as any).context;
@@ -332,12 +380,41 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const handleCardDeposit = async () => {
     depositFlow.setLoading(true);
     try {
+      // Get current session to ensure auth token is fresh
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Please sign in to continue");
+        depositFlow.setLoading(false);
+        return;
+      }
+
       const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
       const { data, error } = await supabase.functions.invoke("create-brand-wallet-topup", {
         body: { brand_id: brandId, amount: depositFlow.amount, return_url: returnUrl },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try to get more details from the error
+        const errorContext = (error as any).context;
+        let errorMessage = "Failed to create deposit";
+
+        if (errorContext) {
+          try {
+            const errorBody = await errorContext.json();
+            console.error("Card deposit error details:", errorBody);
+            errorMessage = errorBody.error || errorMessage;
+          } catch {
+            console.error("Card deposit error:", error);
+          }
+        }
+
+        toast.error(errorMessage);
+        depositFlow.setLoading(false);
+        return;
+      }
 
       if (data?.checkout_url) {
         localStorage.setItem(
@@ -413,25 +490,35 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
         if (depositFlow.method === "wire") {
           return (
             <WireTransferStep
-              accountName="Virality Inc."
-              accountNumber="123456789"
-              routingNumber="021000021"
-              bankName="Chase Bank"
+              accountName="Virality Media"
+              accountNumber="977987573726370"
+              routingNumber="121145307"
+              bankName="Column N.A., Member FDIC"
+              bankAddress="1110 Gorgas Avenue, Suite A4-700, San Francisco, CA 94129, US"
               reference={brandId.slice(0, 8).toUpperCase()}
-              onDone={depositFlow.reset}
             />
           );
         }
         return null;
 
       case "amount":
+        // For personal transfers, skip confirm step and transfer directly
+        const handleAmountContinue = () => {
+          if (depositFlow.method === "personal") {
+            handlePersonalTransfer();
+          } else {
+            depositFlow.nextStep();
+          }
+        };
         return (
           <DepositAmountStep
             method={depositFlow.method!}
             amount={depositFlow.amount}
             onAmountChange={depositFlow.setAmount}
-            onContinue={depositFlow.nextStep}
             personalBalance={personalBalance}
+            onContinue={handleAmountContinue}
+            actionLabel={depositFlow.method === "personal" ? "Transfer" : "Continue"}
+            isLoading={depositFlow.isLoading}
           />
         );
 
@@ -474,7 +561,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   return (
     <div className="space-y-6">
       {/* Balance Card */}
-      <div className="space-y-1">
+      <div data-tour-target="wallet-balance" className="space-y-1">
         <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
           Virality Balance
         </p>
@@ -490,7 +577,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
               <span className="text-muted-foreground/30">·</span>
               <button
                 onClick={() => setBrandToPersonalOpen(true)}
-                className="text-sm text-primary hover:text-primary/80 font-inter tracking-[-0.3px] transition-colors"
+                className="text-sm text-primary hover:text-primary/80 hover:underline font-inter tracking-[-0.3px] transition-colors"
               >
                 Withdraw to personal
               </button>
@@ -500,16 +587,18 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       </div>
 
       {/* Payment Methods Grid */}
-      <PaymentMethodsGrid
-        onSelectMethod={handleSelectMethod}
-        personalBalance={personalBalance}
-      />
+      <div data-tour-target="payment-methods">
+        <PaymentMethodsGrid
+          onSelectMethod={handleSelectMethod}
+          personalBalance={personalBalance}
+        />
+      </div>
 
       {/* Pending Deposits */}
       <PendingDepositsSection deposits={pendingDeposits} />
 
       {/* Transaction History */}
-      <Card className="border-border/50 bg-card">
+      <Card data-tour-target="transaction-history" className="border-border/50 bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold font-inter tracking-[-0.5px]">
             Transaction History
@@ -580,6 +669,14 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
         state={depositFlow}
         isOpen={depositFlow.isOpen}
         onClose={depositFlow.reset}
+        actionLabel={
+          depositFlow.step === "address" && depositFlow.method === "wire" ? "Done" :
+          undefined
+        }
+        onAction={
+          depositFlow.step === "address" && depositFlow.method === "wire" ? depositFlow.reset :
+          undefined
+        }
       >
         {renderDrawerContent()}
       </DepositDrawer>

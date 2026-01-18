@@ -487,11 +487,7 @@ function PublicCampaignContent({
       }
 
       // Process blueprint and fetch training modules
-      console.log('Blueprint fetch result:', blueprintResult);
-      console.log('Campaign brand_id:', campaign?.brand_id);
-      console.log('Campaign blueprint_id:', campaign?.blueprint_id);
       if (blueprintResult.data) {
-        console.log('Setting blueprint content:', blueprintResult.data.content?.substring(0, 100));
         setBlueprintContent(blueprintResult.data.content || null);
         if (blueprintResult.data.assets && Array.isArray(blueprintResult.data.assets) && blueprintResult.data.assets.length > 0) {
           const mappedAssets = blueprintResult.data.assets.map((asset: any) => ({
@@ -1582,7 +1578,6 @@ export default function PublicCampaignPage() {
 
   useEffect(() => {
     const checkMembership = async () => {
-      console.log('[PublicCampaignPage] checkMembership started, id:', id);
       if (!id) {
         navigate('/');
         return;
@@ -1590,11 +1585,9 @@ export default function PublicCampaignPage() {
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        console.log('[PublicCampaignPage] User:', user?.id || 'not logged in');
 
         // Check if id looks like a UUID
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-        console.log('[PublicCampaignPage] isUUID:', isUUID);
 
         // First try to find in campaigns table
         let campaignData = null;
@@ -1644,36 +1637,31 @@ export default function PublicCampaignPage() {
         }
 
         // If not found in campaigns, try bounty_campaigns (boosts)
-        console.log('[PublicCampaignPage] Campaign not found, checking bounty_campaigns');
         let boostData = null;
         if (isUUID) {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from("bounty_campaigns")
             .select("id, slug")
             .eq("id", id)
             .maybeSingle();
-          console.log('[PublicCampaignPage] Boost query by UUID:', { data, error });
           boostData = data;
         }
         if (!boostData) {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from("bounty_campaigns")
             .select("id, slug")
             .eq("slug", id)
             .maybeSingle();
-          console.log('[PublicCampaignPage] Boost query by slug:', { data, error });
           boostData = data;
         }
 
         if (boostData) {
-          console.log('[PublicCampaignPage] Boost found:', boostData.id);
           setSourceType('boost');
           setSourceId(boostData.id);
           setSourceSlug(boostData.slug || id);
 
           if (!user) {
             // Not logged in, allow viewing but not as member
-            console.log('[PublicCampaignPage] No user, allowing non-member view');
             setIsMember(false);
             setLoading(false);
             return;
@@ -1696,8 +1684,6 @@ export default function PublicCampaignPage() {
         }
 
         // Not found in either table, redirect to join page with the slug
-        console.warn('Campaign/boost not found:', id);
-        console.log('Checked campaigns and bounty_campaigns tables');
         navigate(`/join/${id}`, { replace: true });
       } catch (error) {
         console.error('Error checking membership:', error);

@@ -274,15 +274,15 @@ Deno.serve(async (req) => {
     const balanceBefore = parseFloat(wallet.balance.toString());
     const balanceAfter = balanceBefore + amount;
     const newTotalEarned = parseFloat(wallet.total_earned.toString()) + amount;
-    const newBudgetUsed = parseFloat(campaign.budget_used?.toString() || '0') + amount;
+    const budgetBefore = parseFloat(campaign.budget_used?.toString() || '0');
 
-    // Create metadata object
+    // Create metadata object (budget_after will be updated after atomic increment)
     const metadata: any = {
       campaign_id,
       balance_before: balanceBefore,
       balance_after: balanceAfter,
-      campaign_budget_before: parseFloat(campaign.budget_used?.toString() || '0'),
-      campaign_budget_after: newBudgetUsed,
+      campaign_budget_before: budgetBefore,
+      campaign_budget_after: null, // Will be set after atomic increment
       campaign_total_budget: parseFloat(campaign.budget.toString()),
       signed_request: !!signature, // Track if request was signed
     };
@@ -328,17 +328,24 @@ Deno.serve(async (req) => {
       throw new Error('Failed to update wallet');
     }
 
-    // Update campaign budget used
-    const { error: campaignUpdateError } = await supabase
-      .from('campaigns')
-      .update({
-        budget_used: newBudgetUsed,
-      })
-      .eq('id', campaign_id);
+    // Update campaign budget used atomically to prevent race conditions
+    const { data: newBudgetUsed, error: campaignUpdateError } = await supabase
+      .rpc('increment_campaign_budget_used', {
+        p_campaign_id: campaign_id,
+        p_amount: amount,
+      });
 
     if (campaignUpdateError) {
-      console.error('Campaign update error:', campaignUpdateError);
-      // Don't fail the transaction for this
+      console.error('Campaign budget update error:', campaignUpdateError);
+      // Don't fail the transaction for this, but log it
+    } else {
+      // Update the transaction metadata with the actual new budget value
+      await supabase
+        .from('wallet_transactions')
+        .update({
+          metadata: { ...metadata, campaign_budget_after: newBudgetUsed },
+        })
+        .eq('id', transaction.id);
     }
 
     // Enhanced audit logging

@@ -93,7 +93,7 @@ export function CreatorTiersOverview({
 
       // Fetch creator assignments with profiles
       const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from("boost_tier_assignments")
+        .from("creator_tier_assignments")
         .select(`
           *,
           profiles:user_id (
@@ -162,7 +162,7 @@ export function CreatorTiersOverview({
 
       // Update assignment
       const { error: updateError } = await supabase
-        .from("boost_tier_assignments")
+        .from("creator_tier_assignments")
         .update({
           tier_id: changeTierDialog.newTierId,
           previous_tier_id: oldTierId,

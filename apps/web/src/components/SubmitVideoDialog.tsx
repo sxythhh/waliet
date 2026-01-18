@@ -381,8 +381,6 @@ export function SubmitVideoDialog({
           }).then(result => {
             if (result.error) {
               console.error('Bot analysis error:', result.error);
-            } else {
-              console.log('Bot analysis triggered:', result.data);
             }
           }).catch(err => {
             console.error('Failed to trigger bot analysis:', err);

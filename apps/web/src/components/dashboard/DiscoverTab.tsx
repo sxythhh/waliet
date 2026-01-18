@@ -81,6 +81,9 @@ interface BountyCampaign {
   slug?: string | null;
   tags?: string[] | null;
   content_distribution?: string | null;
+  payment_model?: 'retainer' | 'flat_rate' | null;
+  flat_rate_min?: number | null;
+  flat_rate_max?: number | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -158,7 +161,9 @@ export function DiscoverTab({
   const [bookmarkedBountyIds, setBookmarkedBountyIds] = useState<string[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const [joinedCampaignIds, setJoinedCampaignIds] = useState<string[]>([]);
+  const [appliedCampaignIds, setAppliedCampaignIds] = useState<string[]>([]);
   const [joinedBoostIds, setJoinedBoostIds] = useState<string[]>([]);
+  const [appliedBoostIds, setAppliedBoostIds] = useState<string[]>([]);
   const [internalSearchOverlayOpen, setInternalSearchOverlayOpen] = useState(false);
 
   // Use external state if provided, otherwise use internal state
@@ -356,13 +361,20 @@ export function DiscoverTab({
 
     // Fetch joined campaigns and boosts for the user
     if (currentUser) {
-      const [campaignSubmissions, boostParticipants] = await Promise.all([
-        supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", currentUser.id),
-        supabase.from("boost_participants").select("boost_id").eq("user_id", currentUser.id)
+      const [campaignSubmissions, boostParticipants, boostApplications] = await Promise.all([
+        supabase.from("campaign_submissions").select("campaign_id, status").eq("creator_id", currentUser.id).neq("status", "withdrawn"),
+        supabase.from("boost_participants").select("boost_id").eq("user_id", currentUser.id),
+        supabase.from("bounty_applications").select("bounty_campaign_id").eq("user_id", currentUser.id)
       ]);
 
-      setJoinedCampaignIds(campaignSubmissions.data?.map(s => s.campaign_id) || []);
+      // Separate approved (joined) from pending (applied) campaign submissions
+      const approvedCampaigns = campaignSubmissions.data?.filter(s => s.status === 'approved').map(s => s.campaign_id) || [];
+      const pendingCampaigns = campaignSubmissions.data?.filter(s => s.status === 'pending').map(s => s.campaign_id) || [];
+
+      setJoinedCampaignIds(approvedCampaigns);
+      setAppliedCampaignIds(pendingCampaigns);
       setJoinedBoostIds(boostParticipants.data?.map(p => p.boost_id) || []);
+      setAppliedBoostIds(boostApplications.data?.map(a => a.bounty_campaign_id) || []);
     }
 
     // Fetch campaigns (show all, including ones user has joined)
@@ -660,6 +672,7 @@ export function DiscoverTab({
                       const isEnded = bounty.status === "ended";
                       const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
                       const isJoinedBoost = joinedBoostIds.includes(bounty.id);
+                      const hasApplied = appliedBoostIds.includes(bounty.id);
                       return (
                         <BoostDiscoverCard
                           key={bounty.id}
@@ -674,8 +687,12 @@ export function DiscoverTab({
                           videos_per_month={bounty.videos_per_month}
                           max_accepted_creators={bounty.max_accepted_creators}
                           accepted_creators_count={bounty.accepted_creators_count}
+                          payment_model={bounty.payment_model}
+                          flat_rate_min={bounty.flat_rate_min}
+                          flat_rate_max={bounty.flat_rate_max}
                           isEnded={isEnded}
                           isBookmarked={isBookmarked}
+                          hasApplied={hasApplied}
                           slug={bounty.slug}
                           created_at={bounty.created_at}
                           tags={bounty.tags}
@@ -684,6 +701,14 @@ export function DiscoverTab({
                             // If already joined, navigate to boost details
                             if (isJoinedBoost) {
                               navigate(`/dashboard/boost/${bounty.id}`);
+                              return;
+                            }
+                            // If already applied, show toast and don't open sheet
+                            if (hasApplied) {
+                              toast({
+                                title: "Already applied",
+                                description: "You've already applied to this boost. Check your campaigns tab for status.",
+                              });
                               return;
                             }
                             if (!isEnded) {
@@ -744,18 +769,20 @@ export function DiscoverTab({
                 >
                   {sortedCampaigns.map(campaign => {
                     const isJoined = joinedCampaignIds.includes(campaign.id);
+                    const isApplied = appliedCampaignIds.includes(campaign.id);
                     const handleCampaignClick = () => {
                       // If already joined, navigate to campaign details
                       if (isJoined) {
                         navigate(`/dashboard/campaign/${campaign.id}`);
                         return;
                       }
-                      if (navigateOnClick) {
-                        navigate(`/join/${campaign.slug}`);
-                      } else {
-                        setSelectedCampaign(campaign);
-                        setSheetOpen(true);
+                      // If already applied, show toast
+                      if (isApplied) {
+                        toast.info("You've already applied to this campaign. Check your campaigns tab for status.");
+                        return;
                       }
+                      // Always navigate to full page
+                      navigate(`/join/${campaign.slug}`);
                     };
                     const isEnded = campaign.status === "ended";
                     const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
@@ -775,6 +802,8 @@ export function DiscoverTab({
                           platforms={campaign.platforms}
                           isEnded={isEnded}
                           isBookmarked={isBookmarked}
+                          isJoined={isJoined}
+                          isApplied={isApplied}
                           onClick={handleCampaignClick}
                           onBookmarkClick={e => toggleBookmark(campaign.id, e)}
                           onFullscreenClick={e => {

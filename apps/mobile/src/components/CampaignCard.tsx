@@ -5,16 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Dimensions,
 } from 'react-native';
 import { LiquidGlassView } from '@callstack/liquid-glass';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../theme/colors';
 import { Card, Badge, Progress } from './ui';
+import { platformConfig } from '../hooks/useSocialAccounts';
 import type { Campaign } from '@virality/shared-types';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width - 32;
 
 export interface CampaignCardProps {
   campaign: Campaign;
@@ -23,19 +20,26 @@ export interface CampaignCardProps {
   isApplied?: boolean;
 }
 
-// Platform icons with proper Material icons
+// Platform badge with actual logo images
 const PlatformBadge = ({ platform }: { platform: string }) => {
-  const platformConfig: Record<string, { bg: string; icon: string }> = {
-    tiktok: { bg: colors.background, icon: 'music-note' },
-    instagram: { bg: '#E1306C', icon: 'instagram' },
-    youtube: { bg: '#FF0000', icon: 'youtube' },
-  };
+  const p = platform.toLowerCase() as keyof typeof platformConfig;
+  const config = platformConfig[p];
 
-  const config = platformConfig[platform.toLowerCase()] || { bg: colors.mutedForeground, icon: 'web' };
+  if (!config) {
+    return (
+      <View style={[styles.platformBadge, { backgroundColor: colors.mutedForeground }]}>
+        <Icon name="web" size={14} color={colors.foreground} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.platformBadge, { backgroundColor: config.bg }]}>
-      <Icon name={config.icon} size={14} color={colors.foreground} />
+      <Image
+        source={config.logoWhite}
+        style={styles.platformLogoImage}
+        resizeMode="contain"
+      />
     </View>
   );
 };
@@ -189,7 +193,7 @@ export function CampaignCard({
 const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
-    width: CARD_WIDTH,
+    width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -290,6 +294,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  platformLogoImage: {
+    width: 14,
+    height: 14,
   },
   // Budget section
   budgetSection: {

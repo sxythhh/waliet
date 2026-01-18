@@ -23,9 +23,9 @@ const buttonVariants = cva(
         sm: "h-10 rounded-md px-3", // Min 40px for touch targets
         lg: "h-11 rounded-md px-8",
         xl: "h-12 rounded-md px-10", // Extra large for prominent CTAs
-        icon: "h-10 w-10", // 40px minimum
-        "icon-sm": "h-9 w-9", // 36px for tight spaces (desktop only)
-        "icon-lg": "h-11 w-11", // 44px for prominent icon buttons
+        icon: "h-11 w-11", // 44px WCAG AA minimum touch target
+        "icon-sm": "h-9 w-9", // 36px - desktop only, avoid on mobile
+        "icon-lg": "h-12 w-12", // 48px for prominent icon buttons
       },
       gap: {
         none: "gap-0",

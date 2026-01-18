@@ -1,14 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Mail, Shield, CheckCircle2, XCircle, Link2 } from "lucide-react";
+import { CheckCircle2, XCircle, Building2, ArrowRight } from "lucide-react";
+import AuthDialog from "@/components/AuthDialog";
 
 type BrandInvitation = Database["public"]["Tables"]["brand_invitations"]["Row"];
 type Brand = Database["public"]["Tables"]["brands"]["Row"];
@@ -20,10 +17,26 @@ export default function BrandInvite() {
   const [invitation, setInvitation] = useState<any>(null);
   const [brand, setBrand] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [pendingAutoAccept, setPendingAutoAccept] = useState(false);
+
+  // Store invite URL for OAuth redirect (use both localStorage and sessionStorage for reliability)
+  useEffect(() => {
+    const currentPath = window.location.pathname + window.location.search;
+    sessionStorage.setItem('auth_redirect_url', currentPath);
+    localStorage.setItem('auth_redirect_url', currentPath);
+  }, []);
+
+  // Check if we're returning from OAuth (flag set in AuthCallback)
+  useEffect(() => {
+    const shouldAutoAccept = sessionStorage.getItem('brand_invite_auto_accept') || localStorage.getItem('brand_invite_auto_accept');
+    if (shouldAutoAccept) {
+      sessionStorage.removeItem('brand_invite_auto_accept');
+      localStorage.removeItem('brand_invite_auto_accept');
+      setPendingAutoAccept(true);
+    }
+  }, []);
 
   // Determine if this is a link-based (token) or email-based (invitationId) invite
   const isLinkInvite = !!token;
@@ -33,6 +46,27 @@ export default function BrandInvite() {
     checkUser();
   }, [invitationId, token]);
 
+  // Listen for auth state changes and auto-accept invitation
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        setAuthDialogOpen(false);
+        // Flag for auto-accept when invitation loads
+        setPendingAutoAccept(true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Auto-accept invitation when both user, invitation, and brand are ready
+  useEffect(() => {
+    if (pendingAutoAccept && user && invitation && brand && !processing) {
+      setPendingAutoAccept(false);
+      acceptInvitation(user);
+    }
+  }, [pendingAutoAccept, user, invitation, brand, processing]);
+
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
@@ -41,13 +75,11 @@ export default function BrandInvite() {
   const loadInvitation = async () => {
     const lookupId = token || invitationId;
     if (!lookupId) {
-      console.error("No invitation ID or token provided");
       setLoading(false);
       return;
     }
 
     try {
-      console.log("Loading invitation:", lookupId, isLinkInvite ? "(token)" : "(id)");
 
       // Fetch invitation by token or ID
       let query = supabase
@@ -62,17 +94,13 @@ export default function BrandInvite() {
 
       const { data: inviteData, error: inviteError } = await query.maybeSingle();
 
-      console.log("Invitation response:", { inviteData, inviteError });
-
       if (inviteError) {
-        console.error("Invitation fetch error:", inviteError);
         toast.error("Failed to load invitation");
         setLoading(false);
         return;
       }
 
       if (!inviteData) {
-        console.log("Invitation not found");
         toast.error("Invitation not found");
         setLoading(false);
         return;
@@ -80,24 +108,18 @@ export default function BrandInvite() {
 
       // Check if invitation has expired
       if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
-        console.log("Invitation expired");
         toast.error("This invitation has expired");
         setLoading(false);
         return;
       }
 
       if (inviteData.status !== "pending") {
-        console.log("Invitation already used:", inviteData.status);
         toast.error("This invitation has already been used");
         setLoading(false);
         return;
       }
 
       setInvitation(inviteData);
-      // For email-based invites, pre-fill the email
-      if (inviteData.email) {
-        setEmail(inviteData.email);
-      }
 
       // Fetch brand details
       const { data: brandData, error: brandError } = await supabase
@@ -106,67 +128,22 @@ export default function BrandInvite() {
         .eq("id", inviteData.brand_id)
         .maybeSingle();
 
-      console.log("Brand response:", { brandData, brandError });
-
       if (brandError) {
-        console.error("Brand fetch error:", brandError);
         toast.error("Failed to load brand details");
       }
 
       setBrand(brandData);
     } catch (error: any) {
-      console.error("Error loading invitation:", error);
       toast.error(error.message || "Failed to load invitation");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProcessing(true);
-
-    try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: isLinkInvite
-              ? `${window.location.origin}/brand/${brandSlug}/join/${token}`
-              : `${window.location.origin}/brand/${brandSlug}/invite/${invitationId}`,
-          },
-        });
-        if (error) throw error;
-
-        // If signup is successful and user is created, accept invitation automatically
-        if (data.user) {
-          setUser(data.user);
-          toast.success("Account created successfully!");
-          // Accept invitation automatically after account creation
-          await acceptInvitation(data.user);
-        } else {
-          toast.success("Account created! Please check your email to verify.");
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Logged in successfully!");
-        await checkUser();
-      }
-    } catch (error: any) {
-      console.error("Auth error:", error);
-      toast.error(error.message || "Authentication failed");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   const acceptInvitation = async (currentUser: any) => {
-    if (!currentUser || !invitation) return;
+    if (!currentUser || !invitation) {
+      return;
+    }
 
     try {
       // For email-based invites, check if user email matches invitation
@@ -207,24 +184,18 @@ export default function BrandInvite() {
         });
 
       if (memberError) {
-        console.error("Member insert error:", memberError);
         throw memberError;
       }
 
       // Update invitation status to accepted
-      const { error: updateError } = await supabase
+      await supabase
         .from("brand_invitations")
         .update({ status: "accepted" })
         .eq("id", invitation.id);
 
-      if (updateError) {
-        console.error("Error updating invitation status:", updateError);
-      }
-
       toast.success(`Welcome to ${brand?.name}!`);
-      navigate(`/dashboard?workspace=${brandSlug}`);
+      navigate(`/dashboard?workspace=${brandSlug}&onboarding=active`);
     } catch (error: any) {
-      console.error("Error accepting invitation:", error);
       toast.error(error.message || "Failed to accept invitation");
     }
   };
@@ -238,26 +209,39 @@ export default function BrandInvite() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Loading invitation...</p>
       </div>
     );
   }
 
   if (!invitation || !brand) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-destructive" />
-              Invalid Invitation
-            </CardTitle>
-            <CardDescription>
-              This invitation link is invalid or has expired.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="max-w-md w-full">
+          <div className="bg-card dark:bg-[#0e0e0e] border border-border/50 rounded-xl p-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <XCircle className="h-7 w-7 text-red-500" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold font-inter tracking-[-0.5px] text-foreground">
+                  Invalid Invitation
+                </h2>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                  This invitation link is invalid or has expired. Please ask for a new invite.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/")}
+                className="mt-2"
+              >
+                Go to Home
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -268,133 +252,146 @@ export default function BrandInvite() {
     : user?.email?.toLowerCase() === invitation.email?.toLowerCase();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[hsl(0,0%,3.1%)]">
-      <Card className="max-w-md w-full">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            {brand.logo_url && (
-              <img src={brand.logo_url} alt={brand.name} className="h-12 w-12 rounded-lg object-cover" />
-            )}
-            <div>
-              <CardTitle>Brand Invitation</CardTitle>
-              <CardDescription>Join {brand.name}</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Invitation Details */}
-          <div className="space-y-3 p-4 bg-muted rounded-lg">
-            {invitation.is_link_invite ? (
-              <div className="flex items-start gap-2">
-                <Link2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Invite Link</p>
-                  <p className="text-sm text-muted-foreground">Anyone with this link can join</p>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="max-w-md w-full space-y-4">
+        {/* Virality Logo + Wordmark */}
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <img
+            alt="Virality Logo"
+            className="h-6 w-6"
+            src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png"
+            width="24"
+            height="24"
+          />
+          <span className="text-[17px] font-clash font-semibold text-foreground tracking-[-0.4px] -ml-0.5">
+            VIRALITY
+          </span>
+        </div>
+
+        {/* Brand Card */}
+        <div className="bg-card dark:bg-[#0e0e0e] border border-border/50 rounded-xl overflow-hidden">
+          {/* Header with brand info */}
+          <div className="p-6 pb-4">
+            <div className="flex items-center gap-4">
+              {brand.logo_url ? (
+                <img
+                  src={brand.logo_url}
+                  alt={brand.name}
+                  className="h-14 w-14 rounded-xl object-cover border border-border/50"
+                />
+              ) : (
+                <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Building2 className="h-7 w-7 text-primary" />
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2">
-                <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Invited Email</p>
-                  <p className="text-sm text-muted-foreground">{invitation.email}</p>
-                </div>
-              </div>
-            )}
-            <div className="flex items-start gap-2">
-              <Shield className="h-4 w-4 mt-0.5 text-muted-foreground" />
+              )}
               <div className="flex-1">
-                <p className="text-sm font-medium">Role</p>
-                <p className="text-sm text-muted-foreground capitalize">{invitation.role}</p>
+                <h1 className="text-xl font-semibold font-inter tracking-[-0.5px] text-foreground">
+                  {brand.name}
+                </h1>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                  You've been invited to join this brand
+                </p>
               </div>
             </div>
           </div>
 
-          {/* User Status */}
-          {!user ? (
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  readOnly={!invitation.is_link_invite && !!invitation.email}
-                  className={!invitation.is_link_invite && invitation.email ? "bg-muted" : ""}
-                />
+          {/* Divider */}
+          <div className="border-t border-border/50" />
+
+          {/* Invitation Details */}
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted/30 dark:bg-muted/20 rounded-lg p-3">
+                <span className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">
+                  {invitation.is_link_invite ? "Invite Type" : "Invited Email"}
+                </span>
+                <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground truncate mt-1">
+                  {invitation.is_link_invite ? "Open Link" : invitation.email}
+                </p>
+              </div>
+              <div className="bg-muted/30 dark:bg-muted/20 rounded-lg p-3">
+                <span className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.3px]">
+                  Your Role
+                </span>
+                <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground capitalize mt-1">
+                  {invitation.role}
+                </p>
+              </div>
+            </div>
+
+            {/* Auth Button / Accept Button */}
+            {!user ? (
+              <div className="space-y-4 pt-2">
+                <Button
+                  onClick={() => setAuthDialogOpen(true)}
+                  className="w-full h-11 rounded-lg font-inter text-sm font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                >
+                  Sign In to Join
+                </Button>
                 {!invitation.is_link_invite && invitation.email && (
-                  <p className="text-xs text-muted-foreground">
-                    This invitation is for {email}
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] text-center">
+                    This invitation is for {invitation.email}
                   </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={processing}>
-                {processing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {isSignUp ? "Create Account & Accept" : "Sign In & Accept"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => setIsSignUp(!isSignUp)}
-              >
-                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-              </Button>
-            </form>
-          ) : emailMatches ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <p className="text-sm">
-                  {invitation.is_link_invite
-                    ? `You're logged in as ${user.email}`
-                    : "You're logged in with the invited email!"}
-                </p>
-              </div>
-              <Button onClick={handleAcceptInvitation} className="w-full" disabled={processing}>
-                {processing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Accept Invitation
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <XCircle className="h-5 w-5 text-destructive" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Email Mismatch</p>
-                  <p className="text-xs text-muted-foreground">
-                    You're logged in as {user.email}, but this invitation is for {invitation.email}
-                  </p>
+            ) : emailMatches ? (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
+                      Ready to join
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] truncate">
+                      Signed in as {user.email}
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  onClick={handleAcceptInvitation}
+                  className="w-full h-11 rounded-lg font-inter text-sm font-medium tracking-[-0.5px]"
+                  disabled={processing}
+                >
+                  {processing ? "Joining..." : `Join ${brand.name}`}
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  setUser(null);
-                  toast.info("Signed out. Please sign in with the invited email.");
-                }}
-              >
-                Sign Out & Try Again
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
+                      Email doesn't match
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      You're signed in as {user.email}, but this invitation is for {invitation.email}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full h-11 rounded-lg font-inter text-sm font-medium tracking-[-0.5px]"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setUser(null);
+                    toast.info("Signed out. Please sign in with the correct email.");
+                  }}
+                >
+                  Sign Out & Try Again
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+          By joining, you agree to collaborate with {brand.name} on Virality
+        </p>
+      </div>
+
+      {/* Auth Dialog */}
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </div>
   );
 }

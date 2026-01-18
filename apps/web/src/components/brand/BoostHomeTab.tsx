@@ -6,7 +6,6 @@ import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, end
 import { toast } from "sonner";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
-import { BudgetProgressCard } from "./BudgetProgressCard";
 import { ActivityChart, ActivityData } from "./ActivityChart";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 interface Boost {
@@ -155,7 +154,7 @@ export function BoostHomeTab({
         // Fetch wallet transactions for payouts
         const {
           data: transactions
-        } = await supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>boost_id', boost.id).eq('type', 'earning');
+        } = await supabase.from('wallet_transactions').select('amount, created_at, type').eq('metadata->>boost_id', boost.id).in('type', ['earning', 'balance_correction']);
         if (isCancelled) return;
         const submissionsData = submissions || [];
         const transactionsData = transactions || [];
@@ -405,7 +404,6 @@ export function BoostHomeTab({
       setIsRefreshing(false);
     }
   };
-  const budgetTotal = boost.budget || 0;
 
   // Show skeletons while loading or if stats haven't loaded yet
   if (isLoading || !stats) {
@@ -433,9 +431,6 @@ export function BoostHomeTab({
         </div>
       </div>;
   }
-
-  // Calculate budget used from actual payouts (stats is guaranteed non-null here)
-  const budgetUsed = stats.totalPayouts;
 
   return <div className="p-4 pb-[70px] sm:pb-4 space-y-4">
       {/* Date Range Label */}
@@ -488,9 +483,6 @@ export function BoostHomeTab({
           </div>
         </Card>
       </div>
-
-      {/* Budget & Creators Card */}
-      <BudgetProgressCard budgetUsed={budgetUsed} budgetTotal={budgetTotal} acceptedCreators={stats.acceptedCreators} maxCreators={stats.maxCreators} onTopUp={onTopUp} />
 
       {/* Charts Row - Side by Side */}
       <div className="flex flex-col gap-4">

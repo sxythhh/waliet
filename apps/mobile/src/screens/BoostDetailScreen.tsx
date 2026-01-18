@@ -16,7 +16,9 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { LogoLoader } from '../components/LogoLoader';
+import { ApplySheet } from '../components/ApplySheet';
 import { colors } from '../theme/colors';
+import { useConnectedAccounts } from '../hooks/useSocialAccounts';
 import { Card, Badge, Button } from '../components/ui';
 // Note: Using local interface instead of @virality/shared-types BountyCampaign
 // because the schema includes flat_rate fields not in the shared types
@@ -57,8 +59,10 @@ export function BoostDetailScreen() {
   const { boostId } = route.params as RouteParams;
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: connectedAccounts = [] } = useConnectedAccounts();
 
   const [applySuccess, setApplySuccess] = useState(false);
+  const [showApplySheet, setShowApplySheet] = useState(false);
 
   const {
     data: boost,
@@ -104,18 +108,22 @@ export function BoostDetailScreen() {
 
   // Apply mutation - direct submit without confirmation
   const applyMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (accountIds: string[]) => {
       if (!user?.id || !boost?.id) {
         throw new Error('Must be logged in to apply');
       }
 
+      // Insert an application for each selected account
+      const applications = accountIds.map(accountId => ({
+        bounty_campaign_id: boost.id,
+        user_id: user.id,
+        social_account_id: accountId,
+        status: 'pending',
+      }));
+
       const { error } = await supabase
         .from('bounty_applications')
-        .insert({
-          bounty_campaign_id: boost.id,
-          user_id: user.id,
-          status: 'pending',
-        });
+        .insert(applications);
 
       if (error) throw error;
     },
@@ -125,22 +133,31 @@ export function BoostDetailScreen() {
     onSuccess: () => {
       setApplySuccess(true);
       queryClient.invalidateQueries({ queryKey: ['boostApplication', boostId] });
-      // Auto-hide success message after 3 seconds
-      setTimeout(() => setApplySuccess(false), 3000);
     },
   });
 
-  // Direct apply - no nested confirmations
-  const handleApply = useCallback(() => {
+  // Open apply sheet
+  const handleOpenApplySheet = useCallback(() => {
     if (!user) {
       Alert.alert('Sign In Required', 'Please sign in to apply to boosts.');
       return;
     }
     if (existingApplication) {
-      return; // Already applied, button won't show anyway
+      return;
     }
-    applyMutation.mutate();
-  }, [user, existingApplication, applyMutation]);
+    setShowApplySheet(true);
+  }, [user, existingApplication]);
+
+  // Actually submit application from sheet
+  const handleApply = useCallback((accountIds: string[]) => {
+    applyMutation.mutate(accountIds);
+  }, [applyMutation]);
+
+  // Close sheet
+  const handleCloseSheet = useCallback(() => {
+    setShowApplySheet(false);
+    setApplySuccess(false);
+  }, []);
 
   if (isLoading) {
     return (
@@ -363,17 +380,9 @@ export function BoostDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Apply Button - Fixed at bottom with inline feedback */}
+      {/* Apply Button - Fixed at bottom */}
       {isActive && (
         <View style={styles.applyContainer}>
-          {/* Success Toast */}
-          {applySuccess && (
-            <View style={styles.successToast}>
-              <Icon name="check-circle" size={20} color={colors.success} />
-              <Text style={styles.successToastText}>Application submitted!</Text>
-            </View>
-          )}
-
           {existingApplication ? (
             <View style={styles.applicationStatusCard}>
               <View style={styles.applicationStatusLeft}>
@@ -409,26 +418,28 @@ export function BoostDetailScreen() {
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.applyButtonNew, applyMutation.isPending && styles.applyButtonDisabled]}
-              onPress={handleApply}
-              disabled={applyMutation.isPending}
+              style={styles.applyButtonNew}
+              onPress={handleOpenApplySheet}
               activeOpacity={0.8}
             >
-              {applyMutation.isPending ? (
-                <View style={styles.applyButtonContent}>
-                  <LogoLoader size={24} />
-                  <Text style={styles.applyButtonText}>Applying...</Text>
-                </View>
-              ) : (
-                <View style={styles.applyButtonContent}>
-                  <Icon name="rocket-launch" size={22} color={colors.primaryForeground} />
-                  <Text style={styles.applyButtonText}>Apply Now</Text>
-                </View>
-              )}
+              <Text style={styles.applyButtonText}>Apply Now</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
+
+      {/* Apply Sheet Modal */}
+      <ApplySheet
+        visible={showApplySheet}
+        onClose={handleCloseSheet}
+        onApply={handleApply}
+        isLoading={applyMutation.isPending}
+        isSuccess={applySuccess}
+        title={boost?.title || ''}
+        brandName={brandName}
+        brandLogo={brandLogo}
+        accounts={connectedAccounts}
+      />
     </SafeAreaView>
   );
 }
@@ -736,11 +747,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   applyButtonDisabled: {
     opacity: 0.7,

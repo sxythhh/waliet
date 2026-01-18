@@ -165,11 +165,6 @@ export function ShareCampaignDialog({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const shareToFacebook = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
   const shareToLinkedIn = () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -228,7 +223,7 @@ export function ShareCampaignDialog({
                 {type === "boost" && !isEditingSlug && (
                   <button
                     onClick={() => setShowPortalUrl(!showPortalUrl)}
-                    className="flex items-center gap-1 text-xs font-medium font-inter tracking-[-0.3px] text-foreground hover:text-foreground/80 transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium font-inter tracking-[-0.3px] text-foreground hover:text-foreground/80 transition-colors select-none"
                   >
                     <Icon icon="material-symbols:swap-horiz-rounded" className="w-3.5 h-3.5" />
                     <span>{showPortalUrl ? "Swap to Boost" : "Swap to Portal"}</span>
@@ -240,7 +235,7 @@ export function ShareCampaignDialog({
                       setEditedSlug(currentSlug);
                       setIsEditingSlug(true);
                     }}
-                    className="flex items-center gap-1 text-xs font-medium font-inter tracking-[-0.3px] text-primary hover:text-primary/80 transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium font-inter tracking-[-0.3px] text-primary hover:text-primary/80 transition-colors select-none"
                   >
                     <Icon icon="material-symbols:edit-outline" className="w-3.5 h-3.5" />
                     <span>Edit</span>
@@ -250,23 +245,25 @@ export function ShareCampaignDialog({
             </div>
             {isEditingSlug ? (
               <div className="flex gap-2">
-                <div className="flex-1 flex items-center gap-0 h-10 bg-muted/30 dark:bg-muted/20 border border-border/50 rounded-md overflow-hidden">
-                  <span className="pl-3 text-sm text-muted-foreground font-inter tracking-[-0.3px] whitespace-nowrap">
+                <div className="flex-1 flex items-center h-10 bg-muted/30 dark:bg-muted/20 border border-border/50 rounded-md overflow-hidden px-3">
+                  <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px] whitespace-nowrap">
                     virality.gg/join/
                   </span>
                   <input
                     type="text"
                     value={editedSlug}
                     onChange={(e) => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    className="flex-1 h-full bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.3px] text-foreground"
+                    className="flex-1 h-full bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.3px] text-foreground font-semibold"
                     placeholder="my-campaign"
+                    spellCheck={false}
+                    autoComplete="off"
                     autoFocus
                   />
                 </div>
                 <Button
                   onClick={handleSaveSlug}
                   disabled={isSavingSlug || !editedSlug.trim()}
-                  className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
+                  className="h-10 w-10 p-0 bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
                 >
                   {isSavingSlug ? (
                     <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -280,7 +277,7 @@ export function ShareCampaignDialog({
                     setEditedSlug(currentSlug);
                   }}
                   variant="ghost"
-                  className="h-10 px-3 shrink-0"
+                  className="h-10 w-10 p-0 shrink-0 hover:bg-muted text-muted-foreground hover:text-foreground"
                 >
                   <Icon icon="material-symbols:close-rounded" className="w-4 h-4" />
                 </Button>
@@ -319,13 +316,6 @@ export function ShareCampaignDialog({
               >
                 <Icon icon="ri:twitter-x-fill" className="w-4 h-4" />
                 <span className="hidden sm:inline">X</span>
-              </button>
-              <button
-                onClick={shareToFacebook}
-                className="flex-1 h-10 rounded-lg bg-muted/30 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/40 border border-border/50 flex items-center justify-center gap-2 text-sm font-medium font-inter tracking-[-0.3px] transition-colors"
-              >
-                <Icon icon="ri:facebook-fill" className="w-4 h-4" />
-                <span className="hidden sm:inline">Facebook</span>
               </button>
               <button
                 onClick={shareToLinkedIn}

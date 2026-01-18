@@ -7,7 +7,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { DepositFlowState, PaymentMethod, CryptoNetwork } from "./types";
+import { DepositFlowState, PaymentMethod } from "./types";
 
 // Step metadata for headers
 const stepMeta: Record<string, { title: string; description: string }> = {
@@ -62,6 +62,9 @@ interface DepositDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
+  actionDisabled?: boolean;
 }
 
 export function DepositDrawer({
@@ -69,6 +72,9 @@ export function DepositDrawer({
   isOpen,
   onClose,
   children,
+  actionLabel,
+  onAction,
+  actionDisabled,
 }: DepositDrawerProps) {
   const { step, method } = state;
 
@@ -94,18 +100,8 @@ export function DepositDrawer({
       <DrawerContent className="max-h-[90vh]">
         {/* Header */}
         <DrawerHeader className="relative border-b border-border/50 pb-4">
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4 h-8 w-8"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-
           {/* Title & Description */}
-          <div className="pr-10">
+          <div className="pr-24">
             <DrawerTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">
               {meta.title}
             </DrawerTitle>
@@ -114,6 +110,28 @@ export function DepositDrawer({
                 {meta.description}
               </DrawerDescription>
             )}
+          </div>
+
+          {/* Action buttons */}
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            {actionLabel && onAction && (
+              <Button
+                size="sm"
+                className="h-8 px-4 font-inter tracking-[-0.3px]"
+                disabled={actionDisabled}
+                onClick={onAction}
+              >
+                {actionLabel}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </DrawerHeader>
 

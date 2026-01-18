@@ -11,15 +11,20 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
-import { Button, Input, Card } from '../components/ui';
+import { Card } from '../components/ui';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BANNER_HEIGHT = 140;
 
 interface ProfileFormData {
   full_name: string;
@@ -27,9 +32,14 @@ interface ProfileFormData {
   bio: string;
 }
 
-type RootStackParamList = {
-  EditProfile: undefined;
-};
+interface Profile {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+}
 
 export function EditProfileScreen() {
   const navigation = useNavigation();
@@ -47,15 +57,15 @@ export function EditProfileScreen() {
   // Fetch current profile
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ['profile', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<Profile | null> => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, username, bio, avatar_url, banner_url')
         .eq('id', user.id)
         .single();
       if (error) throw error;
-      return data;
+      return data as Profile | null;
     },
     enabled: !!user?.id,
   });
@@ -138,10 +148,25 @@ export function EditProfileScreen() {
 
   const updateField = (field: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const handleChangePhoto = (type: 'avatar' | 'banner') => {
+    Alert.alert(
+      type === 'avatar' ? 'Change Profile Photo' : 'Change Banner',
+      'Photo uploads are available on the web app. Would you like to open it?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Open Web App',
+          onPress: () => {
+            Linking.openURL('https://virality.so/dashboard?tab=profile');
+          },
+        },
+      ]
+    );
   };
 
   if (loadingProfile) {
@@ -185,23 +210,53 @@ export function EditProfileScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Banner Section */}
+          <TouchableOpacity
+            style={styles.bannerContainer}
+            onPress={() => handleChangePhoto('banner')}
+            activeOpacity={0.8}
+          >
+            {profile?.banner_url ? (
+              <Image
+                source={{ uri: profile.banner_url }}
+                style={styles.bannerImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.bannerPlaceholder}>
+                <Icon name="image-plus" size={32} color={colors.mutedForeground} />
+                <Text style={styles.bannerPlaceholderText}>Add Banner</Text>
+              </View>
+            )}
+            <View style={styles.bannerOverlay}>
+              <Icon name="camera" size={20} color={colors.foreground} />
+            </View>
+          </TouchableOpacity>
+
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
-            <View style={styles.avatar}>
-              {profile?.avatar_url ? (
-                <Image
-                  source={{ uri: profile.avatar_url }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Text style={styles.avatarText}>
-                  {formData.full_name?.[0]?.toUpperCase() || '?'}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity style={styles.changePhotoButton}>
-              <Text style={styles.changePhotoText}>Change Photo</Text>
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={() => handleChangePhoto('avatar')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.avatar}>
+                {profile?.avatar_url ? (
+                  <Image
+                    source={{ uri: profile.avatar_url }}
+                    style={styles.avatarImage}
+                  />
+                ) : (
+                  <Text style={styles.avatarText}>
+                    {formData.full_name?.[0]?.toUpperCase() || '?'}
+                  </Text>
+                )}
+              </View>
+              <View style={styles.avatarCameraIcon}>
+                <Icon name="camera" size={16} color={colors.foreground} />
+              </View>
             </TouchableOpacity>
+            <Text style={styles.changePhotoText}>Tap to change photo</Text>
           </View>
 
           {/* Basic Info */}
@@ -242,7 +297,7 @@ export function EditProfileScreen() {
                 )}
               </View>
 
-              <View style={styles.inputGroup}>
+              <View style={[styles.inputGroup, styles.inputGroupLast]}>
                 <View style={styles.labelRow}>
                   <Text style={styles.inputLabel}>Bio</Text>
                   <Text style={styles.charCount}>
@@ -267,7 +322,6 @@ export function EditProfileScreen() {
             </Card>
           </View>
 
-          {/* Info text */}
           <Text style={styles.infoText}>
             Your profile information is visible to brands when you apply to campaigns.
           </Text>
@@ -319,9 +373,45 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
+  bannerContainer: {
+    width: SCREEN_WIDTH,
+    height: BANNER_HEIGHT,
+    backgroundColor: colors.muted,
+    position: 'relative',
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bannerPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.muted,
+  },
+  bannerPlaceholderText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: colors.mutedForeground,
+  },
+  bannerOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: 24,
+    marginTop: -50,
+    marginBottom: 16,
+  },
+  avatarContainer: {
+    position: 'relative',
   },
   avatar: {
     width: 100,
@@ -330,7 +420,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    borderWidth: 4,
+    borderColor: colors.background,
     overflow: 'hidden',
   },
   avatarImage: {
@@ -343,13 +434,23 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     fontWeight: '600',
   },
-  changePhotoButton: {
-    paddingVertical: 8,
+  avatarCameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: colors.primary,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: colors.background,
   },
   changePhotoText: {
+    marginTop: 8,
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
+    color: colors.mutedForeground,
   },
   section: {
     marginHorizontal: 16,
@@ -371,6 +472,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  inputGroupLast: {
+    borderBottomWidth: 0,
   },
   labelRow: {
     flexDirection: 'row',

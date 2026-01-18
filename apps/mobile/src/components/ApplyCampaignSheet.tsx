@@ -20,11 +20,13 @@ import Animated, {
   Extrapolation,
   FadeIn,
   FadeOut,
+  Easing,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { BlurView } from '@react-native-community/blur';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { platformConfig } from '../hooks/useSocialAccounts';
 import type { Campaign } from '@virality/shared-types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -36,16 +38,7 @@ interface ApplyCampaignSheetProps {
   visible: boolean;
   onClose: () => void;
   onApply: () => Promise<void>;
-  userDisplayName?: string;
-  userAvatarUrl?: string;
 }
-
-// Platform icon config
-const platformConfig: Record<string, { bg: string; icon: string }> = {
-  tiktok: { bg: '#000', icon: 'music-note' },
-  instagram: { bg: '#E1306C', icon: 'instagram' },
-  youtube: { bg: '#FF0000', icon: 'youtube' },
-};
 
 // Confetti particle component
 const ConfettiParticle = ({ delay, x }: { delay: number; x: number }) => {
@@ -180,8 +173,6 @@ export function ApplyCampaignSheet({
   visible,
   onClose,
   onApply,
-  userDisplayName,
-  userAvatarUrl,
 }: ApplyCampaignSheetProps) {
   const insets = useSafeAreaInsets();
   const [isApplying, setIsApplying] = useState(false);
@@ -194,14 +185,43 @@ export function ApplyCampaignSheet({
 
   // Sheet animation values
   const sheetTranslateY = useSharedValue(SCREEN_HEIGHT);
+  const dragStartY = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
-      sheetTranslateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+      // Smooth ease-out animation for opening (no bounce)
+      sheetTranslateY.value = withTiming(0, {
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+      });
     } else {
-      sheetTranslateY.value = withTiming(SCREEN_HEIGHT, { duration: 300 });
+      sheetTranslateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 });
     }
   }, [visible, sheetTranslateY]);
+
+  // Drag gesture for handle to dismiss
+  const handleDragGesture = Gesture.Pan()
+    .onStart(() => {
+      dragStartY.value = sheetTranslateY.value;
+    })
+    .onUpdate((event) => {
+      // Only allow dragging down
+      const newY = Math.max(0, dragStartY.value + event.translationY);
+      sheetTranslateY.value = newY;
+    })
+    .onEnd((event) => {
+      // If dragged down more than 100px or with velocity, dismiss
+      if (sheetTranslateY.value > 100 || event.velocityY > 500) {
+        sheetTranslateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 });
+        runOnJS(onClose)();
+      } else {
+        // Snap back
+        sheetTranslateY.value = withTiming(0, {
+          duration: 250,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
+    });
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => {
@@ -272,10 +292,6 @@ export function ApplyCampaignSheet({
     ),
   }));
 
-  const swipeTextOpacity = useAnimatedStyle(() => ({
-    opacity: interpolate(swipeProgress.value, [0, 0.5], [1, 0], Extrapolation.CLAMP),
-  }));
-
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslateY.value }],
   }));
@@ -320,10 +336,12 @@ export function ApplyCampaignSheet({
         />
         <View style={styles.sheetOverlay} />
 
-        {/* Handle */}
-        <View style={styles.handleContainer}>
-          <View style={styles.handle} />
-        </View>
+        {/* Draggable Handle */}
+        <GestureDetector gesture={handleDragGesture}>
+          <Animated.View style={styles.handleContainer}>
+            <View style={styles.handle} />
+          </Animated.View>
+        </GestureDetector>
 
         <ScrollView
           style={styles.scrollContent}
@@ -350,10 +368,19 @@ export function ApplyCampaignSheet({
               </Text>
               <View style={styles.platformsRow}>
                 {platforms.map((platform: string, i: number) => {
-                  const config = platformConfig[platform.toLowerCase()] || { bg: '#666', icon: 'web' };
+                  const p = platform.toLowerCase() as keyof typeof platformConfig;
+                  const config = platformConfig[p];
                   return (
-                    <View key={i} style={[styles.platformBadgeSmall, { backgroundColor: config.bg }]}>
-                      <Icon name={config.icon} size={12} color="#fff" />
+                    <View key={i} style={[styles.platformBadgeSmall, { backgroundColor: config?.bg || '#666' }]}>
+                      {config ? (
+                        <Image
+                          source={config.logoWhite}
+                          style={styles.platformLogoImageSmall}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Icon name="web" size={12} color="#fff" />
+                      )}
                     </View>
                   );
                 })}
@@ -424,32 +451,13 @@ export function ApplyCampaignSheet({
             </TouchableOpacity>
           )}
 
-          {/* User Profile Preview */}
-          <View style={styles.profilePreview}>
-            <Text style={styles.profileLabel}>Applying as</Text>
-            <View style={styles.profileRow}>
-              {userAvatarUrl ? (
-                <Image source={{ uri: userAvatarUrl }} style={styles.profileAvatar} />
-              ) : (
-                <View style={styles.profileAvatarPlaceholder}>
-                  <Icon name="account" size={20} color="#666" />
-                </View>
-              )}
-              <Text style={styles.profileName}>{userDisplayName || 'Creator'}</Text>
-              <Icon name="check-circle" size={18} color="#22c55e" />
-            </View>
-          </View>
         </ScrollView>
 
         {/* Swipe to Apply Button */}
         <View style={styles.applySection}>
           <View style={styles.swipeContainer}>
             {/* Track background */}
-            <View style={styles.swipeTrackBg}>
-              <Animated.Text style={[styles.swipeText, swipeTextOpacity]}>
-                Swipe to apply →
-              </Animated.Text>
-            </View>
+            <View style={styles.swipeTrackBg} />
 
             {/* Filled track */}
             <Animated.View style={[styles.swipeTrackFilled, swipeTrackStyle]} />
@@ -556,6 +564,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  platformLogoImageSmall: {
+    width: 12,
+    height: 12,
+  },
   statsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -603,47 +615,6 @@ const styles = StyleSheet.create({
     color: '#aaa',
     lineHeight: 20,
   },
-  profilePreview: {
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  profileLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  profileAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: 12,
-  },
-  profileAvatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  profileName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-  },
   applySection: {
     paddingHorizontal: 20,
     paddingTop: 10,
@@ -659,13 +630,6 @@ const styles = StyleSheet.create({
   },
   swipeTrackBg: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swipeText: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 16,
-    fontWeight: '600',
   },
   swipeTrackFilled: {
     position: 'absolute',

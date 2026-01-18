@@ -191,7 +191,7 @@ export function CreateCampaignTypeDialog({
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-none shadow-lg">
                       {blueprints.map(blueprint => <SelectItem key={blueprint.id} value={blueprint.id}>
-                          {blueprint.title}
+                          {blueprint.title || "Untitled"}
                         </SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -356,7 +356,7 @@ export function CreateCampaignTypeDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-none shadow-lg">
                   {blueprints.map(blueprint => <SelectItem key={blueprint.id} value={blueprint.id}>
-                      {blueprint.title}
+                      {blueprint.title || "Untitled"}
                     </SelectItem>)}
                 </SelectContent>
               </Select>

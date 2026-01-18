@@ -21,8 +21,13 @@ const typeConfigs: Record<
   crypto_deposit: { label: "Crypto Deposit", icon: ArrowDownLeft, isDeposit: true },
   wire_deposit: { label: "Wire Deposit", icon: ArrowDownLeft, isDeposit: true },
   personal_transfer: { label: "From Personal", icon: ArrowDownLeft, isDeposit: true },
+  transfer_in: { label: "Transfer In", icon: ArrowDownLeft, isDeposit: true },
+  transfer_out: { label: "Transfer Out", icon: ArrowUpRight, isDeposit: false },
   campaign_funding: { label: "Campaign Funding", icon: ArrowUpRight, isDeposit: false },
+  campaign_allocation: { label: "Campaign Allocation", icon: ArrowUpRight, isDeposit: false },
+  campaign_refund: { label: "Campaign Refund", icon: ArrowDownLeft, isDeposit: true },
   payout: { label: "Payout", icon: ArrowUpRight, isDeposit: false },
+  creator_payout: { label: "Creator Payout", icon: ArrowUpRight, isDeposit: false },
   withdrawal: { label: "Withdrawal", icon: ArrowUpRight, isDeposit: false },
   refund: { label: "Refund", icon: ArrowDownLeft, isDeposit: true },
 };

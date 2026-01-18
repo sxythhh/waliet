@@ -454,76 +454,72 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
         {loading ? (
           <div className="py-8 text-center text-muted-foreground font-inter tracking-[-0.5px]">Loading...</div>
         ) : !wallet || wallet.balance < minBalanceRequired ? (
-          <div className="space-y-4 py-4">
-            <div className="py-4 text-center">
-              <p className="text-muted-foreground font-inter tracking-[-0.5px]">Minimum balance of ${minBalanceRequired} required to withdraw.</p>
-              <p className="text-sm text-muted-foreground mt-2 font-inter tracking-[-0.5px]">Current balance: ${wallet?.balance?.toFixed(2) || '0.00'}</p>
+          <div className="space-y-6 py-4">
+            {/* Large Balance Display */}
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                Available Balance
+              </p>
+              <p className="text-4xl font-semibold text-foreground font-inter tracking-[-1.5px]">
+                ${wallet?.balance?.toFixed(2) || '0.00'}
+              </p>
             </div>
-            
-            {/* Payment Methods Section - Always visible */}
-            <div className="space-y-2">
-              <Label className="font-inter tracking-[-0.5px]">Payment Methods</Label>
-              <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                {payoutMethods.map((method) => {
-                  const methodIcon = getMethodIcon(method);
-                  const networkLogo = getNetworkLogo(method);
-                  
-                  return (
-                    <div
-                      key={method.id}
-                      className="relative rounded-xl p-3 border border-border bg-muted dark:bg-muted/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shrink-0">
-                          {networkLogo ? (
-                            <img src={networkLogo} alt="Network" className="w-5 h-5" />
-                          ) : methodIcon ? (
-                            <img src={methodIcon} alt={getMethodLabel(method)} className="w-5 h-5" />
-                          ) : method.method === 'bank' ? (
-                            <Building2 className="w-4 h-4 text-muted-foreground" />
-                          ) : method.method === 'upi' ? (
-                            <Smartphone className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <CreditCard className="w-4 h-4 text-muted-foreground" />
-                          )}
+
+            <div className="p-4 rounded-xl bg-destructive/5">
+              <p className="text-sm text-destructive font-medium font-inter tracking-[-0.5px]">
+                Minimum balance of ${minBalanceRequired} required to withdraw
+              </p>
+            </div>
+
+            {/* Payment Methods Section - Read only, no add button */}
+            {payoutMethods.length > 0 && (
+              <div className="space-y-2">
+                <Label className="font-inter tracking-[-0.5px]">Your Payment Methods</Label>
+                <div className="grid grid-cols-1 gap-2">
+                  {payoutMethods.map((method) => {
+                    const methodIcon = getMethodIcon(method);
+                    const networkLogo = getNetworkLogo(method);
+
+                    return (
+                      <div
+                        key={method.id}
+                        className="relative rounded-xl p-3 border border-border bg-muted dark:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shrink-0">
+                            {networkLogo ? (
+                              <img src={networkLogo} alt="Network" className="w-5 h-5" />
+                            ) : methodIcon ? (
+                              <img src={methodIcon} alt={getMethodLabel(method)} className="w-5 h-5" />
+                            ) : method.method === 'bank' ? (
+                              <Building2 className="w-4 h-4 text-muted-foreground" />
+                            ) : method.method === 'upi' ? (
+                              <Smartphone className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <CreditCard className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">
+                              {getMethodLabel(method)}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.4px]">
+                              {getMethodDetails(method)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">
-                            {getMethodLabel(method)}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.4px]">
-                            {getMethodDetails(method)}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemovePayoutMethod(method.id)}
-                          className="w-7 h-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center shrink-0 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5 text-destructive" />
-                        </button>
                       </div>
-                    </div>
-                  );
-                })}
-                
-                {/* Add Method Button */}
-                {payoutMethods.length < 3 && (
-                  <button
-                    type="button"
-                    onClick={() => setAddMethodDialogOpen(true)}
-                    className="rounded-xl p-3 border border-dashed border-border bg-muted/50 hover:bg-muted transition-all"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Plus className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.4px]">
-                        Add Payment Method
-                      </span>
-                    </div>
-                  </button>
-                )}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
+
+            {payoutMethods.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center font-inter tracking-[-0.5px]">
+                Add a payment method in your wallet settings to withdraw
+              </p>
+            )}
           </div>
         ) : payoutMethods.length === 0 ? (
           <div className="py-8 text-center">
@@ -556,12 +552,22 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
             )}
           </div>
         ) : (
-          <div className="space-y-4 py-4">
+          <div className="space-y-5 py-4">
+            {/* Large Balance Display */}
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                Available Balance
+              </p>
+              <p className="text-4xl font-semibold text-foreground font-inter tracking-[-1.5px]">
+                ${wallet?.balance?.toFixed(2) || '0.00'}
+              </p>
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="payout-amount" className="font-inter tracking-[-0.5px]">Amount ($)</Label>
+                <Label htmlFor="payout-amount" className="font-inter tracking-[-0.5px]">Withdraw Amount</Label>
                 <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                  Minimum: ${minimumAmount}.00 • Available: ${wallet?.balance?.toFixed(2) || "0.00"}
+                  Min: ${minimumAmount}
                 </p>
               </div>
               <Input
@@ -573,7 +579,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                 placeholder={minimumAmount.toString() + '.00'}
                 value={payoutAmount}
                 onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))}
-                className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50 font-inter tracking-[-0.5px]"
+                className="bg-muted border-transparent placeholder:text-muted-foreground h-12 text-lg font-medium focus-visible:ring-primary/50 font-inter tracking-[-0.5px]"
               />
             </div>
 

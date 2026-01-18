@@ -64,7 +64,6 @@ export const LowBalanceSettingsTab = forwardRef<LowBalanceSettingsHandle, LowBal
       }).limit(10) as any]);
       if (settingsResult.error && settingsResult.error.code !== 'PGRST116') {
         // Ignore column not found errors - table might not be migrated yet
-        console.log("Settings query returned:", settingsResult);
       }
       if (settingsResult.data) {
         // Cast to any since columns may not exist yet
@@ -190,29 +189,24 @@ export const LowBalanceSettingsTab = forwardRef<LowBalanceSettingsHandle, LowBal
               <Input type="number" value={pauseCampaignThreshold} onChange={e => setPauseCampaignThreshold(e.target.value)} className="w-24 h-9 text-right" />
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Auto Top-up */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Auto Top-up</h3>
-        
-        <div className="p-4 rounded-xl bg-card/50 border border-border/50 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium font-inter tracking-[-0.3px]">Enable Auto Top-up</p>
-              <p className="text-xs text-muted-foreground">Automatically charge your card</p>
-            </div>
-            <Switch checked={autoTopupEnabled} onCheckedChange={setAutoTopupEnabled} />
-          </div>
-
-          {autoTopupEnabled && <div className="flex items-center justify-between pt-4 border-t border-border/50">
-              <p className="text-sm text-muted-foreground">Top-up amount</p>
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground text-sm">$</span>
-                <Input type="number" value={autoTopupAmount} onChange={e => setAutoTopupAmount(e.target.value)} className="w-24 h-9 text-right" />
+          <div className="p-4 rounded-xl bg-card/50 border border-border/50 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Enable Auto Top-up</p>
+                <p className="text-xs text-muted-foreground">Automatically charge your card</p>
               </div>
-            </div>}
+              <Switch checked={autoTopupEnabled} onCheckedChange={setAutoTopupEnabled} />
+            </div>
+
+            {autoTopupEnabled && <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                <p className="text-sm text-muted-foreground">Top-up amount</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-sm">$</span>
+                  <Input type="number" value={autoTopupAmount} onChange={e => setAutoTopupAmount(e.target.value)} className="w-24 h-9 text-right" />
+                </div>
+              </div>}
+          </div>
         </div>
       </div>
 

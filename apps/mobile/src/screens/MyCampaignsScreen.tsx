@@ -1,132 +1,554 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  ScrollView,
   RefreshControl,
   TouchableOpacity,
   Image,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
+import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+  Easing,
+  FadeIn,
+  FadeOut,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { LogoLoader } from '../components/LogoLoader';
 import { colors } from '../theme/colors';
 
-// Platform icon config
-const platformConfig: Record<string, { bg: string; icon: string }> = {
-  tiktok: { bg: '#000', icon: 'music-note' },
-  instagram: { bg: '#E1306C', icon: 'instagram' },
-  youtube: { bg: '#FF0000', icon: 'youtube' },
-};
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const REFERRAL_SHEET_HEIGHT = 450;
 
-interface VideoSubmission {
+// Types
+interface JoinedCampaign {
   id: string;
-  source_id: string;
-  source_type: 'campaign' | 'boost';
-  video_url: string;
-  platform: string;
-  status: 'pending_review' | 'approved' | 'rejected' | 'paid';
-  views: number;
-  payout_amount: number;
-  created_at: string;
-  title: string | null;
-  // Joined campaign data (when source_type is 'campaign')
-  campaign?: {
+  campaign_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'withdrawn';
+  submitted_at: string;
+  total_earned?: number;
+  campaign: {
     id: string;
     title: string;
     brand_name: string;
-    brand_color: string;
+    brand_logo_url: string | null;
     rpm_rate: number;
-  } | null;
-  // Joined boost data (when source_type is 'boost')
-  boost?: {
-    id: string;
-    title: string;
-    brands?: {
-      name: string;
-      logo_url: string | null;
-    } | null;
-  } | null;
+    status: string;
+  };
 }
 
-function formatViews(views: number): string {
-  if (views >= 1000000) {
-    return `${(views / 1000000).toFixed(1)}M`;
-  } else if (views >= 1000) {
-    return `${(views / 1000).toFixed(1)}K`;
-  }
-  return views.toString();
+interface WalletData {
+  balance: number;
+  totalEarned: number;
+  transactions: Array<{
+    amount: number;
+    created_at: string;
+    type: string;
+  }>;
 }
 
+// Helper functions - values are stored in dollars, not cents
 function formatCurrency(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function getStatusConfig(status: VideoSubmission['status']): { color: string; label: string; bg: string } {
-  switch (status) {
-    case 'approved':
-      return { color: '#22c55e', label: 'Approved', bg: 'rgba(34,197,94,0.15)' };
-    case 'pending_review':
-      return { color: '#f59e0b', label: 'Pending', bg: 'rgba(245,158,11,0.15)' };
-    case 'rejected':
-      return { color: '#ef4444', label: 'Rejected', bg: 'rgba(239,68,68,0.15)' };
-    case 'paid':
-      return { color: '#6366f1', label: 'Paid', bg: 'rgba(99,102,241,0.15)' };
-    default:
-      return { color: '#888', label: status, bg: 'rgba(136,136,136,0.15)' };
+function formatCurrencyShort(amount: number): string {
+  if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(1)}K`;
   }
+  return `$${amount.toFixed(0)}`;
 }
 
-function getPlatformConfig(platform: string): { bg: string; icon: string } {
-  return platformConfig[platform.toLowerCase()] || { bg: '#666', icon: 'web' };
+// Interactive earnings chart component with tooltip
+function EarningsChart({
+  data,
+  width,
+  height,
+  transactions,
+}: {
+  data: number[];
+  width: number;
+  height: number;
+  transactions?: Array<{ amount: number; created_at: string; type: string }>;
+}) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const touchX = useSharedValue(-1);
+
+  const paddingH = 16;
+  const paddingV = 12;
+  const chartWidth = width - paddingH * 2;
+  const chartHeight = height - paddingV * 2;
+
+  // Calculate points with smooth curve
+  const points = useMemo(() => {
+    if (data.length < 2) return [];
+    const maxVal = Math.max(...data, 1);
+    const minVal = Math.min(...data, 0);
+    const range = maxVal - minVal || 1;
+
+    return data.map((val, i) => ({
+      x: paddingH + (i / (data.length - 1)) * chartWidth,
+      y: paddingV + chartHeight - ((val - minVal) / range) * chartHeight * 0.85,
+      value: val,
+      date: transactions?.[i]?.created_at || '',
+    }));
+  }, [data, chartWidth, chartHeight, paddingH, paddingV, transactions]);
+
+  // Create smooth bezier curve path
+  const createSmoothPath = useCallback((pts: typeof points) => {
+    if (pts.length < 2) return '';
+
+    let path = `M ${pts[0].x} ${pts[0].y}`;
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      const current = pts[i];
+      const next = pts[i + 1];
+      const controlX = (current.x + next.x) / 2;
+
+      path += ` C ${controlX} ${current.y}, ${controlX} ${next.y}, ${next.x} ${next.y}`;
+    }
+
+    return path;
+  }, []);
+
+  // Create area path for gradient fill
+  const createAreaPath = useCallback((pts: typeof points, h: number) => {
+    if (pts.length < 2) return '';
+
+    const linePath = createSmoothPath(pts);
+    const lastPoint = pts[pts.length - 1];
+    const firstPoint = pts[0];
+
+    return `${linePath} L ${lastPoint.x} ${h} L ${firstPoint.x} ${h} Z`;
+  }, [createSmoothPath]);
+
+  // Find nearest point to touch position
+  const findNearestPoint = useCallback((x: number) => {
+    if (points.length === 0) return -1;
+    let nearestIndex = 0;
+    let nearestDistance = Math.abs(points[0].x - x);
+
+    for (let i = 1; i < points.length; i++) {
+      const distance = Math.abs(points[i].x - x);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = i;
+      }
+    }
+    return nearestIndex;
+  }, [points]);
+
+  const updateActiveIndex = useCallback((x: number) => {
+    const index = findNearestPoint(x);
+    setActiveIndex(index >= 0 ? index : null);
+  }, [findNearestPoint]);
+
+  const clearActiveIndex = useCallback(() => {
+    setActiveIndex(null);
+  }, []);
+
+  // Auto-hide tooltip after tap
+  const hideAfterDelay = useCallback(() => {
+    setTimeout(() => {
+      setActiveIndex(null);
+    }, 2000);
+  }, []);
+
+  // Tap gesture for single taps
+  const tapGesture = Gesture.Tap()
+    .onStart((event) => {
+      touchX.value = event.x;
+      runOnJS(updateActiveIndex)(event.x);
+    })
+    .onEnd(() => {
+      runOnJS(hideAfterDelay)();
+    });
+
+  // Pan gesture for dragging across the chart
+  const panGesture = Gesture.Pan()
+    .onStart((event) => {
+      touchX.value = event.x;
+      runOnJS(updateActiveIndex)(event.x);
+    })
+    .onUpdate((event) => {
+      touchX.value = event.x;
+      runOnJS(updateActiveIndex)(event.x);
+    })
+    .onEnd(() => {
+      touchX.value = -1;
+      runOnJS(clearActiveIndex)();
+    });
+
+  // Combine tap and pan gestures
+  const composedGesture = Gesture.Simultaneous(tapGesture, panGesture);
+
+  // Empty state - subtle line
+  if (data.length < 2) {
+    return (
+      <View style={{ width, height }}>
+        <Svg width={width} height={height}>
+          <Path
+            d={`M ${paddingH} ${height / 2} L ${width - paddingH} ${height / 2}`}
+            stroke="rgba(139, 92, 246, 0.2)"
+            strokeWidth={2}
+          />
+        </Svg>
+      </View>
+    );
+  }
+
+  const linePath = createSmoothPath(points);
+  const areaPath = createAreaPath(points, height);
+  const activePoint = activeIndex !== null ? points[activeIndex] : null;
+
+  // Format date for tooltip
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  return (
+    <GestureDetector gesture={composedGesture}>
+      <View style={{ width, height, position: 'relative' }}>
+        {/* Tooltip */}
+        {activePoint && (
+          <Animated.View
+            entering={FadeIn.duration(150)}
+            exiting={FadeOut.duration(100)}
+            style={[
+              chartStyles.tooltip,
+              {
+                left: Math.min(Math.max(activePoint.x - 40, 8), width - 88),
+                top: -28,
+              },
+            ]}
+          >
+            <Text style={chartStyles.tooltipValue}>${activePoint.value.toFixed(2)}</Text>
+            {activePoint.date && (
+              <Text style={chartStyles.tooltipDate}>{formatDate(activePoint.date)}</Text>
+            )}
+          </Animated.View>
+        )}
+
+        <Svg width={width} height={height}>
+          <Defs>
+            <LinearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#8b5cf6" stopOpacity="0.3" />
+              <Stop offset="1" stopColor="#8b5cf6" stopOpacity="0" />
+            </LinearGradient>
+          </Defs>
+
+          {/* Gradient fill under line */}
+          <Path
+            d={areaPath}
+            fill="url(#areaGradient)"
+          />
+
+          {/* Main curve line */}
+          <Path
+            d={linePath}
+            stroke="#8b5cf6"
+            strokeWidth={2.5}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Active point indicator */}
+          {activePoint && (
+            <>
+              {/* Vertical line */}
+              <Path
+                d={`M ${activePoint.x} ${activePoint.y} L ${activePoint.x} ${height}`}
+                stroke="rgba(139, 92, 246, 0.4)"
+                strokeWidth={1}
+              />
+              {/* Outer glow */}
+              <Circle
+                cx={activePoint.x}
+                cy={activePoint.y}
+                r={12}
+                fill="rgba(139, 92, 246, 0.15)"
+              />
+              {/* Inner circle */}
+              <Circle
+                cx={activePoint.x}
+                cy={activePoint.y}
+                r={6}
+                fill="#8b5cf6"
+              />
+              {/* Center dot */}
+              <Circle
+                cx={activePoint.x}
+                cy={activePoint.y}
+                r={3}
+                fill="#fff"
+              />
+            </>
+          )}
+        </Svg>
+      </View>
+    </GestureDetector>
+  );
+}
+
+const chartStyles = StyleSheet.create({
+  tooltip: {
+    position: 'absolute',
+    backgroundColor: 'rgba(23, 23, 23, 0.95)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  tooltipValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: -0.3,
+  },
+  tooltipDate: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+});
+
+// Referral Sheet Component
+function ReferralSheet({
+  visible,
+  onClose,
+  referralCode,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  referralCode: string | null;
+}) {
+  const sheetTranslateY = useSharedValue(REFERRAL_SHEET_HEIGHT);
+  const dragStartY = useSharedValue(0);
+  const [copied, setCopied] = useState(false);
+
+  React.useEffect(() => {
+    if (visible) {
+      sheetTranslateY.value = withTiming(0, {
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+      });
+    } else {
+      sheetTranslateY.value = withTiming(REFERRAL_SHEET_HEIGHT, { duration: 250 });
+    }
+  }, [visible]);
+
+  const handleDragGesture = Gesture.Pan()
+    .onStart(() => {
+      dragStartY.value = sheetTranslateY.value;
+    })
+    .onUpdate((event) => {
+      const newY = Math.max(0, dragStartY.value + event.translationY);
+      sheetTranslateY.value = newY;
+    })
+    .onEnd((event) => {
+      if (sheetTranslateY.value > 80 || event.velocityY > 500) {
+        sheetTranslateY.value = withTiming(REFERRAL_SHEET_HEIGHT, { duration: 250 });
+        runOnJS(onClose)();
+      } else {
+        sheetTranslateY.value = withTiming(0, {
+          duration: 250,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
+    });
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetTranslateY.value }],
+  }));
+
+  const handleCopy = () => {
+    // In a real app, use Clipboard API
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!visible && sheetTranslateY.value >= REFERRAL_SHEET_HEIGHT) {
+    return null;
+  }
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      {visible && (
+        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={onClose}
+          />
+        </Animated.View>
+      )}
+
+      <Animated.View style={[styles.referralSheet, sheetStyle]}>
+        <GestureDetector gesture={handleDragGesture}>
+          <Animated.View style={styles.handleContainer}>
+            <View style={styles.handle} />
+          </Animated.View>
+        </GestureDetector>
+
+        <View style={styles.referralContent}>
+          <Text style={styles.referralTitle}>Refer & Earn</Text>
+          <Text style={styles.referralSubtitle}>
+            Earn $50 for every friend who joins and completes their first campaign
+          </Text>
+
+          <View style={styles.referralCodeBox}>
+            <Text style={styles.referralCodeLabel}>Your referral code</Text>
+            <View style={styles.referralCodeRow}>
+              <Text style={styles.referralCode}>{referralCode || 'N/A'}</Text>
+              <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
+                <Icon name={copied ? 'check' : 'content-copy'} size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.referralStats}>
+            <View style={styles.referralStat}>
+              <Text style={styles.referralStatValue}>0</Text>
+              <Text style={styles.referralStatLabel}>Referrals</Text>
+            </View>
+            <View style={styles.referralStatDivider} />
+            <View style={styles.referralStat}>
+              <Text style={styles.referralStatValue}>$0.00</Text>
+              <Text style={styles.referralStatLabel}>Earned</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.shareButton}>
+            <Text style={styles.shareButtonText}>Share Referral Link</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </View>
+  );
 }
 
 export function MyCampaignsScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
+  const [showReferralSheet, setShowReferralSheet] = useState(false);
+  const [showReferralBanner, setShowReferralBanner] = useState(true);
 
+  // Query for wallet data
+  const { data: walletData } = useQuery({
+    queryKey: ['wallet-data', user?.id],
+    queryFn: async (): Promise<WalletData> => {
+      if (!user?.id) return { balance: 0, totalEarned: 0, transactions: [] };
+
+      // Fetch wallet balance and total_earned directly from wallets table
+      const { data: wallet } = await supabase
+        .from('wallets')
+        .select('balance, total_earned')
+        .eq('user_id', user.id)
+        .single();
+
+      // Fetch all transactions for the chart to show balance changes over time
+      const { data: transactions } = await supabase
+        .from('wallet_transactions')
+        .select('amount, created_at, type')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: true })
+        .limit(30);
+
+      return {
+        balance: wallet?.balance || 0,
+        totalEarned: wallet?.total_earned || 0,
+        transactions: transactions || [],
+      };
+    },
+    enabled: !!user?.id,
+  });
+
+  // Query for profile (referral code)
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('referral_code')
+        .eq('id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Query for joined campaigns with earnings
   const {
-    data: submissions,
+    data: joinedCampaigns,
     isLoading,
-    error,
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['my-submissions', user?.id],
-    queryFn: async (): Promise<VideoSubmission[]> => {
+    queryKey: ['my-campaigns-home', user?.id],
+    queryFn: async (): Promise<JoinedCampaign[]> => {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('video_submissions')
+        .from('campaign_submissions')
         .select(`
           id,
-          source_id,
-          source_type,
-          video_url,
-          platform,
+          campaign_id,
           status,
-          views,
-          payout_amount,
-          created_at,
-          title
+          submitted_at,
+          campaign:campaigns (
+            id,
+            title,
+            brand_name,
+            brand_logo_url,
+            rpm_rate,
+            status
+          )
         `)
         .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .eq('status', 'approved')
+        .order('submitted_at', { ascending: false });
 
       if (error) throw error;
 
-      return (data || []) as VideoSubmission[];
+      // Get earnings per campaign
+      const campaignIds = (data || []).map(d => d.campaign_id);
+      const { data: earnings } = await supabase
+        .from('wallet_transactions')
+        .select('source_id, amount')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .in('source_id', campaignIds);
+
+      const earningsBySource: Record<string, number> = {};
+      (earnings || []).forEach(e => {
+        earningsBySource[e.source_id] = (earningsBySource[e.source_id] || 0) + Math.abs(e.amount);
+      });
+
+      return (data || [])
+        .filter(d => d.campaign !== null)
+        .map(d => ({
+          ...d,
+          total_earned: earningsBySource[d.campaign_id] || 0,
+          campaign: d.campaign as any,
+        })) as JoinedCampaign[];
     },
     enabled: !!user?.id,
   });
@@ -135,153 +557,48 @@ export function MyCampaignsScreen() {
     refetch();
   }, [refetch]);
 
-  const handleSubmissionPress = useCallback(
-    (submission: VideoSubmission) => {
+  const handleCampaignPress = useCallback(
+    (campaign: JoinedCampaign) => {
       // @ts-expect-error - Navigation types not set up yet
-      navigation.navigate('SubmissionDetail', { submissionId: submission.id });
+      navigation.navigate('CreatorCampaignDetail', {
+        campaignId: campaign.campaign_id,
+        submissionId: campaign.id,
+      });
     },
     [navigation]
   );
 
-  const renderSubmission = ({ item }: { item: VideoSubmission }) => {
-    const statusConfig = getStatusConfig(item.status);
-    const earned = item.payout_amount || 0;
-    const platConfig = getPlatformConfig(item.platform);
-    const sourceColor = item.source_type === 'boost' ? '#8b5cf6' : '#6366f1';
+  const handleWalletPress = useCallback(() => {
+    // @ts-expect-error - Navigation types not set up yet
+    navigation.navigate('Main', { screen: 'Wallet' });
+  }, [navigation]);
 
-    return (
-      <TouchableOpacity
-        style={styles.submissionCard}
-        onPress={() => handleSubmissionPress(item)}
-        activeOpacity={0.7}
-      >
-        {/* Header with source type color stripe */}
-        <View
-          style={[
-            styles.colorStripe,
-            { backgroundColor: sourceColor },
-          ]}
-        />
+  // Generate chart data showing balance over time (running balance)
+  const chartTransactions = useMemo(() => {
+    if (!walletData?.transactions?.length) return [];
 
-        <View style={styles.cardContent}>
-          {/* Top Row: Submission Info */}
-          <View style={styles.topRow}>
-            <View style={styles.campaignInfo}>
-              <View style={styles.brandNameRow}>
-                <Icon
-                  name={item.source_type === 'boost' ? 'lightning-bolt' : 'bullhorn'}
-                  size={12}
-                  color="#666"
-                  style={styles.brandIcon}
-                />
-                <Text style={styles.brandName} numberOfLines={1}>
-                  {item.source_type === 'boost' ? 'Boost' : 'Campaign'}
-                </Text>
-              </View>
-              <Text style={styles.campaignTitle} numberOfLines={1}>
-                {item.title || 'Video Submission'}
-              </Text>
-            </View>
-            <View style={[styles.platformBadge, { backgroundColor: platConfig.bg }]}>
-              <Icon name={platConfig.icon} size={16} color="#fff" />
-            </View>
-          </View>
+    // Calculate running balance for each transaction
+    let runningBalance = 0;
+    const transactionsWithBalance = walletData.transactions.map(t => {
+      runningBalance += t.amount;
+      return {
+        ...t,
+        balance: runningBalance,
+      };
+    });
 
-          {/* Stats Row */}
-          <View style={styles.statsRow}>
-            {/* Views */}
-            <View style={styles.statItem}>
-              <View style={styles.statLabelRow}>
-                <Icon name="eye-outline" size={12} color="#666" />
-                <Text style={styles.statLabel}>Views</Text>
-              </View>
-              <Text style={styles.statValue}>{formatViews(item.views || 0)}</Text>
-            </View>
+    return transactionsWithBalance.slice(-20);
+  }, [walletData?.transactions]);
 
-            {/* Earned */}
-            <View style={styles.statItem}>
-              <View style={styles.statLabelRow}>
-                <Icon name="cash" size={12} color="#22c55e" />
-                <Text style={styles.statLabel}>Earned</Text>
-              </View>
-              <Text style={[styles.statValue, { color: '#22c55e' }]}>
-                {formatCurrency(earned / 100)}
-              </Text>
-            </View>
-
-            {/* Status */}
-            <View style={styles.statItem}>
-              <View style={styles.statLabelRow}>
-                <Icon name="checkbox-marked-circle-outline" size={12} color="#666" />
-                <Text style={styles.statLabel}>Status</Text>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
-                <Text style={[styles.statusText, { color: statusConfig.color }]}>
-                  {statusConfig.label}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Date */}
-          <Text style={styles.dateText}>Submitted {formatDate(item.created_at)}</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  // Summary stats
-  const stats = React.useMemo(() => {
-    if (!submissions) return { total: 0, approved: 0, pending: 0, views: 0, earned: 0 };
-
-    return submissions.reduce(
-      (acc, s) => ({
-        total: acc.total + 1,
-        approved: acc.approved + (s.status === 'approved' || s.status === 'paid' ? 1 : 0),
-        pending: acc.pending + (s.status === 'pending_review' ? 1 : 0),
-        views: acc.views + (s.views || 0),
-        earned: acc.earned + (s.payout_amount || 0),
-      }),
-      { total: 0, approved: 0, pending: 0, views: 0, earned: 0 }
-    );
-  }, [submissions]);
-
-  const renderHeader = () => (
-    <View style={styles.header}>
-      {/* Stats Cards */}
-      <View style={styles.statsCards}>
-        <View style={styles.statCard}>
-          <Icon name="check-circle-outline" size={20} color={colors.primary} style={styles.statCardIcon} />
-          <Text style={styles.statCardValue}>{stats.approved}</Text>
-          <Text style={styles.statCardLabel}>Approved</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Icon name="clock-outline" size={20} color="#f59e0b" style={styles.statCardIcon} />
-          <Text style={styles.statCardValue}>{stats.pending}</Text>
-          <Text style={styles.statCardLabel}>Pending</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Icon name="eye-outline" size={20} color="#6366f1" style={styles.statCardIcon} />
-          <Text style={[styles.statCardValue, { color: '#6366f1' }]}>
-            {formatViews(stats.views)}
-          </Text>
-          <Text style={styles.statCardLabel}>Total Views</Text>
-        </View>
-      </View>
-
-      <View style={styles.sectionTitleRow}>
-        <Icon name="video-box" size={18} color="#fff" />
-        <Text style={styles.sectionTitle}>Submissions</Text>
-      </View>
-    </View>
-  );
+  const chartData = useMemo(() => {
+    return chartTransactions.map(t => t.balance);
+  }, [chartTransactions]);
 
   if (!user) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>My Campaigns</Text>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Sign in to view your submissions</Text>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.emptyText}>Sign in to view your dashboard</Text>
         </View>
       </SafeAreaView>
     );
@@ -290,7 +607,6 @@ export function MyCampaignsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>My Campaigns</Text>
         <View style={styles.loadingContainer}>
           <LogoLoader size={56} />
         </View>
@@ -298,47 +614,150 @@ export function MyCampaignsScreen() {
     );
   }
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>My Campaigns</Text>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error loading submissions</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.title}>My Campaigns</Text>
-      <FlatList
-        data={submissions}
-        keyExtractor={(item) => item.id}
-        renderItem={renderSubmission}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.listContent}
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../assets/virality-logo-white.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.headerTitle}>Virality</Text>
+        </View>
+        <TouchableOpacity style={styles.walletButton} onPress={handleWalletPress}>
+          <Icon name="wallet-outline" size={16} color={colors.primary} />
+          <Text style={styles.walletButtonText}>
+            {formatCurrency(walletData?.balance || 0)}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            tintColor="#6366f1"
-            colors={['#6366f1']}
+            tintColor={colors.primary}
           />
         }
-        ListEmptyComponent={
+      >
+        {/* Total Earnings */}
+        <View style={styles.earningsSection}>
+          <Text style={styles.totalEarnings}>
+            {formatCurrency(walletData?.totalEarned || 0)}
+          </Text>
+        </View>
+
+        {/* Earnings Chart */}
+        <View style={styles.chartContainer}>
+          <EarningsChart
+            data={chartData}
+            width={SCREEN_WIDTH - 32}
+            height={80}
+            transactions={chartTransactions}
+          />
+        </View>
+
+        {/* Referral Banner */}
+        {showReferralBanner && (
+          <TouchableOpacity
+            style={styles.referralBanner}
+            onPress={() => setShowReferralSheet(true)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.referralBannerIcon}>
+              <Icon name="gift-outline" size={28} color={colors.primary} />
+            </View>
+            <View style={styles.referralBannerContent}>
+              <Text style={styles.referralBannerTitle}>Earn $50 & lifetime bonuses</Text>
+              <Text style={styles.referralBannerSubtitle}>Refer a friend to Virality</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.referralBannerClose}
+              onPress={() => setShowReferralBanner(false)}
+            >
+              <Icon name="close" size={20} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+
+        {/* Campaign List Header */}
+        <View style={styles.listHeader}>
+          <TouchableOpacity style={styles.filterButton}>
+            <Text style={styles.filterButtonText}>UGC</Text>
+            <Icon name="chevron-down" size={16} color={colors.foreground} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sortButton}>
+            <Text style={styles.sortButtonText}>Trending</Text>
+            <Icon name="chevron-down" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Campaign List */}
+        {joinedCampaigns && joinedCampaigns.length > 0 ? (
+          <View style={styles.campaignList}>
+            {joinedCampaigns.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.campaignRow}
+                onPress={() => handleCampaignPress(item)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.campaignLogo}>
+                  {item.campaign.brand_logo_url ? (
+                    <Image
+                      source={{ uri: item.campaign.brand_logo_url }}
+                      style={styles.brandLogo}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.brandLogoPlaceholder}>
+                      <Text style={styles.brandInitial}>
+                        {item.campaign.brand_name?.[0]?.toUpperCase() || 'V'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.campaignInfo}>
+                  <Text style={styles.campaignTitle} numberOfLines={1}>
+                    {item.campaign.title}
+                  </Text>
+                  <Text style={styles.campaignMeta}>
+                    ${item.campaign.rpm_rate?.toFixed(0) || '0'} base • {formatCurrencyShort(item.total_earned || 0)} claimed
+                  </Text>
+                </View>
+                <View style={styles.campaignEarnings}>
+                  <Text style={styles.earningsValue}>
+                    {formatCurrencyShort(item.total_earned || 0)}
+                  </Text>
+                  <Icon name="chevron-right" size={20} color={colors.mutedForeground} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
           <View style={styles.emptyContainer}>
-            <Icon name="video-off-outline" size={48} color="#333" />
-            <Text style={styles.emptyTitle}>No submissions yet</Text>
+            <Icon name="briefcase-outline" size={48} color="#333" />
+            <Text style={styles.emptyTitle}>No campaigns yet</Text>
             <Text style={styles.emptySubtitle}>
-              Apply to campaigns and submit your videos
+              Browse and apply to campaigns in the Discover tab
             </Text>
           </View>
-        }
+        )}
+      </ScrollView>
+
+      {/* Referral Sheet */}
+      <ReferralSheet
+        visible={showReferralSheet}
+        onClose={() => setShowReferralSheet(false)}
+        referralCode={profile?.referral_code || null}
       />
     </SafeAreaView>
   );
@@ -347,202 +766,327 @@ export function MyCampaignsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
+    backgroundColor: colors.background,
   },
   header: {
-    marginBottom: 8,
-  },
-  statsCards: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  statCardIcon: {
-    marginBottom: 8,
-  },
-  statCardValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  statCardLabel: {
-    fontSize: 12,
-    color: '#888',
-  },
-  sectionTitleRow: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
   },
-  sectionTitle: {
-    fontSize: 18,
+  logoContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoImage: {
+    width: 26,
+    height: 26,
+  },
+  headerTitle: {
+    fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
+    letterSpacing: -0.5,
   },
-  listContent: {
+  walletButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primaryMuted,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  walletButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
-  submissionCard: {
-    backgroundColor: '#1a1a1a',
+  earningsSection: {
+    marginTop: 8,
+  },
+  totalEarnings: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: colors.foreground,
+    letterSpacing: -2,
+  },
+  chartContainer: {
+    marginTop: 40, // Extra space for tooltip above
+    marginBottom: 16,
+  },
+  referralBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
     borderRadius: 12,
-    marginBottom: 12,
-    overflow: 'hidden',
+    padding: 16,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: colors.border,
   },
-  colorStripe: {
-    height: 4,
+  referralBannerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primaryMuted,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  cardContent: {
-    padding: 14,
+  referralBannerContent: {
+    flex: 1,
   },
-  topRow: {
+  referralBannerTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginBottom: 2,
+  },
+  referralBannerSubtitle: {
+    fontSize: 13,
+    color: colors.mutedForeground,
+  },
+  referralBannerClose: {
+    padding: 4,
+  },
+  listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  filterButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.foreground,
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sortButtonText: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+  },
+  campaignList: {
+    gap: 12,
+  },
+  campaignRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  campaignLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 12,
+  },
+  brandLogo: {
+    width: '100%',
+    height: '100%',
+  },
+  brandLogoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  brandInitial: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
   },
   campaignInfo: {
     flex: 1,
     marginRight: 12,
   },
-  brandNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  campaignTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.foreground,
     marginBottom: 2,
   },
-  brandIcon: {
-    marginRight: 4,
+  campaignMeta: {
+    fontSize: 13,
+    color: colors.mutedForeground,
   },
-  brandName: {
-    fontSize: 12,
-    color: '#888',
-  },
-  campaignTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  platformBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  statItem: {
-    flex: 1,
-  },
-  statLabelRow: {
+  campaignEarnings: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 2,
   },
-  statLabel: {
-    fontSize: 11,
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
+  earningsValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#666',
+    color: colors.foreground,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  retryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#6366f1',
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyText: {
-    color: '#888',
+    color: colors.mutedForeground,
     fontSize: 16,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 48,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    color: '#333',
-    marginBottom: 16,
-    fontWeight: 'bold',
+    paddingHorizontal: 32,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.foreground,
+    marginTop: 16,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#888',
+    color: colors.mutedForeground,
     textAlign: 'center',
+  },
+  // Referral Sheet Styles
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  referralSheet: {
+    position: 'absolute',
+    bottom: 90, // Above the tab bar
+    left: 0,
+    right: 0,
+    height: REFERRAL_SHEET_HEIGHT,
+    backgroundColor: '#0a0a0a',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+  },
+  referralContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  referralTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.foreground,
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  referralSubtitle: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  referralCodeBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  referralCodeLabel: {
+    fontSize: 12,
+    color: colors.mutedForeground,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  referralCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  referralCode: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.foreground,
+    letterSpacing: 2,
+  },
+  copyButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  referralStats: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  referralStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  referralStatDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+  },
+  referralStatValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.foreground,
+    marginBottom: 4,
+  },
+  referralStatLabel: {
+    fontSize: 12,
+    color: colors.mutedForeground,
+  },
+  shareButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    borderRadius: 28,
+    borderTopWidth: 1,
+    borderTopColor: '#589bfd',
+  },
+  shareButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
