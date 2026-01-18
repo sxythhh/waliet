@@ -85,10 +85,16 @@ function OAuthRedirectHandler() {
   return null;
 }
 
-// Redirect /c/:slug to /join/:slug for backwards compatibility
+// Redirect /join/:slug to /campaign/:slug
+function JoinSlugRedirect() {
+  const { slug } = useParams();
+  return <Navigate to={`/campaign/${slug}`} replace />;
+}
+
+// Redirect /c/:slug to /campaign/:slug for backwards compatibility
 function CampaignSlugRedirect() {
   const { slug } = useParams();
-  return <Navigate to={`/join/${slug}`} replace />;
+  return <Navigate to={`/campaign/${slug}`} replace />;
 }
 
 // Redirect /boost/:id to /join/:slug (supports both UUID and slug in URL)
@@ -242,7 +248,7 @@ const App = () => (
                   } />
                   <Route path="/boost/:id" element={<BoostRedirect />} />
                   <Route path="/blueprint/:id" element={<BlueprintDetail />} />
-                  <Route path="/join/:slug" element={<CampaignApply />} />
+                  <Route path="/join/:slug" element={<JoinSlugRedirect />} />
                   <Route path="/c/:slug" element={<CampaignSlugRedirect />} />
                   <Route path="/apply/:slug" element={
                     <Suspense fallback={<PageLoader />}>
