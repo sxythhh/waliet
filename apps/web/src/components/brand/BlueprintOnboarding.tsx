@@ -38,28 +38,17 @@ const TEMPLATE_STYLES: TemplateStyle[] = [
 interface BlueprintOnboardingProps {
   brandId: string;
   onSelectTemplate: (templateId: string) => void;
-  onStartBlank: () => void;
 }
 
 export function BlueprintOnboarding({
   brandId,
   onSelectTemplate,
-  onStartBlank,
 }: BlueprintOnboardingProps) {
 
   return (
     <div className="space-y-4">
       {/* Template Styles Section */}
       <div className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-5">
-        <button
-          onClick={onStartBlank}
-          className="flex items-center gap-2 mb-4 hover:opacity-70 transition-opacity"
-        >
-          <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
-            Start with Blank Blueprint
-          </h3>
-        </button>
-
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {TEMPLATE_STYLES.map((template) => (
             <button

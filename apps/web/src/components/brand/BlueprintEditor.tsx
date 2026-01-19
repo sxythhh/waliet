@@ -94,7 +94,6 @@ export function BlueprintEditor({
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [connectPlatform, setConnectPlatform] = useState<"tiktok" | "instagram" | "youtube" | "twitter">("tiktok");
-  const [hideOnboarding, setHideOnboarding] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
   const isMobile = useIsMobile();
@@ -941,11 +940,10 @@ export function BlueprintEditor({
               )}
 
               {/* Onboarding Section - only shown for empty blueprints when not hidden (not in readOnly) */}
-              {!readOnly && isEmptyBlueprint() && !hideOnboarding && (
+              {!readOnly && isEmptyBlueprint() && (
                 <BlueprintOnboarding
                   brandId={brandId}
                   onSelectTemplate={handleApplyTemplate}
-                  onStartBlank={() => setHideOnboarding(true)}
                 />
               )}
 
