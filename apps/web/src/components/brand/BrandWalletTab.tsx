@@ -99,34 +99,42 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
 
   const fetchWalletData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-
-      const { data, error } = await supabase.functions.invoke("get-brand-balance", {
-        body: { brand_id: brandId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      // Query directly from business_wallets table
+      const { data, error } = await supabase
+        .from("business_wallets")
+        .select("*")
+        .eq("business_id", brandId)
+        .maybeSingle();
 
       if (error) {
-        // Check if it's a 401/403 auth error - don't show toast for these
-        // FunctionsHttpError has context as a Response object
-        const status = (error as any)?.context?.status;
-        if (status === 401 || status === 403) {
-          // Silently ignore auth errors - user may not have access to this brand's wallet
+        // Silently ignore RLS/permission errors
+        if (error.code === "PGRST116" || error.message?.includes("permission")) {
           return;
         }
         throw error;
       }
-      setWalletData(data);
-    } catch (error: any) {
-      // Also check for auth errors in catch block (FunctionsHttpError structure)
-      const status = error?.context?.status;
-      if (status === 401 || status === 403) {
-        // Silently ignore auth errors
+
+      // If no wallet exists yet, create default wallet data
+      if (!data) {
+        setWalletData({
+          balance: 0,
+          virality_balance: 0,
+          withdraw_balance: 0,
+          pending_balance: 0,
+          currency: "USD",
+        });
         return;
       }
+
+      // Map database fields to WalletData interface
+      setWalletData({
+        balance: Number(data.balance) || 0,
+        virality_balance: Number(data.balance) || 0,
+        withdraw_balance: 0,
+        pending_balance: 0,
+        currency: "USD",
+      });
+    } catch (error: any) {
       console.error("Error fetching wallet data:", error);
       toast.error("Failed to load wallet data");
     }
