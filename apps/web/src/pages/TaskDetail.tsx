@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, DollarSign, Clock, Users, Calendar, Building2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, DollarSign, Clock, Users, Calendar, Building2, CheckCircle2, Upload, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,9 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SEOHead } from "@/components/SEOHead";
 import { useTask } from "@/hooks/useTasks";
 import { useHasAppliedToTask, useApplyToTask } from "@/hooks/useTaskApplications";
+import { useTaskSubmission } from "@/hooks/useTaskSubmissions";
 import { useAuth } from "@/contexts/AuthContext";
+import { SubmitTaskDialog } from "@/components/task-verification/SubmitTaskDialog";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -17,13 +20,17 @@ export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
 
   const { data: task, isLoading: taskLoading } = useTask(id);
   const { data: existingApplication, isLoading: applicationLoading } = useHasAppliedToTask(id);
+  const { data: existingSubmission, isLoading: submissionLoading } = useTaskSubmission(existingApplication?.id);
   const applyMutation = useApplyToTask();
 
-  const isLoading = taskLoading || applicationLoading;
+  const isLoading = taskLoading || applicationLoading || submissionLoading;
   const hasApplied = !!existingApplication;
+  const isAccepted = existingApplication?.status === "accepted";
+  const hasSubmitted = !!existingSubmission;
   const canApply = user && !hasApplied && task?.status === "active";
 
   const handleApply = async () => {
@@ -216,6 +223,82 @@ export default function TaskDetail() {
           </Card>
         )}
 
+        {/* Application Status Card */}
+        {hasApplied && (
+          <Card className={
+            existingApplication?.status === "accepted" ? "border-green-500/30 bg-green-500/5" :
+            existingApplication?.status === "rejected" ? "border-red-500/30 bg-red-500/5" :
+            "border-primary/30 bg-primary/5"
+          }>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold mb-1">Application Status</h3>
+                  <div className="flex items-center gap-2">
+                    {existingApplication?.status === "pending" && (
+                      <Badge variant="secondary">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pending Review
+                      </Badge>
+                    )}
+                    {existingApplication?.status === "accepted" && (
+                      <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Accepted
+                      </Badge>
+                    )}
+                    {existingApplication?.status === "rejected" && (
+                      <Badge variant="destructive">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        Not Selected
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Submission Status */}
+                  {isAccepted && (
+                    <div className="mt-3">
+                      {hasSubmitted ? (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Submission:</span>
+                          {existingSubmission?.verification_status === "approved" || existingSubmission?.verification_status === "auto_approved" ? (
+                            <Badge className="bg-green-500/10 text-green-500">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Verified
+                            </Badge>
+                          ) : existingSubmission?.verification_status === "rejected" ? (
+                            <Badge variant="destructive">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              Rejected
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Under Review
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Complete the task and submit proof to earn your reward.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                {isAccepted && !hasSubmitted && (
+                  <Button onClick={() => setShowSubmitDialog(true)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Submit Task
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Apply Button */}
         <div className="sticky bottom-4 bg-background/80 backdrop-blur-lg p-4 -mx-4 border-t">
           <div className="max-w-4xl mx-auto">
@@ -223,10 +306,20 @@ export default function TaskDetail() {
               <Button className="w-full" size="lg" onClick={() => navigate("/auth")}>
                 Sign in to Apply
               </Button>
-            ) : hasApplied ? (
+            ) : hasApplied && isAccepted && !hasSubmitted ? (
+              <Button className="w-full" size="lg" onClick={() => setShowSubmitDialog(true)}>
+                <Upload className="w-5 h-5 mr-2" />
+                Submit Completed Task
+              </Button>
+            ) : hasApplied && hasSubmitted ? (
               <Button className="w-full" size="lg" disabled>
                 <CheckCircle2 className="w-5 h-5 mr-2" />
-                Already Applied
+                Submission Under Review
+              </Button>
+            ) : hasApplied ? (
+              <Button className="w-full" size="lg" disabled>
+                <Clock className="w-5 h-5 mr-2" />
+                Application Pending
               </Button>
             ) : isEnded ? (
               <Button className="w-full" size="lg" disabled>
@@ -249,6 +342,22 @@ export default function TaskDetail() {
           </div>
         </div>
       </main>
+
+      {/* Submit Task Dialog */}
+      {task && existingApplication && (
+        <SubmitTaskDialog
+          open={showSubmitDialog}
+          onOpenChange={setShowSubmitDialog}
+          task={{
+            id: task.id,
+            title: task.title,
+            reward_amount: task.reward_amount,
+            verification_type: (task as any).verification_type,
+            estimated_time_minutes: (task as any).estimated_time_minutes,
+          }}
+          application={{ id: existingApplication.id }}
+        />
+      )}
     </div>
   );
 }
