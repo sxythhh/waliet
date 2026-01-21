@@ -62,7 +62,7 @@ export function ProfileOnboardingChecklist({
                 {/* Background circle */}
                 <circle cx="22" cy="22" r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} className="text-black/10 dark:text-white/10" />
                 {/* Progress circle */}
-                <circle cx="22" cy="22" r={radius} fill="none" stroke="#2060df" strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-500 ease-out" />
+                <circle cx="22" cy="22" r={radius} fill="none" stroke="hsl(var(--primary))" strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-500 ease-out" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xs font-semibold text-foreground" style={{

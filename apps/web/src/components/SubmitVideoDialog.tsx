@@ -472,7 +472,7 @@ export function SubmitVideoDialog({
                       {platform ? `No ${PLATFORM_CONFIG[platform]?.label || platform} accounts connected` : 'Select a platform first by entering a video URL'}
                     </span>
                   </div> : <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                    <SelectTrigger className="h-12 bg-muted/30 border-border/50 rounded-xl focus:border-primary/50 focus:ring-[#2060df]/20">
+                    <SelectTrigger className="h-12 bg-muted/30 border-border/50 rounded-xl focus:border-primary/50 focus:ring-[hsl(var(--primary))]/20">
                       <SelectValue placeholder="Select your account" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border-border">
@@ -499,7 +499,7 @@ export function SubmitVideoDialog({
                   Link <span className="text-primary">*</span>
                 </label>
                 <div className="relative">
-                  <Input placeholder="https://tiktok.com/@username/video/..." value={videoUrl} onChange={e => handleUrlChange(e.target.value)} className="h-12 bg-muted/30 border-border/50 rounded-xl text-sm focus:border-primary/50 focus:ring-[#2060df]/20" style={{
+                  <Input placeholder="https://tiktok.com/@username/video/..." value={videoUrl} onChange={e => handleUrlChange(e.target.value)} className="h-12 bg-muted/30 border-border/50 rounded-xl text-sm focus:border-primary/50 focus:ring-[hsl(var(--primary))]/20" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.3px'
                 }} />
@@ -522,7 +522,7 @@ export function SubmitVideoDialog({
 
               {/* Submit Button */}
               <div className="flex justify-end pt-2">
-                <Button onClick={handleSubmit} disabled={isSubmitting || !videoUrl || !platform || !selectedAccountId || !acknowledged} className="h-11 px-6 rounded-xl font-semibold bg-primary hover:bg-[#1a4db8] text-white border-t border-primary/70 font-inter tracking-[-0.5px]">
+                <Button onClick={handleSubmit} disabled={isSubmitting || !videoUrl || !platform || !selectedAccountId || !acknowledged} className="h-11 px-6 rounded-xl font-semibold bg-primary hover:bg-[hsl(var(--primary))] text-white border-t border-primary/70 font-inter tracking-[-0.5px]">
                   {isSubmitting ? <span className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Submitting...

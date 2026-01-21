@@ -317,7 +317,7 @@ export function SubmitBoostVideoDialog({
                   value={gdriveUrl}
                   onChange={(e) => setGdriveUrl(e.target.value)}
                   placeholder="https://drive.google.com/file/d/..."
-                  className="h-12 bg-muted/30 border border-zinc-300 dark:border-border/50 rounded-xl text-sm focus:border-primary/50 focus:ring-[#2060df]/20 font-inter tracking-[-0.3px]"
+                  className="h-12 bg-muted/30 border border-zinc-300 dark:border-border/50 rounded-xl text-sm focus:border-primary/50 focus:ring-[hsl(var(--primary))]/20 font-inter tracking-[-0.3px]"
                 />
                 {/* Verification Status */}
                 {isValidating && (
@@ -358,7 +358,7 @@ export function SubmitBoostVideoDialog({
                   onChange={(e) => setCaption(e.target.value)}
                   placeholder="Enter the caption for this video..."
                   rows={3}
-                  className="bg-muted/30 border border-zinc-300 dark:border-border/50 rounded-xl text-sm resize-none focus:border-primary/50 focus:ring-[#2060df]/20 font-inter tracking-[-0.3px]"
+                  className="bg-muted/30 border border-zinc-300 dark:border-border/50 rounded-xl text-sm resize-none focus:border-primary/50 focus:ring-[hsl(var(--primary))]/20 font-inter tracking-[-0.3px]"
                 />
               </div>
 
@@ -371,7 +371,7 @@ export function SubmitBoostVideoDialog({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Any notes for the reviewer..."
-                  className="h-12 bg-muted/30 border border-zinc-300 dark:border-border/50 rounded-xl text-sm focus:border-primary/50 focus:ring-[#2060df]/20 font-inter tracking-[-0.3px]"
+                  className="h-12 bg-muted/30 border border-zinc-300 dark:border-border/50 rounded-xl text-sm focus:border-primary/50 focus:ring-[hsl(var(--primary))]/20 font-inter tracking-[-0.3px]"
                 />
               </div>
 

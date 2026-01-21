@@ -84,15 +84,9 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
   const fetchWebhooks = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await (supabase
-        // @ts-expect-error - brand_webhooks table exists but not in generated types
-        .from("brand_webhooks")
-        .select("*")
-        .eq("brand_id", brandId)
-        .order("created_at", { ascending: false }) as unknown as { data: Webhook[] | null; error: Error | null });
-
-      if (error) throw error;
-      setWebhooks(data || []);
+      // Note: Webhooks feature not yet implemented in new schema
+      // Return empty array for now - webhook feature to be added later
+      setWebhooks([]);
     } catch (error) {
       console.error("Error fetching webhooks:", error);
       toast.error("Failed to load webhooks");

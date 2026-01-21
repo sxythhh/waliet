@@ -775,7 +775,7 @@ export function JoinCampaignSheet({
                 <Button style={{
                   fontFamily: 'Geist',
                   letterSpacing: '-0.5px',
-                  backgroundColor: campaign.status === "ended" || !meetsInsightsRequirement ? '#6b7280' : '#2060df'
+                  backgroundColor: campaign.status === "ended" || !meetsInsightsRequirement ? '#6b7280' : 'hsl(var(--primary))'
                 }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0 || !meetsInsightsRequirement} className="w-full text-white tracking-tighter">
                   {campaign.status === "ended" ? "Campaign Ended" : !meetsInsightsRequirement ? "Insights Required" : submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
                 </Button>

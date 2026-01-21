@@ -85,9 +85,9 @@ export function TeamMembersTab({
       if (user) {
         setCurrentUserId(user.id);
         const { data: memberData } = await supabase
-          .from("brand_members")
+          .from("business_members")
           .select("role")
-          .eq("brand_id", brandId)
+          .eq("business_id", brandId)
           .eq("user_id", user.id)
           .maybeSingle();
         setCurrentUserRole(memberData?.role || null);
@@ -95,9 +95,9 @@ export function TeamMembersTab({
 
       // Fetch brand members
       const { data: membersData, error: membersError } = await supabase
-        .from("brand_members")
+        .from("business_members")
         .select("id, user_id, role, created_at")
-        .eq("brand_id", brandId);
+        .eq("business_id", brandId);
       if (membersError) throw membersError;
 
       // Fetch all profiles in one query
@@ -119,27 +119,10 @@ export function TeamMembersTab({
       }));
       setMembers(membersWithProfiles);
 
-      // Fetch pending email invitations (non-link invites)
-      const { data: invitationsData, error: invitationsError } = await supabase
-        .from("brand_invitations")
-        .select("*")
-        .eq("brand_id", brandId)
-        .eq("status", "pending")
-        .or("is_link_invite.is.null,is_link_invite.eq.false");
-      if (invitationsError) throw invitationsError;
-      setInvitations(invitationsData || []);
-
-      // Fetch active link invitations
-      const { data: linkInvitesData, error: linkInvitesError } = await supabase
-        .from("brand_invitations")
-        .select("id, role, invite_token, created_at, expires_at")
-        .eq("brand_id", brandId)
-        .eq("is_link_invite", true)
-        .eq("status", "pending")
-        .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false });
-      if (linkInvitesError) throw linkInvitesError;
-      setLinkInvites((linkInvitesData || []) as LinkInvite[]);
+      // Note: brand_invitations table not yet implemented in new schema
+      // Set empty arrays for now - invitation feature to be added later
+      setInvitations([]);
+      setLinkInvites([]);
     } catch (error) {
       console.error("Error fetching team data:", error);
       toast.error("Failed to load team data");
@@ -154,17 +137,13 @@ export function TeamMembersTab({
 
     try {
       if (type === "member") {
-        const { error } = await supabase.from("brand_members").delete().eq("id", id);
+        const { error } = await supabase.from("business_members").delete().eq("id", id);
         if (error) throw error;
         toast.success("Member removed successfully");
-      } else if (type === "link") {
-        const { error } = await supabase.from("brand_invitations").update({ status: "cancelled" }).eq("id", id);
-        if (error) throw error;
-        toast.success("Link revoked");
-      } else if (type === "invitation") {
-        const { error } = await supabase.from("brand_invitations").update({ status: "cancelled" }).eq("id", id);
-        if (error) throw error;
-        toast.success("Invitation cancelled");
+      } else if (type === "link" || type === "invitation") {
+        // Invitations not yet implemented in new schema
+        toast.info("Invitation management coming soon");
+        return;
       }
       fetchTeamData();
     } catch (error) {
