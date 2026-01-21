@@ -1234,7 +1234,7 @@ export default function CampaignApply() {
                               onClick={handleSubmit}
                               disabled={submitting}
                               className="w-full mt-3 font-inter tracking-[-0.5px]"
-                              style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                              style={{ backgroundColor: '#f5ca6e', borderTop: '1px solid #fbe0aa', color: '#000' }}
                             >
                               {submitting ? "Connecting..." : `Connect ${selectedAccounts.length} Account${selectedAccounts.length > 1 ? 's' : ''}`}
                             </Button>
@@ -1409,7 +1409,7 @@ export default function CampaignApply() {
                     size="lg"
                     onClick={handleApplyClick}
                     disabled={isFull || isEnded || submitting}
-                    style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                    style={{ backgroundColor: '#f5ca6e', borderTop: '1px solid #fbe0aa', color: '#000' }}
                   >
                     {submitting ? 'Joining...' : isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : parseApplicationQuestions(boostCampaign?.application_questions).length === 0 ? 'Join Campaign' : 'Start Application'}
                   </Button>
@@ -1469,7 +1469,7 @@ export default function CampaignApply() {
                       disabled={isEnded || submitting || selectedAccounts.length === 0} 
                       className="w-full font-inter tracking-[-0.5px]" 
                       size="lg"
-                      style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                      style={{ backgroundColor: '#f5ca6e', borderTop: '1px solid #fbe0aa', color: '#000' }}
                     >
                       {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                     </Button>
@@ -1491,7 +1491,7 @@ export default function CampaignApply() {
             size="lg"
             onClick={handleApplyClick}
             disabled={submitting}
-            style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+            style={{ backgroundColor: '#f5ca6e', borderTop: '1px solid #fbe0aa', color: '#000' }}
           >
             {submitting ? "Joining..." : user ? (isBoost && parseApplicationQuestions(boostCampaign?.application_questions).length === 0 ? "Join Campaign" : "Start Application") : "Sign In to Apply"}
           </Button>
@@ -1605,7 +1605,7 @@ export default function CampaignApply() {
                   disabled={isEnded || submitting || selectedAccounts.length === 0} 
                   className="w-full font-inter tracking-[-0.5px]" 
                   size="lg"
-                  style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                  style={{ backgroundColor: '#f5ca6e', borderTop: '1px solid #fbe0aa', color: '#000' }}
                 >
                   {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                 </Button>

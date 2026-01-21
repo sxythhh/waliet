@@ -46,7 +46,7 @@ export default function Privacy() {
             <div className="flex items-center gap-3">
               {isAuthenticated ? (
                 <Link to="/dashboard">
-                  <Button size="sm" className="font-medium bg-primary hover:bg-primary/90 border-t border-[#4f89ff] text-white">
+                  <Button size="sm" className="font-medium bg-primary hover:bg-primary/90 border-t border-[#fbe0aa] text-white">
                     Dashboard
                   </Button>
                 </Link>

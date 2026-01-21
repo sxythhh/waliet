@@ -280,7 +280,7 @@ export function ApplyToBoostDialog({
               <Button 
                 onClick={() => setShowAddSocialDialog(true)} 
                 className="font-inter tracking-[-0.5px] bg-primary hover:bg-primary/90 text-white"
-                style={{ borderTop: '1px solid #4b85f7' }}
+                style={{ borderTop: '1px solid #fbe0aa' }}
               >
                 Connect Account
               </Button>
@@ -394,7 +394,7 @@ export function ApplyToBoostDialog({
                 onClick={handleSubmit}
                 disabled={submitting || isUploading || (!videoUrl.trim() && !uploadedVideoFile)}
                 className="flex-1 bg-primary hover:bg-primary/90 text-white font-inter tracking-[-0.5px]"
-                style={{ borderTop: '1px solid #4b85f7' }}
+                style={{ borderTop: '1px solid #fbe0aa' }}
               >
                 {isUploading ? "Uploading..." : submitting ? "Submitting..." : "Submit Application"}
               </Button>

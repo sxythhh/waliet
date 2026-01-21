@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
-import viralityLogo from "@/assets/virality-logo.webp";
+import viralityLogo from "@/assets/virality-logo-new.png";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -1794,7 +1794,7 @@ export function ProfileTab() {
                   setAddSocialDialogOpen(true);
                 }}
                 size="sm"
-                className="font-inter font-medium tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7] rounded-md"
+                className="font-inter font-medium tracking-[-0.5px] bg-[#f5ca6e] hover:bg-[#f5ca6e]/90 text-black border-t border-t-[#fbe0aa] rounded-md"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Account

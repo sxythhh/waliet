@@ -41,7 +41,7 @@ const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextSty
       borderTopColor: colors.primaryGlow,
     },
     text: {
-      color: '#fff',
+      color: '#000',
     },
   },
   destructive: {

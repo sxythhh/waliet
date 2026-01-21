@@ -340,8 +340,8 @@ export function ProfileHeader({
                   <RankBadge rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} size="sm" />
                 </div>}
               <div className="flex-1" />
-              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-white hover:opacity-90 border-0 border-t border-t-[#4b85f7]" style={{
-              backgroundColor: '#1f60dd'
+              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-black hover:opacity-90 border-0 border-t border-t-[#fbe0aa]" style={{
+              backgroundColor: '#f5ca6e'
             }} onClick={() => setShowEditProfileDialog(true)}>
                 Edit Profile
               </Button>

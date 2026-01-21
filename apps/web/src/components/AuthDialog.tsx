@@ -154,7 +154,7 @@ export default function AuthDialog({
                   onBack={() => setShowEmailForm(false)}
                   onSuccess={() => {
                     handleClose();
-                    navigate("/dashboard");
+                    navigate("/");
                   }}
                 />
               )}

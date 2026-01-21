@@ -323,7 +323,7 @@ export function AppSidebar() {
 
   // Auto-collapse sidebar on campaign/boost detail pages on desktop
   // Auto-expand when navigating away (reverse animation)
-  const isDetailPage = location.pathname.startsWith('/dashboard/campaign/') || location.pathname.startsWith('/dashboard/boost/');
+  const isDetailPage = location.pathname.startsWith('/dashboard/campaign/') || location.pathname.startsWith('/dashboard/boost/') || location.pathname.startsWith('/campaign/') || location.pathname.startsWith('/boost/');
   useEffect(() => {
     if (!isMobile && isDetailPage && !hasAutoCollapsed.current) {
       setIsCollapsed(true);
@@ -378,9 +378,9 @@ export function AppSidebar() {
     } else {
       newParams.delete("subtab");
     }
-    // If not already on dashboard, navigate there with the new params
-    if (location.pathname !== '/dashboard') {
-      navigate(`/dashboard?${newParams.toString()}`);
+    // If not already on home, navigate there with the new params
+    if (location.pathname !== '/') {
+      navigate(`/?${newParams.toString()}`);
     } else {
       setSearchParams(newParams);
     }
@@ -392,9 +392,9 @@ export function AppSidebar() {
     newParams.delete("blueprint");
     newParams.delete("campaign");
     newParams.delete("boost");
-    // If not already on dashboard, navigate there with the new params
-    if (location.pathname !== '/dashboard') {
-      navigate(`/dashboard?${newParams.toString()}`);
+    // If not already on home, navigate there with the new params
+    if (location.pathname !== '/') {
+      navigate(`/?${newParams.toString()}`);
     } else {
       setSearchParams(newParams);
     }
@@ -409,9 +409,9 @@ export function AppSidebar() {
     }
     // Save workspace preference to localStorage
     localStorage.setItem("lastWorkspace", newWorkspace);
-    // Always navigate to /dashboard when switching workspaces
+    // Always navigate to home when switching workspaces
     // This ensures we leave detail pages (campaign/boost) properly
-    navigate(`/dashboard?${newParams.toString()}`);
+    navigate(`/?${newParams.toString()}`);
     setWorkspaceOpen(false);
   };
   const handleSignOut = async () => {
@@ -442,7 +442,7 @@ export function AppSidebar() {
       {/* Mobile Header - Top (hidden on campaign/boost detail pages) */}
       <header className={`md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4 ${isDetailPage ? 'hidden' : ''}`}>
         {!isCreatorMode && currentBrandName ? (
-          <Link to={`/dashboard?workspace=${workspace}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link to={`/?workspace=${workspace}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {currentBrandLogo ? (
               <img src={currentBrandLogo} alt={currentBrandName} className="h-7 w-7 rounded object-cover" />
             ) : (
@@ -559,7 +559,7 @@ export function AppSidebar() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2 pb-safe-bottom">
         {menuItems.map(item => {
-        const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+        const isActive = location.pathname === '/' && currentTab === item.tab;
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}`}>
               {item.tab === "campaigns" ? <div className="relative h-6 w-6">
                   <img src={homeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
@@ -728,7 +728,7 @@ export function AppSidebar() {
         <nav className="flex-1 py-0 px-2 overflow-visible">
           <div className="flex flex-col gap-1 overflow-visible">
             {menuItems.map(item => {
-            const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+            const isActive = location.pathname === '/' && currentTab === item.tab;
             const hasSubItems = item.subItems && item.subItems.length > 0;
 
             // For items with subitems (like Creators), render expandable menu
@@ -890,7 +890,7 @@ export function AppSidebar() {
                                   newParams.delete("campaign");
                                   newParams.set("boost", item.id);
                                 }
-                                navigate(`/dashboard?${newParams.toString()}`);
+                                navigate(`/?${newParams.toString()}`);
                               }}
                               className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-muted dark:bg-[#1a1a1a] hover:brightness-110 transition-all"
                             >

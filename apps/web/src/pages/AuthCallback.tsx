@@ -102,7 +102,7 @@ export default function AuthCallback() {
             return;
           }
 
-          navigate("/dashboard", { replace: true });
+          navigate("/", { replace: true });
           return;
         }
 
@@ -162,7 +162,7 @@ export default function AuthCallback() {
             return;
           }
 
-          navigate("/dashboard", { replace: true });
+          navigate("/", { replace: true });
           return;
         }
 

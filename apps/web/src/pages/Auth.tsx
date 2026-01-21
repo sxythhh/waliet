@@ -52,7 +52,7 @@ export default function Auth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && !isRecoveryMode) {
         const returnUrl = sessionStorage.getItem('applyReturnUrl');
-        navigate(returnUrl || "/dashboard");
+        navigate(returnUrl || "/");
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -60,7 +60,7 @@ export default function Auth() {
         setIsRecoveryMode(true);
       } else if (session && !isRecoveryMode) {
         const returnUrl = sessionStorage.getItem('applyReturnUrl');
-        navigate(returnUrl || "/dashboard");
+        navigate(returnUrl || "/");
       }
     });
     return () => subscription.unsubscribe();
@@ -179,7 +179,7 @@ export default function Auth() {
             : "You're signed in successfully.",
         });
         const returnUrl = sessionStorage.getItem('applyReturnUrl');
-        navigate(returnUrl || "/dashboard");
+        navigate(returnUrl || "/");
       }
     } catch (error: any) {
       toast({
@@ -225,7 +225,7 @@ export default function Auth() {
       toast({ title: "Password updated", description: "Your password has been successfully updated." });
       setIsRecoveryMode(false);
       setNewPassword("");
-      navigate("/dashboard");
+      navigate("/");
     }
   };
 

@@ -19,12 +19,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getSubdomainSlug, getCampaignSlugFromPath } from "./utils/subdomain";
 
 // Eagerly loaded routes (critical path)
-import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // Lazily loaded routes (secondary pages)
-const Discover = lazy(() => import("./pages/Discover"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CampaignJoin = lazy(() => import("./pages/CampaignJoin"));
@@ -129,7 +127,7 @@ function BoostRedirect() {
         toast.error("Boost not found", {
           description: "The boost you're looking for doesn't exist or has been removed."
         });
-        navigate("/dashboard", { replace: true });
+        navigate("/", { replace: true });
       }
     };
     fetchBoostSlug();
@@ -205,7 +203,11 @@ const App = () => (
               <SubdomainHandler>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <WorkspaceProvider><Dashboard /></WorkspaceProvider>
+                    </Suspense>
+                  } />
                   <Route path="/b/:slug" element={<BrandPublicPage />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
@@ -217,7 +219,8 @@ const App = () => (
                   <Route path="/google/docs-callback" element={<GoogleDocsOAuthCallback />} />
                   <Route path="/notion/callback" element={<NotionOAuthCallback />} />
                   <Route path="/apply" element={<Apply />} />
-                  <Route path="/discover" element={<Discover />} />
+                  {/* Redirect /discover to home for backwards compatibility */}
+                  <Route path="/discover" element={<Navigate to="/" replace />} />
                   <Route path="/creator-terms" element={<CreatorTerms />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
@@ -255,11 +258,8 @@ const App = () => (
                       <PublicBoostApplication />
                     </Suspense>
                   } />
-                  <Route path="/dashboard" element={
-                    <Suspense fallback={<DashboardLoader />}>
-                      <WorkspaceProvider><Dashboard /></WorkspaceProvider>
-                    </Suspense>
-                  } />
+                  {/* Redirect /dashboard to home for backwards compatibility */}
+                  <Route path="/dashboard" element={<Navigate to="/" replace />} />
                   <Route path="/dashboard/campaign/:id" element={
                     <Suspense fallback={<DashboardLoader />}>
                       <WorkspaceProvider><DashboardLayout><CreatorCampaignDetails /></DashboardLayout></WorkspaceProvider>

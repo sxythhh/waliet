@@ -236,7 +236,7 @@ export default function CourseDetail() {
               const isCompleted = completions.some(c => c.module_id === module.id);
               const isSelected = selectedModuleId === module.id;
               return <div key={module.id} className={`group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isSelected ? 'bg-white/5' : 'hover:bg-white/[0.02]'}`} onClick={() => setSelectedModuleId(module.id)}>
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-[#5865F2] text-white' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
+                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-[#f5ca6e] text-black' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
                       {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
                     </div>
                     <span className={`flex-1 text-sm transition-colors font-chakra-petch font-semibold ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`} style={{ letterSpacing: '-0.5px' }}>{module.title}</span>
@@ -290,7 +290,7 @@ export default function CourseDetail() {
                         setSidebarOpen(false);
                       }}
                     >
-                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-[#5865F2] text-white' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isCompleted ? 'bg-[#f5ca6e] text-black' : isSelected ? 'bg-white/10 text-white/80' : 'bg-white/5 text-white/40'}`}>
                         {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
                       </div>
                       <span className={`flex-1 text-sm transition-colors font-chakra-petch font-semibold ${isSelected ? 'text-white font-medium' : 'text-white/60 group-hover:text-white/80'}`} style={{ letterSpacing: '-0.5px' }}>{module.title}</span>
@@ -320,7 +320,7 @@ export default function CourseDetail() {
                       {selectedModule.title}
                     </h2>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toggleCompletion(selectedModule.id, completions.some(c => c.module_id === selectedModule.id))} className="border-transparent bg-white/10 hover:bg-[#5865F2]">
+                  <Button variant="outline" size="sm" onClick={() => toggleCompletion(selectedModule.id, completions.some(c => c.module_id === selectedModule.id))} className="border-transparent bg-white/10 hover:bg-[#f5ca6e]">
                     {completions.some(c => c.module_id === selectedModule.id) ? <>
                         <CheckCircle2 className="h-4 w-4 mr-2 text-white" />
                         Completed
@@ -401,7 +401,7 @@ export default function CourseDetail() {
                       prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-8 md:prose-h2:mt-12 prose-h2:mb-3 md:prose-h2:mb-4
                       prose-h3:text-xl md:prose-h3:text-2xl prose-h3:mt-6 md:prose-h3:mt-8 prose-h3:mb-2 md:prose-h3:mb-3
                       prose-p:text-white/80 prose-p:leading-7 prose-p:mb-4
-                      prose-a:text-[#5865F2] prose-a:no-underline hover:prose-a:underline
+                      prose-a:text-[#f5ca6e] prose-a:no-underline hover:prose-a:underline
                       prose-strong:font-semibold prose-strong:text-white
                       prose-ul:my-4 prose-li:my-2 prose-li:text-white/80
                       [&_img]:max-w-full [&_img]:md:max-w-[600px] [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4

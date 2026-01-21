@@ -14,11 +14,11 @@ export const colors = {
   foreground: '#fafafa',     // hsl(0, 0%, 98%)
   mutedForeground: '#696969', // hsl(0, 0%, 41%)
 
-  // Primary - Discord Blurple
-  primary: '#5865F2',        // hsl(235, 86%, 65%)
-  primaryForeground: '#ffffff', // Text on primary background
-  primaryGlow: '#7983F5',    // hsl(235, 86%, 75%)
-  primaryMuted: 'rgba(88, 101, 242, 0.15)',
+  // Primary - Amber Gold
+  primary: '#f5ca6e',        // hsl(41, 87%, 70%)
+  primaryForeground: '#000000', // Text on primary background (dark text for light bg)
+  primaryGlow: '#fbe0aa',    // hsl(43, 92%, 82%)
+  primaryMuted: 'rgba(245, 202, 110, 0.15)',
 
   // Secondary
   secondary: '#292929',      // hsl(0, 0%, 16%)
@@ -40,7 +40,7 @@ export const colors = {
 
   // Transparent overlays
   overlay: 'rgba(0, 0, 0, 0.5)',
-  glassBg: 'rgba(88, 101, 242, 0.3)',
+  glassBg: 'rgba(245, 202, 110, 0.3)',
 
   // Rank colors
   rank: {
@@ -55,7 +55,7 @@ export const colors = {
   status: {
     live: '#22c55e',
     pending: '#f59e0b',
-    clearing: '#5865F2',
+    clearing: '#f5ca6e',
     paid: '#22c55e',
     clawedBack: '#ef4444',
     draft: '#696969',

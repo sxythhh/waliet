@@ -44,7 +44,7 @@ export function PageHeader({
             {showHome && (
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/dashboard" className="flex items-center">
+                  <Link to="/" className="flex items-center">
                     <Home className="h-4 w-4" />
                   </Link>
                 </BreadcrumbLink>

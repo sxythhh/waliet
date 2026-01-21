@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
-import viralityLogo from "@/assets/virality-logo.webp";
+import viralityLogo from "@/assets/virality-logo-new.png";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -136,7 +136,7 @@ export default function ResetPassword() {
         title: "Password updated!",
         description: "Your password has been successfully updated. Redirecting to dashboard..."
       });
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setTimeout(() => navigate("/"), 2000);
     }
   };
 

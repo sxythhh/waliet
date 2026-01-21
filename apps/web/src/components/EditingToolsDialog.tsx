@@ -151,7 +151,7 @@ export function EditingToolsDialog({
               onClick={handleSave}
               disabled={saving}
               className="h-9 px-5 min-w-[90px] tracking-[-0.3px]"
-              style={{ backgroundColor: "#2061de", borderTop: "1px solid #4b85f7" }}
+              style={{ backgroundColor: "#f5ca6e", borderTop: "1px solid #fbe0aa", color: "#000" }}
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
             </Button>

@@ -538,7 +538,7 @@ export function BrandCampaignsTab({
                 data-tour-target="create-campaign-btn"
                 onClick={() => setCampaignTypeDialogOpen(true)}
                 size="sm"
-                className="gap-2 h-8 text-white border-t border-t-[#4b85f7] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary px-3 hover:bg-primary/90 shrink-0"
+                className="gap-2 h-8 text-black border-t border-t-[#fbe0aa] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary px-3 hover:bg-primary/90 shrink-0"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Create Campaign</span>

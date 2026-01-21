@@ -160,7 +160,7 @@ export default function Training() {
           }
         }}>
               {/* Banner Image */}
-              <div className="relative h-48 bg-gradient-to-br from-[#5865F2]/20 to-[#202020] overflow-hidden">
+              <div className="relative h-48 bg-gradient-to-br from-[#f5ca6e]/20 to-[#202020] overflow-hidden">
                 {course.banner_url ? <img src={course.banner_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center">
                     <BookOpen className="h-16 w-16 text-white/20" />
                   </div>}
