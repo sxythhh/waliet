@@ -87,7 +87,7 @@ export default function BrandDashboard() {
       const {
         data: brandData,
         error: brandError
-      } = await supabase.from("brands").select("*").eq("slug", slug).maybeSingle();
+      } = await supabase.from("businesses").select("*").eq("slug", slug).maybeSingle();
       if (brandError) throw brandError;
       if (!brandData) {
         toast.error("Brand not found");
