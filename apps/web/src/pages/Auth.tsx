@@ -5,7 +5,7 @@ import { preserveTrackingForOAuth } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Mail, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 import {
   InputOTP,
@@ -17,8 +17,8 @@ import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking
 import { useTheme } from "@/components/ThemeProvider";
 
 // Helper to get/set last used auth method
-const LAST_AUTH_METHOD_KEY = "virality_last_auth_method";
-type AuthMethod = "google" | "discord" | "email";
+const LAST_AUTH_METHOD_KEY = "waliet_last_auth_method";
+type AuthMethod = "google" | "discord" | "email" | "password";
 
 const getLastAuthMethod = (): AuthMethod | null => {
   return localStorage.getItem(LAST_AUTH_METHOD_KEY) as AuthMethod | null;
@@ -31,8 +31,12 @@ const setLastAuthMethod = (method: AuthMethod) => {
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const [step, setStep] = useState<"main" | "otp">("main");
+  const [step, setStep] = useState<"main" | "otp" | "forgot-password">("main");
+  const [authMode, setAuthMode] = useState<"magic-link" | "password">("password");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -173,7 +177,7 @@ export default function Auth() {
         const referralResult = await trackReferral(data.user.id);
         clearStoredUtmParams();
         toast({
-          title: "Welcome to Virality!",
+          title: "Welcome to Waliet!",
           description: referralResult.success
             ? "You're signed in and referral applied successfully."
             : "You're signed in successfully.",
@@ -214,6 +218,149 @@ export default function Auth() {
     }
   };
 
+  const handlePasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        // Check if user doesn't exist - suggest sign up
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            variant: "destructive",
+            title: "Invalid credentials",
+            description: "Email or password is incorrect. Try again or sign up for a new account.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message,
+          });
+        }
+      } else if (data.user) {
+        setLastAuthMethod("password");
+        const referralResult = await trackReferral(data.user.id);
+        clearStoredUtmParams();
+        toast({
+          title: "Welcome back!",
+          description: "You're signed in successfully.",
+        });
+        const returnUrl = sessionStorage.getItem('applyReturnUrl');
+        navigate(returnUrl || "/");
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to sign in",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Password too short",
+        description: "Password must be at least 6 characters.",
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: getStoredUtmParams() || undefined,
+        },
+      });
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else if (data.user) {
+        // Check if email confirmation is required
+        if (data.user.identities?.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Account exists",
+            description: "An account with this email already exists. Try signing in instead.",
+          });
+          setIsSignUp(false);
+        } else if (data.session) {
+          // User is signed in directly (email confirmation disabled)
+          setLastAuthMethod("password");
+          const referralResult = await trackReferral(data.user.id);
+          clearStoredUtmParams();
+          toast({
+            title: "Welcome to Waliet!",
+            description: "Your account has been created successfully.",
+          });
+          const returnUrl = sessionStorage.getItem('applyReturnUrl');
+          navigate(returnUrl || "/");
+        } else {
+          // Email confirmation required
+          toast({
+            title: "Check your email",
+            description: "We sent you a confirmation link. Please verify your email to continue.",
+          });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to create account",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?recovery=true`,
+      });
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Reset link sent",
+          description: "Check your email for a password reset link.",
+        });
+        setStep("main");
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send reset link",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -233,13 +380,13 @@ export default function Auth() {
   if (isRecoveryMode) {
     return (
       <div className="min-h-screen flex">
-        <SEOHead title="Reset Password" description="Reset your Virality account password" noIndex={true} />
+        <SEOHead title="Reset Password" description="Reset your Waliet account password" noIndex={true} />
         {/* Left Panel - Form */}
         <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
           <div className="w-full max-w-[400px] space-y-8">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/05566301-7c21-4e5b-9e22-a097cbaf1442.png" alt="Virality" className="h-8 w-auto" />
+              <img src="/lovable-uploads/05566301-7c21-4e5b-9e22-a097cbaf1442.png" alt="Waliet" className="h-8 w-auto" />
             </div>
 
             {/* Header */}
@@ -289,7 +436,7 @@ export default function Auth() {
   // Main Auth Page
   return (
     <div className="min-h-screen flex">
-      <SEOHead title="Sign In" description="Sign in to your Virality account" noIndex={true} />
+      <SEOHead title="Sign In" description="Sign in to your Waliet account" noIndex={true} />
 
       {/* Left Panel - Form */}
       <div className="flex-1 flex items-center justify-center p-8 lg:p-12 bg-background relative">
@@ -308,18 +455,18 @@ export default function Auth() {
         </button>
 
         <div className="w-full max-w-[400px] space-y-8">
-          {/* Virality Logo + Wordmark */}
+          {/* Waliet Logo + Wordmark */}
           {step === "main" && (
             <div className="flex items-center justify-center gap-2">
               <img
-                alt="Virality Logo"
+                alt="Waliet Logo"
                 className="h-6 w-6"
                 src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png"
                 width="24"
                 height="24"
               />
               <span className="text-[17px] font-clash font-semibold text-foreground tracking-[-0.4px] -ml-0.5">
-                VIRALITY
+                WALIET
               </span>
             </div>
           )}
@@ -339,30 +486,160 @@ export default function Auth() {
           {/* Main Auth Options */}
           {step === "main" && (
             <div className="space-y-6">
-              {/* Email Input */}
-              <form onSubmit={handleSendOTP} className="space-y-3">
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="email-main"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="h-12 pl-12 pr-28 bg-background border border-border rounded-lg font-inter focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
+              {/* Auth Mode Toggle */}
+              <div className="flex items-center justify-center gap-1 p-1 bg-muted/50 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("password")}
+                  className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                    authMode === "password"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode("magic-link")}
+                  className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                    authMode === "magic-link"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Magic Link
+                </button>
+              </div>
+
+              {/* Password Auth Form */}
+              {authMode === "password" && (
+                <form onSubmit={isSignUp ? handlePasswordSignUp : handlePasswordSignIn} className="space-y-4">
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label htmlFor="email-password" className="text-sm font-medium text-foreground font-inter">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="email-password"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={loading}
+                        className="h-12 pl-12 bg-background border border-border rounded-lg font-inter focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="space-y-2">
+                    <label htmlFor="password" className="text-sm font-medium text-foreground font-inter">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder={isSignUp ? "Create a password (min 6 chars)" : "Enter your password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={loading}
+                        minLength={6}
+                        className="h-12 pl-12 pr-12 bg-background border border-border rounded-lg font-inter focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Forgot Password Link */}
+                  {!isSignUp && (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setStep("forgot-password")}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors font-inter"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
                   <Button
                     type="submit"
-                    size="sm"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-4 font-semibold font-inter rounded-md"
+                    className="w-full h-12 font-semibold font-inter rounded-lg"
+                    style={{ letterSpacing: '-0.5px' }}
+                    disabled={!email || !password || loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : isSignUp ? (
+                      "Create Account"
+                    ) : (
+                      "Sign In"
+                    )}
+                  </Button>
+
+                  {/* Toggle Sign Up / Sign In */}
+                  <p className="text-sm text-center text-muted-foreground font-inter">
+                    {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+                    <button
+                      type="button"
+                      onClick={() => setIsSignUp(!isSignUp)}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      {isSignUp ? "Sign in" : "Sign up"}
+                    </button>
+                  </p>
+                </form>
+              )}
+
+              {/* Magic Link Form */}
+              {authMode === "magic-link" && (
+                <form onSubmit={handleSendOTP} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="email-main" className="text-sm font-medium text-foreground font-inter">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="email-main"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={loading}
+                        className="h-12 pl-12 bg-background border border-border rounded-lg font-inter focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full h-12 font-semibold font-inter rounded-lg"
                     style={{ letterSpacing: '-0.5px' }}
                     disabled={!email || loading}
                   >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Send Magic Link"}
                   </Button>
-                </div>
-              </form>
+                  <p className="text-xs text-muted-foreground text-center font-inter">
+                    We'll send you a 6-digit code to verify your email
+                  </p>
+                </form>
+              )}
 
               {/* Divider */}
               <div className="relative">
@@ -419,16 +696,68 @@ export default function Auth() {
               {/* Terms */}
               <p className="text-xs text-muted-foreground text-center font-inter leading-relaxed">
                 By signing up, you agree to the{" "}
-                <a href="https://virality.gg/terms" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-2 hover:text-primary">
+                <a href="/terms" className="text-foreground underline underline-offset-2 hover:text-primary">
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="https://virality.gg/privacy" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-2 hover:text-primary">
+                <a href="/privacy" className="text-foreground underline underline-offset-2 hover:text-primary">
                   Privacy Policy
                 </a>
                 .
               </p>
 
+            </div>
+          )}
+
+          {/* Forgot Password Step */}
+          {step === "forgot-password" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight font-inter">
+                  Reset password
+                </h1>
+                <p className="text-muted-foreground mt-1 font-inter text-sm">
+                  Enter your email and we'll send you a reset link
+                </p>
+              </div>
+
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="email-forgot" className="text-sm font-medium text-foreground font-inter">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      id="email-forgot"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="h-12 pl-12 bg-background border border-border rounded-lg font-inter focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-12 font-semibold font-inter rounded-lg"
+                  style={{ letterSpacing: '-0.5px' }}
+                  disabled={!email || loading}
+                >
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Send Reset Link"}
+                </Button>
+              </form>
+
+              <button
+                type="button"
+                onClick={() => setStep("main")}
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors font-inter"
+              >
+                Back to sign in
+              </button>
             </div>
           )}
 

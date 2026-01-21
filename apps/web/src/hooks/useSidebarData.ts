@@ -2,295 +2,273 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 // Types
-export interface JoinedCampaign {
+export interface JoinedTask {
   id: string;
   title: string;
-  slug: string;
+  slug: string | null;
+  type: "task"; // For sidebar compatibility
+  business_name: string;
+  business_logo_url: string | null;
+  // Legacy aliases for sidebar compatibility
   brand_name: string;
   brand_logo_url: string | null;
   description: string | null;
-  status: string;
-  budget: number;
-  budget_used?: number | null;
-  rpm_rate: number;
-  allowed_platforms: string[] | null;
-  end_date: string | null;
-  created_at: string;
-  hashtags?: string[] | null;
-  guidelines?: string | null;
-  embed_url?: string | null;
-  asset_links?: { url: string; label?: string }[] | null;
-  requirements?: string[] | null;
-  campaign_update?: string | null;
-  campaign_update_at?: string | null;
-  payout_day_of_week?: number | null;
-  blueprint_id?: string | null;
-  payment_model?: string | null;
-  post_rate?: number | null;
-  type: "campaign" | "boost";
+  status: string | null;
+  reward_amount: number | null;
+  created_at: string | null;
+  deadline: string | null;
+  application_status: string | null;
 }
 
-export interface BrandMembership {
-  brand_id: string;
-  role: string;
+export interface BusinessMembership {
+  business_id: string;
+  brand_id: string; // Legacy alias
+  role: string | null;
+  businesses: {
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    brand_color?: string | null;
+  };
+  // Legacy alias for AppSidebar compatibility
   brands: {
     name: string;
     slug: string;
     logo_url: string | null;
-    brand_color: string | null;
+    brand_color?: string | null;
   };
 }
 
-export interface Brand {
+export interface Business {
   id: string;
   name: string;
   slug: string;
   logo_url: string | null;
-  brand_color: string | null;
+  brand_color?: string | null;
 }
 
-// Fetch joined campaigns and boosts for a user
-async function fetchJoinedCampaigns(userId: string): Promise<JoinedCampaign[]> {
-  const items: JoinedCampaign[] = [];
-
-  // Fetch campaigns the user has joined (via approved submissions)
-  const { data: submissions } = await supabase
-    .from("campaign_submissions")
-    .select("campaign_id")
-    .eq("creator_id", userId)
-    .eq("status", "approved")
-    .limit(50);
-
-  if (submissions && submissions.length > 0) {
-    const campaignIds = submissions.map((s) => s.campaign_id);
-
-    // Fetch campaign details with brand info
-    const { data: campaigns } = await supabase
-      .from("campaigns")
-      .select(`
-        id, title, slug, description, status, budget, budget_used,
-        rpm_rate, allowed_platforms, end_date, created_at, hashtags,
-        guidelines, embed_url, asset_links, requirements, campaign_update,
-        campaign_update_at, payout_day_of_week, blueprint_id, payment_model, post_rate,
-        brands (name, logo_url)
-      `)
-      .in("id", campaignIds)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
-
-    if (campaigns) {
-      items.push(...campaigns.map((c: any) => ({
-        ...c,
-        brand_name: c.brands?.name || "Unknown Brand",
-        brand_logo_url: c.brands?.logo_url || null,
-        type: "campaign" as const,
-      })));
-    }
-  }
-
-  // Fetch boosts the user has been accepted to
-  const { data: boostApplications } = await supabase
-    .from("bounty_applications")
-    .select("bounty_campaign_id")
+// Fetch joined tasks for a user (tasks they've been accepted to)
+async function fetchJoinedTasks(userId: string): Promise<JoinedTask[]> {
+  // Fetch task applications that are accepted or completed
+  const { data: applications } = await supabase
+    .from("task_applications")
+    .select(`
+      id,
+      status,
+      task_id,
+      tasks (
+        id,
+        title,
+        slug,
+        description,
+        status,
+        reward_amount,
+        created_at,
+        deadline,
+        businesses (
+          name,
+          logo_url
+        )
+      )
+    `)
     .eq("user_id", userId)
-    .eq("status", "accepted")
+    .in("status", ["accepted", "completed"])
     .limit(50);
 
-  if (boostApplications && boostApplications.length > 0) {
-    const boostIds = boostApplications.map((a) => a.bounty_campaign_id);
+  if (!applications) return [];
 
-    // Fetch boost details with brand info
-    const { data: boosts } = await supabase
-      .from("bounty_campaigns")
-      .select(`
-        id, title, slug, description, status, monthly_retainer,
-        videos_per_month, end_date, created_at, blueprint_id,
-        brands (name, logo_url)
-      `)
-      .in("id", boostIds)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
-
-    if (boosts) {
-      items.push(...boosts.map((b: any) => ({
-        id: b.id,
-        title: b.title,
-        slug: b.slug,
-        brand_name: b.brands?.name || "Unknown Brand",
-        brand_logo_url: b.brands?.logo_url || null,
-        description: b.description,
-        status: b.status,
-        budget: b.monthly_retainer || 0,
-        budget_used: null,
-        rpm_rate: 0,
-        allowed_platforms: null,
-        end_date: b.end_date,
-        created_at: b.created_at,
-        hashtags: null,
-        guidelines: null,
-        embed_url: null,
-        asset_links: null,
-        requirements: null,
-        campaign_update: null,
-        campaign_update_at: null,
-        payout_day_of_week: null,
-        blueprint_id: b.blueprint_id,
-        payment_model: "monthly_retainer",
-        post_rate: null,
-        type: "boost" as const,
-      })));
-    }
-  }
-
-  // Sort by created date (newest first)
-  return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return applications
+    .filter((app: any) => app.tasks) // Filter out any without task data
+    .map((app: any) => {
+      const businessName = app.tasks.businesses?.name || "Unknown Business";
+      const businessLogoUrl = app.tasks.businesses?.logo_url || null;
+      return {
+        id: app.tasks.id,
+        title: app.tasks.title,
+        slug: app.tasks.slug,
+        type: "task" as const,
+        business_name: businessName,
+        business_logo_url: businessLogoUrl,
+        // Legacy aliases for sidebar compatibility
+        brand_name: businessName,
+        brand_logo_url: businessLogoUrl,
+        description: app.tasks.description,
+        status: app.tasks.status,
+        reward_amount: app.tasks.reward_amount,
+        created_at: app.tasks.created_at,
+        deadline: app.tasks.deadline,
+        application_status: app.status,
+      };
+    })
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 }
 
-// Fetch brand memberships for a user
-async function fetchBrandMemberships(userId: string): Promise<BrandMembership[]> {
+// Fetch business memberships for a user
+async function fetchBusinessMemberships(userId: string): Promise<BusinessMembership[]> {
   const { data } = await supabase
-    .from("brand_members")
-    .select("brand_id, role, brands(name, slug, logo_url, brand_color)")
+    .from("business_members")
+    .select("business_id, role, businesses(name, slug, logo_url, brand_color)")
     .eq("user_id", userId);
 
-  return (data as unknown as BrandMembership[]) || [];
+  if (!data) return [];
+
+  // Transform to include legacy aliases for AppSidebar compatibility
+  return data.map((item: any) => ({
+    business_id: item.business_id,
+    brand_id: item.business_id, // Legacy alias
+    role: item.role,
+    businesses: {
+      name: item.businesses?.name || "",
+      slug: item.businesses?.slug || "",
+      logo_url: item.businesses?.logo_url || null,
+      brand_color: item.businesses?.brand_color || null,
+    },
+    // Legacy alias for AppSidebar
+    brands: {
+      name: item.businesses?.name || "",
+      slug: item.businesses?.slug || "",
+      logo_url: item.businesses?.logo_url || null,
+      brand_color: item.businesses?.brand_color || null,
+    },
+  }));
 }
 
-// Fetch all brands (for admin)
-async function fetchAllBrands(): Promise<Brand[]> {
+// Fetch all businesses (for admin)
+async function fetchAllBusinesses(): Promise<Business[]> {
   const { data } = await supabase
-    .from("brands")
-    .select("id, name, slug, logo_url, brand_color")
+    .from("businesses")
+    .select("id, name, slug, logo_url")
     .order("name");
 
   return data || [];
 }
 
-// Hook for joined campaigns
+// Hook for joined tasks
+export function useJoinedTasks(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["joinedTasks", userId],
+    queryFn: () => fetchJoinedTasks(userId!),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
+// Legacy alias for backwards compatibility
 export function useJoinedCampaigns(userId: string | undefined) {
+  return useJoinedTasks(userId);
+}
+
+// Hook for business memberships
+export function useBusinessMemberships(userId: string | undefined) {
   return useQuery({
-    queryKey: ["joinedCampaigns", "v2", userId],
-    queryFn: () => fetchJoinedCampaigns(userId!),
+    queryKey: ["businessMemberships", userId],
+    queryFn: () => fetchBusinessMemberships(userId!),
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }
 
-// Hook for brand memberships
+// Legacy alias for backwards compatibility
 export function useBrandMemberships(userId: string | undefined) {
-  return useQuery({
-    queryKey: ["brandMemberships", userId],
-    queryFn: () => fetchBrandMemberships(userId!),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
+  return useBusinessMemberships(userId);
 }
 
-// Hook for all brands (admin only)
-export function useAllBrands(enabled: boolean) {
+// Hook for all businesses (admin only)
+export function useAllBusinesses(enabled: boolean) {
   return useQuery({
-    queryKey: ["allBrands"],
-    queryFn: fetchAllBrands,
+    queryKey: ["allBusinesses"],
+    queryFn: fetchAllBusinesses,
     enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-// Brand campaign/boost for sidebar
-export interface BrandCampaignItem {
+// Legacy alias for backwards compatibility
+export function useAllBrands(enabled: boolean) {
+  return useAllBusinesses(enabled);
+}
+
+// Business task for sidebar
+export interface BusinessTaskItem {
   id: string;
   title: string;
-  cover_url: string | null;
-  type: "campaign" | "boost";
+  banner_url: string | null;
+  cover_url: string | null; // Legacy alias
+  type: "task"; // For sidebar compatibility
 }
 
-// Fetch brand campaigns and boosts for sidebar
-async function fetchBrandCampaignsForSidebar(brandId: string): Promise<BrandCampaignItem[]> {
-  // Fetch campaigns for this brand
-  const { data: campaigns } = await supabase
-    .from("campaigns")
-    .select("id, title, cover_url")
-    .eq("brand_id", brandId)
-    .eq("status", "active")
+// Fetch business tasks for sidebar
+async function fetchBusinessTasksForSidebar(businessId: string): Promise<BusinessTaskItem[]> {
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id, title, banner_url")
+    .eq("business_id", businessId)
+    .in("status", ["active", "draft"])
     .order("created_at", { ascending: false });
 
-  // Fetch boosts for this brand
-  const { data: boosts } = await supabase
-    .from("boosts")
-    .select("id, title, cover_url")
-    .eq("brand_id", brandId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-
-  const items: BrandCampaignItem[] = [];
-
-  // Add campaigns
-  if (campaigns) {
-    items.push(...campaigns.map(c => ({
-      id: c.id,
-      title: c.title,
-      cover_url: c.cover_url,
-      type: "campaign" as const,
-    })));
-  }
-
-  // Add boosts
-  if (boosts) {
-    items.push(...boosts.map(b => ({
-      id: b.id,
-      title: b.title,
-      cover_url: b.cover_url,
-      type: "boost" as const,
-    })));
-  }
-
-  return items;
+  return tasks?.map(t => ({
+    id: t.id,
+    title: t.title,
+    banner_url: t.banner_url,
+    cover_url: t.banner_url, // Legacy alias
+    type: "task" as const,
+  })) || [];
 }
 
-// Hook for brand campaigns and boosts for sidebar
-export function useBrandCampaignsForSidebar(brandId: string | undefined | null) {
+// Hook for business tasks for sidebar
+export function useBusinessTasksForSidebar(businessId: string | undefined | null) {
   return useQuery({
-    queryKey: ["brandCampaignsForSidebar", brandId],
-    queryFn: () => fetchBrandCampaignsForSidebar(brandId!),
-    enabled: !!brandId,
+    queryKey: ["businessTasksForSidebar", businessId],
+    queryFn: () => fetchBusinessTasksForSidebar(businessId!),
+    enabled: !!businessId,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 }
 
-// Hook for current brand info
-export function useCurrentBrandInfo(brandId: string | undefined | null) {
-  return useQuery({
-    queryKey: ["currentBrandInfo", brandId],
-    queryFn: async () => {
-      if (!brandId) return null;
+// Legacy alias
+export function useBrandCampaignsForSidebar(brandId: string | undefined | null) {
+  return useBusinessTasksForSidebar(brandId);
+}
 
-      const [brandResult, memberCountResult] = await Promise.all([
+// Hook for current business info
+export function useCurrentBusinessInfo(businessId: string | undefined | null) {
+  return useQuery({
+    queryKey: ["currentBusinessInfo", businessId],
+    queryFn: async () => {
+      if (!businessId) return null;
+
+      const [businessResult, memberCountResult] = await Promise.all([
         supabase
-          .from("brands")
-          .select("id, name, slug, logo_url, brand_color, subscription_status, subscription_plan")
-          .eq("id", brandId)
+          .from("businesses")
+          .select("id, name, slug, logo_url, subscription_status, subscription_plan")
+          .eq("id", businessId)
           .single(),
         supabase
-          .from("brand_members")
+          .from("business_members")
           .select("id", { count: "exact", head: true })
-          .eq("brand_id", brandId),
+          .eq("business_id", businessId),
       ]);
 
-      if (!brandResult.data) return null;
+      if (!businessResult.data) return null;
 
       return {
-        ...brandResult.data,
+        ...businessResult.data,
         memberCount: memberCountResult.count || 0,
       };
     },
-    enabled: !!brandId,
-    staleTime: 2 * 60 * 1000, // 2 minutes for brand info
+    enabled: !!businessId,
+    staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
+}
+
+// Legacy alias
+export function useCurrentBrandInfo(brandId: string | undefined | null) {
+  return useCurrentBusinessInfo(brandId);
 }
 
 // User profile data for sidebar
@@ -310,13 +288,22 @@ export function useUserProfile(userId: string | undefined) {
       if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("avatar_url, banner_url, full_name, username, account_type")
+        .select("avatar_url, full_name, username, account_type")
         .eq("id", userId)
         .single();
-      return data;
+      return {
+        ...data,
+        banner_url: null, // Not in new simplified schema
+      };
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
+
+// Export legacy types for backwards compatibility
+export type JoinedCampaign = JoinedTask;
+export type Brand = Business;
+export type BrandMembership = BusinessMembership;
+export type BrandCampaignItem = BusinessTaskItem;

@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ const BRAND_COLORS = [
 
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
-  home_url: z.string().trim().max(255).optional().or(z.literal("")),
+  website: z.string().trim().max(255).optional().or(z.literal("")),
   description: z.string().trim().max(500).optional()
 });
 type BrandFormValues = z.infer<typeof brandSchema>;
@@ -46,6 +47,7 @@ export function CreateBrandDialog({
   onOpenChange: controlledOnOpenChange,
   hideTrigger = false
 }: CreateBrandDialogProps) {
+  const queryClient = useQueryClient();
   const [internalOpen, setInternalOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
@@ -62,7 +64,7 @@ export function CreateBrandDialog({
     resolver: zodResolver(brandSchema),
     defaultValues: {
       name: "",
-      home_url: "",
+      website: "",
       description: ""
     }
   });
@@ -125,40 +127,45 @@ export function CreateBrandDialog({
       const {
         data: brandData,
         error: brandError
-      } = await supabase.from("brands").insert({
+      } = await supabase.from("businesses").insert({
         name: values.name,
         slug: slug,
         description: values.description || null,
-        home_url: values.home_url || null,
+        website: values.website || null,
         logo_url: logoUrl,
         brand_color: brandColor
       }).select().single();
       if (brandError) throw brandError;
 
-      // Add creator as brand member
+      // Add creator as business member - this must succeed for RLS policies to work
       const {
         error: memberError
-      } = await supabase.from("brand_members").insert({
-        brand_id: brandData.id,
+      } = await supabase.from("business_members").insert({
+        business_id: brandData.id,
         user_id: user.id,
         role: "owner"
       });
       if (memberError) {
-        console.error("Error adding brand member:", memberError);
+        console.error("Error adding business member:", memberError);
+        throw new Error(`Failed to add you as owner: ${memberError.message}`);
       }
 
-      // Create brand_wallets record for the new brand
-      const { error: walletError } = await supabase.from("brand_wallets").insert({
-        brand_id: brandData.id,
+      // Create business_wallets record for the new business
+      const { error: walletError } = await supabase.from("business_wallets").insert({
+        business_id: brandData.id,
         balance: 0,
         total_deposited: 0,
-        total_spent: 0,
-        currency: "usd"
+        total_spent: 0
       });
       if (walletError) {
-        console.error("Error creating brand wallet:", walletError);
+        console.error("Error creating business wallet:", walletError);
+        // Wallet is optional, don't fail the whole operation
       }
       toast.success("Brand created successfully!");
+
+      // Invalidate business memberships query so the sidebar updates
+      queryClient.invalidateQueries({ queryKey: ["businessMemberships"] });
+
       setOpen(false);
       form.reset();
       setLogoFile(null);
@@ -181,7 +188,7 @@ export function CreateBrandDialog({
       if (error.code === "23505") {
         toast.error("A brand with this name already exists");
       } else {
-        toast.error("Failed to create brand. Please try again.");
+        toast.error(error?.message || "Failed to create brand. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -305,7 +312,7 @@ export function CreateBrandDialog({
                   </FormItem>} />
 
               {/* Website URL Field */}
-              <FormField control={form.control} name="home_url" render={({
+              <FormField control={form.control} name="website" render={({
               field
             }) => <FormItem>
                     <FormLabel className="text-sm text-foreground font-inter tracking-[-0.5px]">

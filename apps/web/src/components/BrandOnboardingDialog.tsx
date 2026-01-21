@@ -64,28 +64,17 @@ export function BrandOnboardingDialog({
         // Save description
         if (description.trim()) {
           const { error } = await supabase
-            .from("brands")
+            .from("businesses")
             .update({ description: description.trim() })
             .eq("id", brand.id);
           if (error) throw error;
         }
       } else if (currentStep === 1) {
-        // Send team invites
+        // Team invites - feature coming soon
         const validInvites = invites.filter((inv) => inv.email.trim());
         if (validInvites.length > 0) {
-          const { data: { user } } = await supabase.auth.getUser();
-          for (const invite of validInvites) {
-            const { error } = await supabase.from("brand_invitations").insert({
-              brand_id: brand.id,
-              email: invite.email.toLowerCase().trim(),
-              role: invite.role,
-              invited_by: user?.id || "",
-            } as any);
-            if (error && error.code !== "23505") {
-              throw error;
-            }
-          }
-          toast.success(`Sent ${validInvites.length} invitation(s)`);
+          // TODO: Implement business_invitations table
+          toast.info("Team invites will be available soon. You can add team members from settings.");
         }
       }
 
@@ -110,11 +99,11 @@ export function BrandOnboardingDialog({
     setIsSubmitting(true);
     try {
       const { error } = await supabase
-        .from("brands")
+        .from("businesses")
         .update({
           onboarding_completed: true,
           onboarding_step: ONBOARDING_STEPS.length,
-        } as any)
+        })
         .eq("id", brand.id);
 
       if (error) throw error;
@@ -126,9 +115,9 @@ export function BrandOnboardingDialog({
       } else {
         navigate(`/dashboard?workspace=${brand.slug}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error completing onboarding:", error);
-      toast.error("Failed to complete setup");
+      toast.error(error?.message || "Failed to complete setup");
     } finally {
       setIsSubmitting(false);
     }

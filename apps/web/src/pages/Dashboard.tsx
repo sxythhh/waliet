@@ -2,18 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
-import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
+import { MyTasksTab } from "@/components/dashboard/MyTasksTab";
+import { TasksDiscoverTab } from "@/components/dashboard/TasksDiscoverTab";
 import { TrainingTab } from "@/components/dashboard/TrainingTab";
 import { ReferralsTab } from "@/components/dashboard/ReferralsTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { SettingsTab } from "@/components/dashboard/SettingsTab";
 import { BrandCampaignsTab } from "@/components/dashboard/BrandCampaignsTab";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
-import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
+// JoinPrivateCampaignDialog removed - not needed for Waliet tasks
 import { AppSidebar } from "@/components/AppSidebar";
 import { AnnouncementPopup } from "@/components/onboarding";
-import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
@@ -40,9 +39,8 @@ type BrandSummary = {
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
+  // privateDialogOpen removed - not needed for Waliet tasks
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
   const [isGuestMode, setIsGuestMode] = useState(false);
@@ -126,9 +124,9 @@ export default function Dashboard() {
       const lastWorkspace = localStorage.getItem("lastWorkspace");
 
       if (!urlWorkspace && lastWorkspace && lastWorkspace !== "creator") {
-        // Validate that the brand slug exists before restoring
+        // Validate that the business slug exists before restoring
         const { data: brandExists } = await supabase
-          .from("brands")
+          .from("businesses")
           .select("slug")
           .eq("slug", lastWorkspace)
           .maybeSingle();
@@ -194,18 +192,6 @@ export default function Dashboard() {
         .single();
 
       setProfile(profileData);
-
-      // Check if onboarding needs to be shown (for existing users with reset onboarding)
-      if (profileData && profileData.onboarding_completed === false) {
-        setShowOnboarding(true);
-      }
-
-      // Check if user selected brand during onboarding
-      const pendingBrand = sessionStorage.getItem("pendingBrandCreation");
-      if (pendingBrand === "true") {
-        sessionStorage.removeItem("pendingBrandCreation");
-        setShowCreateBrandDialog(true);
-      }
     };
 
     initializeDashboard();
@@ -232,40 +218,9 @@ export default function Dashboard() {
     }
   }, [workspace, isBrandMode, isDemoMode]);
 
-  // Handle brand onboarding completion from URL params
-  useEffect(() => {
-    const onboardingStatus = searchParams.get("onboarding");
-    const status = searchParams.get("status");
-
-    if (onboardingStatus === "complete" && (status === "submitted" || status === "success") && currentBrand) {
-      const updateOnboardingStatus = async () => {
-        try {
-          const { error } = await supabase
-            .from("brands")
-            .update({ whop_onboarding_complete: true })
-            .eq("id", currentBrand.id);
-
-          if (!error) {
-            toast.success("Verification completed successfully!");
-          }
-
-          // Clean up URL params
-          const newParams = new URLSearchParams(searchParams);
-          newParams.delete("onboarding");
-          newParams.delete("status");
-          setSearchParams(newParams, { replace: true });
-        } catch (error) {
-          console.error("Error updating onboarding status:", error);
-        }
-      };
-
-      updateOnboardingStatus();
-    }
-  }, [searchParams, currentBrand, setSearchParams]);
-
   const fetchBrandBySlug = async (slug: string) => {
     const { data } = await supabase
-      .from("brands")
+      .from("businesses")
       .select("id, name, slug, subscription_status, logo_url")
       .eq("slug", slug)
       .single();
@@ -281,7 +236,7 @@ export default function Dashboard() {
 
     // Update document title
     const originalTitle = document.title;
-    document.title = `${currentBrand.name} | Virality`;
+    document.title = `${currentBrand.name} | Waliet`;
 
     // Update favicon if brand has a logo
     const originalFavicon = document.querySelector("link[rel='icon']") as HTMLLinkElement;
@@ -376,9 +331,9 @@ export default function Dashboard() {
     // Creator mode tabs
     switch (currentTab) {
       case "campaigns":
-        return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} className="pb-[30px]" />;
+        return <MyTasksTab className="pb-[30px]" />;
       case "discover":
-        return <DiscoverTab />;
+        return <TasksDiscoverTab />;
       case "training":
         return <TrainingTab />;
       case "profile":
@@ -388,7 +343,7 @@ export default function Dashboard() {
       case "wallet":
         return <ReferralsTab />;
       default:
-        return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
+        return <MyTasksTab />;
     }
   };
   // Don't render until auth is resolved to prevent flash of unauthenticated state
@@ -404,7 +359,7 @@ export default function Dashboard() {
   return (
     <DemoDataProvider>
       <div className="flex h-screen w-full bg-white dark:bg-background">
-        <SEOHead title="Dashboard" description="Your Virality creator dashboard" noIndex={!isGuestMode} />
+        <SEOHead title="Dashboard" description="Your Waliet dashboard - complete tasks and earn money" noIndex={!isGuestMode} />
         <AppSidebar />
 
         {/* Main Content */}
@@ -420,8 +375,6 @@ export default function Dashboard() {
           </div>
         </main>
 
-        <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
-
         {/* Announcements Popup */}
         {userId && <AnnouncementPopup userId={userId} />}
 
@@ -435,8 +388,6 @@ export default function Dashboard() {
         {/* Creator Chat Widget */}
         {isCreatorMode && <UnifiedMessagesWidget />}
 
-        {/* Onboarding Dialog - for existing users with reset onboarding */}
-        {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
 
         {/* Product Tour */}
         {isBrandMode && <ProductTour />}

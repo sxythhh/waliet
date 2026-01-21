@@ -1023,8 +1023,8 @@ export function AppSidebar() {
         )}
       </aside>
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
-        // Invalidate brand memberships cache to refetch
-        queryClient.invalidateQueries({ queryKey: ["brandMemberships", user?.id] });
+        // Invalidate business memberships cache to refetch
+        queryClient.invalidateQueries({ queryKey: ["businessMemberships"] });
       }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />

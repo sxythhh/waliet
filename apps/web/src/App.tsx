@@ -70,6 +70,7 @@ const CreatorCampaignDetails = lazy(() => import("./pages/CreatorCampaignDetails
 const CreatorBoostDetails = lazy(() => import("./pages/CreatorBoostDetails"));
 const PublicBoostApplication = lazy(() => import("./pages/PublicBoostApplication"));
 const PublicCampaignPage = lazy(() => import("./pages/PublicCampaignPage"));
+const TaskDetail = lazy(() => import("./pages/TaskDetail"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -268,6 +269,11 @@ const App = () => (
                   <Route path="/dashboard/boost/:id" element={
                     <Suspense fallback={<DashboardLoader />}>
                       <WorkspaceProvider><DashboardLayout><CreatorBoostDetails /></DashboardLayout></WorkspaceProvider>
+                    </Suspense>
+                  } />
+                  <Route path="/tasks/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <TaskDetail />
                     </Suspense>
                   } />
                   <Route path="/campaign/:id" element={
