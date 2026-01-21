@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 // Import dual-state icons from assets
 import homeInactive from "@/assets/home-inactive-new.png";
-import homeActive from "@/assets/home-active-new.png";
+import homeActive from "@/assets/WalietHomeActive.png";
 import chefHatInactive from "@/assets/chef-hat-gray.svg";
 import chefHatActive from "@/assets/chef-hat-blue.svg";
 import discoverInactive from "@/assets/discover-inactive.svg";

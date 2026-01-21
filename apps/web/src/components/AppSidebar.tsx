@@ -24,7 +24,7 @@ import supportIconLight from "@/assets/support-icon-light.svg";
 import lightbulbIconLight from "@/assets/lightbulb-icon-light.svg";
 import bugIconLight from "@/assets/bug-icon-light.svg";
 import homeInactive from "@/assets/home-inactive-new.png";
-import homeActive from "@/assets/home-active-new.png";
+import homeActive from "@/assets/WalietHomeActive.png";
 import walletInactive from "@/assets/wallet-inactive.svg";
 import walletActive from "@/assets/wallet-active.svg";
 import discoverInactive from "@/assets/discover-inactive.svg";
