@@ -285,7 +285,7 @@ export function UserOnboardingFlow({
 
       if (error) throw error;
 
-      toast.success("Welcome to Virality!");
+      toast.success("Welcome to Waliet!");
       onOpenChange(false);
       onComplete?.();
     } catch (error: any) {

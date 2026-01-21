@@ -442,7 +442,7 @@ export function AppSidebar() {
   };
   return <>
       {/* Mobile Header - Top (hidden on campaign/boost detail pages) */}
-      <header className={`md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4 ${isDetailPage ? 'hidden' : ''}`}>
+      <header className={`md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background/70 backdrop-blur-xl border-b border-white/10 px-4 ${isDetailPage ? 'hidden' : ''}`}>
         {!isCreatorMode && currentBrandName ? (
           <Link to={`/?workspace=${workspace}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {currentBrandLogo ? (
@@ -458,8 +458,9 @@ export function AppSidebar() {
             <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground uppercase truncate max-w-[120px]">{currentBrandName}</span>
           </Link>
         ) : (
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center gap-1.5">
             <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+            <span className="font-geist font-bold tracking-tighter text-base text-foreground">WALIET</span>
           </Link>
         )}
         <div className="flex items-center gap-2">
@@ -571,7 +572,7 @@ export function AppSidebar() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2 pb-safe-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background/70 backdrop-blur-xl border-t border-white/10 px-2 pb-safe-bottom">
         {menuItems.map(item => {
         const isActive = location.pathname === '/' && currentTab === item.tab;
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}`}>

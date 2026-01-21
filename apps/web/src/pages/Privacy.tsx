@@ -39,8 +39,8 @@ export default function Privacy() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <Link to="/" className="flex items-center gap-2">
-              <img alt="Virality" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
-              <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
+              <img alt="Waliet" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
+              <span className="text-lg font-clash font-semibold text-white">WALIET</span>
             </Link>
 
             <div className="flex items-center gap-3">

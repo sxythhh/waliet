@@ -99,8 +99,8 @@ export default function AuthDialog({
           <div className="rounded-xl">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex items-center justify-center gap-2">
-                <img alt="Virality Logo" className="h-7 w-auto" src="/lovable-uploads/8052c9b2-7adb-44e5-85ad-afd4a6c0a1a1.png" />
-                <span className="font-clash font-bold tracking-tight text-lg text-foreground">VIRALITY</span>
+                <img alt="Waliet Logo" className="h-7 w-auto" src="/lovable-uploads/8052c9b2-7adb-44e5-85ad-afd4a6c0a1a1.png" />
+                <span className="font-clash font-bold tracking-tight text-lg text-foreground">WALIET</span>
               </div>
             </div>
 

@@ -85,7 +85,7 @@ export function FloatingFooter({
         <div className="flex items-center justify-between h-auto py-2.5 md:h-10 md:py-0">
           {/* Left side - Links */}
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] md:text-[13px] font-inter tracking-[-0.3px] text-foreground/50">
-            <span className="hidden sm:inline">Virality Media © 2026</span>
+            <span className="hidden sm:inline">Waliet © 2026</span>
             <span className="sm:inline hidden text-foreground/20">|</span>
             <Link to="/privacy" className="hover:text-foreground transition-colors">
               Privacy

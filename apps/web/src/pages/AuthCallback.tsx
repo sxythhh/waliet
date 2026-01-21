@@ -75,7 +75,7 @@ export default function AuthCallback() {
 
               if (referralResult.success) {
                 toast({
-                  title: "Welcome to Virality!",
+                  title: "Welcome to Waliet!",
                   description: "Referral applied successfully."
                 });
               } else if (referralResult.error) {
@@ -135,7 +135,7 @@ export default function AuthCallback() {
 
               if (referralResult.success) {
                 toast({
-                  title: "Welcome to Virality!",
+                  title: "Welcome to Waliet!",
                   description: "Referral applied successfully."
                 });
               } else if (referralResult.error) {

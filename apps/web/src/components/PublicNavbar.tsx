@@ -103,9 +103,9 @@ export default function PublicNavbar({
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2" aria-label="Virality Home">
-                <img alt="Virality Logo" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" width="24" height="24" />
-                <span className="text-[17px] font-clash font-semibold text-foreground tracking-[-0.4px] -ml-0.5">VIRALITY</span>
+              <Link to="/" className="flex items-center gap-2" aria-label="Waliet Home">
+                <img alt="Waliet Logo" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" width="24" height="24" />
+                <span className="text-[17px] font-clash font-semibold text-foreground tracking-[-0.4px] -ml-0.5">WALIET</span>
               </Link>
               
               <div className="hidden md:flex items-center gap-1">

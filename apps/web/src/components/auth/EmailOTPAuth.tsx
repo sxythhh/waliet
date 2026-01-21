@@ -135,12 +135,12 @@ export function EmailOTPAuth({ onBack, onSuccess }: EmailOTPAuthProps) {
 
         if (referralResult.success) {
           toast({
-            title: "Welcome to Virality!",
+            title: "Welcome to Waliet!",
             description: "You're signed in and referral applied successfully.",
           });
         } else {
           toast({
-            title: "Welcome to Virality!",
+            title: "Welcome to Waliet!",
             description: "You're signed in successfully.",
           });
         }

@@ -58,7 +58,7 @@ export function SEOHead({
       <meta property="og:title" content={seo.title} />
       <meta property="og:description" content={seo.description} />
       <meta property="og:image" content={seo.ogImage} />
-      <meta property="og:site_name" content="Virality" />
+      <meta property="og:site_name" content="Waliet" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />

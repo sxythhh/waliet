@@ -84,7 +84,7 @@ function AdminNav({
       <div className="h-14 flex items-center px-4 border-b border-white/5">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6" />
-          <span className="font-geist font-bold tracking-tight text-[15px] text-white">VIRALITY</span>
+          <span className="font-geist font-bold tracking-tight text-[15px] text-white">WALIET</span>
         </Link>
       </div>
 
@@ -256,7 +256,7 @@ export default function Admin() {
           </Button>
           <div className="flex items-center gap-2">
             <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover" />
-            <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground">VIRALITY</span>
+            <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground">WALIET</span>
           </div>
           <Button
             variant="ghost"

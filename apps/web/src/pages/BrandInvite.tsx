@@ -254,17 +254,17 @@ export default function BrandInvite() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="max-w-md w-full space-y-4">
-        {/* Virality Logo + Wordmark */}
+        {/* Waliet Logo + Wordmark */}
         <div className="flex items-center justify-center gap-2 mb-2">
           <img
-            alt="Virality Logo"
+            alt="Waliet Logo"
             className="h-6 w-6"
             src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png"
             width="24"
             height="24"
           />
           <span className="text-[17px] font-clash font-semibold text-foreground tracking-[-0.4px] -ml-0.5">
-            VIRALITY
+            WALIET
           </span>
         </div>
 
@@ -386,7 +386,7 @@ export default function BrandInvite() {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-          By joining, you agree to collaborate with {brand.name} on Virality
+          By joining, you agree to collaborate with {brand.name} on Waliet
         </p>
       </div>
 
