@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase, Users, Zap } from "lucide-react";
 import { Icon } from "@iconify/react";
+import { CreateTaskDialog } from "./CreateTaskDialog";
 
 interface CreateCampaignTypeDialogProps {
-  onSelectClipping: (blueprintId?: string) => void;
+  onSelectClipping?: (blueprintId?: string) => void;
   onSelectManaged?: (blueprintId?: string) => void;
   onSelectBoost?: () => void;
   onSelectJobPost?: () => void;
@@ -15,27 +16,43 @@ interface CreateCampaignTypeDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   defaultBlueprintId?: string;
+  onSuccess?: () => void;
 }
 
 export function CreateCampaignTypeDialog({
-  onSelectClipping,
-  onSelectBoost,
   trigger,
+  brandId,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  onSuccess,
 }: CreateCampaignTypeDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [showTaskWizard, setShowTaskWizard] = useState(false);
+  const [selectedTaskType, setSelectedTaskType] = useState<string | null>(null);
+
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const handleSimpleTaskClick = () => {
+    setSelectedTaskType("simple");
     setOpen(false);
-    onSelectClipping();
+    setShowTaskWizard(true);
   };
 
-  const handleBoostClick = () => {
+  const handleRecurringTaskClick = () => {
+    setSelectedTaskType("recurring");
     setOpen(false);
-    onSelectBoost?.();
+    setShowTaskWizard(true);
+  };
+
+  const handleTaskWizardClose = () => {
+    setShowTaskWizard(false);
+    setSelectedTaskType(null);
+  };
+
+  const handleTaskSuccess = () => {
+    handleTaskWizardClose();
+    onSuccess?.();
   };
 
   const taskTypes = [
@@ -55,7 +72,7 @@ export function CreateCampaignTypeDialog({
       icon: Zap,
       color: "#1ea75e",
       borderColor: "rgba(100, 220, 150, 0.6)",
-      onClick: handleBoostClick,
+      onClick: handleRecurringTaskClick,
     },
     {
       id: "hiring",
@@ -64,7 +81,7 @@ export function CreateCampaignTypeDialog({
       icon: Users,
       color: "#7c3aed",
       borderColor: "rgba(180, 130, 255, 0.6)",
-      onClick: handleBoostClick,
+      onClick: handleRecurringTaskClick,
       hidden: true, // Hidden for now
     },
   ];
@@ -130,26 +147,36 @@ export function CreateCampaignTypeDialog({
     </DialogContent>
   );
 
-  // If controlled, don't render trigger
-  if (controlledOpen !== undefined) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        {dialogContent}
-      </Dialog>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button className="gap-2 font-inter tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(245,202,111,0.4)] border-t border-primary/50">
-            <Plus className="h-4 w-4" />
-            Create Task
-          </Button>
-        )}
-      </DialogTrigger>
-      {dialogContent}
-    </Dialog>
+    <>
+      {/* Type Selection Dialog */}
+      {controlledOpen !== undefined ? (
+        <Dialog open={open} onOpenChange={setOpen}>
+          {dialogContent}
+        </Dialog>
+      ) : (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            {trigger || (
+              <Button className="gap-2 font-inter tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(245,202,111,0.4)] border-t border-primary/50">
+                <Plus className="h-4 w-4" />
+                Create Task
+              </Button>
+            )}
+          </DialogTrigger>
+          {dialogContent}
+        </Dialog>
+      )}
+
+      {/* Task Creation Wizard */}
+      {brandId && (
+        <CreateTaskDialog
+          open={showTaskWizard}
+          onOpenChange={handleTaskWizardClose}
+          businessId={brandId}
+          onSuccess={handleTaskSuccess}
+        />
+      )}
+    </>
   );
 }
