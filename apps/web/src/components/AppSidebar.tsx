@@ -578,31 +578,31 @@ export function AppSidebar() {
         return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}`}>
               {item.tab === "campaigns" ? <div className="relative h-6 w-6">
                   <img src={homeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={homeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={homeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "profile" ? <div className="relative h-6 w-6">
                   <img src={chefHatInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={chefHatActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={chefHatActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "discover" ? <div className="relative h-6 w-6">
                   <img src={discoverInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={discoverActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "settings" ? <div className="relative h-6 w-6">
                   <img src={profileInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={profileActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "blueprints" ? <div className="relative h-6 w-6">
                   <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={blueprintsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={blueprintsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "scope" ? <div className="relative h-6 w-6">
                   <img src={scopeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={scopeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={scopeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
                   <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "wallet" ? <Icon icon="material-symbols:id-card" className={`h-6 w-6 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} /> : item.tab === "education" ? <div className="relative h-6 w-6">
                   <img src={educationInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.tab === "analytics" ? <div className="relative h-6 w-6">
                   <img src={campaignsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={campaignsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={campaignsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} style={isActive ? {filter: 'brightness(0) saturate(100%) invert(84%) sepia(35%) saturate(555%) hue-rotate(338deg) brightness(102%) contrast(93%)'} : {}} />
                 </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-primary' : ''}`} /> : null}
               <span className="text-[12px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
