@@ -53,7 +53,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const fetchBrandBySlug = async (slug: string) => {
     const { data, error } = await supabase
-      .from("brands")
+      .from("businesses")
       .select("id, name, slug, logo_url")
       .eq("slug", slug)
       .maybeSingle();
