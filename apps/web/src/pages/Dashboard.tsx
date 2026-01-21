@@ -23,8 +23,6 @@ import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab"
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { SEOHead } from "@/components/SEOHead";
-import AuthDialog from "@/components/AuthDialog";
-import { Button } from "@/components/ui/button";
 
 import { UnifiedMessagesWidget } from "@/components/shared/UnifiedMessagesWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -47,7 +45,6 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const navigate = useNavigate();
 
@@ -412,32 +409,6 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main className="flex-1 h-screen overflow-hidden flex flex-col bg-background">
-          {/* Guest Mode Banner */}
-          {isGuestMode && (
-            <div className="bg-primary/10 border-b border-primary/20 px-4 py-3 flex items-center justify-between">
-              <p className="text-sm text-foreground/80">
-                <span className="font-medium">Welcome!</span> Sign in to apply for campaigns and track your earnings.
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAuthDialog(true)}
-                  className="text-sm"
-                >
-                  Sign In
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setShowAuthDialog(true)}
-                  className="text-sm"
-                >
-                  Create Account
-                </Button>
-              </div>
-            </div>
-          )}
-
           <div
             data-tour-target="dashboard-main"
             className={`
@@ -469,9 +440,6 @@ export default function Dashboard() {
 
         {/* Product Tour */}
         {isBrandMode && <ProductTour />}
-
-        {/* Auth Dialog for guest users */}
-        <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
       </div>
     </DemoDataProvider>
   );

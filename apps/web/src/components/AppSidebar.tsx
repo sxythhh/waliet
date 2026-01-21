@@ -11,8 +11,9 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { InviteMemberDialog } from "@/components/brand/InviteMemberDialog";
 import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
-import newLogo from "@/assets/new-logo.png";
+import newLogo from "@/assets/virality-logo-new.png";
 import ghostLogoBlue from "@/assets/ghost-logo-blue.png";
+import AuthDialog from "@/components/AuthDialog";
 import discordIcon from "@/assets/discord-icon.png";
 import supportIcon from "@/assets/support-icon.svg";
 import lightbulbIcon from "@/assets/lightbulb-icon.svg";
@@ -214,6 +215,7 @@ export function AppSidebar() {
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<"feature" | "bug">("feature");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
   const [creatorsExpanded, setCreatorsExpanded] = useState(false);
   const [selectedCampaignForDetails, setSelectedCampaignForDetails] = useState<JoinedCampaign | null>(null);
@@ -456,20 +458,21 @@ export function AppSidebar() {
             <span className="font-geist font-bold tracking-tighter-custom text-sm text-foreground uppercase truncate max-w-[120px]">{currentBrandName}</span>
           </Link>
         ) : (
-          <div className="flex items-center gap-0">
-            <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
-            <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
-          </div>
+          <Link to="/" className="flex items-center">
+            <OptimizedImage src={newLogo} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+          </Link>
         )}
         <div className="flex items-center gap-2">
-          {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
-          {(isCreatorMode || !isCreatorMode && currentBrandSubscriptionStatus === "active") && <WalletDropdown variant="header" />}
-          {/* Upgrade Plan Button - Mobile (only for brands without active plan) */}
-          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-inter text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
-              <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
-              Upgrade
-            </button>}
-          <Popover>
+          {user ? (
+            <>
+              {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
+              {(isCreatorMode || !isCreatorMode && currentBrandSubscriptionStatus === "active") && <WalletDropdown variant="header" />}
+              {/* Upgrade Plan Button - Mobile (only for brands without active plan) */}
+              {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-inter text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
+                  <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
+                  Upgrade
+                </button>}
+              <Popover>
             <PopoverTrigger asChild>
               <button className="cursor-pointer">
                 <Avatar className="w-8 h-8">
@@ -553,6 +556,17 @@ export function AppSidebar() {
               </div>
             </PopoverContent>
           </Popover>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="font-geist font-semibold tracking-[-0.5px] text-foreground/80 h-8" onClick={() => setShowAuthDialog(true)}>
+                Sign In
+              </Button>
+              <Button size="sm" className="font-geist font-semibold tracking-[-0.5px] bg-primary hover:bg-primary/90 border-t border-[#fbe0aa] h-8" onClick={() => setShowAuthDialog(true)}>
+                Create Account
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -1013,6 +1027,7 @@ export function AppSidebar() {
       }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />
+      <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
       <InviteMemberDialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen} brandId={currentBrandId} brandSlug={workspace || ''} onInviteSent={() => {
         // Invalidate brand info cache to refresh member count
         queryClient.invalidateQueries({ queryKey: ["currentBrandInfo", currentBrandId] });
