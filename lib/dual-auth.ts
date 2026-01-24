@@ -3,7 +3,7 @@ import { createClient } from "./supabase/server";
 import { whopsdk } from "./whop-sdk";
 import { prisma } from "./prisma";
 
-export type AuthProvider = "whop" | "supabase";
+export type AuthProvider = "whop" | "whop-oauth" | "supabase";
 
 export interface DualAuthUser {
   id: string;
@@ -21,6 +21,9 @@ export interface DualAuthResult {
     name: string | null;
     avatar: string | null;
     email: string | null;
+    username: string | null;
+    whopUserId: string | null;
+    createdAt: Date;
     sellerProfile: {
       id: string;
       hourlyRate: number;
@@ -37,13 +40,13 @@ export interface DualAuthResult {
 
 /**
  * Get authenticated user from either Whop or Supabase
- * Tries Whop first (for in-app usage), then falls back to Supabase
+ * Priority: Whop header (app view) → Whop OAuth cookie → Supabase session
  */
 export async function getDualAuthUser(): Promise<DualAuthResult | null> {
-  // Try Whop auth first
+  // Try Whop app view auth first (x-whop-user-token header)
   const whopUser = await tryWhopAuth();
   if (whopUser) {
-    console.log("[DualAuth] Authenticated via Whop:", whopUser.userId);
+    console.log("[DualAuth] Authenticated via Whop app view:", whopUser.userId);
     const dbUser = await syncWhopUserToDatabase(whopUser);
     return {
       user: {
@@ -56,6 +59,13 @@ export async function getDualAuthUser(): Promise<DualAuthResult | null> {
       },
       dbUser,
     };
+  }
+
+  // Try Whop OAuth cookie (from "Continue with Whop" flow)
+  const whopOAuthUser = await tryWhopOAuthCookie();
+  if (whopOAuthUser) {
+    console.log("[DualAuth] Authenticated via Whop OAuth cookie:", whopOAuthUser.id);
+    return whopOAuthUser;
   }
 
   // Try Supabase auth
@@ -141,25 +151,157 @@ async function tryWhopAuth(): Promise<WhopUserData | null> {
 
     // Normal auth flow - verify token from headers
     const headersList = await headers();
+
+    // Debug: Log all headers to see what Whop is sending
+    const headersDebug: Record<string, string> = {};
+    headersList.forEach((value, key) => {
+      headersDebug[key] = key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
+        ? `${value.substring(0, 20)}...`
+        : value;
+    });
+    console.log("[DualAuth] Headers received:", JSON.stringify(headersDebug, null, 2));
+
+    // Get the token from header
     const whopToken = headersList.get("x-whop-user-token");
 
     if (!whopToken) {
+      console.log("[DualAuth] No x-whop-user-token header found");
       return null;
     }
 
-    const result = await whopsdk.verifyUserToken(headersList);
-    const user = await whopsdk.users.retrieve(result.userId);
-    type ExtendedWhopUser = { email?: string };
-    const extendedUser = user as unknown as ExtendedWhopUser;
+    console.log("[DualAuth] Found x-whop-user-token, length:", whopToken.length);
+
+    // Try SDK verification first
+    try {
+      const result = await whopsdk.verifyUserToken(headersList);
+      console.log("[DualAuth] SDK verification successful, userId:", result.userId);
+
+      const user = await whopsdk.users.retrieve(result.userId);
+      type ExtendedWhopUser = { email?: string };
+      const extendedUser = user as unknown as ExtendedWhopUser;
+
+      return {
+        userId: result.userId,
+        name: user.name,
+        username: user.username,
+        email: extendedUser.email,
+        profilePicUrl: user.profile_picture?.url || undefined,
+      };
+    } catch (sdkError) {
+      console.log("[DualAuth] SDK verification failed:", sdkError);
+
+      // Fallback: Manually decode JWT to get user ID
+      try {
+        // JWT format: header.payload.signature
+        const parts = whopToken.split(".");
+        if (parts.length !== 3) {
+          console.log("[DualAuth] Invalid JWT format");
+          return null;
+        }
+
+        // Decode payload (base64url)
+        const payload = JSON.parse(
+          Buffer.from(parts[1], "base64url").toString("utf-8")
+        );
+        console.log("[DualAuth] JWT payload:", JSON.stringify(payload));
+
+        const userId = payload.sub;
+        if (!userId || !userId.startsWith("user_")) {
+          console.log("[DualAuth] Invalid user ID in token:", userId);
+          return null;
+        }
+
+        console.log("[DualAuth] Extracted userId from JWT:", userId);
+
+        // Fetch user details from Whop API
+        const user = await whopsdk.users.retrieve(userId);
+        type ExtendedWhopUser = { email?: string };
+        const extendedUser = user as unknown as ExtendedWhopUser;
+
+        return {
+          userId,
+          name: user.name,
+          username: user.username,
+          email: extendedUser.email,
+          profilePicUrl: user.profile_picture?.url || undefined,
+        };
+      } catch (fallbackError) {
+        console.log("[DualAuth] Fallback JWT decode failed:", fallbackError);
+        return null;
+      }
+    }
+  } catch (err) {
+    console.log("[DualAuth] tryWhopAuth error:", err);
+    return null;
+  }
+}
+
+/**
+ * Attempt authentication via Whop OAuth cookie
+ * This is set when user authenticates via "Continue with Whop" button
+ */
+async function tryWhopOAuthCookie(): Promise<DualAuthResult | null> {
+  try {
+    const cookieStore = await cookies();
+
+    // Check if user explicitly logged out
+    const loggedOutCookie = cookieStore.get("waliet-logged-out");
+    if (loggedOutCookie?.value === "true") {
+      console.log("[DualAuth] User logged out, skipping Whop OAuth cookie");
+      return null;
+    }
+
+    const whopCookie = cookieStore.get("whop_oauth_user");
+    if (!whopCookie) {
+      return null;
+    }
+
+    console.log("[DualAuth] Found whop_oauth_user cookie");
+
+    const userData = JSON.parse(whopCookie.value);
+    if (!userData.id) {
+      console.log("[DualAuth] Invalid whop_oauth_user cookie - no id");
+      return null;
+    }
+
+    // Look up the full user from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userData.id },
+      include: {
+        sellerProfile: {
+          select: {
+            id: true,
+            hourlyRate: true,
+            bio: true,
+            tagline: true,
+            averageRating: true,
+            totalSessionsCompleted: true,
+            totalReviews: true,
+            isVerified: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    if (!dbUser) {
+      console.log("[DualAuth] User not found in database:", userData.id);
+      return null;
+    }
 
     return {
-      userId: result.userId,
-      name: user.name,
-      username: user.username,
-      email: extendedUser.email,
-      profilePicUrl: user.profile_picture?.url || undefined,
+      user: {
+        id: dbUser.id,
+        name: dbUser.name || userData.name,
+        email: dbUser.email || userData.email,
+        avatar: dbUser.avatar,
+        provider: "whop-oauth",
+        providerId: userData.whopUserId || dbUser.whopUserId || dbUser.id,
+      },
+      dbUser,
     };
-  } catch {
+  } catch (e) {
+    console.log("[DualAuth] tryWhopOAuthCookie error:", e);
     return null;
   }
 }

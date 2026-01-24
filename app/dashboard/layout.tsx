@@ -117,34 +117,26 @@ function DashboardSidebar() {
   // Find current workspace details
   const currentWorkspaceDetails = workspaces.find(w => w.slug === currentWorkspace);
 
-  // Fetch user data from Supabase or Whop OAuth cookie
+  // Fetch user data from server (handles Whop header, Whop OAuth cookie, and Supabase)
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUser(user);
-      } else {
-        // Try to get user from Whop OAuth cookie
-        const whopCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('whop_oauth_user='));
-        if (whopCookie) {
-          try {
-            const whopUser = JSON.parse(decodeURIComponent(whopCookie.split('=')[1]));
-            // Create a mock user object that matches Supabase User structure
-            setUser({
-              id: whopUser.id,
-              email: whopUser.email || undefined,
-              user_metadata: {
-                full_name: whopUser.name,
-              },
-            } as User);
-          } catch (e) {
-            console.error("Failed to parse whop_oauth_user cookie", e);
-          }
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          // Create a user object compatible with the existing UI expectations
+          setUser({
+            id: data.user.id,
+            email: data.user.email || undefined,
+            user_metadata: {
+              full_name: data.user.name,
+              avatar_url: data.user.avatar,
+            },
+          } as User);
         }
-      }
-    });
+      })
+      .catch(err => {
+        console.error("Failed to fetch user:", err);
+      });
   }, []);
 
   // Load workspaces from localStorage (in real app, fetch from API)
@@ -184,9 +176,22 @@ function DashboardSidebar() {
     router.push(`/dashboard?${params.toString()}`);
   };
 
-  const handleSignOut = () => {
-    // TODO: Implement sign out
-    router.push("/login");
+  const handleSignOut = async () => {
+    // Clear Supabase session
+    const supabase = createClient();
+    await supabase.auth.signOut();
+
+    // Clear Whop OAuth cookie
+    document.cookie = 'whop_oauth_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+
+    // Set logged out flag (prevents auto-login via Whop header in app view)
+    document.cookie = 'waliet-logged-out=true; path=/; max-age=86400'; // 24 hours
+
+    // Clear local user state
+    setUser(null);
+
+    // Redirect to auth page
+    router.push("/auth");
   };
 
   const toggleTheme = () => {
