@@ -63,11 +63,11 @@ export async function GET(request: Request) {
       code_verifier: codeVerifier,
     });
 
-    const tokenResponse = await fetch("https://whop.com/oauth/token", {
+    // Try as public client first (no Authorization header)
+    const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Bearer ${process.env.WHOP_API_KEY}`,
       },
       body: tokenBody.toString(),
     });
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
     const accessToken = tokenData.access_token;
 
     // Get user info from OAuth userinfo endpoint (includes email with email scope)
-    const userResponse = await fetch("https://whop.com/oauth/userinfo", {
+    const userResponse = await fetch("https://api.whop.com/oauth/userinfo", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
