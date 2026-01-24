@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getDualAuthUser } from "@/lib/dual-auth";
 
+// Force dynamic rendering - this route uses cookies and cannot be static
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const auth = await getDualAuthUser();
