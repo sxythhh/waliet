@@ -19,11 +19,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getSubdomainSlug, getCampaignSlugFromPath } from "./utils/subdomain";
 
 // Eagerly loaded routes (critical path)
-import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // Lazily loaded routes (secondary pages)
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CampaignJoin = lazy(() => import("./pages/CampaignJoin"));
 const BrandDashboard = lazy(() => import("./pages/BrandDashboard"));
@@ -210,8 +208,6 @@ const App = () => (
                     </Suspense>
                   } />
                   <Route path="/b/:slug" element={<BrandPublicPage />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
                   <Route path="/discord/bot-callback" element={<DiscordBotOAuthCallback />} />

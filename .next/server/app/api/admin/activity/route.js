@@ -1,0 +1,11 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/admin/activity/route.js")
+R.c("server/chunks/[root-of-the-server]__5a5dc594._.js")
+R.c("server/chunks/waliet_0742fc73._.js")
+R.c("server/chunks/waliet_9e105764._.js")
+R.c("server/chunks/48459_next_e85c0f64._.js")
+R.c("server/chunks/[root-of-the-server]__4ee96bbc._.js")
+R.c("server/chunks/waliet_a46561dd._.js")
+R.c("server/chunks/waliet_fc052909._.js")
+R.c("server/chunks/waliet__next-internal_server_app_api_admin_activity_route_actions_7de2274a.js")
+R.m(69313)
+module.exports=R.m(69313).exports

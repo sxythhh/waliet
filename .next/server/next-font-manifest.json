@@ -1,0 +1,59 @@
+{
+  "app": {
+    "[project]/waliet/app/_not-found/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/app/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/browse/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/dashboard/[companyId]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/dashboard/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/experiences/[experienceId]/book/[sellerId]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/experiences/[experienceId]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/experiences/[experienceId]/seller/[userId]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/experiences/[experienceId]/wallet/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/login/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/onboarding/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ],
+    "[project]/waliet/app/sellers/[userId]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/Geist_Variable-s.p.f19e4721.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}
