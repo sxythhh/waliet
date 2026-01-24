@@ -31,6 +31,14 @@ export async function GET(request: Request) {
   // Generate PKCE values
   const { verifier, challenge } = generatePKCE();
 
+  console.log("[Whop OAuth Init] PKCE generated:", {
+    verifier_length: verifier.length,
+    verifier_first10: verifier.substring(0, 10),
+    challenge_length: challenge.length,
+    redirect_uri: redirectUri,
+    client_id: clientId,
+  });
+
   // Use state parameter to pass return_url through OAuth flow
   const state = returnUrl ? btoa(JSON.stringify({ return_url: returnUrl })) : "";
 

@@ -77,8 +77,10 @@ export async function GET(request: Request) {
       console.error("Token exchange failed:", errorData);
       console.error("Request details:", {
         client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`,
+        redirect_uri: redirectUri,
         app_url: process.env.NEXT_PUBLIC_APP_URL,
+        code_verifier_length: codeVerifier?.length,
+        code_verifier_first10: codeVerifier?.substring(0, 10),
       });
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/login?error=token_exchange_failed&details=${encodeURIComponent(errorData.substring(0, 200))}`
