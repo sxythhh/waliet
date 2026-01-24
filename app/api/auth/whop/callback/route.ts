@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -8,16 +7,15 @@ export async function GET(request: Request) {
   const error = searchParams.get("error");
   const state = searchParams.get("state");
 
-  // Get code verifier from cookie
-  const cookieStore = await cookies();
-  const codeVerifier = cookieStore.get("whop_code_verifier")?.value;
-
-  // Parse return URL from state parameter
+  // Parse state parameter to get return_url AND code_verifier
   let returnUrl = "/browse";
+  let codeVerifier: string | null = null;
+
   if (state) {
     try {
       const stateData = JSON.parse(atob(state));
       returnUrl = stateData.return_url || returnUrl;
+      codeVerifier = stateData.code_verifier || null;
     } catch (e) {
       console.error("Failed to parse state parameter:", e);
     }

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import crypto from "crypto";
 
 // Generate PKCE code verifier and challenge
@@ -31,17 +30,20 @@ export async function GET(request: Request) {
   // Generate PKCE values
   const { verifier, challenge } = generatePKCE();
 
+  // Store verifier AND return_url in state parameter (more reliable than cookie)
+  const stateData = {
+    return_url: returnUrl || "/browse",
+    code_verifier: verifier,
+  };
+  const state = btoa(JSON.stringify(stateData));
+
   console.log("[Whop OAuth Init] PKCE generated:", {
     verifier_length: verifier.length,
     verifier_first10: verifier.substring(0, 10),
-    challenge_length: challenge.length,
     challenge_first10: challenge.substring(0, 10),
     redirect_uri: redirectUri,
     client_id: clientId,
   });
-
-  // Use state parameter to pass return_url through OAuth flow
-  const state = returnUrl ? btoa(JSON.stringify({ return_url: returnUrl })) : "";
 
   // Redirect to Whop OAuth authorization page
   const authUrl = new URL("https://whop.com/oauth");
@@ -51,21 +53,7 @@ export async function GET(request: Request) {
   authUrl.searchParams.set("scope", "openid profile email");
   authUrl.searchParams.set("code_challenge", challenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
-  if (state) {
-    authUrl.searchParams.set("state", state);
-  }
+  authUrl.searchParams.set("state", state);
 
-  // Create response with redirect
-  const response = NextResponse.redirect(authUrl.toString());
-
-  // Store code verifier in cookie for use in callback
-  response.cookies.set("whop_code_verifier", verifier, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 10, // 10 minutes
-    path: "/",
-  });
-
-  return response;
+  return NextResponse.redirect(authUrl.toString());
 }
