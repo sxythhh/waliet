@@ -4,6 +4,10 @@
   "outputDirectory": "apps/web/dist",
   "framework": "vite",
   "rewrites": [
+    {
+      "source": "/auth",
+      "destination": "https://cr-auth.vercel.app/auth"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
