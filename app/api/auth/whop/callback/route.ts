@@ -51,7 +51,10 @@ export async function GET(request: Request) {
       code: code?.substring(0, 20) + "...",
       redirect_uri: redirectUri,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
+      client_secret_present: !!process.env.WHOP_CLIENT_SECRET,
+      client_secret_first5: process.env.WHOP_CLIENT_SECRET?.substring(0, 5),
       code_verifier_length: codeVerifier.length,
+      code_verifier_first10: codeVerifier.substring(0, 10),
     });
 
     // Exchange code for access token (with PKCE)
