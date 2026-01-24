@@ -38,22 +38,32 @@ export async function GET(request: Request) {
   }
 
   if (!codeVerifier) {
+    console.error("Missing code_verifier cookie");
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/login?error=missing_code_verifier`
     );
   }
 
   try {
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`;
+
+    console.log("Token exchange request:", {
+      code: code?.substring(0, 20) + "...",
+      redirect_uri: redirectUri,
+      client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
+      code_verifier_length: codeVerifier.length,
+    });
+
     // Exchange code for access token (with PKCE)
     const tokenBody = new URLSearchParams({
       grant_type: "authorization_code",
       code,
-      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`,
+      redirect_uri: redirectUri,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
       code_verifier: codeVerifier,
     });
 
-    const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
+    const tokenResponse = await fetch("https://whop.com/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -79,7 +89,7 @@ export async function GET(request: Request) {
     const accessToken = tokenData.access_token;
 
     // Get user info from OAuth userinfo endpoint (includes email with email scope)
-    const userResponse = await fetch("https://api.whop.com/oauth/userinfo", {
+    const userResponse = await fetch("https://whop.com/oauth/userinfo", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
