@@ -1,0 +1,367 @@
+import { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Upload } from "lucide-react";
+import { BrandOnboardingDialog } from "./BrandOnboardingDialog";
+import { BrandWelcomeDialog } from "./brand/BrandWelcomeDialog";
+import { generateSlug } from "@/lib/slug";
+
+const BRAND_COLORS = [
+  "#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", 
+  "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899",
+  "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"
+];
+
+const brandSchema = z.object({
+  name: z.string().trim().min(1, "Brand name is required").max(100),
+  website: z.string().trim().max(255).optional().or(z.literal("")),
+  description: z.string().trim().max(500).optional()
+});
+type BrandFormValues = z.infer<typeof brandSchema>;
+interface CreateBrandDialogProps {
+  onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+interface CreatedBrand {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logo_url: string | null;
+  brand_color: string | null;
+}
+
+export function CreateBrandDialog({
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  hideTrigger = false
+}: CreateBrandDialogProps) {
+  const queryClient = useQueryClient();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [createdBrand, setCreatedBrand] = useState<CreatedBrand | null>(null);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange || (() => {}) : setInternalOpen;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [brandColor, setBrandColor] = useState("#8B5CF6");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const form = useForm<BrandFormValues>({
+    resolver: zodResolver(brandSchema),
+    defaultValues: {
+      name: "",
+      website: "",
+      description: ""
+    }
+  });
+  const brandName = form.watch("name");
+
+  // Generate initials from brand name
+  const getInitials = (name: string) => {
+    if (!name) return "V";
+    const words = name.trim().split(/\s+/);
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  const removeLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  const uploadLogo = async (): Promise<string | null> => {
+    if (!logoFile) return null;
+    const fileExt = logoFile.name.split(".").pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+    const {
+      error: uploadError
+    } = await supabase.storage.from("campaign-banners").upload(filePath, logoFile);
+    if (uploadError) throw uploadError;
+    const {
+      data: {
+        publicUrl
+      }
+    } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
+    return publicUrl;
+  };
+  const onSubmit = async (values: BrandFormValues) => {
+    setIsSubmitting(true);
+    try {
+      const logoUrl = await uploadLogo();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+      const slug = generateSlug(values.name);
+      const {
+        data: brandData,
+        error: brandError
+      } = await supabase.from("businesses").insert({
+        name: values.name,
+        slug: slug,
+        description: values.description || null,
+        website: values.website || null,
+        logo_url: logoUrl,
+        brand_color: brandColor
+      }).select().single();
+      if (brandError) throw brandError;
+
+      // Add creator as business member - this must succeed for RLS policies to work
+      const {
+        error: memberError
+      } = await supabase.from("business_members").insert({
+        business_id: brandData.id,
+        user_id: user.id,
+        role: "owner"
+      });
+      if (memberError) {
+        console.error("Error adding business member:", memberError);
+        throw new Error(`Failed to add you as owner: ${memberError.message}`);
+      }
+
+      // Create business_wallets record for the new business
+      const { error: walletError } = await supabase.from("business_wallets").insert({
+        business_id: brandData.id,
+        balance: 0,
+        total_deposited: 0,
+        total_spent: 0
+      });
+      if (walletError) {
+        console.error("Error creating business wallet:", walletError);
+        // Wallet is optional, don't fail the whole operation
+      }
+      toast.success("Brand created successfully!");
+
+      // Invalidate business memberships query so the sidebar updates
+      queryClient.invalidateQueries({ queryKey: ["businessMemberships"] });
+
+      setOpen(false);
+      form.reset();
+      setLogoFile(null);
+      setLogoPreview(null);
+      setBrandColor("#8B5CF6");
+      onSuccess?.();
+
+      // Store the created brand and open welcome dialog first
+      setCreatedBrand({
+        id: brandData.id,
+        name: brandData.name,
+        slug: brandData.slug,
+        description: brandData.description,
+        logo_url: brandData.logo_url,
+        brand_color: brandData.brand_color,
+      });
+      setWelcomeOpen(true);
+    } catch (error: any) {
+      console.error("Error creating brand:", error);
+      if (error.code === "23505") {
+        toast.error("A brand with this name already exists");
+      } else {
+        toast.error(error?.message || "Failed to create brand. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  const handleCancel = () => {
+    form.reset();
+    setLogoFile(null);
+    setLogoPreview(null);
+    setBrandColor("#8B5CF6");
+    setOpen(false);
+  };
+  const handleWelcomeGetStarted = () => {
+    setWelcomeOpen(false);
+    setOnboardingOpen(true);
+  };
+
+  return (<>
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!hideTrigger && <DialogTrigger asChild />}
+      <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+            {/* Header */}
+            <div className="px-6 pt-6">
+              <DialogHeader className="space-y-1">
+                <DialogTitle className="text-lg font-semibold tracking-tight font-inter">
+                  Create Brand
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] text-left">
+                  Create and customize your brand workspace to manage your campaigns with your team.{" "}
+                  <a 
+                    href="https://join.virality.gg/new" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground hover:underline"
+                  >
+                    Learn more
+                  </a>
+                </p>
+              </DialogHeader>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-5 space-y-5">
+              {/* Icon Section */}
+              <div className="space-y-2">
+                <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                  Workspace Logo & Colour
+                </label>
+                
+                <div className="flex items-center gap-2.5">
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  
+                  {/* Logo Preview or Initials with Color */}
+                  <div 
+                    className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: logoPreview ? undefined : brandColor }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-sm font-semibold font-inter">
+                        {getInitials(brandName)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Color Picker */}
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {BRAND_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setBrandColor(color)}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Upload/Remove Buttons */}
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5 bg-black/5 dark:bg-white/5 border-0 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
+                    >
+                      <Upload className="h-3 w-3" />
+                      {logoPreview ? 'Change' : 'Upload'}
+                    </Button>
+                    {logoPreview && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={removeLogo} 
+                        className="h-7 text-xs font-inter tracking-[-0.3px] px-2.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Name Field */}
+              <FormField control={form.control} name="name" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                      Name <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter brand name" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>} />
+
+              {/* Website URL Field */}
+              <FormField control={form.control} name="website" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                      Website URL
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://yourbrand.com" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary/80 rounded-lg transition-colors" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>} />
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-6 flex items-center justify-end gap-3">
+              <Button type="button" variant="ghost" onClick={handleCancel} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-primary text-white hover:bg-primary/90 border-t border-primary/80 rounded-lg">
+                {isSubmitting ? <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Creating...
+                  </span> : "Continue"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+
+    {/* Welcome Dialog */}
+    {createdBrand && (
+      <BrandWelcomeDialog
+        open={welcomeOpen}
+        onOpenChange={setWelcomeOpen}
+        brandName={createdBrand.name}
+        onGetStarted={handleWelcomeGetStarted}
+      />
+    )}
+
+    {/* Onboarding Dialog */}
+    {createdBrand && (
+      <BrandOnboardingDialog
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        brand={createdBrand}
+      />
+    )}
+  </>);
+}

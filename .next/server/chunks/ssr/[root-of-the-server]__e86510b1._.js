@@ -1,3 +1,0 @@
-module.exports=[18622,(a,b,c)=>{b.exports=a.x("next/dist/compiled/next-server/app-page-turbo.runtime.prod.js",()=>require("next/dist/compiled/next-server/app-page-turbo.runtime.prod.js"))},185,(a,b,c)=>{"use strict";b.exports=a.r(18622)},2977,(a,b,c)=>{"use strict";b.exports=a.r(185).vendored["react-ssr"].ReactJsxRuntime},63194,(a,b,c)=>{"use strict";b.exports=a.r(185).vendored["react-ssr"].React},43647,a=>{"use strict";var b=a.i(2977),c=a.i(17175),d=a.i(13493);function e({children:a}){let e=(0,d.getQueryClient)();return(0,b.jsxs)(c.QueryClientProvider,{client:e,children:[a,!1]})}a.s(["AppProviders",()=>e],43647)}];
-
-//# sourceMappingURL=%5Broot-of-the-server%5D__e86510b1._.js.map

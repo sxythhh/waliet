@@ -1,0 +1,796 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Check, ArrowUp, Plus, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { OptimizedImage } from "@/components/OptimizedImage";
+import { useTheme } from "@/components/ThemeProvider";
+import DOMPurify from "dompurify";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import emptyAccountsImage from "@/assets/empty-accounts.png";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { DiscordConnectPrompt } from "@/components/DiscordConnectPrompt";
+import fullscreenIcon from "@/assets/fullscreen-icon.svg";
+import fullscreenIconDark from "@/assets/expand-icon-dark.svg";
+interface BlueprintHook {
+  text: string;
+}
+
+interface ExampleVideo {
+  url: string;
+  description: string;
+}
+
+interface Asset {
+  link: string;
+  notes: string;
+}
+
+interface Blueprint {
+  id: string;
+  title: string;
+  content: string | null;
+  hooks: (string | BlueprintHook)[] | null;
+  talking_points: string[] | null;
+  dos_and_donts: { dos: string[]; donts: string[] } | null;
+  call_to_action: string | null;
+  hashtags: string[] | null;
+  brand_voice: string | null;
+  content_guidelines: string | null;
+  example_videos: ExampleVideo[] | null;
+  assets: Asset[] | null;
+}
+interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  campaign_type?: string | null;
+  category?: string | null;
+  brand_name: string;
+  brand_logo_url: string;
+  budget: number;
+  budget_used?: number;
+  rpm_rate: number;
+  status: string;
+  start_date: string | null;
+  banner_url: string | null;
+  platforms: string[];
+  slug: string;
+  guidelines: string | null;
+  application_questions: string[];
+  requires_application?: boolean;
+  preview_url?: string | null;
+  is_infinite_budget?: boolean;
+  blueprint_id?: string | null;
+  brands?: {
+    logo_url: string;
+    is_verified?: boolean;
+  };
+  require_audience_insights?: boolean;
+  min_insights_score?: number;
+}
+interface DemographicSubmission {
+  id: string;
+  status: string;
+  score: number | null;
+}
+
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link: string | null;
+  demographic_submissions?: DemographicSubmission[];
+}
+
+interface JoinCampaignSheetProps {
+  campaign: Campaign | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+export function JoinCampaignSheet({
+  campaign,
+  open,
+  onOpenChange,
+  onSuccess
+}: JoinCampaignSheetProps) {
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [answers, setAnswers] = useState<{
+    [key: string]: string;
+  }>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
+  const [loadingBlueprint, setLoadingBlueprint] = useState(false);
+  const [userInsightsScore, setUserInsightsScore] = useState<number | null>(null);
+  const [userDiscordConnected, setUserDiscordConnected] = useState(false);
+  const [campaignHasDiscord, setCampaignHasDiscord] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const {
+    resolvedTheme
+  } = useTheme();
+
+  // Helper to parse links in text
+  const parseTextWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-[#4f89ff] hover:underline" onClick={e => e.stopPropagation()}>
+            {part}
+          </a>;
+      }
+      return part;
+    });
+  };
+
+  // Load Discord connection status and campaign Discord settings
+  const loadDiscordStatus = useCallback(async () => {
+    if (!campaign?.id) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setCurrentUserId(user.id);
+
+      // Check if user has Discord connected
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('discord_id')
+        .eq('id', user.id)
+        .single();
+
+      setUserDiscordConnected(!!profile?.discord_id);
+
+      // Check if campaign has Discord configured
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('discord_guild_id')
+        .eq('id', campaign.id)
+        .single();
+
+      setCampaignHasDiscord(!!campaignData?.discord_guild_id);
+    } catch (error) {
+      console.error('Error loading Discord status:', error);
+    }
+  }, [campaign?.id]);
+
+  const loadBlueprint = useCallback(async () => {
+    if (!campaign?.blueprint_id) {
+      setBlueprint(null);
+      return;
+    }
+    setLoadingBlueprint(true);
+    try {
+      const {
+        data,
+        error
+      } = await supabase.from('blueprints').select('*').eq('id', campaign.blueprint_id).single();
+      if (error) throw error;
+      setBlueprint(data as Blueprint);
+    } catch (error) {
+      console.error('Error loading blueprint:', error);
+      setBlueprint(null);
+    } finally {
+      setLoadingBlueprint(false);
+    }
+  }, [campaign?.blueprint_id]);
+
+  const checkAuthentication = useCallback(async () => {
+    try {
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    } catch (error) {
+      console.error("Error checking authentication:", error);
+      setIsLoggedIn(false);
+    }
+  }, []);
+  const getPlatformIcon = (platform: string) => {
+    const isLightMode = resolvedTheme === "light";
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return isLightMode ? tiktokLogoBlack : tiktokLogo;
+      case "instagram":
+        return isLightMode ? instagramLogoBlack : instagramLogo;
+      case "youtube":
+        return isLightMode ? youtubeLogoBlack : youtubeLogo;
+      default:
+        return null;
+    }
+  };
+  const loadSocialAccounts = useCallback(async () => {
+    if (!campaign) return;
+    setLoadingAccounts(true);
+    // Reset answers when loading accounts for a new campaign
+    setAnswers({});
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setLoadingAccounts(false);
+      return;
+    }
+
+    // Get all user's social accounts that match the campaign's platforms
+    // Also fetch demographic submissions to check insights score
+    const {
+      data: accounts
+    } = await supabase.from("social_accounts").select(`
+      *,
+      demographic_submissions(
+        id,
+        status,
+        score
+      )
+    `).eq("user_id", user.id).in("platform", campaign.platforms.map(p => p.toLowerCase()));
+
+    // Calculate user's best insights score from approved submissions
+    if (accounts) {
+      const approvedScores = accounts
+        .flatMap(acc => acc.demographic_submissions || [])
+        .filter((sub: DemographicSubmission) => sub.status === 'approved' && sub.score != null)
+        .map((sub: DemographicSubmission) => sub.score as number);
+
+      if (approvedScores.length > 0) {
+        const avgScore = Math.round(approvedScores.reduce((a, b) => a + b, 0) / approvedScores.length);
+        setUserInsightsScore(avgScore);
+      } else {
+        setUserInsightsScore(null);
+      }
+    }
+
+    // Get active (non-withdrawn) submissions to filter out platforms
+    const {
+      data: activeSubmissions
+    } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn");
+    const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
+
+    // Filter out accounts with active submissions for this campaign
+    const availableAccounts = (accounts?.filter(acc => !activePlatforms.has(acc.platform)) || []) as SocialAccount[];
+    setSocialAccounts(availableAccounts);
+    setLoadingAccounts(false);
+  }, [campaign]);
+
+  // Check authentication when sheet opens
+  useEffect(() => {
+    if (open) {
+      checkAuthentication();
+      loadSocialAccounts();
+      loadBlueprint();
+      loadDiscordStatus();
+    }
+  }, [open, checkAuthentication, loadSocialAccounts, loadBlueprint, loadDiscordStatus]);
+  const toggleAccountSelection = (accountId: string) => {
+    setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
+  };
+  const handleSubmit = async () => {
+    if (!campaign || selectedAccounts.length === 0) {
+      toast.error("Please select at least one social account");
+      return;
+    }
+    if (campaign.status === "ended") {
+      toast.error("This campaign has ended and is no longer accepting applications");
+      return;
+    }
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to join campaigns");
+      return;
+    }
+
+    // Validate application questions only if campaign requires application
+    const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
+    if (campaign.requires_application !== false && questions.length > 0) {
+      const unansweredQuestions = questions.filter((q, idx) => {
+        const answer = answers[idx];
+        return !answer || answer.trim().length === 0;
+      });
+      if (unansweredQuestions.length > 0) {
+        toast.error("Please answer all application questions");
+        return;
+      }
+    }
+    setSubmitting(true);
+    try {
+      // Determine submission status based on campaign type
+      const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
+
+      // Delete any withdrawn submissions to start fresh
+      await supabase.from("campaign_submissions").delete().eq("campaign_id", campaign.id).eq("creator_id", user.id).eq("status", "withdrawn");
+
+      // Check for existing submissions first (excluding withdrawn)
+      const {
+        data: existingData
+      } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn");
+      const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
+
+      // Track if any submissions were actually created
+      let submissionsCreated = 0;
+      const submittedAccountsData: Array<{
+        platform: string;
+        username: string;
+        account_link: string;
+      }> = [];
+
+      // Process each selected account
+      for (const accountId of selectedAccounts) {
+        const account = socialAccounts.find(a => a.id === accountId);
+
+        // Skip if already submitted for this platform
+        if (existingPlatforms.has(account.platform)) {
+          continue;
+        }
+
+        // Format application answers
+        const formattedAnswers = campaign.application_questions?.map((question, index) => ({
+          question,
+          answer: answers[index] || ""
+        })) || [];
+        const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
+
+        // Create new submission (use upsert to handle race conditions)
+        const submissionData = {
+          campaign_id: campaign.id,
+          creator_id: user.id,
+          platform: account.platform,
+          content_url: contentUrl,
+          status: submissionStatus,
+          application_answers: formattedAnswers
+        };
+        const {
+          error: submissionError
+        } = await supabase.from("campaign_submissions").upsert(submissionData, {
+          onConflict: 'campaign_id,creator_id,platform',
+          ignoreDuplicates: false
+        });
+        if (submissionError) {
+          // Handle duplicate submission gracefully (409 conflict or unique constraint violation)
+          const isConflict = submissionError.code === '23505'
+            || submissionError.code === '409'
+            || (submissionError as any).status === 409
+            || submissionError.message?.includes('duplicate')
+            || submissionError.message?.includes('conflict');
+          if (isConflict) {
+            continue;
+          }
+          console.error('Submission error:', submissionError);
+          throw submissionError;
+        }
+
+        // Link the social account to the campaign (check if active link exists first)
+        const {
+          data: existingLink
+        } = await supabase.from("social_account_campaigns").select("id, status").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
+        if (!existingLink) {
+          // Create new link
+          const linkData = {
+            social_account_id: accountId,
+            campaign_id: campaign.id,
+            user_id: user.id,
+            status: 'active'
+          };
+          const {
+            error: linkError
+          } = await supabase.from("social_account_campaigns").insert(linkData);
+          if (linkError) {
+            console.error('Link error:', linkError);
+            throw linkError;
+          }
+        } else if (existingLink.status !== 'active') {
+          // Reactivate disconnected link
+          const {
+            error: updateError
+          } = await supabase.from("social_account_campaigns").update({
+            status: 'active',
+            disconnected_at: null
+          }).eq("id", existingLink.id);
+          if (updateError) {
+            console.error('Update error:', updateError);
+            throw updateError;
+          }
+        }
+        submissionsCreated++;
+        submittedAccountsData.push({
+          platform: account.platform,
+          username: account.username,
+          account_link: account.account_link || contentUrl
+        });
+      }
+
+      // Track accounts in Shortimize if auto-approved
+      if (!campaign.requires_application && submissionsCreated > 0) {
+        try {
+          const {
+            error: trackError
+          } = await supabase.functions.invoke('track-campaign-user', {
+            body: {
+              campaignId: campaign.id,
+              userId: user.id
+            }
+          });
+          if (trackError) {
+            console.error('Error tracking accounts:', trackError);
+          }
+        } catch (error) {
+          console.error('Error calling track function:', error);
+        }
+
+        // Auto-join Discord server if auto-approved and campaign has Discord configured
+        try {
+          // Fetch campaign's Discord settings
+          const { data: campaignData } = await supabase
+            .from('campaigns')
+            .select('discord_guild_id, discord_role_id')
+            .eq('id', campaign.id)
+            .single();
+
+          if (campaignData?.discord_guild_id) {
+            const { error: discordError } = await supabase.functions.invoke('add-to-discord-server', {
+              body: {
+                userId: user.id,
+                guildId: campaignData.discord_guild_id,
+                roleId: campaignData.discord_role_id || undefined
+              }
+            });
+
+            if (discordError) {
+              console.error('Error adding to Discord:', discordError);
+              // Don't fail the submission if Discord join fails
+            }
+          }
+        } catch (error) {
+          console.error('Error with Discord auto-join:', error);
+        }
+      }
+
+      // Send Discord notification if submissions were created
+      if (submissionsCreated > 0) {
+        try {
+          // Get user profile
+          const {
+            data: profile,
+            error: profileError
+          } = await supabase.from('profiles').select('username, email').eq('id', user.id).single();
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+          }
+
+          // Get brand data including slug and logo
+          const {
+            data: brandData,
+            error: brandError
+          } = await supabase.from('brands').select('slug').eq('name', campaign.brand_name).single();
+          if (brandError) {
+            console.error('Brand fetch error:', brandError);
+          }
+          const brandSlug = brandData?.slug || '';
+          const formattedAnswers = campaign.application_questions?.map((question, index) => ({
+            question,
+            answer: answers[index] || ""
+          })) || [];
+          const {
+            data: functionData,
+            error: functionError
+          } = await supabase.functions.invoke('notify-campaign-application', {
+            body: {
+              username: profile?.username || 'Unknown',
+              email: profile?.email || 'Unknown',
+              campaign_name: campaign.title,
+              campaign_slug: campaign.slug,
+              brand_name: campaign.brand_name,
+              brand_slug: brandSlug,
+              brand_logo_url: campaign.brand_logo_url || '',
+              social_accounts: submittedAccountsData,
+              application_answers: formattedAnswers,
+              submitted_at: new Date().toISOString()
+            }
+          });
+          if (functionError) {
+            console.error('Edge function error:', functionError);
+          }
+        } catch (webhookError) {
+          console.error('Failed to send Discord notification:', webhookError);
+          // Don't fail the submission if webhook fails
+        }
+      }
+
+      // Show appropriate message based on what happened
+      if (submissionsCreated === 0) {
+        toast.info("You've already applied to this campaign with the selected account(s)");
+        onOpenChange(false);
+        return;
+      }
+      const accountText = submissionsCreated === 1 ? "account is" : "accounts are";
+      const successMessage = campaign.requires_application === false ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.` : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
+      toast.success(successMessage);
+      onOpenChange(false);
+      onSuccess?.();
+      navigate("/dashboard?tab=campaigns");
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to submit application");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  if (!campaign) return null;
+  const budgetRemaining = campaign.budget - (campaign.budget_used || 0);
+  const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
+  return <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
+        {/* Floating Fullscreen Button */}
+        <button onClick={() => {
+        onOpenChange(false);
+        navigate(`/join/${campaign.slug}`);
+      }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-background backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors z-50" title="Open full page">
+          <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5 hidden dark:block" />
+          <img src={fullscreenIconDark} alt="Fullscreen" className="w-5 h-5 block dark:hidden" />
+        </button>
+        <div className="flex-1 overflow-y-auto px-6 pb-24">
+          <div className="mt-6 space-y-6 pb-[80px]">
+            {/* Campaign Banner */}
+            {campaign.banner_url && <div className="relative w-full h-40 rounded-lg overflow-hidden">
+                <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
+              </div>}
+
+            {/* Brand Info */}
+            <div className="flex items-start gap-3">
+              {campaign.brand_logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-border">
+                  <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                </div>}
+              <div className="flex-1">
+                <h3 className="font-semibold text-2xl">{campaign.title}</h3>
+                <p className="text-sm text-foreground flex items-center gap-1">
+                  {campaign.brand_name}
+                  {campaign.brands?.is_verified && <VerifiedBadge size="sm" />}
+                </p>
+              </div>
+            </div>
+
+            {/* Description with expandable "Show more" */}
+            {campaign.description && <div className="space-y-2">
+                <div className="relative">
+                  <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${descriptionExpanded ? '' : 'max-h-[100px]'}`} style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
+                    {parseTextWithLinks(campaign.description)}
+                  </div>
+                  {!descriptionExpanded && campaign.description.length > 200 && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
+                </div>
+                {campaign.description.length > 200 && <div className="flex justify-center">
+                    <button onClick={() => setDescriptionExpanded(!descriptionExpanded)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
+                      {descriptionExpanded ? 'Show less' : 'Show more'}
+                    </button>
+                  </div>}
+              </div>}
+
+            {/* Blueprint Content Display */}
+            {blueprint && <div className="space-y-4">
+                {/* Blueprint Header */}
+                
+
+                {/* Preview Container with Gradient Fade */}
+                <div className="relative">
+                  <div className="max-h-[180px] overflow-hidden">
+                    {/* Main Content */}
+                    {blueprint.content && <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-inter tracking-[-0.3px]" dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(blueprint.content)
+                  }} />
+                      </div>}
+
+                    {/* Hooks Section Preview */}
+                    {blueprint.hooks && blueprint.hooks.length > 0 && <div className="rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-4 space-y-3 mt-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
+                            <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                          </div>
+                          <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Hooks</span>
+                        </div>
+                        <div className="space-y-2 pl-1">
+                          {blueprint.hooks.slice(0, 2).map((hook: string | BlueprintHook, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
+                              <span className="text-amber-500 mt-0.5">•</span>
+                              <span>{typeof hook === 'string' ? hook : hook.text}</span>
+                            </div>)}
+                        </div>
+                      </div>}
+                  </div>
+                  
+                  {/* Gradient Fade Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+                </div>
+
+                {/* View Full Blueprint Button */}
+                <Button variant="ghost" className="w-full font-inter tracking-[-0.5px] hover:bg-muted" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
+                  View full blueprint
+                </Button>
+              </div>}
+
+            {/* Budget & RPM */}
+            {!campaign.is_infinite_budget}
+
+
+            {/* Account Selection or Create Account - only show for campaigns requiring application */}
+            {!isLoggedIn ? <div className="space-y-3">
+                <div className="p-6 rounded-lg bg-muted/50 text-center space-y-4">
+                  <p className="text-sm font-medium text-foreground">Join this campaign</p>
+                  <p className="text-xs text-muted-foreground">Create an account to start earning from your content</p>
+                  <Button onClick={() => {
+                onOpenChange(false);
+                navigate('/auth');
+              }} className="w-full">
+                    Create Account
+                  </Button>
+                </div>
+              </div> : <div className="space-y-2">
+                <Label style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.5px'
+            }}>Select Social Accounts *</Label>
+                {loadingAccounts ? <div className="space-y-1.5">
+                    {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                        <Skeleton className="w-5 h-5 rounded" />
+                        <Skeleton className="w-5 h-5 rounded" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>)}
+                  </div> : socialAccounts.length === 0 ? <div className="py-8 text-center space-y-3">
+                    <p className="text-sm text-muted-foreground" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
+                      No accounts connected yet
+                    </p>
+                    <button onClick={() => setShowAddAccountDialog(true)} className="text-sm font-medium text-primary hover:text-primary/80 transition-colors" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
+                      + Add Account
+                    </button>
+                  </div> : <div className="space-y-1.5">
+                    {socialAccounts.map(account => {
+                const platformIcon = getPlatformIcon(account.platform);
+                const isSelected = selectedAccounts.includes(account.id);
+                return <button key={account.id} type="button" onClick={() => toggleAccountSelection(account.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all ${isSelected ? "bg-primary/10" : "hover:bg-muted/50"}`} style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 flex-shrink-0" />}
+                          <span className="text-sm font-medium text-foreground">{account.username}</span>
+                        </button>;
+              })}
+                    <button onClick={() => setShowAddAccountDialog(true)} className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
+                      + Add another account
+                    </button>
+                  </div>}
+              </div>}
+
+            {/* Audience Insights Requirement Notice */}
+            {isLoggedIn && campaign.require_audience_insights && (
+              (() => {
+                const minScore = campaign.min_insights_score || 0;
+                const meetsRequirement = userInsightsScore !== null && userInsightsScore >= minScore;
+
+                if (!meetsRequirement) {
+                  return (
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-2">
+                      <p className="text-sm font-medium text-amber-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                        Audience Insights Required
+                      </p>
+                      <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                        {minScore > 0
+                          ? `This campaign requires verified audience insights with a score of ${minScore}% or higher.`
+                          : 'This campaign requires verified audience insights.'}
+                        {userInsightsScore !== null
+                          ? ` Your current score is ${userInsightsScore}%.`
+                          : ' You have not submitted audience insights yet.'}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => {
+                          onOpenChange(false);
+                          navigate('/dashboard?tab=profile');
+                        }}
+                      >
+                        Share Audience Insights
+                      </Button>
+                    </div>
+                  );
+                }
+                return null;
+              })()
+            )}
+
+            {/* Application Questions - only show if logged in and campaign requires application */}
+            {isLoggedIn && campaign.requires_application !== false && Array.isArray(campaign.application_questions) && campaign.application_questions.map((question, index) => <div key={index} className="space-y-2">
+                <Label htmlFor={`question-${index}`}>
+                  {question} *
+                </Label>
+                <Textarea id={`question-${index}`} value={answers[index] || ""} onChange={e => setAnswers({
+              ...answers,
+              [index]: e.target.value
+            })} placeholder="Your answer..." rows={3} className="min-h-[60px] border-2 border-transparent focus-visible:border-[#2663EB] focus-visible:shadow-none transition-none" />
+              </div>)}
+          </div>
+        </div>
+
+        {/* Sticky Submit Button at bottom */}
+        {isLoggedIn && (() => {
+          const insightsRequired = campaign.require_audience_insights;
+          const minScore = campaign.min_insights_score || 0;
+          const meetsInsightsRequirement = !insightsRequired || (userInsightsScore !== null && userInsightsScore >= minScore);
+
+          return (
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-[#dadce2]/0">
+              <div className="flex flex-col gap-3">
+                {/* Discord Connect Prompt */}
+                {currentUserId && campaignHasDiscord && !userDiscordConnected && (
+                  <DiscordConnectPrompt
+                    userId={currentUserId}
+                    hasDiscordConnected={userDiscordConnected}
+                    campaignHasDiscord={campaignHasDiscord}
+                    variant="banner"
+                    onConnected={loadDiscordStatus}
+                  />
+                )}
+                <Button style={{
+                  fontFamily: 'Geist',
+                  letterSpacing: '-0.5px',
+                  backgroundColor: campaign.status === "ended" || !meetsInsightsRequirement ? '#6b7280' : 'hsl(var(--primary))'
+                }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0 || !meetsInsightsRequirement} className="w-full text-white tracking-tighter">
+                  {campaign.status === "ended" ? "Campaign Ended" : !meetsInsightsRequirement ? "Insights Required" : submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+                </Button>
+                <Button variant="ghost" className="w-full md:hidden" style={{
+                  fontFamily: 'Geist',
+                  letterSpacing: '-0.5px'
+                }} onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </SheetContent>
+
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={loadSocialAccounts} />
+    </Sheet>;
+}

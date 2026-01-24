@@ -1,0 +1,456 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Eye, DollarSign, Video, ArrowRight, Briefcase, Wallet, MessageCircle, CheckCircle, Clock, XCircle, ExternalLink, Loader2 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { Brand } from "@/pages/BrandPortal";
+
+interface BrandPortalHomeProps {
+  brand: Brand;
+  userId: string;
+}
+
+interface Stats {
+  totalEarnings: number;
+  totalViews: number;
+  totalVideos: number;
+  pendingPayouts: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: "video" | "payout";
+  title: string;
+  amount?: number;
+  views?: number;
+  date: string;
+}
+
+interface VideoSubmission {
+  id: string;
+  video_url: string;
+  platform: string;
+  status: string;
+  views: number;
+  created_at: string;
+  campaign_title: string;
+}
+
+export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
+  const [, setSearchParams] = useSearchParams();
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [recentSubmissions, setRecentSubmissions] = useState<VideoSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+
+      setProfile(profileData);
+
+      // Fetch campaigns for this brand
+      const { data: campaigns } = await supabase
+        .from("campaigns")
+        .select("id, title")
+        .eq("brand_id", brand.id);
+
+      const campaignIds = campaigns?.map(c => c.id) || [];
+      const campaignMap = (campaigns || []).reduce((acc, c) => {
+        acc[c.id] = c.title;
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Fetch bounty campaigns for this brand
+      const { data: boostCampaigns } = await supabase
+        .from("bounty_campaigns")
+        .select("id, title")
+        .eq("brand_id", brand.id);
+
+      const boostIds = boostCampaigns?.map(c => c.id) || [];
+      const boostMap = (boostCampaigns || []).reduce((acc, c) => {
+        acc[c.id] = c.title;
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Fetch video stats from campaigns
+      let totalViews = 0;
+      let totalVideos = 0;
+      const allSubmissions: VideoSubmission[] = [];
+
+      if (campaignIds.length > 0) {
+        const { data: videos } = await supabase
+          .from("campaign_videos")
+          .select("id, video_url, platform, status, video_views, created_at, campaign_id")
+          .eq("creator_id", userId)
+          .in("campaign_id", campaignIds)
+          .order("created_at", { ascending: false });
+
+        if (videos) {
+          totalVideos += videos.length;
+          totalViews += videos.reduce((sum, v) => sum + (v.video_views || 0), 0);
+          allSubmissions.push(...videos.map(v => ({
+            id: v.id,
+            video_url: v.video_url,
+            platform: v.platform || "unknown",
+            status: v.status || "pending",
+            views: v.video_views || 0,
+            created_at: v.created_at || "",
+            campaign_title: campaignMap[v.campaign_id] || "Campaign",
+          })));
+        }
+      }
+
+      if (boostIds.length > 0) {
+        const { data: boostVideos } = await supabase
+          .from("boost_video_submissions")
+          .select("id, video_url, platform, status, created_at, bounty_campaign_id")
+          .eq("user_id", userId)
+          .in("bounty_campaign_id", boostIds)
+          .order("created_at", { ascending: false });
+
+        if (boostVideos) {
+          totalVideos += boostVideos.length;
+          allSubmissions.push(...boostVideos.map(v => ({
+            id: v.id,
+            video_url: v.video_url,
+            platform: v.platform,
+            status: v.status,
+            views: 0,
+            created_at: v.created_at,
+            campaign_title: boostMap[v.bounty_campaign_id] || "Campaign",
+          })));
+        }
+      }
+
+      // Sort and get recent submissions
+      allSubmissions.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setRecentSubmissions(allSubmissions.slice(0, 5));
+
+      // Fetch earnings for this brand from brand_wallet_transactions
+      const { data: walletTransactions } = await supabase
+        .from("brand_wallet_transactions")
+        .select("amount, status, created_at, description")
+        .eq("brand_id", brand.id);
+
+      const totalEarnings = (walletTransactions || [])
+        .filter(t => t.status === "completed")
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const pendingPayouts = (walletTransactions || [])
+        .filter(t => t.status === "pending")
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      setStats({
+        totalEarnings,
+        totalViews,
+        totalVideos,
+        pendingPayouts,
+      });
+
+      // Create recent activity from transactions
+      const activity: RecentActivity[] = (walletTransactions || [])
+        .slice(0, 5)
+        .map(t => ({
+          id: t.created_at || crypto.randomUUID(),
+          type: "payout" as const,
+          title: t.description || "Payment",
+          amount: t.amount || 0,
+          date: t.created_at || new Date().toISOString(),
+        }));
+
+      setRecentActivity(activity);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [brand.id, userId]);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-500 border-0">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Approved
+          </Badge>
+        );
+      case "pending":
+        return (
+          <Badge className="bg-amber-500/10 text-amber-500 border-0">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge className="bg-red-500/10 text-red-500 border-0">
+            <XCircle className="h-3 w-3 mr-1" />
+            Rejected
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-muted-foreground border-border capitalize">
+            {status}
+          </Badge>
+        );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome Header */}
+      <div className="bg-card rounded-2xl p-6 border border-border">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-14 w-14 ring-2 ring-border">
+            <AvatarImage src={profile?.avatar_url || ""} />
+            <AvatarFallback className="text-lg font-semibold bg-muted text-muted-foreground">
+              {profile?.username?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+              Welcome back, {profile?.username || "Creator"}!
+            </h1>
+            <p className="text-muted-foreground font-inter tracking-[-0.3px]">
+              Here's your performance summary with {brand.name}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-card border-border">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1 font-inter tracking-[-0.3px]">Total Earnings</p>
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  ${stats?.totalEarnings?.toFixed(2) || "0.00"}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-emerald-500/10">
+                <DollarSign className="h-5 w-5 text-emerald-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1 font-inter tracking-[-0.3px]">Total Views</p>
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  {stats?.totalViews?.toLocaleString() || "0"}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-blue-500/10">
+                <Eye className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1 font-inter tracking-[-0.3px]">Videos Submitted</p>
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  {stats?.totalVideos || 0}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-purple-500/10">
+                <Video className="h-5 w-5 text-purple-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1 font-inter tracking-[-0.3px]">Pending Payouts</p>
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  ${stats?.pendingPayouts?.toFixed(2) || "0.00"}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-amber-500/10">
+                <TrendingUp className="h-5 w-5 text-amber-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions & Recent Submissions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Actions */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <button
+              onClick={() => setSearchParams({ tab: "discover" })}
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Briefcase className="h-4 w-4 text-blue-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground font-inter tracking-[-0.3px] text-sm">Discover Campaigns</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Browse available opportunities</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+
+            <button
+              onClick={() => setSearchParams({ tab: "profile" })}
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <Wallet className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground font-inter tracking-[-0.3px] text-sm">View Profile</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Check earnings & withdraw</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+
+            <button
+              onClick={() => setSearchParams({ tab: "messages" })}
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <MessageCircle className="h-4 w-4 text-purple-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground font-inter tracking-[-0.3px] text-sm">Messages</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Chat with {brand.name}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </CardContent>
+        </Card>
+
+        {/* Recent Submissions */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">Recent Submissions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentSubmissions.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center bg-muted">
+                  <Video className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground font-inter tracking-[-0.3px] text-sm">No submissions yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentSubmissions.map((submission) => (
+                  <div
+                    key={submission.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Video className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] truncate">
+                          {submission.campaign_title}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                          {format(new Date(submission.created_at), "MMM d")} · {submission.platform}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(submission.status)}
+                      <button
+                        onClick={() => window.open(submission.video_url, "_blank")}
+                        className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      {recentActivity.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentActivity.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/10">
+                      <DollarSign className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                        {format(new Date(activity.date), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  </div>
+                  {activity.amount && (
+                    <Badge className="border-0 font-medium bg-emerald-500/10 text-emerald-500">
+                      +${activity.amount.toFixed(2)}
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
