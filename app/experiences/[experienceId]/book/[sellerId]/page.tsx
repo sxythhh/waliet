@@ -1,7 +1,7 @@
 import { getAuthenticatedUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { EmptyState } from "@/components/ui/empty-state";
-import { MdError } from "react-icons/md";
+import { AlertCircle } from "lucide-react";
 import { BookingForm } from "@/components/booking/BookingForm";
 
 interface PageProps {
@@ -16,7 +16,7 @@ export default async function BookSessionPage({ params }: PageProps) {
   if (!auth) {
     return (
       <EmptyState
-        icon={MdError}
+        icon={AlertCircle}
         title="Authentication Required"
         description="Please access this page through your Whop community."
       />
@@ -27,7 +27,7 @@ export default async function BookSessionPage({ params }: PageProps) {
   if (auth.user.id === sellerId) {
     return (
       <EmptyState
-        icon={MdError}
+        icon={AlertCircle}
         title="Cannot Book With Yourself"
         description="You cannot book a session with yourself."
       />
@@ -45,7 +45,7 @@ export default async function BookSessionPage({ params }: PageProps) {
   if (!seller || !seller.sellerProfile) {
     return (
       <EmptyState
-        icon={MdError}
+        icon={AlertCircle}
         title="Seller Not Found"
         description="This seller profile doesn't exist or is no longer available."
       />
@@ -55,7 +55,7 @@ export default async function BookSessionPage({ params }: PageProps) {
   if (!seller.sellerProfile.isActive) {
     return (
       <EmptyState
-        icon={MdError}
+        icon={AlertCircle}
         title="Seller Unavailable"
         description="This seller is not currently accepting bookings."
       />

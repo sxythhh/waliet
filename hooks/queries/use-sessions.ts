@@ -8,3 +8,12 @@ export function useBuyerSessions() {
     },
   });
 }
+
+export function useSellerSessions() {
+  return useQuery({
+    queryKey: ["seller-sessions"],
+    queryFn: async () => {
+      return { data: [], isLoading: false };
+    },
+  });
+}

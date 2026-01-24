@@ -250,13 +250,13 @@ export function AddSocialAccountDialog({
     const isLightMode = resolvedTheme === "light";
     switch (platform) {
       case "tiktok":
-        return <img src={isLightMode ? tiktokLogoBlack : tiktokLogo} alt="TikTok" className={size} />;
+        return <img src={(isLightMode ? tiktokLogoBlack : tiktokLogo).src} alt="TikTok" className={size} />;
       case "instagram":
-        return <img src={isLightMode ? instagramLogoBlack : instagramLogo} alt="Instagram" className={size} />;
+        return <img src={(isLightMode ? instagramLogoBlack : instagramLogo).src} alt="Instagram" className={size} />;
       case "youtube":
-        return <img src={isLightMode ? youtubeLogoBlack : youtubeLogo} alt="YouTube" className={size} />;
+        return <img src={(isLightMode ? youtubeLogoBlack : youtubeLogo).src} alt="YouTube" className={size} />;
       case "twitter":
-        return <img src={isLightMode ? xLogoLight : xLogo} alt="X" className={size} />;
+        return <img src={(isLightMode ? xLogoLight : xLogo).src} alt="X" className={size} />;
     }
   };
   const handleCopyCode = async () => {

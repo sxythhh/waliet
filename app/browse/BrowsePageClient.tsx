@@ -57,7 +57,7 @@ interface BrowsePageClientProps {
   sellers: Seller[];
   experienceId?: string;
   currentUserId: string;
-  authProvider?: "whop" | "supabase";
+  authProvider?: "whop" | "whop-oauth" | "supabase";
 }
 
 interface Filters {

@@ -69,8 +69,8 @@ export default async function BrowsePage({ searchParams }: PageProps) {
 
   // Map to the format expected by the browse component
   const sellers = allUsers
-    .filter((u) => u.sellerProfile) // Only users with active seller profiles
-    .map((u) => ({
+    .filter((u: typeof allUsers[number]) => u.sellerProfile) // Only users with active seller profiles
+    .map((u: typeof allUsers[number]) => ({
       id: u.sellerProfile!.id,
       userId: u.id,
       hourlyRate: u.sellerProfile!.hourlyRate,

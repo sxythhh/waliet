@@ -18,7 +18,7 @@ interface UserMenuProps {
     name: string | null;
     email: string | null;
     avatar: string | null;
-    provider: "whop" | "supabase";
+    provider: "whop" | "whop-oauth" | "supabase";
   };
 }
 

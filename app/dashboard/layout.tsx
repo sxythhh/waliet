@@ -131,7 +131,7 @@ function DashboardSidebar() {
               full_name: data.user.name,
               avatar_url: data.user.avatar,
             },
-          } as User);
+          } as unknown as User);
         }
       })
       .catch(err => {
