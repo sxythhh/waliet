@@ -131,8 +131,22 @@ export async function GET(request: Request) {
 
     const response = NextResponse.redirect(finalUrl);
 
-    // Set auth cookie
+    // Set auth token cookie
     response.cookies.set("whop-dev-user-token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    });
+
+    // Set user data cookie for dual-auth to read
+    response.cookies.set("whop_oauth_user", JSON.stringify({
+      id: dbUser.id,
+      whopUserId: userData.sub,
+      name: userData.name,
+      email: userData.email,
+    }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

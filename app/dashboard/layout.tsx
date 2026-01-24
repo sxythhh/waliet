@@ -72,9 +72,7 @@ interface MenuItem {
 // Personal/Creator mode menu items
 const personalMenuItems: MenuItem[] = [
   { title: "Home", tab: "home", icon: HOME_ICON_PLACEHOLDER },
-  { title: "Discover", tab: "discover", icon: MdSavings },
   { title: "Profile", tab: "profile", icon: MdPerson },
-  { title: "Wallet", tab: "wallet", icon: MdRateReview },
   { title: "Settings", tab: "settings", icon: MdSettings },
 ];
 
@@ -105,6 +103,12 @@ function DashboardSidebar() {
   const [workspaceSearch, setWorkspaceSearch] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  // Initialize theme on mount
+  useEffect(() => {
+    // Always start with dark mode
+    document.documentElement.classList.add("dark");
+  }, []);
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
