@@ -14,6 +14,32 @@ const nextConfig = {
         source: '/auth',
         destination: 'https://cr-auth.vercel.app/auth',
       },
+      // Proxy auth-standalone assets
+      {
+        source: '/Logo%20-%20Gradient%20White.png',
+        destination: 'https://cr-auth.vercel.app/Logo%20-%20Gradient%20White.png',
+      },
+      {
+        source: '/Logo%20-%20Gradient.png',
+        destination: 'https://cr-auth.vercel.app/Logo%20-%20Gradient.png',
+      },
+      {
+        source: '/Logo%20-%20White.png',
+        destination: 'https://cr-auth.vercel.app/Logo%20-%20White.png',
+      },
+      {
+        source: '/whop-logo.svg',
+        destination: 'https://cr-auth.vercel.app/whop-logo.svg',
+      },
+      {
+        source: '/favicon.png',
+        destination: 'https://cr-auth.vercel.app/favicon.png',
+      },
+      // Proxy all auth assets
+      {
+        source: '/assets/:path*',
+        destination: 'https://cr-auth.vercel.app/assets/:path*',
+      },
     ];
   },
 };
