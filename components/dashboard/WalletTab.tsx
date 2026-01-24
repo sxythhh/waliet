@@ -1,0 +1,2668 @@
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import wordmarkLogo from "@/assets/wordmark.ai.png";
+import viralityLogo from "@/assets/virality-logo-new.png";
+import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PayoutMethodDialog from "@/components/PayoutMethodDialog";
+import { Separator } from "@/components/ui/separator";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Bar, BarChart } from "recharts";
+import { format, subDays, subMonths, subYears, startOfWeek } from "date-fns";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ethereumLogo from "@/assets/ethereum-logo.png";
+import optimismLogo from "@/assets/optimism-logo.png";
+import solanaLogo from "@/assets/solana-logo.png";
+import polygonLogo from "@/assets/polygon-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
+import paypalLogo from "@/assets/paypal-logo.svg";
+import walletActiveIcon from "@/assets/wallet-active.svg";
+import checkCircleFilledIcon from "@/assets/check-circle-filled.svg";
+import { Skeleton } from "@/components/ui/skeleton";
+import { P2PTransferDialog } from "@/components/P2PTransferDialog";
+import { usePaymentLedger } from "@/hooks/usePaymentLedger";
+import { PayoutStatusCards } from "./PayoutStatusCards";
+import { ProfileHeader } from "./ProfileHeader";
+import { TransactionShareDialog } from "./TransactionShareDialog";
+import { EarningsChart } from "./EarningsChart";
+import { addDays } from "date-fns";
+import { UsdWithLocal } from "@/components/LocalCurrencyAmount";
+import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
+import { TransactionsTable, Transaction as TransactionType } from "@/components/dashboard/TransactionsTable";
+import { DashboardProfileHeader } from "@/components/dashboard/DashboardProfileHeader";
+import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
+import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviewsSection";
+import { PortfolioBuilder } from "@/components/portfolio/builder";
+import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+interface UserProfile {
+  username?: string;
+  avatar_url?: string;
+  banner_url?: string;
+}
+
+// Type for payout details stored in wallet
+interface PayoutDetails {
+  method: string;
+  details: Record<string, unknown>;
+}
+
+interface WalletData {
+  id: string;
+  balance: number;
+  total_earned: number;
+  total_withdrawn: number;
+  payout_method: string | null;
+  payout_details: PayoutDetails[] | PayoutDetails | null;
+}
+interface PayoutMethod {
+  id: string;
+  method: string;
+  details: Record<string, unknown>;
+}
+interface EarningsDataPoint {
+  date: string;
+  amount: number;
+}
+interface TeamEarningsDataPoint {
+  date: string;
+  amount: number;
+}
+interface AffiliateEarningsDataPoint {
+  date: string;
+  amount: number;
+}
+interface WithdrawalDataPoint {
+  date: string;
+  earnings: number;
+  withdrawals: number;
+}
+// Type for wallet transaction metadata
+interface TransactionMetadata {
+  campaign_id?: string;
+  boost_id?: string;
+  recipient_id?: string;
+  recipient_username?: string;
+  sender_id?: string;
+  sender_username?: string;
+  payout_method?: string;
+  wallet_address?: string;
+  address?: string;
+  network?: string;
+  brand_name?: string;
+  rejection_reason?: string;
+  balance_before?: number;
+  balance_after?: number;
+  payoutDetails?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+// Type for campaign/boost query results
+interface CampaignQueryResult {
+  id: string;
+  title: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+  brands?: { logo_url?: string; slug?: string } | null;
+}
+
+interface BoostQueryResult {
+  id: string;
+  title: string;
+  brands?: { name?: string; logo_url?: string; slug?: string } | null;
+}
+
+// Type for campaign submission query results
+interface CampaignSubmissionQueryResult {
+  id: string;
+  campaign_id: string;
+  status: string;
+  submitted_at: string;
+  views?: number;
+  earnings?: number;
+  campaigns: {
+    id: string;
+    title: string;
+    slug: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+    banner_url: string | null;
+    rpm_rate: number;
+    brands?: { logo_url?: string; is_verified?: boolean } | null;
+  };
+}
+
+// Type for bounty application query results
+interface BountyApplicationQueryResult {
+  id: string;
+  bounty_campaign_id: string;
+  status: string;
+  applied_at: string;
+  bounty_campaigns: {
+    id: string;
+    title: string;
+    slug: string;
+    monthly_retainer: number;
+    videos_per_month: number;
+    brands?: { name?: string; logo_url?: string; is_verified?: boolean } | null;
+  };
+}
+
+// Type for testimonial query results
+interface TestimonialQueryResult {
+  id: string;
+  content: string;
+  rating: number | null;
+  created_at: string;
+  brands: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    is_verified: boolean;
+  } | null;
+}
+
+// Type for wallet transaction from database
+interface WalletTransactionRow {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  status: string;
+  description: string | null;
+  created_at: string;
+  metadata: TransactionMetadata | null;
+}
+
+interface Transaction {
+  id: string;
+  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning' | 'transfer_out';
+  amount: number;
+  date: Date;
+  destination?: string;
+  source?: string;
+  status?: string;
+  rejection_reason?: string;
+  metadata?: TransactionMetadata;
+  campaign?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+    brand_slug?: string;
+  } | null;
+  boost?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+    brand_slug?: string;
+  } | null;
+  recipient?: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
+  sender?: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
+}
+type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
+export function WalletTab() {
+  const navigate = useNavigate();
+  const { isAdmin } = useAdminCheck();
+  const [wallet, setWallet] = useState<WalletData | null>(null);
+  const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
+  const [earningsData, setEarningsData] = useState<EarningsDataPoint[]>([]);
+  const [teamEarningsData, setTeamEarningsData] = useState<TeamEarningsDataPoint[]>([]);
+  const [affiliateEarningsData, setAffiliateEarningsData] = useState<AffiliateEarningsDataPoint[]>([]);
+  const [withdrawalData, setWithdrawalData] = useState<WithdrawalDataPoint[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('3D');
+  const [earningsChartOffset, setEarningsChartOffset] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<string>("");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
+  const [pendingBoostEarnings, setPendingBoostEarnings] = useState(0);
+  const [clearingPayouts, setClearingPayouts] = useState(0);
+  const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
+  const [isRequestingEarningsPayout, setIsRequestingEarningsPayout] = useState(false);
+  const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [campaignFilter, setCampaignFilter] = useState<string>("all");
+  const [availableCampaigns, setAvailableCampaigns] = useState<Array<{
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+    type: 'campaign' | 'boost';
+  }>>([]);
+  const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterSubmenu, setFilterSubmenu] = useState<'main' | 'type' | 'status' | 'program'>('main');
+  const [filterSearch, setFilterSearch] = useState('');
+  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(undefined);
+  const [onboardingProfile, setOnboardingProfile] = useState<{
+    id: string;
+    full_name: string | null;
+    username: string | null;
+    content_styles: string[] | null;
+    content_languages: string[] | null;
+    country: string | null;
+    city: string | null;
+    show_location: boolean | null;
+    show_total_earned: boolean | null;
+    show_joined_campaigns: boolean | null;
+    bio: string | null;
+    phone_number: string | null;
+    total_earnings: number | null;
+    trust_score: number | null;
+    avatar_url: string | null;
+    banner_url: string | null;
+    created_at: string;
+  } | null>(null);
+  const [performanceStats, setPerformanceStats] = useState({
+    totalEarnings: 0,
+    trustScore: 0,
+    campaignsJoined: 0,
+    approvalRate: 0
+  });
+  const [socialAccountsCount, setSocialAccountsCount] = useState(0);
+  const [hasDemographicsApproved, setHasDemographicsApproved] = useState(false);
+  const [joinedCampaignsCount, setJoinedCampaignsCount] = useState(0);
+  const [profileActiveTab, setProfileActiveTab] = useState("portfolio");
+  const [editProfileDialogOpen, setEditProfileDialogOpen] = useState(false);
+  const [addSocialDialogOpen, setAddSocialDialogOpen] = useState(false);
+  const [showEditingToolsDialog, setShowEditingToolsDialog] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState<Array<{
+    id: string;
+    platform: string;
+    username: string;
+    is_verified: boolean;
+    account_link: string | null;
+  }>>([]);
+  const [campaignParticipations, setCampaignParticipations] = useState<Array<{
+    id: string;
+    campaign_id: string;
+    status: string;
+    submitted_at: string;
+    views?: number;
+    earnings?: number;
+    campaign: {
+      id: string;
+      title: string;
+      slug: string;
+      brand_name: string;
+      brand_logo_url: string | null;
+      banner_url: string | null;
+      rpm_rate: number;
+      brands?: { logo_url: string; is_verified?: boolean } | null;
+    };
+  }>>([]);
+  const [boostParticipations, setBoostParticipations] = useState<Array<{
+    id: string;
+    bounty_campaign_id: string;
+    status: string;
+    applied_at: string;
+    boost: {
+      id: string;
+      title: string;
+      slug: string;
+      monthly_retainer: number;
+      videos_per_month: number;
+      brands?: { name: string; logo_url: string; is_verified?: boolean } | null;
+    };
+    videos_submitted?: number;
+    total_earned?: number;
+  }>>([]);
+  const [testimonials, setTestimonials] = useState<Array<{
+    id: string;
+    content: string;
+    rating: number | null;
+    created_at: string;
+    brand: {
+      id: string;
+      name: string;
+      logo_url: string | null;
+      is_verified: boolean;
+    } | null;
+  }>>([]);
+  const {
+    toast
+  } = useToast();
+
+  // Use payment ledger for unified pending earnings
+  const {
+    summary: ledgerSummary,
+    loading: ledgerLoading,
+    requestPayout: ledgerRequestPayout,
+    refetch: refetchLedger
+  } = usePaymentLedger();
+
+  // Calculate payout pipeline data
+  const payoutPipelineData = {
+    accruing: {
+      amount: ledgerSummary?.totalPending || 0,
+      videoCount: ledgerSummary?.accruingCount || 0
+    },
+    held: (ledgerSummary?.totalHeld || 0) > 0 ? {
+      amount: ledgerSummary?.totalHeld || 0,
+      videoCount: ledgerSummary?.heldCount || 0,
+      releaseAt: ledgerSummary?.earliestReleaseAt,
+    } : undefined,
+    clearing: {
+      amount: (ledgerSummary?.totalClearing || 0) + clearingPayouts,
+      videoCount: ledgerSummary?.clearingCount || 0,
+      clearingEndsAt: ledgerSummary?.earliestClearingEndsAt,
+      canBeFlagged: ledgerSummary?.hasActiveFlaggableItems || false
+    },
+    paid: {
+      amount: (ledgerSummary?.totalPaid || 0) + (wallet?.total_withdrawn || 0),
+      videoCount: ledgerSummary?.paidCount || 0
+    }
+  };
+
+  // Handle request payout for earnings pipeline
+  const handleRequestEarningsPayout = async () => {
+    if (payoutPipelineData.accruing.amount < 1) {
+      toast({
+        title: "Minimum not met",
+        description: "Minimum payout is $1.00",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsRequestingEarningsPayout(true);
+    try {
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Request payout via ledger
+      if (ledgerSummary && ledgerSummary.totalPending > 0) {
+        await ledgerRequestPayout();
+        toast({
+          title: "Payout requested",
+          description: `$${ledgerSummary.totalPending.toFixed(2)} is now in 7-day clearing period.`
+        });
+        refetchLedger();
+        fetchClearingPayouts();
+      }
+    } catch (error) {
+      console.error('Error requesting payout:', error);
+      toast({
+        title: "Error",
+        description: "Failed to request payout",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRequestingEarningsPayout(false);
+    }
+  };
+  // Fetch onboarding data for the Get Discovered checklist
+  const fetchOnboardingData = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Fetch profile data with extended fields
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, content_styles, content_languages, country, city, show_location, show_total_earned, show_joined_campaigns, bio, phone_number, total_earnings, trust_score, avatar_url, banner_url, created_at, editing_tools")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileData) {
+      setOnboardingProfile(profileData);
+    }
+
+    // Fetch social accounts
+    const { data: socialData } = await supabase
+      .from("social_accounts")
+      .select("id, platform, username, is_verified, account_link")
+      .eq("user_id", session.user.id)
+      .eq("hidden_from_public", false);
+
+    setSocialAccounts(socialData || []);
+    setSocialAccountsCount(socialData?.length || 0);
+
+    // Check for approved demographics (via social_accounts since demographic_submissions uses social_account_id)
+    const { data: demographics } = await supabase
+      .from("social_accounts")
+      .select("demographic_submissions!inner(id, status)")
+      .eq("user_id", session.user.id)
+      .eq("demographic_submissions.status", "approved")
+      .limit(1);
+
+    setHasDemographicsApproved((demographics?.length || 0) > 0);
+
+    // Fetch campaign participations (approved submissions)
+    const { data: campaigns } = await supabase
+      .from("campaign_submissions")
+      .select(`
+        id, campaign_id, status, submitted_at, views, earnings,
+        campaigns (id, title, slug, brand_name, brand_logo_url, banner_url, rpm_rate, brands (logo_url, is_verified))
+      `)
+      .eq("creator_id", session.user.id)
+      .eq("status", "approved")
+      .order("submitted_at", { ascending: false });
+
+    // Deduplicate by campaign_id
+    const typedCampaigns = campaigns as CampaignSubmissionQueryResult[] | null;
+    const uniqueCampaigns = typedCampaigns ? [...new Map(typedCampaigns.map((c) => [c.campaign_id, c])).values()] : [];
+    setCampaignParticipations(uniqueCampaigns.map((c) => ({
+      id: c.id,
+      campaign_id: c.campaign_id,
+      status: c.status,
+      submitted_at: c.submitted_at,
+      views: c.views,
+      earnings: c.earnings,
+      campaign: c.campaigns
+    })));
+
+    const approvedCount = uniqueCampaigns.length;
+    setJoinedCampaignsCount(approvedCount);
+
+    // Fetch boost participations
+    const { data: boosts } = await supabase
+      .from("bounty_applications")
+      .select(`
+        id, bounty_campaign_id, status, applied_at,
+        bounty_campaigns (id, title, slug, monthly_retainer, videos_per_month, brands (name, logo_url, is_verified))
+      `)
+      .eq("user_id", session.user.id)
+      .eq("status", "accepted")
+      .order("applied_at", { ascending: false });
+
+    if (boosts) {
+      // Fetch video counts and earnings for each boost
+      const typedBoosts = boosts as BountyApplicationQueryResult[];
+      const boostsWithStats = await Promise.all(typedBoosts.map(async (app) => {
+        const { data: videoSubmissions } = await supabase
+          .from("video_submissions")
+          .select("id, payout_amount, status")
+          .eq("source_type", "boost")
+          .eq("source_id", app.bounty_campaign_id)
+          .eq("creator_id", session.user.id);
+
+        const approvedVideos = videoSubmissions?.filter(s => s.status === "approved") || [];
+        const totalEarned = approvedVideos.reduce((acc, s) => acc + (s.payout_amount || 0), 0);
+
+        return {
+          id: app.id,
+          bounty_campaign_id: app.bounty_campaign_id,
+          status: app.status,
+          applied_at: app.applied_at,
+          boost: app.bounty_campaigns,
+          videos_submitted: videoSubmissions?.length || 0,
+          total_earned: totalEarned
+        };
+      }));
+      setBoostParticipations(boostsWithStats);
+    }
+
+    // Fetch testimonials
+    const { data: testimonialData } = await supabase
+      .from("creator_testimonials")
+      .select(`
+        id, content, rating, created_at,
+        brands:brand_id (id, name, logo_url, is_verified)
+      `)
+      .eq("creator_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+    if (testimonialData) {
+      const typedTestimonials = testimonialData as TestimonialQueryResult[];
+      setTestimonials(typedTestimonials.map((t) => ({
+        id: t.id,
+        content: t.content,
+        rating: t.rating,
+        created_at: t.created_at,
+        brand: t.brands
+      })));
+    }
+
+    // Calculate approval rate
+    const { data: allSubmissions } = await supabase
+      .from("campaign_submissions")
+      .select("status")
+      .eq("creator_id", session.user.id);
+
+    const declinedCount = allSubmissions?.filter(s => s.status === "declined").length || 0;
+    const totalDecided = approvedCount + declinedCount;
+    const approvalRate = totalDecided > 0 ? (approvedCount / totalDecided) * 100 : 100;
+
+    // Update performance stats
+    setPerformanceStats({
+      totalEarnings: profileData?.total_earnings || 0,
+      trustScore: profileData?.trust_score || 100,
+      campaignsJoined: approvedCount,
+      approvalRate: approvalRate
+    });
+  }, []);
+
+  const handleSaveEditingTools = async (tools: string[]) => {
+    if (!onboardingProfile) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabase.from("profiles").update({
+      editing_tools: tools.length > 0 ? tools : null
+    }).eq("id", session.user.id);
+
+    if (error) {
+      toast({
+        title: "Error saving tools",
+        description: error.message,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setOnboardingProfile({ ...onboardingProfile, editing_tools: tools.length > 0 ? tools : null });
+    toast({
+      title: "Tools saved",
+      description: "Your editing tools have been updated."
+    });
+  };
+
+  const fetchClearingPayouts = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const {
+      data: requests
+    } = await supabase.from('submission_payout_requests').select('total_amount').eq('user_id', session.user.id).in('status', ['clearing']);
+    if (requests && requests.length > 0) {
+      const total = requests.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+      setClearingPayouts(total);
+    } else {
+      setClearingPayouts(0);
+    }
+  }, []);
+  const fetchPendingBoostEarnings = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Get all pending boost submissions from unified table
+    const {
+      data: pendingSubmissions
+    } = await supabase.from("video_submissions").select("payout_amount, source_id").eq("creator_id", session.user.id).eq("source_type", "boost").eq("status", "pending");
+    if (pendingSubmissions && pendingSubmissions.length > 0) {
+      let totalPending = 0;
+      pendingSubmissions.forEach(sub => {
+        if (sub.payout_amount) {
+          totalPending += sub.payout_amount;
+        }
+        // Note: For submissions without payout_amount, we'd need to fetch boost details
+        // but since payout_amount is always set on insert, this should be sufficient
+      });
+      setPendingBoostEarnings(totalPending);
+    } else {
+      setPendingBoostEarnings(0);
+    }
+  }, []);
+
+  const getDateRange = () => {
+    const now = new Date();
+    switch (timePeriod) {
+      case '3D':
+        return {
+          start: subDays(now, 3),
+          end: now
+        };
+      case '1W':
+        return {
+          start: subDays(now, 7),
+          end: now
+        };
+      case '1M':
+        return {
+          start: subMonths(now, 1),
+          end: now
+        };
+      case '3M':
+        return {
+          start: subMonths(now, 3),
+          end: now
+        };
+      case '1Y':
+        return {
+          start: subYears(now, 1),
+          end: now
+        };
+      case 'TW':
+        return {
+          start: startOfWeek(now),
+          end: now
+        };
+      default:
+        return {
+          start: subMonths(now, 1),
+          end: now
+        };
+    }
+  };
+  const fetchEarningsData = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const now = new Date();
+    let start: Date;
+    let days: number;
+
+    // Calculate date range based on selected period
+    switch (earningsChartPeriod) {
+      case '1D':
+        start = subDays(now, 1);
+        days = 1;
+        break;
+      case '1W':
+        start = subDays(now, 7);
+        days = 7;
+        break;
+      case '1M':
+        start = subMonths(now, 1);
+        days = 30;
+        break;
+      case 'ALL':
+      default: {
+        // Get all transactions to determine the earliest date
+        const {
+          data: allTxns
+        } = await supabase.from("wallet_transactions").select("created_at").eq("user_id", session.user.id).order("created_at", {
+          ascending: true
+        }).limit(1);
+        if (allTxns && allTxns.length > 0) {
+          start = new Date(allTxns[0].created_at);
+          days = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+          start = subMonths(now, 1);
+          days = 30;
+        }
+        break;
+      }
+    }
+
+    // Get all earning transactions from the beginning
+    const {
+      data: allTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).gte("created_at", start.toISOString()).order("created_at", {
+      ascending: true
+    });
+    const dataPoints: EarningsDataPoint[] = [];
+
+    // Generate data points - show daily earnings (not cumulative) for better visualization
+    const pointCount = Math.min(days, 30); // Max 30 points for performance
+    const interval = Math.max(1, Math.floor(days / pointCount));
+
+    // Group transactions by date
+    const earningsByDate: Record<string, number> = {};
+    if (allTransactions) {
+      allTransactions.forEach(txn => {
+        const txnDate = new Date(txn.created_at);
+        const dateKey = format(txnDate, 'yyyy-MM-dd');
+        const amount = Number(txn.amount) || 0;
+        // Only count earnings (positive amounts)
+        if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received', 'boost'].includes(txn.type) && amount > 0) {
+          earningsByDate[dateKey] = (earningsByDate[dateKey] || 0) + amount;
+        }
+      });
+    }
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
+      if (currentDate > now) break;
+      const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
+      const dateKey = format(currentDate, 'yyyy-MM-dd');
+
+      // Show daily earnings for that specific day
+      const dailyEarnings = earningsByDate[dateKey] || 0;
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(dailyEarnings.toFixed(2))
+      });
+    }
+
+    // Ensure the last point shows current total earned
+    if (dataPoints.length > 0 && wallet && earningsChartPeriod === 'ALL') {
+      dataPoints[dataPoints.length - 1].amount = Number(wallet.total_earned.toFixed(2));
+    }
+    setEarningsData(dataPoints);
+  }, [earningsChartPeriod, wallet]);
+  const fetchTeamEarningsData = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const now = new Date();
+    let start: Date;
+    let days: number;
+    switch (earningsChartPeriod) {
+      case '1D':
+        start = subDays(now, 1);
+        days = 1;
+        break;
+      case '1W':
+        start = subDays(now, 7);
+        days = 7;
+        break;
+      case '1M':
+        start = subMonths(now, 1);
+        days = 30;
+        break;
+      case 'ALL':
+      default:
+        start = subMonths(now, 6);
+        days = 180;
+        break;
+    }
+    const {
+      data: teamTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).eq("type", "team_earning").gte("created_at", start.toISOString()).order("created_at", {
+      ascending: true
+    });
+    const dataPoints: TeamEarningsDataPoint[] = [];
+    let cumulativeEarnings = 0;
+    const pointCount = Math.min(days, 30);
+    const interval = Math.max(1, Math.floor(days / pointCount));
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
+      if (currentDate > now) break;
+      const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
+      if (teamTransactions) {
+        teamTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
+            cumulativeEarnings += Number(txn.amount) || 0;
+          }
+        });
+      }
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(cumulativeEarnings.toFixed(2))
+      });
+    }
+    setTeamEarningsData(dataPoints);
+  }, [earningsChartPeriod]);
+  const fetchAffiliateEarningsData = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const now = new Date();
+    let start: Date;
+    let days: number;
+    switch (earningsChartPeriod) {
+      case '1D':
+        start = subDays(now, 1);
+        days = 1;
+        break;
+      case '1W':
+        start = subDays(now, 7);
+        days = 7;
+        break;
+      case '1M':
+        start = subMonths(now, 1);
+        days = 30;
+        break;
+      case 'ALL':
+      default:
+        start = subMonths(now, 6);
+        days = 180;
+        break;
+    }
+    const {
+      data: affiliateTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).eq("type", "affiliate_earning").gte("created_at", start.toISOString()).order("created_at", {
+      ascending: true
+    });
+    const dataPoints: AffiliateEarningsDataPoint[] = [];
+    let cumulativeEarnings = 0;
+    const pointCount = Math.min(days, 30);
+    const interval = Math.max(1, Math.floor(days / pointCount));
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
+      if (currentDate > now) break;
+      const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
+      if (affiliateTransactions) {
+        affiliateTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
+            cumulativeEarnings += Number(txn.amount) || 0;
+          }
+        });
+      }
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(cumulativeEarnings.toFixed(2))
+      });
+    }
+    setAffiliateEarningsData(dataPoints);
+  }, [earningsChartPeriod]);
+  const fetchWithdrawalData = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Calculate date range for 7 days with offset
+    const now = new Date();
+    const end = subDays(now, earningsChartOffset * 7);
+    const start = subDays(end, 7);
+
+    // Fetch all wallet transactions
+    const {
+      data: walletTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()).order("created_at", {
+      ascending: true
+    });
+    const dataPoints: WithdrawalDataPoint[] = [];
+    for (let i = 0; i <= 7; i++) {
+      const currentDate = subDays(end, 7 - i);
+      const dateStr = format(currentDate, 'MMM dd');
+      let earningsAmount = 0;
+      let withdrawalsAmount = 0;
+      if (walletTransactions) {
+        walletTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (format(txnDate, 'MMM dd') === dateStr) {
+            if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received'].includes(txn.type)) {
+              earningsAmount += Number(txn.amount) || 0;
+            } else if (txn.type === 'withdrawal' || txn.type === 'transfer_sent') {
+              withdrawalsAmount += Number(txn.amount) || 0;
+            }
+          }
+        });
+      }
+      dataPoints.push({
+        date: dateStr,
+        earnings: Number(earningsAmount.toFixed(2)),
+        withdrawals: Number(withdrawalsAmount.toFixed(2))
+      });
+    }
+    setWithdrawalData(dataPoints);
+  }, [earningsChartOffset]);
+  const fetchTransactions = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Fetch wallet transactions
+    const {
+      data: walletTransactions
+    } = await supabase.from("wallet_transactions").select("*").eq("user_id", session.user.id).order("created_at", {
+      ascending: false
+    });
+
+    // Fetch payout requests to get full payout details
+    const {
+      data: payoutRequests
+    } = await supabase.from("payout_requests").select("*").eq("user_id", session.user.id);
+
+    // Extract unique campaign IDs from earnings transactions
+    const campaignIds = walletTransactions?.filter(txn => {
+      const metadata = txn.metadata as TransactionMetadata | null;
+      return txn.type === 'earning' && metadata?.campaign_id;
+    }).map(txn => (txn.metadata as TransactionMetadata | null)?.campaign_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
+    // Extract unique boost IDs from earnings transactions
+    const boostIds = walletTransactions?.filter(txn => {
+      const metadata = txn.metadata as TransactionMetadata | null;
+      return txn.type === 'earning' && metadata?.boost_id;
+    }).map(txn => (txn.metadata as TransactionMetadata | null)?.boost_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
+    // Fetch campaign details if we have campaign IDs
+    const campaignsMap = new Map<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; brand_slug?: string }>();
+    if (campaignIds.length > 0) {
+      const {
+        data: campaigns
+      } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, brands(logo_url, slug)").in("id", campaignIds);
+      const typedCampaigns = campaigns as CampaignQueryResult[] | null;
+      typedCampaigns?.forEach(campaign => {
+        campaignsMap.set(campaign.id, {
+          id: campaign.id,
+          title: campaign.title,
+          brand_name: campaign.brand_name,
+          // Use brands.logo_url as fallback if brand_logo_url is null
+          brand_logo_url: campaign.brand_logo_url || campaign.brands?.logo_url || null,
+          brand_slug: campaign.brands?.slug
+        });
+      });
+    }
+
+    // Fetch boost details if we have boost IDs
+    const boostsMap = new Map<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; brand_slug?: string }>();
+    if (boostIds.length > 0) {
+      const {
+        data: boosts
+      } = await supabase.from("bounty_campaigns").select("id, title, brands(name, logo_url, slug)").in("id", boostIds);
+      const typedBoosts = boosts as BoostQueryResult[] | null;
+      typedBoosts?.forEach(boost => {
+        boostsMap.set(boost.id, {
+          id: boost.id,
+          title: boost.title,
+          brand_name: boost.brands?.name || '',
+          brand_logo_url: boost.brands?.logo_url || null,
+          brand_slug: boost.brands?.slug
+        });
+      });
+    }
+
+    // Calculate total pending and in-transit withdrawals
+    const pendingAmount = payoutRequests?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit').reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
+    setPendingWithdrawals(pendingAmount);
+
+    // Extract recipient IDs for transfer_sent transactions
+    const recipientIds = walletTransactions?.filter(txn => txn.type === 'transfer_sent' && (txn.metadata as TransactionMetadata | null)?.recipient_id).map(txn => (txn.metadata as TransactionMetadata | null)?.recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
+    // Extract sender IDs for transfer_received transactions
+    const senderIds = walletTransactions?.filter(txn => txn.type === 'transfer_received' && (txn.metadata as TransactionMetadata | null)?.sender_id).map(txn => (txn.metadata as TransactionMetadata | null)?.sender_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
+    // Fetch recipient profiles
+    const recipientsMap = new Map<string, {
+      username: string;
+      avatar_url: string | null;
+    }>();
+    if (recipientIds.length > 0) {
+      const {
+        data: recipients
+      } = await supabase.from("profiles").select("id, username, avatar_url").in("id", recipientIds);
+      recipients?.forEach(r => {
+        recipientsMap.set(r.id, {
+          username: r.username || '',
+          avatar_url: r.avatar_url
+        });
+      });
+    }
+
+    // Fetch sender profiles
+    const sendersMap = new Map<string, {
+      username: string;
+      avatar_url: string | null;
+    }>();
+    if (senderIds.length > 0) {
+      const {
+        data: senders
+      } = await supabase.from("profiles").select("id, username, avatar_url").in("id", senderIds);
+      senders?.forEach(s => {
+        sendersMap.set(s.id, {
+          username: s.username || '',
+          avatar_url: s.avatar_url
+        });
+      });
+    }
+
+    // Extract unique campaigns and boosts for filter dropdown
+    const uniqueCampaigns = Array.from(campaignsMap.values()).map(c => ({
+      id: c.id,
+      title: c.title,
+      brand_name: c.brand_name,
+      brand_logo_url: c.brand_logo_url || null,
+      type: 'campaign' as const
+    }));
+    const uniqueBoosts = Array.from(boostsMap.values()).map(b => ({
+      id: b.id,
+      title: b.title,
+      brand_name: b.brand_name,
+      brand_logo_url: b.brand_logo_url || null,
+      type: 'boost' as const
+    }));
+    setAvailableCampaigns([...uniqueCampaigns, ...uniqueBoosts]);
+    const allTransactions: Transaction[] = [];
+    if (walletTransactions) {
+      walletTransactions.forEach(txn => {
+        const metadata = txn.metadata as TransactionMetadata | null;
+        let source = '';
+        let destination = '';
+        let payoutDetails = null;
+        const isBoostEarning = txn.type === 'earning' && metadata?.boost_id;
+
+        // Try to match with payout request to get full details
+        if (txn.type === 'withdrawal' && payoutRequests) {
+          const matchingPayout = payoutRequests.find(pr => Math.abs(new Date(pr.requested_at).getTime() - new Date(txn.created_at).getTime()) < 5000 && Number(pr.amount) === Number(txn.amount));
+          if (matchingPayout) {
+            payoutDetails = matchingPayout.payout_details;
+            // Add rejection reason if available
+            if (matchingPayout.rejection_reason) {
+              const metadataObj = typeof metadata === 'object' && metadata !== null ? metadata : {};
+              txn.metadata = {
+                ...metadataObj,
+                rejection_reason: matchingPayout.rejection_reason
+              };
+            }
+          }
+        }
+        switch (txn.type) {
+          case 'admin_adjustment':
+            source = 'Virality Admin';
+            destination = 'Wallet';
+            break;
+          case 'earning':
+            source = isBoostEarning ? 'Boost Video' : 'Campaign Submission';
+            destination = 'Wallet';
+            break;
+          case 'withdrawal': {
+            source = 'Wallet';
+            const payoutMethod = metadata?.payout_method;
+            if (payoutMethod === 'paypal') {
+              destination = 'PayPal';
+            } else if (payoutMethod === 'crypto') {
+              const walletAddr = metadata?.wallet_address || metadata?.address || '';
+              if (walletAddr && walletAddr.length > 8) {
+                destination = `${walletAddr.slice(0, 4)}..${walletAddr.slice(-3)}`;
+              } else {
+                destination = walletAddr || 'Crypto';
+              }
+            } else if (payoutMethod === 'bank') {
+              destination = 'Bank Transfer';
+            } else if (payoutMethod === 'wise') {
+              destination = 'Wise';
+            } else if (payoutMethod === 'revolut') {
+              destination = 'Revolut';
+            } else if (payoutMethod === 'tips') {
+              destination = 'TIPS';
+            } else {
+              destination = payoutMethod || 'Unknown';
+            }
+            break;
+          }
+          case 'bonus':
+            source = 'Bonus Payment';
+            destination = 'Wallet';
+            break;
+          case 'refund':
+            source = 'Refund';
+            destination = 'Wallet';
+            break;
+          case 'transfer_sent':
+            source = 'Wallet';
+            destination = `@${metadata?.recipient_username || 'User'}`;
+            break;
+          case 'transfer_received':
+            source = `@${metadata?.sender_username || 'User'}`;
+            destination = 'Wallet';
+            break;
+          case 'transfer_out':
+            source = 'Wallet';
+            destination = metadata?.brand_name ? `${metadata.brand_name} Wallet` : 'Brand Wallet';
+            break;
+          case 'balance_correction':
+            source = 'Balance Adjustment';
+            destination = 'Wallet';
+            break;
+        }
+
+        // Determine transaction type
+        let transactionType: Transaction['type'];
+        if (txn.type === 'balance_correction') {
+          transactionType = 'balance_correction';
+        } else if (txn.type === 'transfer_sent') {
+          transactionType = 'transfer_sent';
+        } else if (txn.type === 'transfer_received') {
+          transactionType = 'transfer_received';
+        } else if (txn.type === 'transfer_out') {
+          transactionType = 'transfer_out';
+        } else if (isBoostEarning) {
+          transactionType = 'boost_earning';
+        } else if (txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund') {
+          transactionType = 'earning';
+        } else {
+          transactionType = 'withdrawal';
+        }
+        allTransactions.push({
+          id: txn.id,
+          type: transactionType,
+          amount: Number(txn.amount) || 0,
+          date: new Date(txn.created_at),
+          destination,
+          source: source || txn.description || '',
+          status: txn.status,
+          rejection_reason: metadata?.rejection_reason,
+          metadata: {
+            ...metadata,
+            payoutDetails
+          },
+          campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null,
+          boost: metadata?.boost_id ? boostsMap.get(metadata.boost_id) || null : null,
+          recipient: metadata?.recipient_id ? recipientsMap.get(metadata.recipient_id) || null : null,
+          sender: metadata?.sender_id ? sendersMap.get(metadata.sender_id) || null : null
+        });
+      });
+    }
+    setTransactions(allTransactions);
+  }, []);
+  const fetchWallet = useCallback(async () => {
+    setLoading(true);
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const {
+      data,
+      error
+    } = await supabase.from("wallets").select("*").eq("user_id", session.user.id).single();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch wallet data"
+      });
+    } else {
+      setWallet(data);
+      if (data?.payout_details) {
+        const methods = Array.isArray(data.payout_details) ? data.payout_details : [data.payout_details];
+        setPayoutMethods(methods.map((m: PayoutDetails, i: number) => ({
+          id: `method-${i}`,
+          method: m.method || data.payout_method || '',
+          details: m.details || (m as unknown as Record<string, unknown>)
+        })));
+      }
+    }
+    setLoading(false);
+  }, [toast]);
+
+  // Main initialization useEffect - runs once on mount
+  useEffect(() => {
+    fetchWallet();
+    fetchPendingBoostEarnings();
+    fetchClearingPayouts();
+    fetchOnboardingData();
+
+    // Set up real-time listener for payout requests
+    const channel = supabase.channel('payout-updates').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'payout_requests'
+    }, payload => {
+      // Refetch wallet and transactions when payout request changes
+      fetchWallet();
+      fetchTransactions();
+      fetchClearingPayouts();
+    }).subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchWallet, fetchPendingBoostEarnings, fetchClearingPayouts, fetchOnboardingData, fetchTransactions]);
+
+  // Fetch data when wallet is available or time period changes
+  useEffect(() => {
+    if (wallet) {
+      fetchEarningsData();
+      fetchTeamEarningsData();
+      fetchAffiliateEarningsData();
+      fetchWithdrawalData();
+      fetchTransactions();
+    }
+  }, [timePeriod, wallet, earningsChartOffset, earningsChartPeriod, fetchEarningsData, fetchTeamEarningsData, fetchAffiliateEarningsData, fetchWithdrawalData, fetchTransactions]);
+
+  const handleAddPayoutMethod = async (method: string, details: Record<string, unknown>) => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session || !wallet) return;
+    if (payoutMethods.length >= 3) {
+      toast({
+        variant: "destructive",
+        title: "Limit Reached",
+        description: "You can only add up to 3 payout methods"
+      });
+      return;
+    }
+    const updatedMethods = [...payoutMethods, {
+      id: `method-${Date.now()}`,
+      method,
+      details
+    }];
+    const payoutDetailsPayload = updatedMethods.map(m => ({
+      method: m.method,
+      details: m.details
+    }));
+    const {
+      error
+    } = await supabase.from("wallets").update({
+      payout_method: method,
+      payout_details: payoutDetailsPayload
+    }).eq("id", wallet.id);
+    if (error) {
+      console.error("Supabase error when adding payout method:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to add payout method: ${error.message}`
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Payout method added successfully"
+      });
+      fetchWallet();
+    }
+  };
+  const handleDeleteMethod = async (methodId: string) => {
+    if (!wallet) return;
+    const updatedMethods = payoutMethods.filter(m => m.id !== methodId);
+    const {
+      error
+    } = await supabase.from("wallets").update({
+      payout_method: updatedMethods.length > 0 ? updatedMethods[0].method : null,
+      payout_details: updatedMethods.length > 0 ? updatedMethods.map(m => ({
+        method: m.method,
+        details: m.details
+      })) : null
+    }).eq("id", wallet.id);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove payout method"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Payout method removed"
+      });
+      fetchWallet();
+    }
+  };
+  const handleSetDefaultMethod = async (methodId: string) => {
+    if (!wallet) return;
+    const methodIndex = payoutMethods.findIndex(m => m.id === methodId);
+    if (methodIndex === -1 || methodIndex === 0) return; // Already default or not found
+
+    const selectedMethod = payoutMethods[methodIndex];
+
+    // Block UPI from being set as default
+    if (selectedMethod.method === 'upi') {
+      toast({
+        variant: "destructive",
+        title: "Temporarily Disabled",
+        description: "UPI payouts are temporarily disabled. Please use another payment method."
+      });
+      return;
+    }
+    const updatedMethods = [...payoutMethods];
+    const [method] = updatedMethods.splice(methodIndex, 1);
+    updatedMethods.unshift(method);
+    const {
+      error
+    } = await supabase.from("wallets").update({
+      payout_method: method.method,
+      payout_details: updatedMethods.map(m => ({
+        method: m.method,
+        details: m.details
+      }))
+    }).eq("id", wallet.id);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to set default method"
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Default payment method updated"
+      });
+      fetchWallet();
+    }
+  };
+  const handleRequestPayout = async () => {
+    const minBalanceRequired = isAdmin ? 1 : 20;
+    if (!wallet?.balance || wallet.balance < minBalanceRequired) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: `Minimum payout amount is $${minBalanceRequired}`
+      });
+      return;
+    }
+    if (payoutMethods.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Payout Method",
+        description: "Please add a payout method first"
+      });
+      return;
+    }
+    setSelectedPayoutMethod(payoutMethods[0].id);
+    setPayoutAmount(wallet.balance.toString());
+    setPayoutDialogOpen(true);
+  };
+
+  // Fetch user profile for share dialog
+  const fetchUserProfile = useCallback(async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const {
+      data: profile
+    } = await supabase.from('profiles').select('username, avatar_url, banner_url').eq('id', session.user.id).single();
+    if (profile) {
+      setUserProfile(profile);
+    }
+  }, []);
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+  const handleConfirmPayout = async () => {
+    if (isSubmittingPayout) return; // Prevent duplicate submissions
+
+    if (!wallet || !payoutAmount || Number(payoutAmount) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Please enter a valid amount"
+      });
+      return;
+    }
+    const amount = Number(payoutAmount);
+    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+    if (!selectedMethod) return;
+
+    // Block UPI withdrawals
+    if (selectedMethod.method === 'upi') {
+      toast({
+        variant: "destructive",
+        title: "Temporarily Disabled",
+        description: "UPI payouts are temporarily disabled. Please use another payment method."
+      });
+      return;
+    }
+
+    // Bank minimum is $250, others $20 (admins bypass minimum)
+    const minimumAmount = isAdmin ? 1 : (selectedMethod.method === 'bank' ? 250 : 20);
+    if (amount < minimumAmount) {
+      toast({
+        variant: "destructive",
+        title: "Minimum Amount",
+        description: `Minimum payout amount is $${minimumAmount}${selectedMethod.method === 'bank' ? ' for bank transfers' : ''}`
+      });
+      return;
+    }
+    if (amount > wallet.balance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: "Amount exceeds available balance"
+      });
+      return;
+    }
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    if (!selectedMethod) return;
+
+    // Set submitting state BEFORE any async operations to prevent race conditions
+    setIsSubmittingPayout(true);
+
+    // Check for existing pending/in-transit withdrawal requests
+    const {
+      data: existingRequests,
+      error: checkError
+    } = await supabase.from("payout_requests").select("id").eq("user_id", session.user.id).in("status", ["pending", "in_transit"]);
+    if (checkError) {
+      setIsSubmittingPayout(false);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to verify withdrawal status"
+      });
+      return;
+    }
+    if (existingRequests && existingRequests.length > 0) {
+      setIsSubmittingPayout(false);
+      toast({
+        variant: "destructive",
+        title: "Pending Withdrawal Exists",
+        description: "You already have a pending withdrawal request. Please wait for it to be processed before requesting another."
+      });
+      return;
+    }
+    try {
+      const balance_before = wallet.balance;
+      const balance_after = wallet.balance - amount;
+
+      // Create payout request
+      const {
+        error: payoutError
+      } = await supabase.from("payout_requests").insert({
+        user_id: session.user.id,
+        amount: amount,
+        payout_method: selectedMethod.method,
+        payout_details: selectedMethod.details,
+        status: 'pending'
+      });
+      if (payoutError) throw payoutError;
+
+      // Create wallet transaction
+      const {
+        error: txnError
+      } = await supabase.from("wallet_transactions").insert({
+        user_id: session.user.id,
+        amount: -amount,
+        // Negative for withdrawals
+        type: 'withdrawal',
+        status: 'pending',
+        description: `Withdrawal to ${selectedMethod.method === 'paypal' ? 'PayPal' : 'Crypto'}`,
+        metadata: {
+          payout_method: selectedMethod.method,
+          network: selectedMethod.details.network || null,
+          balance_before: balance_before,
+          balance_after: balance_after
+        },
+        created_by: session.user.id
+      });
+      if (txnError) throw txnError;
+
+      // Update wallet balance
+      const {
+        error: walletError
+      } = await supabase.from("wallets").update({
+        balance: wallet.balance - amount,
+        total_withdrawn: wallet.total_withdrawn + amount
+      }).eq("id", wallet.id);
+      if (walletError) throw walletError;
+
+      // Send Discord notification
+      try {
+        await supabase.functions.invoke('notify-withdrawal', {
+          body: {
+            username: session.user.user_metadata?.username || 'Unknown',
+            email: session.user.email || 'Unknown',
+            amount: amount,
+            payout_method: selectedMethod.method,
+            payout_details: selectedMethod.details,
+            balance_before: balance_before,
+            balance_after: balance_after,
+            date: new Date().toISOString()
+          }
+        });
+      } catch (notifError) {
+        console.error('Failed to send Discord notification:', notifError);
+      }
+      toast({
+        title: "Payout Requested",
+        description: "Your payout request has been submitted and will be processed within 3-5 business days."
+      });
+      setPayoutDialogOpen(false);
+      fetchWallet();
+      fetchTransactions();
+    } catch (error: unknown) {
+      // Rollback wallet update if transaction failed
+      const {
+        error: rollbackError
+      } = await supabase.from("wallets").update({
+        balance: wallet.balance,
+        total_withdrawn: wallet.total_withdrawn
+      }).eq("id", wallet.id);
+      if (rollbackError) {
+        console.error('Failed to rollback wallet update:', rollbackError);
+      }
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit payout request";
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage
+      });
+    } finally {
+      setIsSubmittingPayout(false);
+    }
+  };
+  // Loading state removed - ProfileHeader handles its own loading skeleton
+  const totalEarnings = earningsData.reduce((sum, point) => sum + point.amount, 0);
+  const timePeriodLabels: Record<TimePeriod, string> = {
+    '3D': '3 Days',
+    '1W': '1 Week',
+    '1M': '1 Month',
+    '3M': '3 Months',
+    '1Y': '1 Year',
+    'TW': 'This Week'
+  };
+
+  // Generate onboarding tasks for Get Discovered checklist
+  const onboardingTasks = [{
+    id: 'profile_info',
+    label: 'Add basic profile info',
+    completed: !!(onboardingProfile?.full_name && onboardingProfile?.username),
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'content_preferences',
+    label: 'Choose content preferences',
+    completed: !!(onboardingProfile?.content_styles && onboardingProfile.content_styles.length > 0),
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'location',
+    label: 'Add your location',
+    completed: !!onboardingProfile?.country,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'phone',
+    label: 'Add phone number',
+    completed: !!onboardingProfile?.phone_number,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'social_account',
+    label: 'Connect a social account',
+    completed: socialAccountsCount > 0,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'demographics',
+    label: 'Submit demographics',
+    completed: hasDemographicsApproved,
+    onClick: () => navigate('/dashboard?tab=settings')
+  }, {
+    id: 'join_campaign',
+    label: 'Join your first campaign',
+    completed: joinedCampaignsCount > 0,
+    onClick: () => navigate('/dashboard?tab=discover')
+  }, {
+    id: 'earn_first',
+    label: 'Earn your first payout',
+    completed: (onboardingProfile?.total_earnings || 0) > 0,
+    onClick: () => navigate('/dashboard?tab=discover')
+  }];
+
+  return <div className="h-full overflow-y-auto bg-background">
+      {/* Dashboard Profile Header */}
+      {onboardingProfile && (
+        <DashboardProfileHeader
+          profile={{
+            id: onboardingProfile.id,
+            username: onboardingProfile.username,
+            full_name: onboardingProfile.full_name,
+            bio: onboardingProfile.bio,
+            avatar_url: onboardingProfile.avatar_url,
+            banner_url: onboardingProfile.banner_url,
+            created_at: onboardingProfile.created_at,
+            country: onboardingProfile.country,
+            city: onboardingProfile.city,
+          }}
+          socialAccounts={socialAccounts}
+          onEditProfile={() => setEditProfileDialogOpen(true)}
+          onAddAccount={() => setAddSocialDialogOpen(true)}
+          onAvatarUpdated={fetchOnboardingData}
+        />
+      )}
+
+      {/* Stats Cards - Hidden for now */}
+
+      {/* Editing Tools Section */}
+      {onboardingProfile && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+          <Card className="bg-card border border-border rounded-xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold tracking-[-0.5px]">Editing Tools</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-0.5 tracking-[-0.3px]">
+                    Show brands what tools you use
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEditingToolsDialog(true)}
+                  className="font-medium tracking-[-0.3px]"
+                >
+                  {onboardingProfile.editing_tools?.length ? "Edit" : "Add Tools"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {onboardingProfile.editing_tools?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {onboardingProfile.editing_tools.map((toolId: string) => {
+                    const tool = EDITING_TOOLS.find((t) => t.id === toolId);
+                    if (!tool) return null;
+                    return (
+                      <div
+                        key={toolId}
+                        className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/50 border border-border rounded-lg"
+                      >
+                        <img
+                          src={tool.logo}
+                          alt={tool.name}
+                          className="w-5 h-5 object-contain rounded"
+                        />
+                        <span className="text-xs font-medium tracking-[-0.2px]">
+                          {tool.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 border border-dashed border-border rounded-lg">
+                  <p className="text-sm font-medium text-foreground mb-0.5 tracking-[-0.3px]">No tools added yet</p>
+                  <p className="text-xs text-muted-foreground tracking-[-0.2px]">Add the video editing and AI tools you use</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Get Discovered Onboarding Checklist - Dismissible Banner */}
+      {onboardingProfile && !onboardingTasks.every(t => t.completed) && (
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
+          <ProfileOnboardingChecklist tasks={onboardingTasks} />
+        </div>
+      )}
+
+      {/* Payout Status Cards - Earnings Pipeline */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-6">
+        <h2 className="text-lg font-semibold tracking-[-0.5px] mb-4">Earnings</h2>
+        <PayoutStatusCards
+          accruing={payoutPipelineData.accruing}
+          held={payoutPipelineData.held}
+          clearing={payoutPipelineData.clearing}
+          paid={payoutPipelineData.paid}
+          onRequestPayout={handleRequestEarningsPayout}
+          isRequesting={isRequestingEarningsPayout}
+          minPayout={1}
+        />
+      </div>
+
+      {/* Edit Profile Dialog */}
+      <EditProfileDialog
+        open={editProfileDialogOpen}
+        onOpenChange={setEditProfileDialogOpen}
+        profile={onboardingProfile ? {
+          id: onboardingProfile.id,
+          full_name: onboardingProfile.full_name,
+          bio: onboardingProfile.bio,
+          city: onboardingProfile.city,
+          country: onboardingProfile.country,
+          content_styles: onboardingProfile.content_styles,
+          content_languages: onboardingProfile.content_languages,
+          show_total_earned: onboardingProfile.show_total_earned,
+          show_location: onboardingProfile.show_location,
+          show_joined_campaigns: onboardingProfile.show_joined_campaigns
+        } : null}
+        onSuccess={fetchOnboardingData}
+      />
+
+      {/* Add Social Account Dialog */}
+      <AddSocialAccountDialog
+        open={addSocialDialogOpen}
+        onOpenChange={setAddSocialDialogOpen}
+        onSuccess={fetchOnboardingData}
+      />
+
+      {/* Editing Tools Dialog */}
+      <EditingToolsDialog
+        open={showEditingToolsDialog}
+        onOpenChange={setShowEditingToolsDialog}
+        selectedTools={onboardingProfile?.editing_tools || []}
+        onSave={handleSaveEditingTools}
+      />
+
+      {/* Hidden legacy content below - kept for potential future use */}
+      <div className="hidden">
+      <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
+        {/* Filter Button */}
+        <div className="pt-5 pb-4 px-0">
+          <DropdownMenu open={filterOpen} onOpenChange={open => {
+          setFilterOpen(open);
+          if (!open) {
+            setFilterSubmenu('main');
+            setFilterSearch('');
+          }
+        }}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 rounded-[9px] border-border bg-background hover:bg-background hover:text-foreground px-4 py-2 h-auto hidden">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="font-medium">Filter</span>
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-background border-border dark:border-[#141414] font-inter tracking-[-0.5px]">
+              <div className="relative">
+                {/* Main Menu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
+                  <div className="relative mb-3">
+                    <Input placeholder="Filter..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" />
+                    
+                  </div>
+                  
+                  {/* Show matching filter options when searching */}
+                  {filterSearch ? <div className="space-y-1 max-h-[250px] overflow-y-auto">
+                      {/* Type options */}
+                      {[{
+                    value: 'earning',
+                    label: 'Campaign Payout'
+                  }, {
+                    value: 'withdrawal',
+                    label: 'Withdrawal'
+                  }, {
+                    value: 'team_earning',
+                    label: 'Team Earnings'
+                  }, {
+                    value: 'affiliate_earning',
+                    label: 'Affiliate Earnings'
+                  }, {
+                    value: 'referral',
+                    label: 'Referral Bonus'
+                  }, {
+                    value: 'transfer_sent',
+                    label: 'Transfer Sent'
+                  }, {
+                    value: 'transfer_received',
+                    label: 'Transfer Received'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setTypeFilter(option.value);
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                            </div>
+                            <span className="text-sm">{option.label}</span>
+                            {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                          </button>)}
+                      
+                      {/* Status options */}
+                      {[{
+                    value: 'completed',
+                    label: 'Completed'
+                  }, {
+                    value: 'pending',
+                    label: 'Pending'
+                  }, {
+                    value: 'in_transit',
+                    label: 'In Transit'
+                  }, {
+                    value: 'rejected',
+                    label: 'Rejected'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setStatusFilter(option.value);
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                            <span className="text-sm">{option.label}</span>
+                            {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                          </button>)}
+                      
+                      {/* Program options */}
+                      {availableCampaigns.filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).map(campaign => <button key={campaign.id} onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter(campaign.id);
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            {campaign.brand_logo_url ? <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                              </div> : <Briefcase className="h-4 w-4" />}
+                            <span className="text-sm truncate">{campaign.title}</span>
+                            {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
+                          </button>)}
+                      
+                      {/* No results */}
+                      {[{
+                    value: 'earning',
+                    label: 'Campaign Payout'
+                  }, {
+                    value: 'withdrawal',
+                    label: 'Withdrawal'
+                  }, {
+                    value: 'team_earning',
+                    label: 'Team Earnings'
+                  }, {
+                    value: 'affiliate_earning',
+                    label: 'Affiliate Earnings'
+                  }, {
+                    value: 'referral',
+                    label: 'Referral Bonus'
+                  }, {
+                    value: 'transfer_sent',
+                    label: 'Transfer Sent'
+                  }, {
+                    value: 'transfer_received',
+                    label: 'Transfer Received'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && [{
+                    value: 'completed',
+                    label: 'Completed'
+                  }, {
+                    value: 'pending',
+                    label: 'Pending'
+                  }, {
+                    value: 'in_transit',
+                    label: 'In Transit'
+                  }, {
+                    value: 'rejected',
+                    label: 'Rejected'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && availableCampaigns.filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No matching filters</p>}
+                    </div> : (/* Default menu items when not searching */
+                <div className="space-y-1">
+                      <button onClick={e => {
+                    e.preventDefault();
+                    setFilterSubmenu('type');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`} style={{
+                    fontFamily: 'Inter, sans-serif',
+                    letterSpacing: 'normal'
+                  }}>
+                        <span className="font-medium">Type</span>
+                        {typeFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>}
+                        <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                      </button>
+                      <button onClick={e => {
+                    e.preventDefault();
+                    setFilterSubmenu('status');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`} style={{
+                    fontFamily: 'Inter, sans-serif',
+                    letterSpacing: 'normal'
+                  }}>
+                        <span className="font-medium">Status</span>
+                        {statusFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>}
+                        <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                      </button>
+                      {availableCampaigns.length > 0 && <button onClick={e => {
+                    e.preventDefault();
+                    setFilterSubmenu('program');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`} style={{
+                    fontFamily: 'Inter, sans-serif',
+                    letterSpacing: 'normal'
+                  }}>
+                          <span className="font-medium">Program</span>
+                          {campaignFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
+                              {availableCampaigns.find(c => c.id === campaignFilter)?.title}
+                            </span>}
+                          <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                        </button>}
+                    </div>)}
+                  
+                  {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && !filterSearch && <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-foreground mt-3" onClick={e => {
+                  e.preventDefault();
+                  setTypeFilter('all');
+                  setStatusFilter('all');
+                  setCampaignFilter('all');
+                }}>
+                      Clear filters
+                    </Button>}
+                </div>
+
+                {/* Type Submenu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'type' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
+                  <button onClick={e => {
+                  e.preventDefault();
+                  setFilterSubmenu('main');
+                  setFilterSearch('');
+                }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Type</span>
+                  </button>
+                  <div className="space-y-1">
+                    {[{
+                    value: 'all',
+                    label: 'All Types'
+                  }, {
+                    value: 'earning',
+                    label: 'Campaign Payout'
+                  }, {
+                    value: 'withdrawal',
+                    label: 'Withdrawal'
+                  }, {
+                    value: 'team_earning',
+                    label: 'Team Earnings'
+                  }, {
+                    value: 'affiliate_earning',
+                    label: 'Affiliate Earnings'
+                  }, {
+                    value: 'referral',
+                    label: 'Referral Bonus'
+                  }, {
+                    value: 'transfer_sent',
+                    label: 'Transfer Sent'
+                  }, {
+                    value: 'transfer_received',
+                    label: 'Transfer Received'
+                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setTypeFilter(option.value);
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                        <span className="text-sm">{option.label}</span>
+                        {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                      </button>)}
+                  </div>
+                </div>
+
+                {/* Status Submenu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'status' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
+                  <button onClick={e => {
+                  e.preventDefault();
+                  setFilterSubmenu('main');
+                  setFilterSearch('');
+                }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Status</span>
+                  </button>
+                  <div className="space-y-1">
+                    {[{
+                    value: 'all',
+                    label: 'All Statuses'
+                  }, {
+                    value: 'completed',
+                    label: 'Completed'
+                  }, {
+                    value: 'pending',
+                    label: 'Pending'
+                  }, {
+                    value: 'in_transit',
+                    label: 'In Transit'
+                  }, {
+                    value: 'rejected',
+                    label: 'Rejected'
+                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setStatusFilter(option.value);
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                        <span className="text-sm">{option.label}</span>
+                        {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                      </button>)}
+                  </div>
+                </div>
+
+                {/* Program Submenu */}
+                <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'program' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
+                  <button onClick={e => {
+                  e.preventDefault();
+                  setFilterSubmenu('main');
+                  setFilterSearch('');
+                }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Program</span>
+                  </button>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    <button onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter('all');
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                      <span className="text-sm">All Programs</span>
+                      {campaignFilter === 'all' && <Check className="h-4 w-4 ml-auto" />}
+                    </button>
+                    {availableCampaigns.filter(campaign => !filterSearch || campaign.title.toLowerCase().includes(filterSearch.toLowerCase()) || campaign.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).map(campaign => <button key={campaign.id} onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter(campaign.id);
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                        {campaign.brand_logo_url ? <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                            <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                          </div> : <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] text-foreground font-medium">
+                              {campaign.title.charAt(0).toUpperCase()}
+                            </span>
+                          </div>}
+                        <span className="text-sm truncate flex-1">{campaign.title}</span>
+                        {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
+                      </button>)}
+                  </div>
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Transactions Table */}
+        <div className="pb-6 px-0">
+          {transactions.length === 0 ? <div className="text-center py-12">
+              <p className="text-sm text-muted-foreground">No transactions yet</p>
+            </div> : <>
+              <div className="overflow-x-auto border border-border dark:border-[#141414] rounded-xl">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-border dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
+                      <TableHead className="text-foreground font-medium text-sm h-12">Source</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Destination</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Processed</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12 text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.filter(transaction => {
+                  if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                  if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                  if (campaignFilter !== "all") {
+                    const matchesCampaign = transaction.campaign?.id === campaignFilter;
+                    const matchesBoost = transaction.boost?.id === campaignFilter;
+                    if (!matchesCampaign && !matchesBoost) return false;
+                  }
+                  return true;
+                }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <TableRow key={transaction.id} onClick={() => {
+                  setSelectedTransaction(transaction);
+                  setTransactionSheetOpen(true);
+                }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-border dark:border-[#141414]">
+                        {/* Source */}
+                        <TableCell className="py-4">
+                          {transaction.boost?.brand_name ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      if (transaction.boost?.brand_slug) {
+                        navigate(`/b/${transaction.boost.brand_slug}`);
+                      }
+                    }}>
+                              {transaction.boost?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                                  <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name} className="w-full h-full object-cover" />
+                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs text-foreground font-medium">
+                                    {transaction.boost.brand_name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>}
+                              <span className="text-sm font-medium">{transaction.boost.brand_name}</span>
+                            </div> : transaction.campaign?.brand_name ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      if (transaction.campaign?.brand_slug) {
+                        navigate(`/b/${transaction.campaign.brand_slug}`);
+                      }
+                    }}>
+                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                                  <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
+                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs text-foreground font-medium">
+                                    {transaction.campaign.brand_name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>}
+                              <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
+                            </div> : transaction.type === 'transfer_received' && (transaction.sender || transaction.metadata?.sender_username) ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/@${transaction.sender?.username || transaction.metadata.sender_username}`);
+                    }}>
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={transaction.sender?.avatar_url || undefined} alt={transaction.sender?.username || transaction.metadata?.sender_username} />
+                                <AvatarFallback className="text-xs">
+                                  {(transaction.sender?.username || transaction.metadata?.sender_username || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium">@{transaction.sender?.username || transaction.metadata.sender_username}</span>
+                            </div> : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? <span className="text-sm text-foreground">Wallet</span> : <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>}
+                        </TableCell>
+                        
+                        {/* Destination */}
+                        <TableCell className="py-4">
+                          {transaction.type === 'transfer_sent' && transaction.recipient ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/@${transaction.recipient?.username}`);
+                    }}>
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={transaction.recipient.avatar_url || undefined} alt={transaction.recipient.username} />
+                                <AvatarFallback className="text-xs">
+                                  {transaction.recipient.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium">@{transaction.recipient.username}</span>
+                            </div> : transaction.type === 'transfer_sent' && transaction.metadata?.recipient_username ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/@${transaction.metadata.recipient_username}`);
+                    }}>
+                              <span className="text-sm font-medium">@{transaction.metadata.recipient_username}</span>
+                            </div> : <span className="text-sm text-foreground">
+                              {transaction.destination || 'Wallet'}
+                            </span>}
+                        </TableCell>
+                        
+                        {/* Status */}
+                        <TableCell className="py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : transaction.status === 'in_transit' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                            {transaction.status === 'completed' && <Check className="h-3 w-3" />}
+                            {transaction.status === 'pending' && <Clock className="h-3 w-3" />}
+                            {transaction.status === 'in_transit' && <Hourglass className="h-3 w-3" />}
+                            {transaction.status === 'rejected' && <X className="h-3 w-3" />}
+                            {transaction.status === 'completed' ? 'Completed' : transaction.status === 'pending' ? 'Pending' : transaction.status === 'in_transit' ? 'In Transit' : transaction.status === 'rejected' ? 'Rejected' : transaction.status?.charAt(0).toUpperCase() + transaction.status?.slice(1)}
+                          </span>
+                        </TableCell>
+                        
+                        
+                        {/* Processed */}
+                        <TableCell className="py-4 text-sm text-muted-foreground">
+                          {transaction.status === 'completed' ? <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="underline decoration-dotted cursor-pointer hover:text-foreground">
+                                    {format(transaction.date, 'MMM d')}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]">
+                                  <div className="space-y-1.5">
+                                    <p className="text-xs text-muted-foreground">Payment Completed</p>
+                                    <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
+                                    <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
+                                    <div className="flex items-center gap-1.5 pt-1 border-t border-border mt-1">
+                                      <Check className="h-3 w-3 text-green-500" />
+                                      <span className="text-xs text-green-500">Successfully processed</span>
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider> : transaction.status === 'rejected' ? <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="underline decoration-dotted cursor-pointer hover:text-foreground text-red-500">
+                                    {format(transaction.date, 'MMM d')}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[240px]">
+                                  <div className="space-y-1.5">
+                                    <p className="text-xs text-muted-foreground">Rejected</p>
+                                    <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
+                                    <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
+                                    {transaction.rejection_reason && <div className="pt-1 border-t border-border mt-1">
+                                        <p className="text-xs text-red-500">Reason: {transaction.rejection_reason}</p>
+                                      </div>}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider> : '-'}
+                        </TableCell>
+                        
+                        {/* Amount */}
+                        <TableCell className="py-4 text-right">
+                          <span className="">
+                            {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                          </span>
+                        </TableCell>
+                      </TableRow>)}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#dadce2]/0">
+                <p className="text-sm text-muted-foreground">
+                  Viewing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length)}-{Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length)} of {transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length} payouts
+                </p>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50" aria-label="Previous page">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50" aria-label="Next page">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>}
+        </div>
+      </Card>
+      </div>
+
+      {/* Balance Cards - Removed duplicate */}
+
+      <PayoutMethodDialog open={dialogOpen} onOpenChange={setDialogOpen} onSave={handleAddPayoutMethod} currentMethodCount={payoutMethods.length} />
+
+      {/* Payout Request Dialog */}
+      <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Payout</DialogTitle>
+            <DialogDescription>
+              Choose the amount and payment method for your withdrawal
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="payout-amount">Amount ($)</Label>
+              <Input id="payout-amount" type="number" min={(() => {
+              const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              return method?.method === 'bank' ? 250 : 20;
+            })()} step="0.01" max={wallet?.balance || 0} placeholder={(() => {
+              const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              return method?.method === 'bank' ? '250.00' : '20.00';
+            })()} value={payoutAmount} onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))} className="bg-muted border-transparent placeholder:text-muted-foreground h-14 text-lg font-medium focus-visible:ring-primary/50" />
+              <div className="flex gap-2 flex-wrap">
+                {(() => {
+                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                const amounts = isAdmin
+                  ? [1, 5, 10, 20]
+                  : (method?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500]);
+                return amounts.map(amount => <Button key={amount} type="button" variant="ghost" size="sm" onClick={() => setPayoutAmount(amount.toString())} disabled={wallet?.balance ? wallet.balance < amount : true} className="bg-muted hover:bg-accent">
+                      ${amount}
+                    </Button>);
+              })()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {(() => {
+                const method = payoutMethods.find(m => m.id === selectedPayoutMethod);
+                const minimum = isAdmin ? '$1.00' : (method?.method === 'bank' ? '$250.00' : '$20.00');
+                return `Minimum: ${minimum} • Available: $${wallet?.balance?.toFixed(2) || "0.00"}`;
+              })()}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payout-method">Payment Method</Label>
+              <Select value={selectedPayoutMethod} onValueChange={setSelectedPayoutMethod}>
+                <SelectTrigger id="payout-method" className="bg-muted border-transparent h-14 text-lg">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {payoutMethods.map(method => {
+                  const getMethodLabel = () => {
+                    switch (method.method) {
+                      case "paypal":
+                        return "PayPal";
+                      case "crypto":
+                        return "Crypto";
+                      case "bank":
+                        return "Bank";
+                      case "upi":
+                        return "UPI (Disabled)";
+                      case "wise":
+                        return "Wise";
+                      case "revolut":
+                        return "Revolut";
+                      case "tips":
+                        return "TIPS";
+                      default:
+                        return method.method;
+                    }
+                  };
+                  const getMethodDetails = () => {
+                    switch (method.method) {
+                      case "paypal":
+                        return method.details.email;
+                      case "crypto":
+                        return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
+                      case "bank":
+                        return `${method.details.bankName}`;
+                      case "upi":
+                        return method.details.upi_id;
+                      case "wise":
+                        return method.details.email;
+                      case "revolut":
+                        return method.details.email;
+                      case "tips":
+                        return method.details.username;
+                      default:
+                        return "N/A";
+                    }
+                  };
+                  const getNetworkLogo = () => {
+                    if (method.method !== "crypto") return null;
+                    const network = method.details?.network?.toLowerCase();
+                    if (network === 'ethereum') return ethereumLogo;
+                    if (network === 'optimism') return optimismLogo;
+                    if (network === 'solana') return solanaLogo;
+                    if (network === 'polygon') return polygonLogo;
+                    return null;
+                  };
+                  const networkLogo = getNetworkLogo();
+                  return <SelectItem key={method.id} value={method.id}>
+                        <div className="flex items-center gap-2">
+                          {networkLogo && <img src={networkLogo} alt="Network logo" className="h-4 w-4" />}
+                          <span>{getMethodLabel()} - {getMethodDetails()}</span>
+                        </div>
+                      </SelectItem>;
+                })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="p-3 rounded-lg text-sm bg-neutral-900/0">
+              {(() => {
+              const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+              const isPayPal = selectedMethod?.method === 'paypal';
+              const isUpi = selectedMethod?.method === 'upi';
+              const isBank = selectedMethod?.method === 'bank';
+              if (isUpi) {
+                return <>
+                  <p className="text-destructive font-medium">UPI payouts are temporarily disabled</p>
+                  <p className="text-xs text-muted-foreground">Please select another payment method</p>
+                </>;
+              }
+              if (isBank) {
+                return <>
+                  <p className="text-muted-foreground">3-5 business day wait time</p>
+                  <p className="text-xs text-muted-foreground mb-2">Minimum withdrawal: $250</p>
+                  <p className="font-medium">$1 + 0.75% fee</p>
+                </>;
+              }
+              if (isPayPal) {
+                return <>
+                  <p className="text-muted-foreground">24h wait time</p>
+                </>;
+              }
+              return <>
+                <p className="text-muted-foreground">2-3 business day wait time</p>
+                <p className="text-xs text-muted-foreground mb-2">(Payouts will not be operated on Saturday & Sunday)</p>
+                <p className="font-medium">$1 + 0.75% fee</p>
+              </>;
+            })()}
+            </div>
+
+            {/* Fee Breakdown and Net Amount */}
+            {payoutAmount && (() => {
+            const amount = parseFloat(payoutAmount);
+            const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+            const isPayPal = selectedMethod?.method === 'paypal';
+            const isUpi = selectedMethod?.method === 'upi';
+            const isBank = selectedMethod?.method === 'bank';
+            const minimumAmount = isAdmin ? 1 : (isBank ? 250 : 20);
+
+            // Don't show fee breakdown for PayPal or UPI
+            if (isPayPal || isUpi || amount < minimumAmount) {
+              return null;
+            }
+
+            // For crypto/bank, show fee breakdown
+            const percentageFee = amount * 0.0075;
+            const afterPercentage = amount - percentageFee;
+            const netAmount = afterPercentage - 1;
+            const feeAmount = percentageFee + 1;
+            return <div className="p-4 bg-card rounded-lg border border-border space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Withdrawal amount</span>
+                    <span className="font-medium">${amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Processing fee</span>
+                    <span className="font-medium text-red-400">-${feeAmount.toFixed(2)}</span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between">
+                    <span className="font-semibold">You'll receive</span>
+                    <span className="font-bold text-lg text-primary">${netAmount.toFixed(2)}</span>
+                  </div>
+                </div>;
+          })()}
+          </div>
+
+          <DialogFooter className="gap-3">
+            <Button variant="ghost" onClick={() => setPayoutDialogOpen(false)} disabled={isSubmittingPayout} className="font-inter tracking-[-0.5px] border-0 hover:bg-destructive/10 hover:text-destructive">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmPayout} disabled={isSubmittingPayout} className="font-inter tracking-[-0.5px]">
+              {isSubmittingPayout ? "Processing..." : "Confirm Payout"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Receipt Sheet */}
+      <Sheet open={transactionSheetOpen} onOpenChange={setTransactionSheetOpen}>
+        <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0 font-inter tracking-[-0.3px]">
+          {selectedTransaction && <div className="flex flex-col h-full">
+              {/* Hero Header with Amount */}
+              {selectedTransaction.status && selectedTransaction.status !== 'completed' && <div className="px-6 pt-4 pb-2 text-center relative">
+                <button onClick={() => setTransactionSheetOpen(false)} className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+                <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
+                    {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
+                  </Badge>
+              </div>}
+
+              {/* Transaction Details Content */}
+              <div className="flex-1 px-6 py-5">
+                <div className="space-y-6">
+                  {/* Source Section */}
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Source</span>
+                    <div className="flex items-center gap-3 mt-2">
+                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt={selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || "Brand"} className="w-10 h-10 rounded-[7px] object-cover" /> : <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
+                          <span className="text-base font-semibold text-muted-foreground">
+                            {(selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N')?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>}
+                      <div>
+                        <span className="text-base font-semibold tracking-[-0.5px] block">
+                          {selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N/A'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timeline Section */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Initiated</span>
+                      <div className="mt-1.5">
+                        <span className="text-sm font-medium tracking-[-0.5px] block">
+                          {format(selectedTransaction.date, 'MMM d, yyyy')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(selectedTransaction.date, 'h:mm a')}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Paid</span>
+                      <div className="mt-1.5">
+                        {selectedTransaction.status === 'completed' ? <>
+                          <span className="text-sm font-medium tracking-[-0.5px] block">
+                            {format(selectedTransaction.date, 'MMM d, yyyy')}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(selectedTransaction.date, 'h:mm a')}
+                          </span>
+                        </> : <span className="text-sm text-muted-foreground">—</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Period Section - only show for non-boost transactions */}
+                  {selectedTransaction.type !== 'boost_earning' && <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Period</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
+                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')} – ${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}` : format(selectedTransaction.date, 'MMM d, yyyy')}
+                    </span>
+                  </div>}
+
+                  {/* Amount Section */}
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Amount</span>
+                    <span className="text-lg font-bold tracking-[-0.5px] block mt-1">
+                      ${Math.abs(selectedTransaction.amount).toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Description Section */}
+                  <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Description</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
+                      {selectedTransaction.source || (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' : selectedTransaction.type === 'referral' ? 'Referral bonus' : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` : selectedTransaction.type === 'balance_correction' ? 'Balance correction' : 'Transaction')}
+                    </span>
+                  </div>
+
+                  {/* Transaction ID */}
+                  <div className="pt-4">
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Transaction ID</span>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-xs font-mono text-muted-foreground break-all">
+                        {selectedTransaction.id}
+                      </span>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" onClick={() => {
+                    navigator.clipboard.writeText(selectedTransaction.id);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                    toast({
+                      description: "Transaction ID copied"
+                    });
+                  }}>
+                        {copiedId ? <Check className="h-2.5 w-2.5 text-green-500" /> : <Copy className="h-2.5 w-2.5" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rejection Reason */}
+                {selectedTransaction.status === 'rejected' && selectedTransaction.rejection_reason && <div className="mt-5 p-3 bg-destructive/10 rounded-xl">
+                    <div className="flex items-start gap-2">
+                      <X className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs font-medium tracking-[-0.5px] text-destructive mb-1">Rejection Reason</div>
+                        <p className="text-sm text-muted-foreground">{selectedTransaction.rejection_reason}</p>
+                      </div>
+                    </div>
+                  </div>}
+
+                {/* Payout Method Details */}
+                {selectedTransaction.type === 'withdrawal' && selectedTransaction.metadata && (() => {
+              return <div className="space-y-1 pt-4">
+                      <div className="text-xs font-medium tracking-[-0.5px] text-muted-foreground uppercase tracking-wide mb-3">Payout Details</div>
+                      
+                      {selectedTransaction.metadata.payout_method && <div className="flex items-center justify-between py-2.5">
+                          <span className="text-sm text-muted-foreground">Method</span>
+                          <span className="text-sm font-medium tracking-[-0.5px] capitalize">{selectedTransaction.metadata.payout_method}</span>
+                        </div>}
+                      
+                      {selectedTransaction.metadata.network && (() => {
+                  const network = selectedTransaction.metadata.network.toLowerCase();
+                  const getNetworkLogo = () => {
+                    if (network === 'ethereum') return ethereumLogo;
+                    if (network === 'optimism') return optimismLogo;
+                    if (network === 'solana') return solanaLogo;
+                    if (network === 'polygon') return polygonLogo;
+                    return null;
+                  };
+                  const networkLogo = getNetworkLogo();
+                  return <div className="flex items-center justify-between py-2.5">
+                            <span className="text-sm text-muted-foreground">Network</span>
+                            <div className="flex items-center gap-1.5">
+                              {networkLogo && <img src={networkLogo} alt="Network" className="h-4 w-4" />}
+                              <span className="text-sm font-medium capitalize">{selectedTransaction.metadata.network}</span>
+                            </div>
+                          </div>;
+                })()}
+                      
+                      {selectedTransaction.metadata.payoutDetails?.address && <div className="flex items-center justify-between py-2.5">
+                          <span className="text-sm text-muted-foreground">Address</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-mono">{selectedTransaction.metadata.payoutDetails.address.slice(0, 6)}...{selectedTransaction.metadata.payoutDetails.address.slice(-4)}</span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                      navigator.clipboard.writeText(selectedTransaction.metadata.payoutDetails.address);
+                      toast({
+                        description: "Address copied"
+                      });
+                    }}>
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>}
+                      
+                      {selectedTransaction.metadata.payoutDetails?.currency && <div className="flex items-center justify-between py-2.5">
+                          <span className="text-sm text-muted-foreground">Currency</span>
+                          <span className="text-sm font-medium uppercase">{selectedTransaction.metadata.payoutDetails.currency}</span>
+                        </div>}
+                      
+                      {selectedTransaction.metadata.payoutDetails?.email && <div className="flex items-center justify-between py-2.5">
+                          <span className="text-sm text-muted-foreground">PayPal</span>
+                          <span className="text-sm font-medium">{selectedTransaction.metadata.payoutDetails.email}</span>
+                        </div>}
+                    </div>;
+            })()}
+              </div>
+              
+              {/* Fixed Buttons */}
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border mt-auto flex flex-col gap-2">
+                <Button onClick={() => setShareDialogOpen(true)} className="w-full gap-2">
+                  Share Transaction
+                </Button>
+                <Button variant="ghost" onClick={() => setTransactionSheetOpen(false)} className="w-full md:hidden text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                  Close
+                </Button>
+              </div>
+            </div>}
+        </SheetContent>
+      </Sheet>
+
+      {/* P2P Transfer Dialog */}
+      
+
+      {/* Share Transaction Dialog */}
+      <TransactionShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} transaction={selectedTransaction} userProfile={userProfile} />
+    </div>;
+}

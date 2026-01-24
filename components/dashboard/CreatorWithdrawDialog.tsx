@@ -1,0 +1,779 @@
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, Building2, Smartphone, CreditCard, Check, X, FileText, AlertTriangle } from "lucide-react";
+import PayoutMethodDialog from "@/components/PayoutMethodDialog";
+import { useTaxFormRequirement } from "@/hooks/useTaxFormRequirement";
+import { TaxFormWizard } from "@/components/tax/TaxFormWizard";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import paypalLogo from "@/assets/paypal-logo.svg";
+import walletActiveIcon from "@/assets/wallet-active.svg";
+import ethereumLogo from "@/assets/ethereum-logo.png";
+import optimismLogo from "@/assets/optimism-logo.png";
+import solanaLogo from "@/assets/solana-logo.png";
+import polygonLogo from "@/assets/polygon-logo.png";
+
+interface PayoutMethod {
+  id: string;
+  method: string;
+  details: any;
+}
+
+interface CreatorWithdrawDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: CreatorWithdrawDialogProps) {
+  const [wallet, setWallet] = useState<{ id: string; balance: number; total_withdrawn: number; payout_details: any } | null>(null);
+  const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
+  const [pendingWithdrawalId, setPendingWithdrawalId] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [addMethodDialogOpen, setAddMethodDialogOpen] = useState(false);
+  const [taxFormWizardOpen, setTaxFormWizardOpen] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const { toast } = useToast();
+  const { isAdmin } = useAdminCheck();
+
+  // Tax form requirement check
+  const { requirement: taxRequirement, isLoading: taxLoading, refetch: refetchTaxRequirement } = useTaxFormRequirement(
+    userId,
+    parseFloat(payoutAmount) || 0
+  );
+
+  // Get minimum amount for a payout method
+  const getMinimumForMethod = (method: string) => {
+    if (isAdmin) return 1;
+    return method === 'bank' ? 250 : 20;
+  };
+
+  // Handle payout method selection with minimum amount validation
+  const handleMethodSelect = (methodId: string) => {
+    const method = payoutMethods.find(m => m.id === methodId);
+    if (!method) return;
+
+    setSelectedPayoutMethod(methodId);
+
+    // Warn if current amount doesn't meet minimum for new method
+    const currentAmount = parseFloat(payoutAmount) || 0;
+    const minimum = getMinimumForMethod(method.method);
+    if (currentAmount > 0 && currentAmount < minimum) {
+      toast({
+        title: "Minimum Amount",
+        description: `${method.method === 'bank' ? 'Bank transfers' : 'This method'} require${method.method === 'bank' ? '' : 's'} a minimum of $${minimum}`
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchData();
+    }
+  }, [open]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setLoading(false);
+      return;
+    }
+
+    // Set userId for tax form check
+    setUserId(session.user.id);
+
+    // Fetch wallet with payout details
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("id, balance, total_withdrawn, payout_method, payout_details")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (walletData) {
+      setWallet(walletData);
+      setPayoutAmount(walletData.balance.toString());
+      
+      // Extract payout methods from wallet's payout_details array
+      const payoutDetails = walletData.payout_details as Array<{ method: string; details: any }> | null;
+      if (payoutDetails && Array.isArray(payoutDetails) && payoutDetails.length > 0) {
+        const methods: PayoutMethod[] = payoutDetails.map((item, index) => ({
+          id: `method-${index}`,
+          method: item.method,
+          details: item.details
+        }));
+        setPayoutMethods(methods);
+        setSelectedPayoutMethod(methods[0].id);
+      }
+    }
+
+    // Fetch pending withdrawals
+    const { data: payoutRequests } = await supabase
+      .from("payout_requests")
+      .select("id, amount, status")
+      .eq("user_id", session.user.id)
+      .in("status", ["pending", "in_transit"]);
+
+    if (payoutRequests && payoutRequests.length > 0) {
+      const totalPending = payoutRequests.reduce((sum, req) => sum + (req.amount || 0), 0);
+      setPendingWithdrawals(totalPending);
+      // Store the first pending request ID for cancellation (only allow cancelling "pending" status)
+      const cancellableRequest = payoutRequests.find(req => req.status === "pending");
+      setPendingWithdrawalId(cancellableRequest?.id || null);
+    } else {
+      setPendingWithdrawals(0);
+      setPendingWithdrawalId(null);
+    }
+
+    setLoading(false);
+  };
+
+  const handleCancelPendingWithdrawal = async () => {
+    if (!pendingWithdrawalId) return;
+
+    setIsCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("payout_requests")
+        .update({ status: "cancelled" })
+        .eq("id", pendingWithdrawalId)
+        .eq("status", "pending"); // Only cancel if still pending
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Withdrawal Cancelled",
+        description: "Your pending withdrawal has been cancelled. The funds have been returned to your balance."
+      });
+
+      // Refresh data
+      await fetchData();
+      onSuccess?.();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to cancel withdrawal. It may have already been processed."
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleAddPayoutMethod = async (method: string, details: any) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !wallet) return;
+
+    if (payoutMethods.length >= 3) {
+      toast({
+        variant: "destructive",
+        title: "Limit Reached",
+        description: "You can only add up to 3 payout methods"
+      });
+      return;
+    }
+
+    const updatedMethods = [...payoutMethods, {
+      id: `method-${Date.now()}`,
+      method,
+      details
+    }];
+
+    const payoutDetailsPayload = updatedMethods.map(m => ({
+      method: m.method,
+      details: m.details
+    }));
+
+    const { error } = await supabase
+      .from("wallets")
+      .update({
+        payout_method: method,
+        payout_details: payoutDetailsPayload
+      })
+      .eq("id", wallet.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to add payout method: ${error.message}`
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Payout method added successfully"
+      });
+      fetchData();
+      // Auto-select the newly added method
+      setSelectedPayoutMethod(`method-${updatedMethods.length - 1}`);
+    }
+  };
+
+  const handleRemovePayoutMethod = async (methodId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !wallet) return;
+
+    const updatedMethods = payoutMethods.filter(m => m.id !== methodId);
+
+    const payoutDetailsPayload = updatedMethods.map(m => ({
+      method: m.method,
+      details: m.details
+    }));
+
+    const { error } = await supabase
+      .from("wallets")
+      .update({
+        payout_method: updatedMethods.length > 0 ? updatedMethods[0].method : null,
+        payout_details: payoutDetailsPayload.length > 0 ? payoutDetailsPayload : null
+      })
+      .eq("id", wallet.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to remove payout method: ${error.message}`
+      });
+    } else {
+      // Update local state immediately
+      setPayoutMethods(updatedMethods);
+      toast({
+        title: "Success",
+        description: "Payout method removed"
+      });
+      // If the removed method was selected, select the first available one
+      if (selectedPayoutMethod === methodId && updatedMethods.length > 0) {
+        setSelectedPayoutMethod(updatedMethods[0].id);
+      } else if (updatedMethods.length === 0) {
+        setSelectedPayoutMethod("");
+      }
+    }
+  };
+
+  const handleConfirmPayout = async () => {
+    if (isSubmitting) return;
+
+    if (!wallet || !payoutAmount || Number(payoutAmount) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Please enter a valid amount"
+      });
+      return;
+    }
+
+    const amount = Number(payoutAmount);
+    const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+    if (!selectedMethod) return;
+
+    // Check if tax form is required - TEMPORARILY DISABLED
+    // if (taxRequirement?.required) {
+    //   setTaxFormWizardOpen(true);
+    //   return;
+    // }
+
+    // Block UPI withdrawals
+    if (selectedMethod.method === 'upi') {
+      toast({
+        variant: "destructive",
+        title: "Temporarily Disabled",
+        description: "UPI payouts are temporarily disabled. Please use another payment method."
+      });
+      return;
+    }
+
+    // Bank minimum is $250, others $20 (admins bypass minimum)
+    const minimumAmount = isAdmin ? 1 : (selectedMethod.method === 'bank' ? 250 : 20);
+    if (amount < minimumAmount) {
+      toast({
+        variant: "destructive",
+        title: "Minimum Amount",
+        description: `Minimum payout amount is $${minimumAmount}${selectedMethod.method === 'bank' ? ' for bank transfers' : ''}`
+      });
+      return;
+    }
+
+    if (amount > wallet.balance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: "Amount exceeds available balance"
+      });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    setIsSubmitting(true);
+
+    // Check for existing pending/in-transit withdrawal requests
+    const { data: existingRequests, error: checkError } = await supabase
+      .from("payout_requests")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .in("status", ["pending", "in_transit"]);
+
+    if (checkError) {
+      setIsSubmitting(false);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to verify withdrawal status"
+      });
+      return;
+    }
+
+    if (existingRequests && existingRequests.length > 0) {
+      setIsSubmitting(false);
+      toast({
+        variant: "destructive",
+        title: "Pending Withdrawal Exists",
+        description: "You already have a pending withdrawal request. Please wait for it to be processed before requesting another."
+      });
+      return;
+    }
+
+    try {
+      // Generate idempotency key to prevent duplicate payouts
+      const idempotencyKey = `${session.user.id}-${amount}-${Date.now()}`;
+
+      // Use secure edge function for withdrawal
+      const { data, error } = await supabase.functions.invoke('request-withdrawal', {
+        body: {
+          amount: amount,
+          payout_method: selectedMethod.method,
+          payout_details: selectedMethod.details,
+          idempotency_key: idempotencyKey
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to submit payout request');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Payout Requested",
+        description: "Your payout request has been submitted and will be processed within 3-5 business days."
+      });
+
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to submit payout request"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getMethodLabel = (method: PayoutMethod) => {
+    switch (method.method) {
+      case "paypal": return "PayPal";
+      case "crypto": return "Crypto";
+      case "bank": return "Bank";
+      case "upi": return "UPI (Disabled)";
+      case "wise": return "Wise";
+      case "revolut": return "Revolut";
+      case "tips": return "TIPS";
+      default: return method.method;
+    }
+  };
+
+  const getMethodDetails = (method: PayoutMethod) => {
+    switch (method.method) {
+      case "paypal": return method.details.email;
+      case "crypto": return `${method.details.address?.slice(0, 8)}...${method.details.address?.slice(-6)}`;
+      case "bank": return method.details.bankName;
+      case "upi": return method.details.upi_id;
+      case "wise": return method.details.email;
+      case "revolut": return method.details.email;
+      case "tips": return method.details.username;
+      default: return "N/A";
+    }
+  };
+
+  const getMethodIcon = (method: PayoutMethod) => {
+    switch (method.method) {
+      case "paypal": return paypalLogo;
+      case "crypto": return walletActiveIcon;
+      default: return null;
+    }
+  };
+
+  const getNetworkLogo = (method: PayoutMethod) => {
+    if (method.method !== "crypto") return null;
+    const network = method.details?.network?.toLowerCase();
+    if (network === 'ethereum') return ethereumLogo;
+    if (network === 'optimism') return optimismLogo;
+    if (network === 'solana') return solanaLogo;
+    if (network === 'polygon') return polygonLogo;
+    return null;
+  };
+
+  const selectedMethod = payoutMethods.find(m => m.id === selectedPayoutMethod);
+  const minimumAmount = isAdmin ? 1 : (selectedMethod?.method === 'bank' ? 250 : 20);
+  const amounts = isAdmin
+    ? [1, 5, 10, 20]
+    : (selectedMethod?.method === 'bank' ? [250, 500, 1000] : [20, 50, 100, 500]);
+
+  const minBalanceRequired = isAdmin ? 1 : 20;
+  const canWithdraw = wallet && wallet.balance >= minBalanceRequired && payoutMethods.length > 0 && pendingWithdrawals === 0;
+
+  return (
+    <>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-inter tracking-[-0.5px]">Request Payout</DialogTitle>
+          <DialogDescription className="font-inter tracking-[-0.5px]">
+            Choose the amount and payment method for your withdrawal
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="py-8 text-center text-muted-foreground font-inter tracking-[-0.5px]">Loading...</div>
+        ) : !wallet || wallet.balance < minBalanceRequired ? (
+          <div className="space-y-6 py-4">
+            {/* Large Balance Display */}
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                Available Balance
+              </p>
+              <p className="text-4xl font-semibold text-foreground font-inter tracking-[-1.5px]">
+                ${wallet?.balance?.toFixed(2) || '0.00'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-destructive/5">
+              <p className="text-sm text-destructive font-medium font-inter tracking-[-0.5px]">
+                Minimum balance of ${minBalanceRequired} required to withdraw
+              </p>
+            </div>
+
+            {/* Payment Methods Section - Read only, no add button */}
+            {payoutMethods.length > 0 && (
+              <div className="space-y-2">
+                <Label className="font-inter tracking-[-0.5px]">Your Payment Methods</Label>
+                <div className="grid grid-cols-1 gap-2">
+                  {payoutMethods.map((method) => {
+                    const methodIcon = getMethodIcon(method);
+                    const networkLogo = getNetworkLogo(method);
+
+                    return (
+                      <div
+                        key={method.id}
+                        className="relative rounded-xl p-3 border border-border bg-muted dark:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shrink-0">
+                            {networkLogo ? (
+                              <img src={networkLogo} alt="Network" className="w-5 h-5" />
+                            ) : methodIcon ? (
+                              <img src={methodIcon} alt={getMethodLabel(method)} className="w-5 h-5" />
+                            ) : method.method === 'bank' ? (
+                              <Building2 className="w-4 h-4 text-muted-foreground" />
+                            ) : method.method === 'upi' ? (
+                              <Smartphone className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <CreditCard className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">
+                              {getMethodLabel(method)}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.4px]">
+                              {getMethodDetails(method)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {payoutMethods.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center font-inter tracking-[-0.5px]">
+                Add a payment method in your wallet settings to withdraw
+              </p>
+            )}
+          </div>
+        ) : payoutMethods.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground font-inter tracking-[-0.5px]">Please add a payout method first.</p>
+          </div>
+        ) : pendingWithdrawals > 0 ? (
+          <div className="py-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">
+                You have a pending withdrawal of <span className="font-semibold text-foreground">${pendingWithdrawals.toFixed(2)}</span>
+              </p>
+              <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
+                {pendingWithdrawalId
+                  ? "You can cancel this request if it hasn't been processed yet."
+                  : "This withdrawal is being processed and cannot be cancelled."}
+              </p>
+            </div>
+            {pendingWithdrawalId && (
+              <Button
+                variant="outline"
+                onClick={handleCancelPendingWithdrawal}
+                disabled={isCancelling}
+                className="font-inter tracking-[-0.5px] border-destructive/50 text-destructive hover:bg-destructive/10"
+              >
+                {isCancelling ? "Cancelling..." : "Cancel Pending Withdrawal"}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-5 py-4">
+            {/* Large Balance Display */}
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                Available Balance
+              </p>
+              <p className="text-4xl font-semibold text-foreground font-inter tracking-[-1.5px]">
+                ${wallet?.balance?.toFixed(2) || '0.00'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="payout-amount" className="font-inter tracking-[-0.5px]">Withdraw Amount</Label>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Min: ${minimumAmount}
+                </p>
+              </div>
+              <Input
+                id="payout-amount"
+                type="number"
+                min={minimumAmount}
+                step="0.01"
+                max={wallet?.balance || 0}
+                placeholder={minimumAmount.toString() + '.00'}
+                value={payoutAmount}
+                onChange={e => setPayoutAmount(e.target.value.replace(',', '.'))}
+                className="bg-muted border-transparent placeholder:text-muted-foreground h-12 text-lg font-medium focus-visible:ring-primary/50 font-inter tracking-[-0.5px]"
+              />
+            </div>
+
+            {/* Tax Form Warning - TEMPORARILY HIDDEN */}
+            {/* {taxRequirement?.required && (
+              <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 flex items-start gap-3">
+                <div className="p-1.5 rounded bg-amber-500/10">
+                  <FileText className="h-4 w-4 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-600 font-inter tracking-[-0.5px]">
+                    Tax Form Required
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.5px]">
+                    {taxRequirement.form_type === 'w9'
+                      ? `Your total payouts will reach $${(taxRequirement.cumulative_payouts || 0).toFixed(0)} after this withdrawal. A W-9 form is required for US creators once you exceed $600.`
+                      : 'A W-8BEN form is required for non-US creators before receiving any payout.'}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 h-7 text-xs border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+                    onClick={() => setTaxFormWizardOpen(true)}
+                  >
+                    Complete Tax Form
+                  </Button>
+                </div>
+              </div>
+            )} */}
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Payment Method</Label>
+              <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                {payoutMethods.map((method) => {
+                  const isSelected = selectedPayoutMethod === method.id;
+                  const methodIcon = getMethodIcon(method);
+                  const networkLogo = getNetworkLogo(method);
+                  
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => handleMethodSelect(method.id)}
+                      className={`relative rounded-xl p-3 border transition-all text-left ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border bg-muted hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shrink-0">
+                          {networkLogo ? (
+                            <img src={networkLogo} alt="Network" className="w-5 h-5" />
+                          ) : methodIcon ? (
+                            <img src={methodIcon} alt={getMethodLabel(method)} className="w-5 h-5" />
+                          ) : method.method === 'bank' ? (
+                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                          ) : method.method === 'upi' ? (
+                            <Smartphone className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <CreditCard className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">
+                            {getMethodLabel(method)}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.4px]">
+                            {getMethodDetails(method)}
+                          </p>
+                        </div>
+                        {isSelected ? (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePayoutMethod(method.id);
+                            }}
+                            className="w-7 h-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center shrink-0 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg text-sm bg-neutral-900/0">
+              {selectedMethod?.method === 'upi' ? (
+                <>
+                  <p className="text-destructive font-medium font-inter tracking-[-0.5px]">UPI payouts are temporarily disabled</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Please select another payment method</p>
+                </>
+              ) : selectedMethod?.method === 'bank' ? (
+                <>
+                  <p className="text-muted-foreground font-inter tracking-[-0.5px]">3-5 business day wait time</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-inter tracking-[-0.5px]">Minimum withdrawal: $250</p>
+                  <p className="font-medium font-inter tracking-[-0.5px]">$1 + 0.75% fee</p>
+                </>
+              ) : selectedMethod?.method === 'paypal' ? (
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">24h wait time</p>
+              ) : (
+                <>
+                  <p className="text-muted-foreground font-inter tracking-[-0.5px]">2-3 business day wait time</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-inter tracking-[-0.5px]">(Payouts will not be operated on Saturday & Sunday)</p>
+                  <p className="font-medium font-inter tracking-[-0.5px]">$1 + 0.75% fee</p>
+                </>
+              )}
+            </div>
+
+            {/* Fee Breakdown */}
+            {payoutAmount && (() => {
+              const amount = parseFloat(payoutAmount);
+              const isPayPal = selectedMethod?.method === 'paypal';
+              const isUpi = selectedMethod?.method === 'upi';
+              const isBank = selectedMethod?.method === 'bank';
+              const minAmount = isBank ? 250 : 20;
+
+              if (isPayPal || isUpi || amount < minAmount) return null;
+
+              const percentageFee = amount * 0.0075;
+              const netAmount = amount - percentageFee - 1;
+              const feeAmount = percentageFee + 1;
+
+              return (
+                <div className="p-4 bg-card rounded-lg border border-border space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground font-inter tracking-[-0.5px]">Withdrawal amount</span>
+                    <span className="font-medium font-inter tracking-[-0.5px]">${amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground font-inter tracking-[-0.5px]">Processing fee</span>
+                    <span className="font-medium text-red-400 font-inter tracking-[-0.5px]">-${feeAmount.toFixed(2)}</span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between">
+                    <span className="font-semibold font-inter tracking-[-0.5px]">You'll receive</span>
+                    <span className="font-bold text-lg text-primary font-inter tracking-[-0.5px]">${netAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        <DialogFooter className="gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            className="font-inter tracking-[-0.5px] border-0 hover:bg-destructive/10 hover:text-destructive"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmPayout}
+            disabled={!canWithdraw || isSubmitting || selectedMethod?.method === 'upi'}
+            className="font-inter tracking-[-0.5px]"
+          >
+            {isSubmitting ? 'Processing...' : 'Request Payout'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+      <PayoutMethodDialog
+        open={addMethodDialogOpen}
+        onOpenChange={setAddMethodDialogOpen}
+        onSave={handleAddPayoutMethod}
+        currentMethodCount={payoutMethods.length}
+      />
+
+      {userId && (
+        <TaxFormWizard
+          open={taxFormWizardOpen}
+          onOpenChange={setTaxFormWizardOpen}
+          userId={userId}
+          onSuccess={() => {
+            refetchTaxRequirement();
+            // If tax form was successfully submitted, retry the payout
+            if (!taxRequirement?.required) {
+              handleConfirmPayout();
+            }
+          }}
+          existingFormType={taxRequirement?.form_type as 'w9' | 'w8ben' | undefined}
+        />
+      )}
+    </>
+  );
+}

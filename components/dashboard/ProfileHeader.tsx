@@ -1,0 +1,396 @@
+import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
+import { Camera, Upload, Pencil, Users, Grid3X3, Eye, FileText, X, Plus, ExternalLink, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import defaultProfileBanner from "@/assets/default-profile-banner.png";
+import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
+import { RankBadge, XPProgressBar, type RankType } from "@/components/RankBadge";
+import { RankInfoDialog } from "@/components/RankInfoDialog";
+import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+
+interface Profile {
+  id: string;
+  username: string;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  total_earnings: number;
+  current_xp: number;
+  current_level: number;
+  current_rank: string;
+  city: string | null;
+  country: string | null;
+  content_styles: string[] | null;
+  content_languages: string[] | null;
+  show_total_earned: boolean | null;
+  show_location: boolean | null;
+  show_joined_campaigns: boolean | null;
+}
+interface SocialAccount {
+  id: string;
+  platform: string;
+  username: string;
+  account_link: string | null;
+  follower_count: number | null;
+  is_verified: boolean;
+}
+interface ProfileHeaderProps {
+  totalViews?: number;
+  totalPosts?: number;
+}
+export function ProfileHeader({
+  totalViews = 0,
+  totalPosts = 0
+}: ProfileHeaderProps) {
+  const navigate = useNavigate();
+  const {
+    resolvedTheme
+  } = useTheme();
+  const {
+    toast
+  } = useToast();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [showCropDialog, setShowCropDialog] = useState(false);
+  const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
+  const [showRankInfo, setShowRankInfo] = useState(false);
+  const [isRankHovered, setIsRankHovered] = useState(false);
+  const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
+  const [bannerCropData, setBannerCropData] = useState<{
+    zoom: number;
+    positionX: number;
+    positionY: number;
+  } | null>(null);
+  const [levelThresholds, setLevelThresholds] = useState<{
+    xpForCurrentLevel: number;
+    xpForNextLevel: number;
+  }>({
+    xpForCurrentLevel: 0,
+    xpForNextLevel: 500
+  });
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    fetchProfile();
+    fetchSocialAccounts();
+    fetchLevelThresholds();
+  }, []);
+  const fetchProfile = async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    setLoading(true);
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings, current_xp, current_level, current_rank, city, country, content_styles, content_languages, show_total_earned, show_location, show_joined_campaigns").eq("id", session.user.id).single();
+    if (profileData) {
+      setProfile({
+        ...profileData,
+        current_xp: profileData.current_xp ?? 0,
+        current_level: profileData.current_level ?? 1,
+        current_rank: profileData.current_rank ?? 'Bronze',
+        show_total_earned: profileData.show_total_earned ?? false,
+        show_location: profileData.show_location ?? false,
+        show_joined_campaigns: profileData.show_joined_campaigns ?? false
+      });
+    }
+    setLoading(false);
+  };
+  const fetchSocialAccounts = async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+    const {
+      data
+    } = await supabase.from("social_accounts").select("id, platform, username, account_link, follower_count, is_verified").eq("user_id", session.user.id).order("created_at", {
+      ascending: true
+    });
+    if (data) {
+      setSocialAccounts(data);
+    }
+  };
+  const fetchLevelThresholds = async () => {
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Get current user's level
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("current_level").eq("id", session.user.id).single();
+    const currentLevel = profileData?.current_level ?? 1;
+
+    // Get thresholds for current and next level
+    const {
+      data: thresholds
+    } = await supabase.from("level_thresholds").select("level, xp_required").in("level", [currentLevel, currentLevel + 1]).order("level");
+    if (thresholds && thresholds.length > 0) {
+      const currentThreshold = thresholds.find(t => t.level === currentLevel);
+      const nextThreshold = thresholds.find(t => t.level === currentLevel + 1);
+      setLevelThresholds({
+        xpForCurrentLevel: currentThreshold?.xp_required ?? 0,
+        xpForNextLevel: nextThreshold?.xp_required ?? (currentThreshold?.xp_required ?? 0) + 500
+      });
+    }
+  };
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile) return;
+    setUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${profile.id}/avatar.${fileExt}`;
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
+      if (uploadError) throw uploadError;
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      // Add cache-busting timestamp to URL
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+      const {
+        error: updateError
+      } = await supabase.from('profiles').update({
+        avatar_url: urlWithCacheBuster
+      }).eq('id', profile.id);
+      if (updateError) throw updateError;
+      setProfile({
+        ...profile,
+        avatar_url: urlWithCacheBuster
+      });
+      toast({
+        title: "Avatar updated successfully"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error uploading avatar",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+  const handleBannerSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile) return;
+
+    // Create temporary URL for cropping
+    const url = URL.createObjectURL(file);
+    setTempBannerUrl(url);
+    setShowCropDialog(true);
+  };
+  const handleBannerCropApply = async (cropData: {
+    zoom: number;
+    positionX: number;
+    positionY: number;
+  }) => {
+    if (!tempBannerUrl || !profile) return;
+    setUploadingBanner(true);
+    setBannerCropData(cropData);
+    try {
+      // Get the file from the input
+      const file = bannerInputRef.current?.files?.[0];
+      if (!file) throw new Error("No file selected");
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${profile.id}/banner.${fileExt}`;
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
+      if (uploadError) throw uploadError;
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const {
+        error: updateError
+      } = await supabase.from('profiles').update({
+        banner_url: publicUrl
+      }).eq('id', profile.id);
+      if (updateError) throw updateError;
+      setProfile({
+        ...profile,
+        banner_url: publicUrl
+      });
+      toast({
+        title: "Banner updated successfully"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error uploading banner",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingBanner(false);
+      setTempBannerUrl(null);
+    }
+  };
+  const getPlatformIcon = (platform: string) => {
+    const isLightMode = resolvedTheme === "light";
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return isLightMode ? tiktokLogoBlack : tiktokLogo;
+      case "instagram":
+        return isLightMode ? instagramLogoBlack : instagramLogo;
+      case "youtube":
+        return isLightMode ? youtubeLogoBlack : youtubeLogo;
+      default:
+        return null;
+    }
+  };
+  const formatFollowerCount = (count: number | null) => {
+    if (!count) return "0";
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
+  };
+  const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.follower_count || 0), 0);
+  return <div className="space-y-6">
+      {/* Banner with Profile Picture Overlap */}
+      <div className="relative">
+        {/* Banner */}
+        <div className="w-full h-40 md:h-52 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 overflow-hidden relative group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
+          <img src={profile?.banner_url || defaultProfileBanner} alt="Profile banner" className="w-full h-full object-cover" />
+          
+          {/* Upload overlay */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="flex items-center gap-2 text-white text-sm font-medium">
+              {uploadingBanner ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <>
+                  <Camera className="h-4 w-4" />
+                  <span>Change Banner</span>
+                </>}
+            </div>
+          </div>
+        </div>
+        
+        <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerSelect} />
+
+        {/* Profile Picture - overlapping banner */}
+        <div className="absolute -bottom-10 left-6 group cursor-pointer z-[5]" onClick={e => {
+        e.stopPropagation();
+        avatarInputRef.current?.click();
+      }}>
+          <Avatar className="w-24 h-24 md:w-28 md:h-28 rounded-2xl border-4 border-background shadow-xl">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username} className="rounded-2xl" />
+            <AvatarFallback className="text-white text-2xl font-bold rounded-2xl" style={{
+            backgroundColor: '#143fd4'
+          }}>
+              {profile?.full_name?.charAt(0).toUpperCase() || profile?.username?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          
+          {/* Upload overlay */}
+          <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            {uploadingAvatar ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <Camera className="h-5 w-5 text-white" />}
+          </div>
+          
+          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        </div>
+      </div>
+
+      {/* Profile Card Section */}
+      <div className="flex flex-col md:flex-row gap-6 pt-8">
+        {/* Left: Info (avatar is now overlapping banner above) */}
+        <div className="flex items-start gap-4 flex-1 pl-2 md:pl-[0px] px-0">
+          {/* Name + Edit */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
+                {profile?.full_name || profile?.username || "Username"}
+              </h2>
+              <span className="text-muted-foreground text-sm">
+                @{profile?.username || "username"}
+              </span>
+              {profile && <div className="relative flex items-center gap-1 cursor-pointer group" onMouseEnter={() => setIsRankHovered(true)} onMouseLeave={() => setIsRankHovered(false)} onClick={() => setShowRankInfo(true)}>
+                  <RankBadge rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} size="sm" />
+                </div>}
+              <div className="flex-1" />
+              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-black hover:opacity-90 border-0 border-t border-t-[#fbe0aa]" style={{
+              backgroundColor: '#f5ca6e'
+            }} onClick={() => setShowEditProfileDialog(true)}>
+                Edit Profile
+              </Button>
+            </div>
+            
+            {/* Bio */}
+            {profile?.bio && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                {profile.bio}
+              </p>}
+
+            {/* XP Progress Bar */}
+            {profile && <div className="mt-3">
+                <XPProgressBar currentXP={profile.current_xp || 0} xpForCurrentLevel={levelThresholds.xpForCurrentLevel} xpForNextLevel={levelThresholds.xpForNextLevel} rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} />
+              </div>}
+          </div>
+        </div>
+
+        {/* Right: Stats Cards */}
+        
+      </div>
+
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
+      
+      <RankInfoDialog open={showRankInfo} onOpenChange={setShowRankInfo} currentRank={profile?.current_rank || 'Bronze'} currentLevel={profile?.current_level || 1} />
+      
+      <EditProfileDialog
+        open={showEditProfileDialog}
+        onOpenChange={setShowEditProfileDialog}
+        profile={profile ? {
+          id: profile.id,
+          full_name: profile.full_name,
+          bio: profile.bio,
+          city: profile.city,
+          country: profile.country,
+          content_styles: profile.content_styles,
+          content_languages: profile.content_languages,
+          show_total_earned: profile.show_total_earned,
+          show_location: profile.show_location,
+          show_joined_campaigns: profile.show_joined_campaigns
+        } : null}
+        onSuccess={fetchProfile}
+      />
+      
+      {tempBannerUrl && <BannerCropDialog open={showCropDialog} onOpenChange={open => {
+      setShowCropDialog(open);
+      if (!open) {
+        URL.revokeObjectURL(tempBannerUrl);
+        setTempBannerUrl(null);
+      }
+    }} imageUrl={tempBannerUrl} onApply={handleBannerCropApply} />}
+    </div>;
+}

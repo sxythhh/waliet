@@ -1,0 +1,794 @@
+import { useEffect, useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
+import { CampaignWizard, CampaignType, WizardMode } from "@/components/brand/CampaignWizard";
+import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
+import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
+import { BrandUpgradeCTA } from "@/components/brand/BrandUpgradeCTA";
+import { CampaignGridCard } from "@/components/brand/CampaignGridCard";
+import { ShareCampaignDialog } from "@/components/brand/ShareCampaignDialog";
+import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
+import { CreateJobPostDialog } from "@/components/brand/CreateJobPostDialog";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import { Icon } from "@iconify/react";
+import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
+import { BrandOnboardingSteps } from "@/components/brand/BrandOnboardingSteps";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useDemoData } from "@/components/tour/DemoDataProvider";
+type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
+interface Campaign {
+  id: string;
+  title: string;
+  description: string | null;
+  budget: number;
+  budget_used: number;
+  rpm_rate: number;
+  status: string;
+  banner_url: string | null;
+  slug: string;
+  created_at: string;
+  guidelines: string | null;
+  allowed_platforms: string[] | null;
+  application_questions: any[];
+}
+interface CampaignMember {
+  id: string;
+  avatar_url?: string | null;
+  display_name?: string;
+  full_name?: string | null;
+  username?: string | null;
+}
+interface BountyCampaign {
+  id: string;
+  title: string;
+  description: string | null;
+  monthly_retainer: number;
+  videos_per_month: number;
+  content_style_requirements: string;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
+  start_date: string | null;
+  end_date: string | null;
+  banner_url: string | null;
+  status: string;
+  created_at: string;
+  budget: number | null;
+  budget_used: number | null;
+  slug: string | null;
+}
+interface BrandCampaignsTabProps {
+  brandId: string;
+  brandName: string;
+  brandSlug: string;
+}
+export function BrandCampaignsTab({
+  brandId,
+  brandName,
+  brandSlug,
+}: BrandCampaignsTabProps) {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { isDemoMode, demoCampaigns, demoBoosts } = useDemoData();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [bounties, setBounties] = useState<BountyCampaign[]>([]);
+  const [campaignMembers, setCampaignMembers] = useState<Record<string, CampaignMember[]>>({});
+  const [bountyMembers, setBountyMembers] = useState<Record<string, CampaignMember[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
+  const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardMode, setWizardMode] = useState<WizardMode>('create');
+  const [wizardType, setWizardType] = useState<CampaignType | undefined>(undefined);
+  const [wizardCampaignId, setWizardCampaignId] = useState<string | undefined>(undefined);
+  const [wizardBoostId, setWizardBoostId] = useState<string | undefined>(undefined);
+  const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
+  const [brandColor, setBrandColor] = useState<string | undefined>(undefined);
+  const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
+  const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+  const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
+  const [createJobPostOpen, setCreateJobPostOpen] = useState(false);
+  const [allocateBudgetOpen, setAllocateBudgetOpen] = useState(false);
+  const [selectedCampaignForFunding, setSelectedCampaignForFunding] = useState<{
+    id: string;
+    type: 'campaign' | 'boost';
+  } | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareData, setShareData] = useState<{ id: string; type: 'campaign' | 'boost'; title: string; slug: string; bannerUrl: string | null } | null>(null);
+  const {
+    isAdmin,
+    loading: adminLoading
+  } = useAdminCheck();
+  const {
+    resolvedTheme
+  } = useTheme();
+
+  // Removed beta gate - brands without subscription can create drafts
+  const showBetaGate = false;
+  const handleBackToCreator = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("workspace", "creator");
+    newParams.delete("tab");
+    setSearchParams(newParams);
+  };
+  useEffect(() => {
+    fetchBrandData();
+  }, [brandId, isDemoMode]);
+  const fetchBrandData = async () => {
+    if (!brandId) return;
+    setLoading(true);
+
+    // In demo mode, use mock data instead of fetching
+    if (isDemoMode) {
+      setCampaigns(demoCampaigns as Campaign[]);
+      setBounties(demoBoosts as BountyCampaign[]);
+      setSubscriptionStatus("active");
+      setSubscriptionPlan("pro");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch brand info for logo, color and subscription status
+      const {
+        data: brandData
+      } = await supabase.from("brands").select("logo_url, brand_color, subscription_status, subscription_plan").eq("id", brandId).single();
+      if (brandData?.logo_url) {
+        setBrandLogoUrl(brandData.logo_url);
+      }
+      if (brandData?.brand_color) {
+        setBrandColor(brandData.brand_color);
+      }
+      setSubscriptionStatus(brandData?.subscription_status || null);
+      setSubscriptionPlan(brandData?.subscription_plan || null);
+
+      // Fetch campaigns
+      const {
+        data: campaignsData,
+        error: campaignsError
+      } = await supabase.from("campaigns").select("*").eq("brand_id", brandId).order("created_at", {
+        ascending: false
+      });
+      if (campaignsError) throw campaignsError;
+
+      // Fetch bounties
+      const {
+        data: bountiesData,
+        error: bountiesError
+      } = await supabase.from("bounty_campaigns").select("*").eq("brand_id", brandId).order("created_at", {
+        ascending: false
+      });
+      if (bountiesError) throw bountiesError;
+
+      // Fetch actual payouts from submission_payout_items
+      const campaignIds = (campaignsData || []).map(c => c.id);
+      const bountyIds = (bountiesData || []).map(b => b.id);
+      const allSourceIds = [...campaignIds, ...bountyIds];
+      let payoutsBySource: Record<string, number> = {};
+      if (allSourceIds.length > 0) {
+        const {
+          data: payoutItems
+        } = await supabase.from("submission_payout_items").select("source_id, amount, status").in("source_id", allSourceIds).in("status", ["approved", "completed", "clearing", "pending"]);
+
+        // Aggregate payouts by source_id
+        (payoutItems || []).forEach((item: any) => {
+          if (!payoutsBySource[item.source_id]) {
+            payoutsBySource[item.source_id] = 0;
+          }
+          payoutsBySource[item.source_id] += item.amount;
+        });
+      }
+
+      // Parse application_questions from JSON to array and add actual budget_used
+      const parsedCampaigns = (campaignsData || []).map(campaign => ({
+        ...campaign,
+        application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions : [],
+        budget_used: payoutsBySource[campaign.id] || campaign.budget_used || 0
+      })) as Campaign[];
+      setCampaigns(parsedCampaigns);
+
+      // Update bounties with actual payouts
+      const parsedBounties = (bountiesData || []).map(bounty => ({
+        ...bounty,
+        budget_used: payoutsBySource[bounty.id] || bounty.budget_used || 0
+      })) as BountyCampaign[];
+      setBounties(parsedBounties);
+
+      // Fetch pending applications count for campaigns
+      let totalPending = 0;
+
+      // Fetch campaign members (approved submissions with profile data)
+      if (campaignIds.length > 0) {
+        const {
+          data: campaignSubmissions
+        } = await supabase.from("campaign_submissions").select("campaign_id, creator_id, profiles:creator_id(id, avatar_url, full_name, username)").in("campaign_id", campaignIds).eq("status", "approved");
+
+        // Group members by campaign_id
+        const membersByCampaign: Record<string, CampaignMember[]> = {};
+        (campaignSubmissions || []).forEach((sub: any) => {
+          if (!membersByCampaign[sub.campaign_id]) {
+            membersByCampaign[sub.campaign_id] = [];
+          }
+          if (sub.profiles) {
+            membersByCampaign[sub.campaign_id].push({
+              id: sub.profiles.id,
+              avatar_url: sub.profiles.avatar_url,
+              display_name: sub.profiles.full_name || sub.profiles.username || ''
+            });
+          }
+        });
+        setCampaignMembers(membersByCampaign);
+      }
+
+      // Fetch bounty members (approved applications with profile data)
+      if (bountyIds.length > 0) {
+        const {
+          data: bountyApps
+        } = await supabase.from("bounty_applications").select("bounty_campaign_id, user_id, profiles:user_id(id, avatar_url, full_name, username)").in("bounty_campaign_id", bountyIds).eq("status", "approved");
+
+        // Group members by bounty_campaign_id
+        const membersByBounty: Record<string, CampaignMember[]> = {};
+        (bountyApps || []).forEach((app: any) => {
+          if (!membersByBounty[app.bounty_campaign_id]) {
+            membersByBounty[app.bounty_campaign_id] = [];
+          }
+          if (app.profiles) {
+            membersByBounty[app.bounty_campaign_id].push({
+              id: app.profiles.id,
+              avatar_url: app.profiles.avatar_url,
+              display_name: app.profiles.full_name || app.profiles.username || ''
+            });
+          }
+        });
+        setBountyMembers(membersByBounty);
+      }
+
+      // Count pending campaign submissions
+      if (campaignIds.length > 0) {
+        const {
+          count: campaignPending
+        } = await supabase.from("campaign_submissions").select("*", {
+          count: "exact",
+          head: true
+        }).in("campaign_id", campaignIds).eq("status", "pending");
+        totalPending += campaignPending || 0;
+      }
+
+      // Count pending bounty applications
+      if (bountyIds.length > 0) {
+        const {
+          count: bountyPending
+        } = await supabase.from("bounty_applications").select("*", {
+          count: "exact",
+          head: true
+        }).in("bounty_campaign_id", bountyIds).eq("status", "pending");
+        totalPending += bountyPending || 0;
+      }
+      setPendingApplicationsCount(totalPending);
+    } catch (error) {
+      console.error("Error fetching brand data:", error);
+      toast.error("Failed to load brand data");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleDeleteClick = (campaign: Campaign) => {
+    setCampaignToDelete(campaign);
+    setDeleteDialogOpen(true);
+  };
+  const handleDeleteBountyClick = (bounty: BountyCampaign) => {
+    setBountyToDelete(bounty);
+    setDeleteDialogOpen(true);
+  };
+  const handleDeleteConfirm = async () => {
+    if (campaignToDelete) {
+      try {
+        const {
+          error
+        } = await supabase.from("campaigns").delete().eq("id", campaignToDelete.id);
+        if (error) throw error;
+        toast.success("Campaign deleted");
+        fetchBrandData();
+      } catch (error) {
+        toast.error("Failed to delete campaign");
+      } finally {
+        setDeleteDialogOpen(false);
+        setCampaignToDelete(null);
+        setDeleteConfirmInput("");
+      }
+    } else if (bountyToDelete) {
+      try {
+        const {
+          error
+        } = await supabase.from("bounty_campaigns").delete().eq("id", bountyToDelete.id);
+        if (error) throw error;
+        toast.success("Boost deleted");
+        fetchBrandData();
+      } catch (error) {
+        toast.error("Failed to delete boost");
+      } finally {
+        setDeleteDialogOpen(false);
+        setBountyToDelete(null);
+        setDeleteConfirmInput("");
+      }
+    }
+  };
+  const handleCampaignClick = (campaign: Campaign) => {
+    // Navigate to analytics tab for this campaign
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "analytics");
+    newParams.set("campaign", campaign.id);
+    setSearchParams(newParams);
+  };
+
+  const handleDuplicateCampaign = async (campaign: Campaign) => {
+    try {
+      const { data: clonedCampaign, error } = await supabase
+        .from('campaigns')
+        .insert({
+          title: `${campaign.title} (Copy)`,
+          description: campaign.description,
+          brand_id: brandId,
+          rpm_rate: campaign.rpm_rate,
+          banner_url: campaign.banner_url,
+          allowed_platforms: campaign.allowed_platforms,
+          status: 'draft',
+          budget: 0,
+          budget_used: 0
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      toast.success('Campaign duplicated as draft');
+      fetchBrandData();
+    } catch (error) {
+      toast.error('Failed to duplicate campaign');
+    }
+  };
+
+  const handleDuplicateBounty = async (bounty: BountyCampaign) => {
+    try {
+      const { data: clonedBoost, error: cloneError } = await supabase
+        .from('bounty_campaigns')
+        .insert({
+          title: `${bounty.title} (Copy)`,
+          description: bounty.description,
+          brand_id: brandId,
+          monthly_retainer: bounty.monthly_retainer,
+          videos_per_month: bounty.videos_per_month,
+          content_style_requirements: bounty.content_style_requirements,
+          max_accepted_creators: bounty.max_accepted_creators,
+          content_distribution: bounty.content_distribution,
+          position_type: bounty.position_type,
+          availability_requirement: bounty.availability_requirement,
+          work_location: bounty.work_location,
+          banner_url: bounty.banner_url,
+          blueprint_id: bounty.blueprint_id,
+          blueprint_embed_url: bounty.blueprint_embed_url,
+          is_private: bounty.is_private,
+          tags: bounty.tags,
+          application_questions: bounty.application_questions,
+          discord_guild_id: bounty.discord_guild_id,
+          discord_role_id: bounty.discord_role_id,
+          shortimize_collection_name: bounty.shortimize_collection_name,
+          view_bonuses_enabled: bounty.view_bonuses_enabled,
+          status: 'draft',
+          budget: 0,
+          budget_used: 0,
+          accepted_creators_count: 0
+        })
+        .select()
+        .single();
+
+      if (cloneError) throw cloneError;
+
+      // Copy view bonuses if enabled
+      if (bounty.view_bonuses_enabled && clonedBoost) {
+        const { data: bonuses } = await supabase
+          .from('boost_view_bonuses')
+          .select('*')
+          .eq('bounty_campaign_id', bounty.id);
+
+        if (bonuses && bonuses.length > 0) {
+          await supabase
+            .from('boost_view_bonuses')
+            .insert(
+              bonuses.map(b => ({
+                bounty_campaign_id: clonedBoost.id,
+                bonus_type: b.bonus_type,
+                view_threshold: b.view_threshold,
+                bonus_amount: b.bonus_amount,
+                min_views: b.min_views,
+                cpm_rate: b.cpm_rate,
+                is_active: b.is_active
+              }))
+            );
+        }
+      }
+
+      toast.success('Boost duplicated as draft');
+      fetchBrandData();
+    } catch (error) {
+      toast.error('Failed to duplicate boost');
+    }
+  };
+
+  const handlePauseBounty = async (bounty: BountyCampaign) => {
+    const newStatus = bounty.status === 'paused' ? 'active' : 'paused';
+
+    try {
+      // Handle pausing - auto-waitlist pending applications
+      if (newStatus === 'paused') {
+        await supabase
+          .from('bounty_applications')
+          .update({
+            status: 'waitlisted',
+            auto_waitlisted_from_pause: true
+          })
+          .eq('bounty_campaign_id', bounty.id)
+          .eq('status', 'pending');
+      }
+
+      // Handle resuming - restore auto-waitlisted applications
+      if (newStatus === 'active') {
+        await supabase
+          .from('bounty_applications')
+          .update({
+            status: 'pending',
+            auto_waitlisted_from_pause: false
+          })
+          .eq('bounty_campaign_id', bounty.id)
+          .eq('auto_waitlisted_from_pause', true);
+      }
+
+      const { error } = await supabase
+        .from('bounty_campaigns')
+        .update({ status: newStatus })
+        .eq('id', bounty.id);
+
+      if (error) throw error;
+      toast.success(newStatus === 'paused' ? 'Boost paused' : 'Boost resumed');
+      fetchBrandData();
+    } catch (error) {
+      toast.error('Failed to update boost status');
+    }
+  };
+  if (loading) {
+    return (
+      <div className="space-y-6 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-300">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="h-7 w-40 bg-muted/30 rounded-lg animate-pulse" />
+          <div className="flex items-center gap-3 flex-1 justify-end">
+            <div className="h-9 w-full max-w-md bg-muted/30 rounded-lg animate-pulse" />
+            <div className="h-8 w-36 bg-muted/30 rounded-lg animate-pulse shrink-0" />
+          </div>
+        </div>
+
+        {/* Campaign Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="rounded-xl overflow-hidden bg-card border border-border/50">
+              <div className="h-28 bg-muted/30 animate-pulse" />
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-32 bg-muted/30 rounded animate-pulse" />
+                  <div className="flex gap-1.5">
+                    <div className="h-6 w-16 bg-muted/30 rounded-full animate-pulse" />
+                    <div className="h-6 w-20 bg-muted/30 rounded-full animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-4 w-24 bg-muted/30 rounded animate-pulse" />
+                <div className="h-1 w-full bg-muted/30 rounded-full animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0) + bounties.reduce((sum, b) => sum + Number(b.budget || 0), 0);
+  const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0) + bounties.reduce((sum, b) => sum + Number(b.budget_used || 0), 0);
+  const activeCampaigns = campaigns.filter(c => c.status === "active").length;
+  return <div className={`relative ${selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}`}>
+      {/* Beta Gate Overlay for non-admin users with inactive subscription */}
+      {showBetaGate && <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-background/80">
+          <div className="text-center space-y-6 max-w-md mx-auto px-6">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+              <img src="/beta-shield-icon.svg" alt="Beta" className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold font-inter tracking-[-0.5px] text-foreground">
+                This Feature is still in BETA
+              </h2>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">
+                Come back soon.
+              </p>
+            </div>
+            <Button onClick={handleBackToCreator} className="px-6">
+              Back to Creator Dashboard
+            </Button>
+          </div>
+        </div>}
+
+      {selectedBoostId ? <BrandCampaignDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
+          {/* Header */}
+          <div className="flex flex-row items-center justify-between gap-4">
+            <h1 className="text-xl font-semibold font-inter tracking-[-0.5px] text-foreground whitespace-nowrap">
+              Your Campaigns
+            </h1>
+            <div className="flex items-center gap-2">
+              <GlobalBrandSearch brandId={brandId} />
+              <Button
+                data-tour-target="create-campaign-btn"
+                onClick={() => setCampaignTypeDialogOpen(true)}
+                size="sm"
+                className="gap-2 h-8 text-black border-t border-t-[#fbe0aa] font-inter font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-primary px-3 hover:bg-primary/90 shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create Campaign</span>
+                <span className="sm:hidden">Create</span>
+              </Button>
+            </div>
+            <CreateCampaignTypeDialog brandId={brandId} subscriptionPlan={subscriptionPlan} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
+          setWizardMode('create');
+          setWizardType('cpm');
+          setWizardCampaignId(undefined);
+          setWizardBoostId(undefined);
+          setWizardOpen(true);
+        }} onSelectManaged={() => {
+          setWizardMode('create');
+          setWizardType('boost');
+          setWizardCampaignId(undefined);
+          setWizardBoostId(undefined);
+          setWizardOpen(true);
+        }} onSelectBoost={() => {
+          setWizardMode('create');
+          setWizardType('boost');
+          setWizardCampaignId(undefined);
+          setWizardBoostId(undefined);
+          setWizardOpen(true);
+        }} onSelectJobPost={() => {
+          setCreateJobPostOpen(true);
+        }} />
+          </div>
+
+          {/* Pick Plan Embed - Show when subscription is not active and in dark mode */}
+          {subscriptionStatus !== "active" && resolvedTheme === "dark" && (
+            <div className="mt-4">
+              <iframe
+                src="https://join.virality.gg/pickplan-4"
+                className="w-full h-[450px] sm:h-[250px] border-0 rounded-2xl"
+                title="Pick a Plan"
+              />
+            </div>
+          )}
+
+          {/* Combined Campaigns & Boosts Grid */}
+          {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-4 mt-6">
+              {/* Status filter tabs */}
+              <div className="flex items-center gap-0 border-b border-border">
+                {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-4 py-2.5 text-sm font-medium font-inter tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                    {filter}
+                  </button>)}
+              </div>
+
+              {/* Campaign grid */}
+              <div data-tour-target="campaigns-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Combined and sorted list */}
+                {[...campaigns.filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
+            ...c,
+            type: "campaign" as const
+          })), ...bounties.filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
+            ...b,
+            type: "boost" as const
+          }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((item, index) => {
+            if (item.type === "campaign") {
+              const campaign = item as Campaign & {
+                type: "campaign";
+              };
+              return <CampaignGridCard
+                key={`campaign-${campaign.id}`}
+                id={campaign.id}
+                title={campaign.title}
+                type="campaign"
+                bannerUrl={campaign.banner_url}
+                brandColor={brandColor || null}
+                budget={Number(campaign.budget)}
+                budgetUsed={Number(campaign.budget_used || 0)}
+                status={campaign.status}
+                slug={campaign.slug}
+                members={campaignMembers[campaign.id] || []}
+                dataTourTarget={index === 0 ? "campaign-card" : undefined}
+                onClick={() => handleCampaignClick(campaign)}
+                onEdit={() => {
+                  setWizardMode('edit');
+                  setWizardType('cpm');
+                  setWizardCampaignId(campaign.id);
+                  setWizardBoostId(undefined);
+                  setWizardOpen(true);
+                }}
+                onDuplicate={() => handleDuplicateCampaign(campaign)}
+                onDelete={() => handleDeleteClick(campaign)}
+                onTopUp={() => {
+                  setSelectedCampaignForFunding({
+                    id: campaign.id,
+                    type: 'campaign'
+                  });
+                  setAllocateBudgetOpen(true);
+                }}
+                onShare={() => {
+                  setShareData({ id: campaign.id, type: 'campaign', title: campaign.title, slug: campaign.slug, bannerUrl: campaign.banner_url });
+                  setShareDialogOpen(true);
+                }}
+                onPreview={campaign.slug ? () => window.open(`/campaign/${campaign.slug}`, '_blank') : undefined}
+              />;
+            } else {
+              const bounty = item as BountyCampaign & {
+                type: "boost";
+              };
+              return <CampaignGridCard
+                key={`boost-${bounty.id}`}
+                id={bounty.id}
+                title={bounty.title}
+                type="boost"
+                bannerUrl={bounty.banner_url}
+                brandColor={brandColor || null}
+                budget={Number(bounty.budget || 0)}
+                budgetUsed={Number(bounty.budget_used || 0)}
+                status={bounty.status}
+                slug={bounty.slug || undefined}
+                members={bountyMembers[bounty.id] || []}
+                dataTourTarget={index === 0 ? "campaign-card" : undefined}
+                onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)}
+                onEdit={() => {
+                  setWizardMode('edit');
+                  setWizardType('boost');
+                  setWizardCampaignId(undefined);
+                  setWizardBoostId(bounty.id);
+                  setWizardOpen(true);
+                }}
+                onDuplicate={() => handleDuplicateBounty(bounty)}
+                onPause={bounty.status !== 'ended' && bounty.status !== 'draft' ? () => handlePauseBounty(bounty) : undefined}
+                onDelete={() => handleDeleteBountyClick(bounty)}
+                onTopUp={() => {
+                  setSelectedCampaignForFunding({
+                    id: bounty.id,
+                    type: 'boost'
+                  });
+                  setAllocateBudgetOpen(true);
+                }}
+                onShare={bounty.slug ? () => {
+                  setShareData({ id: bounty.id, type: 'boost', title: bounty.title, slug: bounty.slug!, bannerUrl: bounty.banner_url });
+                  setShareDialogOpen(true);
+                } : undefined}
+                onPreview={bounty.slug ? () => window.open(`/campaign/${bounty.slug}`, '_blank') : undefined}
+              />;
+            }
+          })}
+              </div>
+            </div>}
+
+          {/* Empty State - Onboarding */}
+          {campaigns.length === 0 && bounties.length === 0 && (
+            <BrandOnboardingSteps
+              onLaunchOpportunity={() => setCampaignTypeDialogOpen(true)}
+              className="mt-4"
+            />
+          )}
+        </>}
+
+
+      {/* Unified Campaign Wizard */}
+      <CampaignWizard
+        open={wizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) {
+            setWizardCampaignId(undefined);
+            setWizardBoostId(undefined);
+            setWizardType(undefined);
+          }
+        }}
+        brandId={brandId}
+        brandName={brandName}
+        brandLogoUrl={brandLogoUrl}
+        subscriptionPlan={subscriptionPlan}
+        onSuccess={fetchBrandData}
+        mode={wizardMode}
+        campaignId={wizardCampaignId}
+        boostId={wizardBoostId}
+        initialType={wizardType}
+      />
+
+      {/* Create Job Post Dialog */}
+      <CreateJobPostDialog open={createJobPostOpen} onOpenChange={setCreateJobPostOpen} brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
+        setDeleteDialogOpen(open);
+        if (!open) setDeleteConfirmInput("");
+      }}>
+        <DialogContent className="sm:max-w-[440px] p-0 gap-0 overflow-hidden [&>button]:text-muted-foreground [&>button]:hover:text-foreground">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-lg font-semibold font-inter tracking-[-0.5px]">
+              Delete {campaignToDelete ? 'Campaign' : 'Boost'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-6 space-y-5">
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
+              <p className="text-sm text-red-600 dark:text-red-400 font-inter tracking-[-0.3px] leading-relaxed">
+                This action cannot be undone. This will permanently delete <strong>{campaignToDelete?.title || bountyToDelete?.title}</strong> and remove all associated data.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-foreground font-inter tracking-[-0.3px]">
+                Type <span className="font-semibold">DELETE</span> to confirm:
+              </label>
+              <Input
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                className="h-11 bg-muted/30 border border-border/80 dark:border-border font-inter tracking-[-0.3px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={handleDeleteConfirm}
+                disabled={deleteConfirmInput.toUpperCase() !== "DELETE"}
+                className="h-10 px-5 font-inter tracking-[-0.5px] bg-red-600 hover:bg-red-700 text-white border-t border-red-400 rounded-lg disabled:opacity-40"
+              >
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscription Gate Dialog */}
+      <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
+
+      {/* Allocate Budget Dialog */}
+      <AllocateBudgetDialog open={allocateBudgetOpen} onOpenChange={open => {
+      setAllocateBudgetOpen(open);
+      if (!open) setSelectedCampaignForFunding(null);
+    }} brandId={brandId} onSuccess={fetchBrandData} preselectedCampaignId={selectedCampaignForFunding?.id} preselectedType={selectedCampaignForFunding?.type} />
+
+      {/* Share Dialog */}
+      {shareData && (
+        <ShareCampaignDialog
+          open={shareDialogOpen}
+          onOpenChange={(open) => {
+            setShareDialogOpen(open);
+            if (!open) setShareData(null);
+          }}
+          title={shareData.title}
+          type={shareData.type}
+          bannerUrl={shareData.bannerUrl}
+          brandColor={brandColor || null}
+          brandSlug={brandSlug}
+          slug={shareData.slug}
+          id={shareData.id}
+          onSlugUpdate={(newSlug) => {
+            setShareData({ ...shareData, slug: newSlug });
+            fetchBrandData();
+          }}
+        />
+      )}
+    </div>;
+}
