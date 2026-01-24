@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     verifier_length: verifier.length,
     verifier_first10: verifier.substring(0, 10),
     challenge_length: challenge.length,
+    challenge_first10: challenge.substring(0, 10),
     redirect_uri: redirectUri,
     client_id: clientId,
   });

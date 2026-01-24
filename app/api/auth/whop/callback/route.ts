@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Bearer ${process.env.WHOP_API_KEY}`,
+        "Authorization": `Bearer ${process.env.WHOP_CLIENT_SECRET}`,
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
