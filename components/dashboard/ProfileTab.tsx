@@ -48,7 +48,6 @@ import { TransactionsTable, Transaction as TransactionType } from "@/components/
 import { DashboardProfileHeader } from "@/components/dashboard/DashboardProfileHeader";
 import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
 import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviewsSection";
-import { PortfolioBuilder } from "@/components/portfolio/builder";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
@@ -1903,13 +1902,6 @@ export function ProfileTab() {
       {onboardingProfile?.id && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
           <CreatorMilestonesCard userId={onboardingProfile.id} />
-        </div>
-      )}
-
-      {/* Portfolio Builder Section - Hidden for now */}
-      {false && onboardingProfile && (
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-4">
-          <PortfolioBuilder />
         </div>
       )}
 

@@ -47,7 +47,6 @@ import { TransactionsTable, Transaction as TransactionType } from "@/components/
 import { DashboardProfileHeader } from "@/components/dashboard/DashboardProfileHeader";
 import { DashboardHistorySection } from "@/components/dashboard/DashboardHistorySection";
 import { DashboardReviewsSection } from "@/components/dashboard/DashboardReviewsSection";
-import { PortfolioBuilder } from "@/components/portfolio/builder";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { EditingToolsDialog, EDITING_TOOLS } from "@/components/EditingToolsDialog";
