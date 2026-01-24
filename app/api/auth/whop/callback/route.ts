@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -46,23 +47,31 @@ export async function GET(request: Request) {
   try {
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`;
 
+    // Compute what the challenge SHOULD be for this verifier
+    const expectedChallenge = crypto
+      .createHash("sha256")
+      .update(codeVerifier)
+      .digest("base64url");
+
     console.log("Token exchange request:", {
       code: code?.substring(0, 20) + "...",
       redirect_uri: redirectUri,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
-      client_secret_present: !!process.env.WHOP_CLIENT_SECRET,
-      client_secret_first5: process.env.WHOP_CLIENT_SECRET?.substring(0, 5),
+      api_key_first10: process.env.WHOP_API_KEY?.substring(0, 10),
       code_verifier_length: codeVerifier.length,
       code_verifier_first10: codeVerifier.substring(0, 10),
+      expected_challenge_first10: expectedChallenge.substring(0, 10),
     });
 
-    // Exchange code for access token - confidential client per docs
-    // Uses Authorization header, NO client_id in body
+    // Try BOTH approaches and see which one gives a different error
+    console.log("Trying token exchange with API key:", process.env.WHOP_API_KEY?.substring(0, 10));
+
+    // Try with WHOP_API_KEY in Authorization header (per docs)
     const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Bearer ${process.env.WHOP_CLIENT_SECRET}`,
+        "Authorization": `Bearer ${process.env.WHOP_API_KEY}`,
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
