@@ -57,23 +57,19 @@ export async function GET(request: Request) {
       code_verifier_first10: codeVerifier.substring(0, 10),
     });
 
-    // Exchange code for access token (with PKCE)
-    // Use Authorization header for confidential clients per Whop docs
-    const tokenBody = new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: redirectUri,
-      client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
-      code_verifier: codeVerifier,
-    });
-
+    // Exchange code for access token (with PKCE) - matching docs exactly
     const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Bearer ${process.env.WHOP_CLIENT_SECRET}`,
       },
-      body: tokenBody.toString(),
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: redirectUri,
+        client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
+        code_verifier: codeVerifier,
+      }).toString(),
     });
 
     if (!tokenResponse.ok) {
