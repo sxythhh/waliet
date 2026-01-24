@@ -1,24 +1,34 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
-// Generate PKCE code verifier and challenge
+/**
+ * Generate PKCE code verifier and challenge per RFC 7636
+ * - verifier: 32 random bytes, base64url encoded (43 chars)
+ * - challenge: SHA256(verifier), base64url encoded (43 chars)
+ */
 function generatePKCE() {
-  // Generate random code verifier (43-128 characters)
   const verifier = crypto.randomBytes(32).toString("base64url");
-
-  // Generate code challenge (SHA256 hash of verifier, base64url encoded)
   const challenge = crypto
     .createHash("sha256")
     .update(verifier)
     .digest("base64url");
-
   return { verifier, challenge };
 }
 
-// Initiate Whop OAuth flow
+/**
+ * Generate a random nonce for OpenID Connect
+ */
+function generateNonce() {
+  return crypto.randomBytes(16).toString("base64url");
+}
+
+/**
+ * Initiate Whop OAuth flow
+ * Redirects user to Whop authorization page
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const returnUrl = searchParams.get("return_url");
+  const returnUrl = searchParams.get("return_url") || "/browse";
 
   const clientId = process.env.NEXT_PUBLIC_WHOP_APP_ID;
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`;
@@ -30,31 +40,39 @@ export async function GET(request: Request) {
   // Generate PKCE values
   const { verifier, challenge } = generatePKCE();
 
-  // Store verifier AND return_url in state parameter (more reliable than cookie)
-  // Use URL-safe base64 encoding to avoid corruption
+  // Generate nonce for OpenID Connect (required when using openid scope)
+  const nonce = generateNonce();
+
+  // Generate state for CSRF protection
+  const stateValue = crypto.randomBytes(16).toString("base64url");
+
+  // Build state object with all values we need to recover in callback
   const stateData = {
-    return_url: returnUrl || "/browse",
-    code_verifier: verifier,
+    s: stateValue,        // CSRF state
+    v: verifier,          // PKCE verifier
+    n: nonce,             // OpenID nonce
+    r: returnUrl,         // Return URL
   };
   const state = Buffer.from(JSON.stringify(stateData)).toString("base64url");
 
-  console.log("[Whop OAuth Init] PKCE generated:", {
-    verifier_length: verifier.length,
-    verifier_first10: verifier.substring(0, 10),
-    challenge_first10: challenge.substring(0, 10),
-    redirect_uri: redirectUri,
-    client_id: clientId,
-  });
-
-  // Redirect to Whop OAuth authorization page
-  const authUrl = new URL("https://whop.com/oauth");
+  // Build authorization URL per Whop docs
+  // Endpoint: https://api.whop.com/oauth/authorize
+  const authUrl = new URL("https://api.whop.com/oauth/authorize");
+  authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("scope", "openid profile email");
+  authUrl.searchParams.set("state", state);
   authUrl.searchParams.set("code_challenge", challenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
-  authUrl.searchParams.set("state", state);
+  authUrl.searchParams.set("nonce", nonce);
+
+  console.log("[Whop OAuth] Starting auth flow:", {
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    verifier_first10: verifier.substring(0, 10),
+    challenge_first10: challenge.substring(0, 10),
+  });
 
   return NextResponse.redirect(authUrl.toString());
 }

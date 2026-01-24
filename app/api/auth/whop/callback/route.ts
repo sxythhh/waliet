@@ -1,105 +1,101 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
 
+/**
+ * Whop OAuth callback handler
+ * Exchanges authorization code for tokens and creates/updates user
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
   const state = searchParams.get("state");
 
-  // Parse state parameter to get return_url AND code_verifier
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  // Parse state to recover verifier and return URL
   let returnUrl = "/browse";
   let codeVerifier: string | null = null;
 
   if (state) {
     try {
-      // Decode URL-safe base64
       const stateData = JSON.parse(Buffer.from(state, "base64url").toString());
-      returnUrl = stateData.return_url || returnUrl;
-      codeVerifier = stateData.code_verifier || null;
+      returnUrl = stateData.r || "/browse";
+      codeVerifier = stateData.v || null;
     } catch (e) {
-      console.error("Failed to parse state parameter:", e);
+      console.error("[Whop OAuth] Failed to parse state:", e);
+      return NextResponse.redirect(`${baseUrl}/login?error=invalid_state`);
     }
   }
 
+  // Handle OAuth errors
   if (error) {
-    const errorReturnUrl = returnUrl.includes("?") ? returnUrl : `${process.env.NEXT_PUBLIC_APP_URL}/login`;
-    return NextResponse.redirect(
-      `${errorReturnUrl}?error=${encodeURIComponent(error)}`
-    );
+    console.error("[Whop OAuth] Authorization error:", error);
+    return NextResponse.redirect(`${baseUrl}/login?error=${encodeURIComponent(error)}`);
   }
 
+  // Validate required params
   if (!code) {
-    const errorReturnUrl = returnUrl.includes("?") ? returnUrl : `${process.env.NEXT_PUBLIC_APP_URL}/login`;
-    return NextResponse.redirect(
-      `${errorReturnUrl}?error=no_code`
-    );
+    console.error("[Whop OAuth] Missing authorization code");
+    return NextResponse.redirect(`${baseUrl}/login?error=missing_code`);
   }
 
   if (!codeVerifier) {
-    console.error("Missing code_verifier cookie");
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login?error=missing_code_verifier`
-    );
+    console.error("[Whop OAuth] Missing code verifier from state");
+    return NextResponse.redirect(`${baseUrl}/login?error=missing_verifier`);
   }
 
   try {
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`;
+    const redirectUri = `${baseUrl}/api/auth/whop/callback`;
+    const clientId = process.env.NEXT_PUBLIC_WHOP_APP_ID!;
+    const apiKey = process.env.WHOP_API_KEY;
 
-    // Compute what the challenge SHOULD be for this verifier
-    const expectedChallenge = crypto
-      .createHash("sha256")
-      .update(codeVerifier)
-      .digest("base64url");
-
-    console.log("Token exchange request:", {
-      code: code?.substring(0, 20) + "...",
+    console.log("[Whop OAuth] Exchanging code for token:", {
       redirect_uri: redirectUri,
-      client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
-      api_key_first10: process.env.WHOP_API_KEY?.substring(0, 10),
-      code_verifier_length: codeVerifier.length,
-      code_verifier_first10: codeVerifier.substring(0, 10),
-      expected_challenge_first10: expectedChallenge.substring(0, 10),
+      client_id: clientId,
+      code_first20: code.substring(0, 20),
+      verifier_first10: codeVerifier.substring(0, 10),
+      has_api_key: !!apiKey,
     });
 
-    // Try BOTH approaches and see which one gives a different error
-    console.log("Trying token exchange with API key:", process.env.WHOP_API_KEY?.substring(0, 10));
+    // Token exchange - use confidential client if API key is available
+    const tokenBody = new URLSearchParams({
+      grant_type: "authorization_code",
+      code: code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+      code_verifier: codeVerifier,
+    });
 
-    // Try with WHOP_API_KEY in Authorization header (per docs)
+    const headers: Record<string, string> = {
+      "Content-Type": "application/x-www-form-urlencoded",
+    };
+
+    // Add Authorization header for confidential clients
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
     const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Bearer ${process.env.WHOP_API_KEY}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code: code,
-        redirect_uri: redirectUri,
-        code_verifier: codeVerifier,
-      }).toString(),
+      headers,
+      body: tokenBody.toString(),
     });
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error("Token exchange failed:", errorData);
-      console.error("Request details:", {
-        client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
-        redirect_uri: redirectUri,
-        app_url: process.env.NEXT_PUBLIC_APP_URL,
-        code_verifier_length: codeVerifier?.length,
-        code_verifier_first10: codeVerifier?.substring(0, 10),
-      });
+      console.error("[Whop OAuth] Token exchange failed:", errorData);
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/login?error=token_exchange_failed&details=${encodeURIComponent(errorData.substring(0, 200))}`
+        `${baseUrl}/login?error=token_exchange_failed&details=${encodeURIComponent(errorData.substring(0, 100))}`
       );
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Get user info from OAuth userinfo endpoint (includes email with email scope)
+    console.log("[Whop OAuth] Token exchange successful");
+
+    // Get user info
     const userResponse = await fetch("https://api.whop.com/oauth/userinfo", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -108,47 +104,34 @@ export async function GET(request: Request) {
 
     if (!userResponse.ok) {
       const errorText = await userResponse.text();
-      console.error("Userinfo fetch failed:", errorText);
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/login?error=user_fetch_failed`
-      );
+      console.error("[Whop OAuth] Userinfo failed:", errorText);
+      return NextResponse.redirect(`${baseUrl}/login?error=userinfo_failed`);
     }
 
     const userData = await userResponse.json();
-    console.log("[Whop OAuth] User data from /oauth/userinfo:", {
+    console.log("[Whop OAuth] User info received:", {
       sub: userData.sub,
       email: userData.email,
       name: userData.name,
+    });
+
+    // Sync user to database
+    const dbUser = await syncWhopUser({
+      whopUserId: userData.sub,
+      email: userData.email,
+      name: userData.name,
       username: userData.preferred_username,
+      avatar: userData.picture,
     });
 
-    // OAuth userinfo returns:
-    // - sub: Whop user ID (user_xxx)
-    // - email: user's email (if email scope granted)
-    // - name: display name
-    // - preferred_username: username
-    // - picture: profile picture URL
-    const whopUserId = userData.sub;
-    const email = userData.email;
-    const name = userData.name;
-    const username = userData.preferred_username;
-    const avatar = userData.picture;
+    // Build redirect response
+    const finalUrl = returnUrl.startsWith("http")
+      ? returnUrl
+      : `${baseUrl}${returnUrl}`;
 
-    // Sync user to database with email-based account linking
-    await syncWhopOAuthUser({
-      whopUserId,
-      email,
-      name,
-      username,
-      avatar,
-    });
+    const response = NextResponse.redirect(finalUrl);
 
-    // Create response with redirect (returnUrl already parsed from state above)
-    const response = NextResponse.redirect(
-      returnUrl.startsWith("http") ? returnUrl : `${process.env.NEXT_PUBLIC_APP_URL}${returnUrl}`
-    );
-
-    // Set the Whop token cookie for authentication
+    // Set auth cookie
     response.cookies.set("whop-dev-user-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -157,28 +140,21 @@ export async function GET(request: Request) {
       path: "/",
     });
 
-    // Clear the logged-out flag since user is explicitly logging in via Whop
+    // Clear logged-out flag
     response.cookies.delete("waliet-logged-out");
 
     return response;
+
   } catch (error) {
-    console.error("Whop OAuth error:", error);
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/login?error=oauth_error`
-    );
+    console.error("[Whop OAuth] Unexpected error:", error);
+    return NextResponse.redirect(`${baseUrl}/login?error=oauth_error`);
   }
 }
 
 /**
- * Sync Whop OAuth user to database with email-based account linking
- *
- * Strategy:
- * 1. Check if user exists by whopUserId (already linked)
- * 2. If not, check if user exists by email (Supabase account)
- * 3. If email match found, link Whop ID to existing account
- * 4. If no match, create new user
+ * Sync Whop user to database with email-based account linking
  */
-async function syncWhopOAuthUser(data: {
+async function syncWhopUser(data: {
   whopUserId: string;
   email: string | null;
   name: string | null;
@@ -187,95 +163,44 @@ async function syncWhopOAuthUser(data: {
 }) {
   const { whopUserId, email, name, username, avatar } = data;
 
-  // First, check if user already exists by Whop ID
-  const existingWhopUser = await prisma.user.findUnique({
+  // Check if user exists by Whop ID
+  const existingUser = await prisma.user.findUnique({
     where: { whopUserId },
     include: { sellerProfile: true },
   });
 
-  if (existingWhopUser) {
-    // User already linked, just update profile info
-    console.log("[Whop OAuth] User already exists with Whop ID:", whopUserId);
-    await prisma.user.update({
-      where: { id: existingWhopUser.id },
+  if (existingUser) {
+    // Update existing user
+    return prisma.user.update({
+      where: { id: existingUser.id },
       data: {
-        name: name || existingWhopUser.name,
-        avatar: avatar || existingWhopUser.avatar,
-        email: email || existingWhopUser.email,
+        name: name || existingUser.name,
+        avatar: avatar || existingUser.avatar,
+        email: email || existingUser.email,
       },
     });
-    return existingWhopUser;
   }
 
-  // User doesn't exist by Whop ID, check if Supabase account exists with same email
-  // Try email-based linking first (most reliable)
+  // Try to link by email
   if (email) {
-    const existingSupabaseUser = await prisma.user.findFirst({
-      where: {
-        email,
-        supabaseUserId: { not: null },
-        whopUserId: null, // Make sure not already linked to another Whop account
-      },
-      include: { sellerProfile: true },
+    const emailUser = await prisma.user.findFirst({
+      where: { email, whopUserId: null },
     });
 
-    if (existingSupabaseUser) {
-      // Found existing Supabase account with same email - link accounts!
-      console.log("[Whop OAuth] Linking Whop ID to existing Supabase account via email:", {
-        email,
-        whopUserId,
-        existingUserId: existingSupabaseUser.id,
-      });
-
-      const linkedUser = await prisma.user.update({
-        where: { id: existingSupabaseUser.id },
-        data: {
-          whopUserId, // Link the Whop ID
-          username, // Add Whop username
-          name: name || existingSupabaseUser.name,
-          avatar: avatar || existingSupabaseUser.avatar,
-        },
-        include: { sellerProfile: true },
-      });
-
-      return linkedUser;
-    }
-  }
-
-  // Try username-based linking as fallback
-  if (username) {
-    const existingUsernameUser = await prisma.user.findFirst({
-      where: {
-        username,
-        whopUserId: null,
-      },
-      include: { sellerProfile: true },
-    });
-
-    if (existingUsernameUser) {
-      console.log("[Whop OAuth] Linking Whop ID to existing account via username (fallback):", {
-        username,
-        whopUserId,
-        existingUserId: existingUsernameUser.id,
-      });
-
-      const linkedUser = await prisma.user.update({
-        where: { id: existingUsernameUser.id },
+    if (emailUser) {
+      return prisma.user.update({
+        where: { id: emailUser.id },
         data: {
           whopUserId,
-          email: email || existingUsernameUser.email,
-          name: name || existingUsernameUser.name,
-          avatar: avatar || existingUsernameUser.avatar,
+          username: username || emailUser.username,
+          name: name || emailUser.name,
+          avatar: avatar || emailUser.avatar,
         },
-        include: { sellerProfile: true },
       });
-
-      return linkedUser;
     }
   }
 
-  // No existing account found - create new user
-  console.log("[Whop OAuth] Creating new user with Whop ID:", whopUserId);
+  // Create new user
   const newUser = await prisma.user.create({
     data: {
       whopUserId,
@@ -284,10 +209,9 @@ async function syncWhopOAuthUser(data: {
       name,
       avatar,
     },
-    include: { sellerProfile: true },
   });
 
-  // Create seller profile for new user (everyone is a seller by default)
+  // Create seller profile
   await prisma.sellerProfile.create({
     data: {
       userId: newUser.id,
