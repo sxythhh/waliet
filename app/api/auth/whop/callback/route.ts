@@ -35,18 +35,20 @@ export async function GET(request: Request) {
 
   try {
     // Exchange code for access token
-    const tokenResponse = await fetch("https://api.whop.com/api/v5/oauth/token", {
+    const tokenBody = new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`,
+      client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
+    });
+
+    const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Bearer ${process.env.WHOP_API_KEY}`,
       },
-      body: JSON.stringify({
-        grant_type: "authorization_code",
-        client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID,
-        client_secret: process.env.WHOP_API_KEY,
-        code,
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`,
-      }),
+      body: tokenBody.toString(),
     });
 
     if (!tokenResponse.ok) {
