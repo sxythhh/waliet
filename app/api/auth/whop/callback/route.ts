@@ -57,17 +57,18 @@ export async function GET(request: Request) {
       code_verifier_first10: codeVerifier.substring(0, 10),
     });
 
-    // Exchange code for access token (with PKCE) - matching docs exactly
+    // Exchange code for access token - confidential client per docs
+    // Uses Authorization header, NO client_id in body
     const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Bearer ${process.env.WHOP_API_KEY}`,
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code: code,
         redirect_uri: redirectUri,
-        client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
         code_verifier: codeVerifier,
       }).toString(),
     });
