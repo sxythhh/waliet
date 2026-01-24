@@ -61,7 +61,7 @@ export async function GET(request: Request) {
       code,
       redirect_uri: redirectUri,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
-      client_secret: process.env.WHOP_API_KEY!,
+      client_secret: process.env.WHOP_CLIENT_SECRET!,
       code_verifier: codeVerifier,
     });
 
