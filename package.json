@@ -13,8 +13,10 @@
     "dev:mobile": "turbo run dev --filter=@virality/mobile",
     "dev:mobile:only": "npm run dev --workspace=@virality/mobile",
     "dev:all": "turbo run dev",
+    "dev:root": "next dev",
     "build": "turbo run build",
     "build:web": "turbo run build --filter=@virality/web",
+    "build:root": "next build",
     "build:packages": "turbo run build --filter=@virality/shared-types --filter=@virality/api-client",
     "lint": "turbo run lint",
     "test": "turbo run test",
@@ -23,10 +25,19 @@
     "clean:dist": "rm -rf packages/*/dist apps/*/dist",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
   "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
     "prettier": "^3.3.3",
     "sharp": "^0.34.5",
-    "turbo": "^2.3.3"
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
   },
   "packageManager": "npm@11.6.1",
   "engines": {
