@@ -58,13 +58,12 @@ export async function GET(request: Request) {
     });
 
     // Exchange code for access token (with PKCE)
-    // Include client_secret for confidential clients
+    // Use Authorization header for confidential clients per Whop docs
     const tokenBody = new URLSearchParams({
       grant_type: "authorization_code",
       code,
       redirect_uri: redirectUri,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
-      client_secret: process.env.WHOP_CLIENT_SECRET!,
       code_verifier: codeVerifier,
     });
 
@@ -72,6 +71,7 @@ export async function GET(request: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Bearer ${process.env.WHOP_CLIENT_SECRET}`,
       },
       body: tokenBody.toString(),
     });
