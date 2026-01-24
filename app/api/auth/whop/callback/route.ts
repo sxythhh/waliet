@@ -8,6 +8,10 @@ export async function GET(request: Request) {
   const error = searchParams.get("error");
   const state = searchParams.get("state");
 
+  // Get code verifier from cookie
+  const cookieStore = await cookies();
+  const codeVerifier = cookieStore.get("whop_code_verifier")?.value;
+
   // Parse return URL from state parameter
   let returnUrl = "/browse";
   if (state) {
@@ -33,13 +37,20 @@ export async function GET(request: Request) {
     );
   }
 
+  if (!codeVerifier) {
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/login?error=missing_code_verifier`
+    );
+  }
+
   try {
-    // Exchange code for access token
+    // Exchange code for access token (with PKCE)
     const tokenBody = new URLSearchParams({
       grant_type: "authorization_code",
       code,
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
+      code_verifier: codeVerifier,
     });
 
     const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
