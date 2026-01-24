@@ -55,15 +55,16 @@ export async function GET(request: Request) {
     });
 
     // Exchange code for access token (with PKCE)
+    // Include client_secret for confidential clients
     const tokenBody = new URLSearchParams({
       grant_type: "authorization_code",
       code,
       redirect_uri: redirectUri,
       client_id: process.env.NEXT_PUBLIC_WHOP_APP_ID!,
+      client_secret: process.env.WHOP_CLIENT_SECRET!,
       code_verifier: codeVerifier,
     });
 
-    // Try as public client first (no Authorization header)
     const tokenResponse = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
       headers: {
