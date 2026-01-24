@@ -13,7 +13,8 @@ export async function GET(request: Request) {
 
   if (state) {
     try {
-      const stateData = JSON.parse(atob(state));
+      // Decode URL-safe base64
+      const stateData = JSON.parse(Buffer.from(state, "base64url").toString());
       returnUrl = stateData.return_url || returnUrl;
       codeVerifier = stateData.code_verifier || null;
     } catch (e) {

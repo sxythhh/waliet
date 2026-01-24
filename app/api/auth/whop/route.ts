@@ -31,11 +31,12 @@ export async function GET(request: Request) {
   const { verifier, challenge } = generatePKCE();
 
   // Store verifier AND return_url in state parameter (more reliable than cookie)
+  // Use URL-safe base64 encoding to avoid corruption
   const stateData = {
     return_url: returnUrl || "/browse",
     code_verifier: verifier,
   };
-  const state = btoa(JSON.stringify(stateData));
+  const state = Buffer.from(JSON.stringify(stateData)).toString("base64url");
 
   console.log("[Whop OAuth Init] PKCE generated:", {
     verifier_length: verifier.length,
