@@ -117,11 +117,33 @@ function DashboardSidebar() {
   // Find current workspace details
   const currentWorkspaceDetails = workspaces.find(w => w.slug === currentWorkspace);
 
-  // Fetch user data from Supabase
+  // Fetch user data from Supabase or Whop OAuth cookie
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+      if (user) {
+        setUser(user);
+      } else {
+        // Try to get user from Whop OAuth cookie
+        const whopCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('whop_oauth_user='));
+        if (whopCookie) {
+          try {
+            const whopUser = JSON.parse(decodeURIComponent(whopCookie.split('=')[1]));
+            // Create a mock user object that matches Supabase User structure
+            setUser({
+              id: whopUser.id,
+              email: whopUser.email || undefined,
+              user_metadata: {
+                full_name: whopUser.name,
+              },
+            } as User);
+          } catch (e) {
+            console.error("Failed to parse whop_oauth_user cookie", e);
+          }
+        }
+      }
     });
   }, []);
 
