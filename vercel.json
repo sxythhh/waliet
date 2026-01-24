@@ -1,6 +1,15 @@
 {
-  "buildCommand": "next build",
-  "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "apps/web/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/auth",
+      "destination": "https://cr-auth.vercel.app/auth"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
