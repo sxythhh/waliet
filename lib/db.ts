@@ -55,6 +55,52 @@ export interface DbUserWithSellerProfile extends DbUser {
 // Database operations
 export const db = {
   user: {
+    // Merge a Whop-only user with a Supabase user that has the complete data
+    async mergeUsersIfNeeded(whopUser: DbUser): Promise<DbUser> {
+      // If the Whop user already has accountType set, no merge needed
+      if (whopUser.accountType) {
+        return whopUser;
+      }
+
+      // Try to find another user with the same email that has accountType set
+      if (whopUser.email) {
+        const { data: emailUsers } = await supabaseAdmin
+          .from("User")
+          .select("*")
+          .eq("email", whopUser.email)
+          .neq("id", whopUser.id)
+          .not("accountType", "is", null);
+
+        if (emailUsers && emailUsers.length > 0) {
+          const sourceUser = emailUsers[0] as DbUser;
+          console.log("[DB] Merging user data from:", sourceUser.id, "to:", whopUser.id);
+
+          // Update the Whop user with data from the source user
+          const { data: updated } = await supabaseAdmin
+            .from("User")
+            .update({
+              accountType: sourceUser.accountType,
+              supabaseUserId: sourceUser.supabaseUserId || whopUser.supabaseUserId,
+              onboardingCompleted: sourceUser.onboardingCompleted || whopUser.onboardingCompleted,
+              website: sourceUser.website || whopUser.website,
+              referralSource: sourceUser.referralSource || whopUser.referralSource,
+              monthlyBudget: sourceUser.monthlyBudget || whopUser.monthlyBudget,
+              updatedAt: new Date().toISOString(),
+            })
+            .eq("id", whopUser.id)
+            .select("*")
+            .single();
+
+          if (updated) {
+            console.log("[DB] Merged successfully, accountType:", updated.accountType);
+            return updated as DbUser;
+          }
+        }
+      }
+
+      return whopUser;
+    },
+
     async findById(id: string): Promise<DbUser | null> {
       const { data, error } = await supabaseAdmin
         .from("User")

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { getOnboardingSections, calculateProgress } from "@/lib/onboarding-steps";
 import { CheckCircle2, Loader2, Check } from "lucide-react";
 
@@ -155,7 +154,7 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
   }
 
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text}`} style={{ scrollbarWidth: 'none' }}>
+    <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col items-center`} style={{ scrollbarWidth: 'none' }}>
       <style jsx global>{`
         ::-webkit-scrollbar {
           display: none;
@@ -168,153 +167,113 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
         }
       `}</style>
 
-      {/* Top bar with user info */}
-      <div className={`flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b ${theme.border}`}>
-        <Image
-          src={theme.logo}
-          alt="Logo"
-          width={120}
-          height={40}
-          className="object-contain"
-          unoptimized
-        />
-        <div className="flex items-center gap-3">
-          <div className="text-right max-w-[200px]">
-            <div className="flex items-center justify-end gap-2">
-              <p className={`text-sm font-medium ${theme.text}`}>{user.name || "User"}</p>
-              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                accountType === "brand"
-                  ? "bg-[#FF6207]/20 text-[#FF6207]"
-                  : "bg-blue-500/20 text-blue-400"
-              }`}>
-                {accountType === "brand" ? "Brand" : "Creator"}
-              </span>
-            </div>
-            {user.bio && (
-              <p className={`text-xs ${theme.textMuted} truncate`}>{user.bio}</p>
-            )}
-          </div>
-          {user.avatar ? (
-            <Image
-              src={user.avatar}
-              alt={user.name || "User"}
-              width={36}
-              height={36}
-              className="rounded-full"
-            />
-          ) : (
-            <div className={`w-9 h-9 rounded-full ${theme.avatarBg} flex items-center justify-center text-sm font-medium`}>
-              {user.name?.charAt(0) || "U"}
-            </div>
-          )}
+      {/* Main content - centered */}
+      <div className="py-12 px-4 sm:px-6 lg:px-8 w-full max-w-2xl">
+        {/* Header - centered */}
+        <div className="mb-8 text-center">
+          <h1 className={`text-3xl font-bold ${theme.text} mb-2`} style={{ letterSpacing: '-0.4px' }}>
+            Welcome{user.name ? `, ${user.name}` : ""}!
+          </h1>
+          <p className={theme.textSecondary}>
+            {accountType === "brand"
+              ? "Complete the following steps to launch your first campaign and start working with creators."
+              : "Go through the following steps to get started with Content Rewards."}
+          </p>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className={`text-3xl font-bold ${theme.text} mb-2`} style={{ letterSpacing: '-0.4px' }}>
-              Welcome{user.name ? `, ${user.name}` : ""}!
-            </h1>
-            <p className={theme.textSecondary}>
-              {accountType === "brand"
-                ? "Complete the following steps to launch your first campaign and start working with creators."
-                : "Go through the following steps to get started with Content Rewards."}
-            </p>
+        {/* Progress bar - centered */}
+        <div className="mb-8 space-y-1.5 mx-auto max-w-md">
+          <div className="flex items-center justify-between">
+            <span className={`text-xs font-medium ${theme.textSecondary}`}>
+              Checklist ({progress.completed} of {progress.total} Completed)
+            </span>
+            <span className={`text-xs ${theme.textMuted}`}>{progress.percentage}%</span>
           </div>
+          <div className={`w-full ${theme.progressBg} rounded-full h-1.5 overflow-hidden`}>
+            <div
+              className="bg-[#FF6207] h-full transition-all duration-500 ease-out rounded-full"
+              style={{ width: `${progress.percentage}%` }}
+            />
+          </div>
+        </div>
 
-          {/* Progress bar */}
-          <div className="mb-6 space-y-1.5 max-w-md">
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-medium ${theme.textSecondary}`}>
-                Checklist ({progress.completed} of {progress.total} Completed)
-              </span>
-              <span className={`text-xs ${theme.textMuted}`}>{progress.percentage}%</span>
-            </div>
-            <div className={`w-full ${theme.progressBg} rounded-full h-1.5 overflow-hidden`}>
-              <div
-                className="bg-[#FF6207] h-full transition-all duration-500 ease-out rounded-full"
-                style={{ width: `${progress.percentage}%` }}
-              />
+        {/* Completion banner - centered */}
+        {isComplete && (
+          <div className={`mb-8 p-3 ${theme.cardBg} border border-[#FF6207]/30 rounded-lg flex items-center justify-center gap-3`}>
+            <CheckCircle2 className="w-5 h-5 text-[#FF6207] flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-orange-500 text-sm">
+                All caught up
+              </p>
+              <p className={`text-xs ${isDark ? 'text-orange-300' : 'text-orange-600'}`}>
+                You&apos;ve completed all onboarding steps!
+              </p>
             </div>
           </div>
+        )}
 
-          {/* Completion banner */}
-          {isComplete && (
-            <div className={`mb-6 p-3 ${theme.cardBg} border border-[#FF6207]/30 rounded-lg flex items-center gap-3`}>
-              <CheckCircle2 className="w-5 h-5 text-[#FF6207] flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-orange-500 text-sm">
-                  All caught up
-                </p>
-                <p className={`text-xs ${isDark ? 'text-orange-300' : 'text-orange-600'}`}>
-                  You&apos;ve completed all onboarding steps!
-                </p>
-              </div>
-            </div>
-          )}
+        {/* Tasks - single column, centered */}
+        <div className="space-y-6">
+          {onboardingSections.map((section) => (
+            <div key={section.id}>
+              <h2 className={`text-lg font-bold ${theme.text} mb-4 text-center`} style={{ letterSpacing: '-0.4px' }}>
+                {section.title}
+              </h2>
+              <div className="space-y-3">
+                {section.tasks.map((task) => {
+                  const isCompleted = completedTasks.has(task.id);
+                  return (
+                    <div
+                      key={task.id}
+                      className={`flex items-center gap-4 p-4 rounded-xl ${theme.cardBg} border ${theme.border}`}
+                    >
+                      {/* Checkbox */}
+                      <button
+                        onClick={() => handleToggleTask(task.id)}
+                        className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          isCompleted
+                            ? "bg-[#FF6207] border-[#FF6207]"
+                            : `${theme.checkboxBorder} hover:border-[#FF6207]/50`
+                        }`}
+                        aria-label={
+                          isCompleted ? `Mark "${task.title}" as incomplete` : `Mark "${task.title}" as complete`
+                        }
+                      >
+                        {isCompleted && <Check className="w-4 h-4 text-white" />}
+                      </button>
 
-          {/* Sections - side by side on desktop, stacked on mobile */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {onboardingSections.map((section) => (
-              <div key={section.id}>
-                <h2 className={`text-lg font-bold ${theme.text} mb-4`} style={{ letterSpacing: '-0.4px' }}>
-                  {section.title}
-                </h2>
-                <div className="space-y-4">
-                  {section.tasks.map((task) => {
-                    const isCompleted = completedTasks.has(task.id);
-                    return (
-                      <div key={task.id} className="pt-4">
-                        <div className="flex items-start gap-4">
-                          <button
-                            onClick={() => handleToggleTask(task.id)}
-                            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                              isCompleted
-                                ? "bg-[#FF6207] border-[#FF6207]"
-                                : `${theme.checkboxBorder} hover:border-[#FF6207]/50`
-                            }`}
-                            aria-label={
-                              isCompleted ? `Mark "${task.title}" as incomplete` : `Mark "${task.title}" as complete`
-                            }
-                          >
-                            {isCompleted && <Check className="w-4 h-4 text-white" />}
-                          </button>
-
-                          <div className="flex-1 min-w-0">
-                            <h4
-                              className={`font-bold ${theme.text} mb-1 ${
-                                isCompleted ? "line-through opacity-50" : ""
-                              }`}
-                              style={{ letterSpacing: '-0.4px' }}
-                            >
-                              {task.title}
-                            </h4>
-                            <p className={`text-sm ${theme.textSecondary} mb-3`}>{task.description}</p>
-
-                            {!isCompleted && task.link && (
-                              <div className="flex gap-3">
-                                <a
-                                  href={task.link}
-                                  target="_parent"
-                                  className="px-4 py-2 bg-[#FF6207] text-white text-sm font-bold rounded-lg border-t-2 border-[#F59E0B] inline-block hover:bg-[#FF6207]/90 transition-colors"
-                                  style={{ letterSpacing: '-0.4px' }}
-                                >
-                                  Get started
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                      {/* Title & Description */}
+                      <div className="flex-1 min-w-0">
+                        <h4
+                          className={`font-semibold ${theme.text} ${
+                            isCompleted ? "line-through opacity-50" : ""
+                          }`}
+                          style={{ letterSpacing: '-0.3px' }}
+                        >
+                          {task.title}
+                        </h4>
+                        <p className={`text-sm ${theme.textSecondary} ${isCompleted ? "opacity-50" : ""}`}>
+                          {task.description}
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* Button - same row */}
+                      {!isCompleted && task.link && (
+                        <a
+                          href={task.link}
+                          target="_parent"
+                          className="flex-shrink-0 px-4 py-2 bg-[#FF6207] text-white text-sm font-semibold rounded-lg hover:bg-[#FF6207]/90 transition-colors"
+                          style={{ letterSpacing: '-0.3px' }}
+                        >
+                          Get started
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

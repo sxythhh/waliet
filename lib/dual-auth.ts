@@ -110,10 +110,12 @@ async function tryWhopAuth(): Promise<WhopUserData | null> {
     try {
       const result = await whopsdk.verifyUserToken(headersList);
       const user = await whopsdk.users.retrieve(result.userId);
+      console.log("[DualAuth] Whop user retrieved:", result.userId, "email:", user.email, "username:", user.username);
       return {
         userId: result.userId,
         name: user.name,
         username: user.username,
+        email: user.email || undefined,
         profilePicUrl: user.profile_picture?.url || undefined,
       };
     } catch {
@@ -127,10 +129,12 @@ async function tryWhopAuth(): Promise<WhopUserData | null> {
         if (!userId || !userId.startsWith("user_")) return null;
 
         const user = await whopsdk.users.retrieve(userId);
+        console.log("[DualAuth] Whop user (fallback) retrieved:", userId, "email:", user.email, "username:", user.username);
         return {
           userId,
           name: user.name,
           username: user.username,
+          email: user.email || undefined,
           profilePicUrl: user.profile_picture?.url || undefined,
         };
       } catch {
@@ -204,14 +208,19 @@ async function trySupabaseAuth(): Promise<SupabaseUserData | null> {
 }
 
 async function syncWhopUserToDatabase(whopUser: WhopUserData): Promise<DbUser> {
+  console.log("[DualAuth] syncWhopUserToDatabase called for:", whopUser.userId, "email:", whopUser.email);
+
   // Check if user exists by Whop ID
   const existingUser = await db.user.findByWhopUserId(whopUser.userId);
+  console.log("[DualAuth] findByWhopUserId result:", existingUser?.id, "accountType:", existingUser?.accountType);
 
   if (existingUser) {
     // Also check if there's another user record with the same email
     // (e.g., from auth-standalone) and sync accountType from the most recently updated one
     if (whopUser.email) {
       const emailUser = await db.user.findByEmail(whopUser.email);
+      console.log("[DualAuth] findByEmail result:", emailUser?.id, "accountType:", emailUser?.accountType);
+
       if (emailUser && emailUser.id !== existingUser.id) {
         // There's a separate user record with the same email
         // Use the accountType from whichever record was updated more recently
@@ -235,15 +244,21 @@ async function syncWhopUserToDatabase(whopUser: WhopUserData): Promise<DbUser> {
             supabaseUserId: emailUser.supabaseUserId || existingUser.supabaseUserId,
           });
         }
+      } else if (emailUser && emailUser.id === existingUser.id) {
+        // Same user - just log and continue
+        console.log("[DualAuth] Email user is same as Whop user, accountType:", existingUser.accountType);
       }
     }
 
-    return db.user.update(existingUser.id, {
+    // Return updated user (preserving existing accountType)
+    const updated = await db.user.update(existingUser.id, {
       name: whopUser.name,
       avatar: whopUser.profilePicUrl || null,
       email: whopUser.email || existingUser.email,
       username: whopUser.username,
     });
+    console.log("[DualAuth] Updated user, accountType:", updated.accountType);
+    return updated;
   }
 
   // Try email-based linking - find ANY user with this email (not just those without whopUserId)
