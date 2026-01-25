@@ -1,7 +1,7 @@
 import { headers, cookies } from "next/headers";
 import { createClient } from "./supabase/server";
 import { whopsdk } from "./whop-sdk";
-import { prisma } from "./prisma";
+import { db, DbUser } from "./db";
 
 export type AuthProvider = "whop" | "whop-oauth" | "supabase";
 
@@ -11,39 +11,27 @@ export interface DualAuthUser {
   email: string | null;
   avatar: string | null;
   provider: AuthProvider;
-  providerId: string; // The ID from the auth provider (whopUserId or supabase user id)
+  providerId: string;
 }
 
 export interface DualAuthResult {
   user: DualAuthUser;
-  dbUser: {
-    id: string;
-    name: string | null;
-    avatar: string | null;
-    email: string | null;
-    username: string | null;
-    whopUserId: string | null;
-    createdAt: Date;
-    sellerProfile: {
-      id: string;
-      hourlyRate: number;
-      bio: string | null;
-      tagline: string | null;
-      averageRating: number | null;
-      totalSessionsCompleted: number;
-      totalReviews: number;
-      isVerified: boolean;
-      isActive: boolean;
-    } | null;
-  };
+  dbUser: DbUser;
 }
 
 /**
  * Get authenticated user from either Whop or Supabase
- * Priority: Whop header (app view) → Whop OAuth cookie → Supabase session
+ * Priority: Whop OAuth cookie → Whop header (app view) → Supabase session
  */
 export async function getDualAuthUser(): Promise<DualAuthResult | null> {
-  // Try Whop app view auth first (x-whop-user-token header)
+  // Try Whop OAuth cookie FIRST (from "Continue with Whop" flow)
+  const whopOAuthUser = await tryWhopOAuthCookie();
+  if (whopOAuthUser) {
+    console.log("[DualAuth] Authenticated via Whop OAuth cookie:", whopOAuthUser.user.id);
+    return whopOAuthUser;
+  }
+
+  // Try Whop app view auth (x-whop-user-token header)
   const whopUser = await tryWhopAuth();
   if (whopUser) {
     console.log("[DualAuth] Authenticated via Whop app view:", whopUser.userId);
@@ -51,21 +39,14 @@ export async function getDualAuthUser(): Promise<DualAuthResult | null> {
     return {
       user: {
         id: dbUser.id,
-        name: whopUser.name,
-        email: whopUser.email || null,
-        avatar: whopUser.profilePicUrl || null,
+        name: dbUser.name || whopUser.name,
+        email: dbUser.email || whopUser.email || null,
+        avatar: dbUser.avatar || whopUser.profilePicUrl || null,
         provider: "whop",
         providerId: whopUser.userId,
       },
       dbUser,
     };
-  }
-
-  // Try Whop OAuth cookie (from "Continue with Whop" flow)
-  const whopOAuthUser = await tryWhopOAuthCookie();
-  if (whopOAuthUser) {
-    console.log("[DualAuth] Authenticated via Whop OAuth cookie:", whopOAuthUser.id);
-    return whopOAuthUser;
   }
 
   // Try Supabase auth
@@ -98,38 +79,11 @@ interface WhopUserData {
   profilePicUrl?: string;
 }
 
-/**
- * Attempt Whop authentication
- *
- * IMPORTANT: Email availability depends on auth method:
- *
- * 1. App View (iframe): Email is NOT available
- *    - Uses whopsdk.verifyUserToken() + users.retrieve()
- *    - Whop API does not return email in user object
- *    - Users created via app view will have null email
- *
- * 2. OAuth ("Continue with Whop"): Email IS available
- *    - Uses /oauth/userinfo endpoint with email scope
- *    - Email is returned and used for account linking
- *
- * This means:
- * - App view users can't be linked to Supabase accounts (no email)
- * - OAuth users CAN be linked via email matching
- * - If user accesses via app view first, then uses OAuth, they'll have
- *   separate accounts unless they use the same email and we implement
- *   a retroactive linking mechanism
- */
 async function tryWhopAuth(): Promise<WhopUserData | null> {
   try {
     const cookieStore = await cookies();
-
-    // Check if user explicitly logged out - skip ALL Whop auth
     const loggedOutCookie = cookieStore.get("waliet-logged-out");
-    const loggedOut = loggedOutCookie?.value === "true";
-
-    console.log("[DualAuth] waliet-logged-out cookie:", loggedOutCookie?.value, "| loggedOut:", loggedOut);
-
-    if (loggedOut) {
+    if (loggedOutCookie?.value === "true") {
       console.log("[DualAuth] User logged out, skipping Whop auth");
       return null;
     }
@@ -138,156 +92,71 @@ async function tryWhopAuth(): Promise<WhopUserData | null> {
     if (process.env.NODE_ENV === "development" && process.env.DEV_WHOP_USER_ID) {
       const userId = process.env.DEV_WHOP_USER_ID;
       const user = await whopsdk.users.retrieve(userId);
-      type ExtendedWhopUser = { email?: string };
-      const extendedUser = user as unknown as ExtendedWhopUser;
       return {
         userId,
         name: user.name,
         username: user.username,
-        email: extendedUser.email,
         profilePicUrl: user.profile_picture?.url || undefined,
       };
     }
 
-    // Normal auth flow - verify token from headers
     const headersList = await headers();
-
-    // Debug: Log all headers to see what Whop is sending
-    const headersDebug: Record<string, string> = {};
-    headersList.forEach((value, key) => {
-      headersDebug[key] = key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
-        ? `${value.substring(0, 20)}...`
-        : value;
-    });
-    console.log("[DualAuth] Headers received:", JSON.stringify(headersDebug, null, 2));
-
-    // Get the token from header
     const whopToken = headersList.get("x-whop-user-token");
 
     if (!whopToken) {
-      console.log("[DualAuth] No x-whop-user-token header found");
       return null;
     }
 
-    console.log("[DualAuth] Found x-whop-user-token, length:", whopToken.length);
-
-    // Try SDK verification first
     try {
       const result = await whopsdk.verifyUserToken(headersList);
-      console.log("[DualAuth] SDK verification successful, userId:", result.userId);
-
       const user = await whopsdk.users.retrieve(result.userId);
-      type ExtendedWhopUser = { email?: string };
-      const extendedUser = user as unknown as ExtendedWhopUser;
-
       return {
         userId: result.userId,
         name: user.name,
         username: user.username,
-        email: extendedUser.email,
         profilePicUrl: user.profile_picture?.url || undefined,
       };
-    } catch (sdkError) {
-      console.log("[DualAuth] SDK verification failed:", sdkError);
-
-      // Fallback: Manually decode JWT to get user ID
+    } catch {
+      // Fallback: Manually decode JWT
       try {
-        // JWT format: header.payload.signature
         const parts = whopToken.split(".");
-        if (parts.length !== 3) {
-          console.log("[DualAuth] Invalid JWT format");
-          return null;
-        }
+        if (parts.length !== 3) return null;
 
-        // Decode payload (base64url)
-        const payload = JSON.parse(
-          Buffer.from(parts[1], "base64url").toString("utf-8")
-        );
-        console.log("[DualAuth] JWT payload:", JSON.stringify(payload));
-
+        const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
         const userId = payload.sub;
-        if (!userId || !userId.startsWith("user_")) {
-          console.log("[DualAuth] Invalid user ID in token:", userId);
-          return null;
-        }
+        if (!userId || !userId.startsWith("user_")) return null;
 
-        console.log("[DualAuth] Extracted userId from JWT:", userId);
-
-        // Fetch user details from Whop API
         const user = await whopsdk.users.retrieve(userId);
-        type ExtendedWhopUser = { email?: string };
-        const extendedUser = user as unknown as ExtendedWhopUser;
-
         return {
           userId,
           name: user.name,
           username: user.username,
-          email: extendedUser.email,
           profilePicUrl: user.profile_picture?.url || undefined,
         };
-      } catch (fallbackError) {
-        console.log("[DualAuth] Fallback JWT decode failed:", fallbackError);
+      } catch {
         return null;
       }
     }
-  } catch (err) {
-    console.log("[DualAuth] tryWhopAuth error:", err);
+  } catch {
     return null;
   }
 }
 
-/**
- * Attempt authentication via Whop OAuth cookie
- * This is set when user authenticates via "Continue with Whop" button
- */
 async function tryWhopOAuthCookie(): Promise<DualAuthResult | null> {
   try {
     const cookieStore = await cookies();
-
-    // Check if user explicitly logged out
-    const loggedOutCookie = cookieStore.get("waliet-logged-out");
-    if (loggedOutCookie?.value === "true") {
-      console.log("[DualAuth] User logged out, skipping Whop OAuth cookie");
+    if (cookieStore.get("waliet-logged-out")?.value === "true") {
       return null;
     }
 
     const whopCookie = cookieStore.get("whop_oauth_user");
-    if (!whopCookie) {
-      return null;
-    }
-
-    console.log("[DualAuth] Found whop_oauth_user cookie");
+    if (!whopCookie) return null;
 
     const userData = JSON.parse(whopCookie.value);
-    if (!userData.id) {
-      console.log("[DualAuth] Invalid whop_oauth_user cookie - no id");
-      return null;
-    }
+    if (!userData.id) return null;
 
-    // Look up the full user from database
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userData.id },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
-    });
-
-    if (!dbUser) {
-      console.log("[DualAuth] User not found in database:", userData.id);
-      return null;
-    }
+    const dbUser = await db.user.findById(userData.id);
+    if (!dbUser) return null;
 
     return {
       user: {
@@ -300,8 +169,7 @@ async function tryWhopOAuthCookie(): Promise<DualAuthResult | null> {
       },
       dbUser,
     };
-  } catch (e) {
-    console.log("[DualAuth] tryWhopOAuthCookie error:", e);
+  } catch {
     return null;
   }
 }
@@ -315,20 +183,14 @@ interface SupabaseUserData {
 
 async function trySupabaseAuth(): Promise<SupabaseUserData | null> {
   try {
-    // Check if Supabase is configured
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.log("[DualAuth] Supabase not configured");
       return null;
     }
 
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
-    console.log("[DualAuth] Supabase auth check - user:", user?.id, "error:", error?.message);
-
-    if (error || !user) {
-      return null;
-    }
+    if (error || !user) return null;
 
     return {
       id: user.id,
@@ -336,526 +198,121 @@ async function trySupabaseAuth(): Promise<SupabaseUserData | null> {
       name: user.user_metadata?.full_name || user.user_metadata?.name || null,
       avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
     };
-  } catch (e) {
-    console.log("[DualAuth] Supabase auth error:", e);
+  } catch {
     return null;
   }
 }
 
-/**
- * Sync Whop app view user to database
- *
- * NOTE: This is used for app view (iframe) authentication where email
- * is NOT available from Whop API. For OAuth flow, see the callback handler
- * in app/api/auth/whop/callback/route.ts which implements account linking.
- *
- * Users created here will have whopUserId but may have null email.
- */
-async function syncWhopUserToDatabase(whopUser: WhopUserData) {
-  console.log("[DualAuth] Syncing Whop app view user:", {
-    userId: whopUser.userId,
-    username: whopUser.username,
-    hasEmail: !!whopUser.email,
-  });
+async function syncWhopUserToDatabase(whopUser: WhopUserData): Promise<DbUser> {
+  // Check if user exists by Whop ID
+  const existingUser = await db.user.findByWhopUserId(whopUser.userId);
 
-  // First check if user already exists by Whop ID
-  const existingWhopUser = await prisma.user.findUnique({
-    where: { whopUserId: whopUser.userId },
-    include: {
-      sellerProfile: {
-        select: {
-          id: true,
-          hourlyRate: true,
-          bio: true,
-          tagline: true,
-          averageRating: true,
-          totalSessionsCompleted: true,
-          totalReviews: true,
-          isVerified: true,
-          isActive: true,
-        },
-      },
-    },
-  });
+  if (existingUser) {
+    // Also check if there's another user record with the same email
+    // (e.g., from auth-standalone) and sync accountType from the most recently updated one
+    if (whopUser.email) {
+      const emailUser = await db.user.findByEmail(whopUser.email);
+      if (emailUser && emailUser.id !== existingUser.id) {
+        // There's a separate user record with the same email
+        // Use the accountType from whichever record was updated more recently
+        const emailUserDate = new Date(emailUser.updatedAt).getTime();
+        const existingUserDate = new Date(existingUser.updatedAt).getTime();
+        const useEmailUserAccountType = emailUserDate > existingUserDate && emailUser.accountType;
 
-  if (existingWhopUser) {
-    // User already exists, just update
-    const user = await prisma.user.update({
-      where: { id: existingWhopUser.id },
-      data: {
-        name: whopUser.name,
-        avatar: whopUser.profilePicUrl || null,
-        email: whopUser.email || existingWhopUser.email, // Preserve existing email if available
-        username: whopUser.username, // Update username
-      },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
-    });
+        console.log("[DualAuth] Found duplicate user records for email:", whopUser.email);
+        console.log("[DualAuth] Existing (whop) user:", existingUser.id, "accountType:", existingUser.accountType, "updated:", existingUser.updatedAt);
+        console.log("[DualAuth] Email user:", emailUser.id, "accountType:", emailUser.accountType, "updated:", emailUser.updatedAt);
 
-    // Create seller profile if doesn't exist
-    if (!user.sellerProfile) {
-      await prisma.sellerProfile.create({
-        data: {
-          userId: user.id,
-          hourlyRate: 0,
-          isActive: true,
-        },
-      });
-
-      return prisma.user.findUniqueOrThrow({
-        where: { id: user.id },
-        include: {
-          sellerProfile: {
-            select: {
-              id: true,
-              hourlyRate: true,
-              bio: true,
-              tagline: true,
-              averageRating: true,
-              totalSessionsCompleted: true,
-              totalReviews: true,
-              isVerified: true,
-              isActive: true,
-            },
-          },
-        },
-      });
+        if (useEmailUserAccountType) {
+          console.log("[DualAuth] Using accountType from email user:", emailUser.accountType);
+          return db.user.update(existingUser.id, {
+            name: whopUser.name,
+            avatar: whopUser.profilePicUrl || null,
+            email: whopUser.email || existingUser.email,
+            username: whopUser.username,
+            accountType: emailUser.accountType,
+            onboardingCompleted: emailUser.onboardingCompleted || existingUser.onboardingCompleted,
+            supabaseUserId: emailUser.supabaseUserId || existingUser.supabaseUserId,
+          });
+        }
+      }
     }
 
-    return user;
-  }
-
-  // User doesn't exist by Whop ID
-  // Try email-based linking first (if email available)
-  if (whopUser.email) {
-    const emailMatch = await prisma.user.findFirst({
-      where: {
-        email: whopUser.email,
-        whopUserId: null,
-      },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
-    });
-
-    if (emailMatch) {
-      console.log("[DualAuth] Linking Whop account via email:", {
-        email: whopUser.email,
-        whopUserId: whopUser.userId,
-        existingUserId: emailMatch.id,
-      });
-
-      return prisma.user.update({
-        where: { id: emailMatch.id },
-        data: {
-          whopUserId: whopUser.userId,
-          username: whopUser.username,
-          name: whopUser.name || emailMatch.name,
-          avatar: whopUser.profilePicUrl || emailMatch.avatar,
-        },
-        include: {
-          sellerProfile: {
-            select: {
-              id: true,
-              hourlyRate: true,
-              bio: true,
-              tagline: true,
-              averageRating: true,
-              totalSessionsCompleted: true,
-              totalReviews: true,
-              isVerified: true,
-              isActive: true,
-            },
-          },
-        },
-      });
-    }
-  }
-
-  // Try username-based linking as fallback (less reliable)
-  if (whopUser.username) {
-    const usernameMatch = await prisma.user.findFirst({
-      where: {
-        username: whopUser.username,
-        whopUserId: null,
-      },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
-    });
-
-    if (usernameMatch) {
-      console.log("[DualAuth] Linking Whop account via username (fallback):", {
-        username: whopUser.username,
-        whopUserId: whopUser.userId,
-        existingUserId: usernameMatch.id,
-      });
-
-      return prisma.user.update({
-        where: { id: usernameMatch.id },
-        data: {
-          whopUserId: whopUser.userId,
-          email: whopUser.email || usernameMatch.email,
-          name: whopUser.name || usernameMatch.name,
-          avatar: whopUser.profilePicUrl || usernameMatch.avatar,
-        },
-        include: {
-          sellerProfile: {
-            select: {
-              id: true,
-              hourlyRate: true,
-              bio: true,
-              tagline: true,
-              averageRating: true,
-              totalSessionsCompleted: true,
-              totalReviews: true,
-              isVerified: true,
-              isActive: true,
-            },
-          },
-        },
-      });
-    }
-  }
-
-  // No existing account found - create new user
-  const user = await prisma.user.create({
-    data: {
-      whopUserId: whopUser.userId,
-      username: whopUser.username,
+    return db.user.update(existingUser.id, {
       name: whopUser.name,
       avatar: whopUser.profilePicUrl || null,
-      email: whopUser.email || null, // Usually null for app view users
-    },
-    include: {
-      sellerProfile: {
-        select: {
-          id: true,
-          hourlyRate: true,
-          bio: true,
-          tagline: true,
-          averageRating: true,
-          totalSessionsCompleted: true,
-          totalReviews: true,
-          isVerified: true,
-          isActive: true,
-        },
-      },
-    },
-  });
-
-  // Create seller profile if doesn't exist (everyone is a seller by default)
-  if (!user.sellerProfile) {
-    await prisma.sellerProfile.create({
-      data: {
-        userId: user.id,
-        hourlyRate: 0, // Default rate, user can set later
-        isActive: true,
-      },
-    });
-
-    // Fetch the updated user with seller profile
-    return prisma.user.findUniqueOrThrow({
-      where: { id: user.id },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
+      email: whopUser.email || existingUser.email,
+      username: whopUser.username,
     });
   }
 
-  return user;
+  // Try email-based linking - find ANY user with this email (not just those without whopUserId)
+  if (whopUser.email) {
+    const emailMatch = await db.user.findByEmail(whopUser.email);
+    if (emailMatch) {
+      console.log("[DualAuth] Linking Whop user to existing email match:", emailMatch.id, "accountType:", emailMatch.accountType);
+      return db.user.update(emailMatch.id, {
+        whopUserId: whopUser.userId,
+        username: whopUser.username || emailMatch.username,
+        name: whopUser.name || emailMatch.name,
+        avatar: whopUser.profilePicUrl || emailMatch.avatar,
+        // Preserve accountType and onboarding status from existing record
+      });
+    }
+  }
+
+  // Try username-based linking
+  if (whopUser.username) {
+    const usernameMatch = await db.user.findByUsernameWithoutWhopId(whopUser.username);
+    if (usernameMatch) {
+      return db.user.update(usernameMatch.id, {
+        whopUserId: whopUser.userId,
+        email: whopUser.email || usernameMatch.email,
+        name: whopUser.name || usernameMatch.name,
+        avatar: whopUser.profilePicUrl || usernameMatch.avatar,
+      });
+    }
+  }
+
+  // Create new user
+  return db.user.create({
+    whopUserId: whopUser.userId,
+    username: whopUser.username,
+    name: whopUser.name,
+    avatar: whopUser.profilePicUrl || null,
+    email: whopUser.email || null,
+  });
 }
 
-async function syncSupabaseUserToDatabase(supabaseUser: SupabaseUserData) {
-  // For Supabase users, we use supabaseUserId field
-  // First check if user exists by supabaseUserId
-  const existing = await prisma.user.findUnique({
-    where: { supabaseUserId: supabaseUser.id },
-    include: {
-      sellerProfile: {
-        select: {
-          id: true,
-          hourlyRate: true,
-          bio: true,
-          tagline: true,
-          averageRating: true,
-          totalSessionsCompleted: true,
-          totalReviews: true,
-          isVerified: true,
-          isActive: true,
-        },
-      },
-    },
-  });
+async function syncSupabaseUserToDatabase(supabaseUser: SupabaseUserData): Promise<DbUser> {
+  // Check if user exists by Supabase ID
+  const existing = await db.user.findBySupabaseUserId(supabaseUser.id);
 
   if (existing) {
-    // Update existing user
-    console.log("[DualAuth] Supabase user already exists:", supabaseUser.id);
-    const user = await prisma.user.update({
-      where: { id: existing.id },
-      data: {
-        name: supabaseUser.name || existing.name,
-        avatar: supabaseUser.avatar || existing.avatar,
-        email: supabaseUser.email || existing.email,
-      },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
+    return db.user.update(existing.id, {
+      name: supabaseUser.name || existing.name,
+      avatar: supabaseUser.avatar || existing.avatar,
+      email: supabaseUser.email || existing.email,
     });
-
-    // Create seller profile if doesn't exist (everyone is a seller by default)
-    if (!user.sellerProfile) {
-      await prisma.sellerProfile.create({
-        data: {
-          userId: user.id,
-          hourlyRate: 0,
-          isActive: true,
-        },
-      });
-
-      return prisma.user.findUniqueOrThrow({
-        where: { id: user.id },
-        include: {
-          sellerProfile: {
-            select: {
-              id: true,
-              hourlyRate: true,
-              bio: true,
-              tagline: true,
-              averageRating: true,
-              totalSessionsCompleted: true,
-              totalReviews: true,
-              isVerified: true,
-              isActive: true,
-            },
-          },
-        },
-      });
-    }
-
-    return user;
   }
 
-  // User doesn't exist by Supabase ID
-  // Try email-based linking first (most reliable)
+  // Try email-based linking
   if (supabaseUser.email) {
-    const existingWhopUser = await prisma.user.findFirst({
-      where: {
-        email: supabaseUser.email,
-        whopUserId: { not: null },
-        supabaseUserId: null, // Make sure not already linked
-      },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
-    });
-
+    const existingWhopUser = await db.user.findByEmailWithWhopIdNoSupabase(supabaseUser.email);
     if (existingWhopUser) {
-      // Found existing Whop account with same email - link accounts!
-      console.log("[DualAuth] Linking Supabase ID to existing Whop account via email:", {
-        email: supabaseUser.email,
+      return db.user.update(existingWhopUser.id, {
         supabaseUserId: supabaseUser.id,
-        existingUserId: existingWhopUser.id,
+        name: supabaseUser.name || existingWhopUser.name,
+        avatar: supabaseUser.avatar || existingWhopUser.avatar,
       });
-
-      const linkedUser = await prisma.user.update({
-        where: { id: existingWhopUser.id },
-        data: {
-          supabaseUserId: supabaseUser.id, // Link the Supabase ID
-          name: supabaseUser.name || existingWhopUser.name,
-          avatar: supabaseUser.avatar || existingWhopUser.avatar,
-        },
-        include: {
-          sellerProfile: {
-            select: {
-              id: true,
-              hourlyRate: true,
-              bio: true,
-              tagline: true,
-              averageRating: true,
-              totalSessionsCompleted: true,
-              totalReviews: true,
-              isVerified: true,
-              isActive: true,
-            },
-          },
-        },
-      });
-
-      return linkedUser;
     }
   }
 
-  // Try username-based linking as fallback (only if Whop username is set)
-  // Note: Supabase users don't have usernames by default, but Whop users do
-  const potentialUsernameMatch = await prisma.user.findFirst({
-    where: {
-      username: { not: null },
-      supabaseUserId: null,
-      whopUserId: { not: null },
-      email: supabaseUser.email, // Extra safety: only link if email also matches
-    },
-    include: {
-      sellerProfile: {
-        select: {
-          id: true,
-          hourlyRate: true,
-          bio: true,
-          tagline: true,
-          averageRating: true,
-          totalSessionsCompleted: true,
-          totalReviews: true,
-          isVerified: true,
-          isActive: true,
-        },
-      },
-    },
-  });
-
-  if (potentialUsernameMatch) {
-    console.log("[DualAuth] Linking Supabase ID to existing Whop account via username+email:", {
-      email: supabaseUser.email,
-      username: potentialUsernameMatch.username,
-      supabaseUserId: supabaseUser.id,
-      existingUserId: potentialUsernameMatch.id,
-    });
-
-    const linkedUser = await prisma.user.update({
-      where: { id: potentialUsernameMatch.id },
-      data: {
-        supabaseUserId: supabaseUser.id,
-        name: supabaseUser.name || potentialUsernameMatch.name,
-        avatar: supabaseUser.avatar || potentialUsernameMatch.avatar,
-      },
-      include: {
-        sellerProfile: {
-          select: {
-            id: true,
-            hourlyRate: true,
-            bio: true,
-            tagline: true,
-            averageRating: true,
-            totalSessionsCompleted: true,
-            totalReviews: true,
-            isVerified: true,
-            isActive: true,
-          },
-        },
-      },
-    });
-
-    return linkedUser;
-  }
-
-  // No existing account found - create new user
-  console.log("[DualAuth] Creating new Supabase user:", supabaseUser.id);
-  const newUser = await prisma.user.create({
-    data: {
-      supabaseUserId: supabaseUser.id,
-      name: supabaseUser.name,
-      avatar: supabaseUser.avatar,
-      email: supabaseUser.email,
-    },
-  });
-
-  // Create seller profile for new user
-  await prisma.sellerProfile.create({
-    data: {
-      userId: newUser.id,
-      hourlyRate: 0,
-      isActive: true,
-    },
-  });
-
-  return prisma.user.findUniqueOrThrow({
-    where: { id: newUser.id },
-    include: {
-      sellerProfile: {
-        select: {
-          id: true,
-          hourlyRate: true,
-          bio: true,
-          tagline: true,
-          averageRating: true,
-          totalSessionsCompleted: true,
-          totalReviews: true,
-          isVerified: true,
-          isActive: true,
-        },
-      },
-    },
+  // Create new user
+  return db.user.create({
+    supabaseUserId: supabaseUser.id,
+    name: supabaseUser.name,
+    avatar: supabaseUser.avatar,
+    email: supabaseUser.email,
   });
 }

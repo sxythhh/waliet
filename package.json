@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:root": "next build",
+    "build:root": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -82,12 +82,15 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.20",
+    "pg": "^8.17.2",
     "postcss": "^8.4.49",
     "prettier": "^3.3.3",
+    "prisma": "^5.22.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"

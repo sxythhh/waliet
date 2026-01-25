@@ -25,10 +25,15 @@ function generateNonce() {
 /**
  * Initiate Whop OAuth flow
  * Redirects user to Whop authorization page
+ *
+ * Query params:
+ * - return_url: Where to redirect after auth (default: /browse)
+ * - link_user_id: User ID to link Whop account to (for account linking flow)
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const returnUrl = searchParams.get("return_url") || "/browse";
+  const linkUserId = searchParams.get("link_user_id"); // For account linking flow
 
   const clientId = process.env.NEXT_PUBLIC_WHOP_APP_ID;
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/whop/callback`;
@@ -47,12 +52,18 @@ export async function GET(request: Request) {
   const stateValue = crypto.randomBytes(16).toString("base64url");
 
   // Build state object with all values we need to recover in callback
-  const stateData = {
+  const stateData: Record<string, string> = {
     s: stateValue,        // CSRF state
     v: verifier,          // PKCE verifier
     n: nonce,             // OpenID nonce
     r: returnUrl,         // Return URL
   };
+
+  // Include link user ID if this is an account linking flow
+  if (linkUserId) {
+    stateData.l = linkUserId; // Link user ID
+  }
+
   const state = Buffer.from(JSON.stringify(stateData)).toString("base64url");
 
   // Build authorization URL per Whop docs

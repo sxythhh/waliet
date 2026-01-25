@@ -8,6 +8,18 @@ const nextConfig = {
     // Skip linting during build
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img-v2-prod.whop.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.whop.com',
+      },
+    ],
+  },
   async rewrites() {
     return [
       {

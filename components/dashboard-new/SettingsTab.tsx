@@ -1,26 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  User,
-  Bell,
-  Shield,
   Moon,
   Sun,
-  Globe,
   Mail,
   Smartphone,
   LogOut,
   Trash2,
-  ChevronRight,
   Loader2,
+  Check,
+  ExternalLink,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { SettingsCard } from "./settings";
 
 interface UserProfile {
   id: string;
@@ -29,6 +27,8 @@ interface UserProfile {
   email: string | null;
   bio: string | null;
   createdAt: string;
+  whopUserId: string | null;
+  supabaseUserId: string | null;
   sellerProfile: {
     id: string;
     timezone: string;
@@ -45,12 +45,6 @@ interface Settings {
   };
   security: {
     twoFactor: boolean;
-    sessions: Array<{
-      id: string;
-      device: string;
-      location: string;
-      lastActive: string;
-    }>;
   };
 }
 
@@ -64,18 +58,51 @@ const defaultSettings: Settings = {
   },
   security: {
     twoFactor: false,
-    sessions: [
-      { id: "1", device: "Current Device", location: "Unknown", lastActive: "Now" },
-    ],
   },
 };
 
 export function SettingsTab() {
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [linkMessage, setLinkMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Handle URL params for link results
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const errorParam = searchParams.get("error");
+
+    if (success) {
+      const messages: Record<string, string> = {
+        account_linked: "Account linked successfully!",
+        accounts_merged: "Accounts merged successfully! Your data has been combined.",
+        already_linked: "This account is already linked.",
+      };
+      setLinkMessage({ type: "success", text: messages[success] || "Success!" });
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("success");
+      window.history.replaceState({}, "", url.toString());
+    } else if (errorParam) {
+      const messages: Record<string, string> = {
+        already_linked: "This account is already linked to your profile.",
+        link_expired: "Link session expired. Please try again.",
+        oauth_failed: "OAuth authentication failed. Please try again.",
+        merge_failed: "Failed to merge accounts. Please contact support.",
+        link_failed: "Failed to link account. Please try again.",
+        no_oauth_data: "No authentication data received. Please try again.",
+      };
+      setLinkMessage({ type: "error", text: messages[errorParam] || "An error occurred." });
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      url.searchParams.delete("provider");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [searchParams]);
 
   // Fetch user profile data
   useEffect(() => {
@@ -105,7 +132,6 @@ export function SettingsTab() {
 
     fetchProfile();
 
-    // Initialize theme from document
     const isDark = document.documentElement.classList.contains("dark");
     setTheme(isDark ? "dark" : "light");
   }, []);
@@ -120,16 +146,6 @@ export function SettingsTab() {
     }));
   };
 
-  const toggleTwoFactor = () => {
-    setSettings((prev) => ({
-      ...prev,
-      security: {
-        ...prev.security,
-        twoFactor: !prev.security.twoFactor,
-      },
-    }));
-  };
-
   const handleThemeChange = (newTheme: "light" | "dark") => {
     setTheme(newTheme);
     if (newTheme === "dark") {
@@ -139,7 +155,6 @@ export function SettingsTab() {
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -148,7 +163,6 @@ export function SettingsTab() {
     );
   }
 
-  // Error state
   if (error || !profile) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
@@ -167,140 +181,190 @@ export function SettingsTab() {
   const displayName = profile.name || "User";
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your account preferences</p>
-      </div>
-
-      {/* Profile Settings */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
+    <div className="space-y-6 max-w-4xl mx-auto pb-8">
+      {/* Link message banner */}
+      {linkMessage && (
+        <div
+          className={`p-4 rounded-xl flex items-center justify-between ${
+            linkMessage.type === "success"
+              ? "bg-green-500/10 border border-green-500/20 text-green-500"
+              : "bg-destructive/10 border border-destructive/20 text-destructive"
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-muted-foreground" />
-            <CardTitle className="text-base">Profile</CardTitle>
-          </div>
-          <CardDescription className="text-xs">Your personal information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Avatar */}
-          <div className="flex items-center gap-4">
-            <Avatar className="w-16 h-16">
-              <AvatarImage src={profile.avatar || undefined} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-xl">
-                {displayName[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium">{displayName}</p>
-              <p className="text-xs text-muted-foreground">Avatar synced from your account</p>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Profile Fields */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <p className="text-sm font-medium">Name</p>
-                <p className="text-xs text-muted-foreground">{displayName}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => window.location.href = "/dashboard?tab=profile"}>
-                Edit
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <p className="text-sm font-medium">Email</p>
-                <p className="text-xs text-muted-foreground">{profile.email || "Not set"}</p>
-              </div>
-              {profile.email && (
-                <Badge variant="secondary" className="text-[10px]">
-                  Verified
-                </Badge>
-              )}
-            </div>
-
-            {profile.sellerProfile && (
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Timezone</p>
-                    <p className="text-xs text-muted-foreground">
-                      {profile.sellerProfile.timezone || "America/New_York"}
-                    </p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm">
-                  Change
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Appearance */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            {theme === "dark" ? (
-              <Moon className="w-4 h-4 text-muted-foreground" />
+            {linkMessage.type === "success" ? (
+              <Check className="w-4 h-4" />
             ) : (
-              <Sun className="w-4 h-4 text-muted-foreground" />
+              <ExternalLink className="w-4 h-4" />
             )}
-            <CardTitle className="text-base">Appearance</CardTitle>
+            <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              {linkMessage.text}
+            </p>
           </div>
-          <CardDescription className="text-xs">Customize how Waliet looks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium">Theme</p>
-              <p className="text-xs text-muted-foreground">Select your preferred theme</p>
-            </div>
-            <div className="flex items-center gap-2 p-1 rounded-lg bg-muted">
-              <button
-                onClick={() => handleThemeChange("light")}
-                className={`p-2 rounded-md transition-colors ${
-                  theme === "light" ? "bg-background shadow-sm" : "hover:bg-background/50"
-                }`}
-              >
-                <Sun className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleThemeChange("dark")}
-                className={`p-2 rounded-md transition-colors ${
-                  theme === "dark" ? "bg-background shadow-sm" : "hover:bg-background/50"
-                }`}
-              >
-                <Moon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <button
+            onClick={() => setLinkMessage(null)}
+            className="text-current hover:opacity-70 transition-opacity"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
-      {/* Notifications */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Bell className="w-4 h-4 text-muted-foreground" />
-            <CardTitle className="text-base">Notifications</CardTitle>
+      {/* Profile Card */}
+      <SettingsCard
+        title="Profile"
+        description="Your personal information and avatar"
+        footerHint="Avatar is synced from your connected account."
+      >
+        <div className="flex items-center gap-4">
+          <Avatar className="w-16 h-16">
+            <AvatarImage src={profile.avatar || undefined} />
+            <AvatarFallback className="bg-muted text-muted-foreground text-xl">
+              {displayName[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-base font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              {displayName}
+            </p>
+            <p className="text-sm text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              {profile.email || "No email set"}
+            </p>
           </div>
-          <CardDescription className="text-xs">Choose what you want to be notified about</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+        </div>
+      </SettingsCard>
+
+      {/* Email Card */}
+      <SettingsCard
+        title="Your Email"
+        description="This is the email used for notifications and account recovery"
+        footerHint="Contact support to change your email address."
+      >
+        <Input
+          type="email"
+          value={profile.email || ""}
+          disabled
+          className="h-11 max-w-md bg-background border border-border"
+          style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}
+        />
+      </SettingsCard>
+
+      {/* Linked Accounts - Google */}
+      <SettingsCard
+        title="Google Account"
+        description="Link your Google account for additional sign-in options"
+        footerHint={profile.supabaseUserId ? "Your Google account is connected." : "Connect to sign in with Google."}
+      >
+        <div className="flex items-center justify-between max-w-md h-11 px-3 bg-background border border-border rounded-md">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              {profile.supabaseUserId ? "Connected" : "Not connected"}
+            </span>
+          </div>
+          {profile.supabaseUserId ? (
+            <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Check className="w-3 h-3" />
+              Linked
+            </Badge>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-primary"
+              onClick={() => window.location.href = "/api/auth/link?provider=google"}
+            >
+              <ExternalLink className="w-3 h-3" />
+              Link
+            </Button>
+          )}
+        </div>
+      </SettingsCard>
+
+      {/* Linked Accounts - Whop */}
+      <SettingsCard
+        title="Whop Account"
+        description="Link your Whop account to access community features"
+        footerHint={profile.whopUserId ? "Your Whop account is connected." : "Connect to access Whop features."}
+      >
+        <div className="flex items-center justify-between max-w-md h-11 px-3 bg-background border border-border rounded-md">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded bg-[#FF6243] flex items-center justify-center">
+              <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+              </svg>
+            </div>
+            <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              {profile.whopUserId ? "Connected" : "Not connected"}
+            </span>
+          </div>
+          {profile.whopUserId ? (
+            <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Check className="w-3 h-3" />
+              Linked
+            </Badge>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-primary"
+              onClick={() => window.location.href = "/api/auth/link?provider=whop"}
+            >
+              <ExternalLink className="w-3 h-3" />
+              Link
+            </Button>
+          )}
+        </div>
+      </SettingsCard>
+
+      {/* Appearance Card */}
+      <SettingsCard
+        title="Appearance"
+        description="Customize how Waliet looks on your device"
+        footerHint={`Currently using ${theme} mode.`}
+      >
+        <div className="flex items-center gap-2 p-1 rounded-lg bg-muted w-fit">
+          <button
+            onClick={() => handleThemeChange("light")}
+            className={`p-2 rounded-md transition-colors ${
+              theme === "light" ? "bg-background shadow-sm" : "hover:bg-background/50"
+            }`}
+          >
+            <Sun className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleThemeChange("dark")}
+            className={`p-2 rounded-md transition-colors ${
+              theme === "dark" ? "bg-background shadow-sm" : "hover:bg-background/50"
+            }`}
+          >
+            <Moon className="w-4 h-4" />
+          </button>
+        </div>
+      </SettingsCard>
+
+      {/* Notifications Card */}
+      <SettingsCard
+        title="Notifications"
+        description="Choose how you want to be notified about activity"
+        footerHint="Configure your notification preferences."
+      >
+        <div className="space-y-0 max-w-md">
+          <div className="flex items-center justify-between py-3 border-b border-border/50">
             <div className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Email notifications</p>
-                <p className="text-xs text-muted-foreground">Receive emails about your activity</p>
+                <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                  Email notifications
+                </p>
+                <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                  Receive emails about your activity
+                </p>
               </div>
             </div>
             <Switch
@@ -309,12 +373,16 @@ export function SettingsTab() {
             />
           </div>
 
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-3 border-b border-border/50">
             <div className="flex items-center gap-3">
               <Smartphone className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Push notifications</p>
-                <p className="text-xs text-muted-foreground">Receive push notifications on your device</p>
+                <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                  Push notifications
+                </p>
+                <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                  Receive push notifications on your device
+                </p>
               </div>
             </div>
             <Switch
@@ -323,12 +391,14 @@ export function SettingsTab() {
             />
           </div>
 
-          <Separator />
-
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-3 border-b border-border/50">
             <div>
-              <p className="text-sm font-medium">Session reminders</p>
-              <p className="text-xs text-muted-foreground">Get reminded before your sessions</p>
+              <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Session reminders
+              </p>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Get reminded before your sessions
+              </p>
             </div>
             <Switch
               checked={settings.notifications.sessionReminders}
@@ -336,10 +406,14 @@ export function SettingsTab() {
             />
           </div>
 
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-3 border-b border-border/50">
             <div>
-              <p className="text-sm font-medium">Payment alerts</p>
-              <p className="text-xs text-muted-foreground">Get notified about payments and refunds</p>
+              <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Payment alerts
+              </p>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Get notified about payments and refunds
+              </p>
             </div>
             <Switch
               checked={settings.notifications.paymentAlerts}
@@ -347,114 +421,88 @@ export function SettingsTab() {
             />
           </div>
 
-          <div className="flex items-center justify-between py-2">
+          <div className="flex items-center justify-between py-3">
             <div>
-              <p className="text-sm font-medium">Marketing emails</p>
-              <p className="text-xs text-muted-foreground">Receive news and promotional content</p>
+              <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Marketing emails
+              </p>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Receive news and promotional content
+              </p>
             </div>
             <Switch
               checked={settings.notifications.marketing}
               onCheckedChange={() => toggleNotification("marketing")}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SettingsCard>
 
-      {/* Security */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-muted-foreground" />
-            <CardTitle className="text-base">Security</CardTitle>
-          </div>
-          <CardDescription className="text-xs">Protect your account</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+      {/* Security Card */}
+      <SettingsCard
+        title="Security"
+        description="Protect your account with additional security measures"
+        footerHint="Keep your account secure."
+      >
+        <div className="space-y-0 max-w-md">
+          <div className="flex items-center justify-between py-3 border-b border-border/50">
             <div>
-              <p className="text-sm font-medium">Two-factor authentication</p>
-              <p className="text-xs text-muted-foreground">Add an extra layer of security</p>
-            </div>
-            <Switch checked={settings.security.twoFactor} onCheckedChange={toggleTwoFactor} />
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium">Change password</p>
-              <p className="text-xs text-muted-foreground">Update your password</p>
-            </div>
-            <Button variant="ghost" size="sm" className="gap-1">
-              Change
-              <ChevronRight className="w-3 h-3" />
-            </Button>
-          </div>
-
-          <Separator />
-
-          <div>
-            <p className="text-sm font-medium mb-3">Active sessions</p>
-            <div className="space-y-2">
-              {settings.security.sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{session.device}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {session.location} • {session.lastActive}
-                    </p>
-                  </div>
-                  {session.lastActive === "Now" ? (
-                    <Badge variant="secondary" className="text-[10px]">
-                      Current
-                    </Badge>
-                  ) : (
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                      Revoke
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Danger Zone */}
-      <Card className="bg-card border-destructive/30">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base text-destructive">Danger Zone</CardTitle>
-          <CardDescription className="text-xs">
-            Irreversible and destructive actions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium">Sign out everywhere</p>
-              <p className="text-xs text-muted-foreground">Sign out of all devices except this one</p>
-            </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <LogOut className="w-3 h-3" />
-              Sign Out All
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-destructive">Delete account</p>
-              <p className="text-xs text-muted-foreground">
-                Permanently delete your account and all data
+              <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Two-factor authentication
+              </p>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Add an extra layer of security
               </p>
             </div>
-            <Button variant="destructive" size="sm" className="gap-2">
-              <Trash2 className="w-3 h-3" />
-              Delete
+            <Switch
+              checked={settings.security.twoFactor}
+              onCheckedChange={() => setSettings(prev => ({
+                ...prev,
+                security: { ...prev.security, twoFactor: !prev.security.twoFactor }
+              }))}
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <p className="text-sm font-medium" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Change password
+              </p>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                Update your password regularly
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              Change
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SettingsCard>
+
+      {/* Sign Out Everywhere Card */}
+      <SettingsCard
+        title="Sign Out Everywhere"
+        description="Sign out of all devices except this one"
+        footerHint="This will end all other active sessions."
+      >
+        <Button variant="outline" size="sm" className="gap-2">
+          <LogOut className="w-3 h-3" />
+          Sign Out All Devices
+        </Button>
+      </SettingsCard>
+
+      {/* Delete Account Card */}
+      <SettingsCard
+        title="Delete Account"
+        description="Permanently delete your account and all associated data"
+        footerHint="This action cannot be undone."
+        variant="danger"
+      >
+        <Button variant="destructive" size="sm" className="gap-2">
+          <Trash2 className="w-3 h-3" />
+          Delete Account
+        </Button>
+      </SettingsCard>
     </div>
   );
 }

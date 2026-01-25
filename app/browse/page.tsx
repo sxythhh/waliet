@@ -1,5 +1,5 @@
 import { getDualAuthUser } from "@/lib/dual-auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { BrowsePageClient } from "./BrowsePageClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { MdLock } from "react-icons/md";
@@ -42,35 +42,13 @@ export default async function BrowsePage({ searchParams }: PageProps) {
 
   const { dbUser: user, user: authUser } = auth;
 
-  // Fetch all users with seller profiles (excluding current user)
-  const allUsers = await prisma.user.findMany({
-    where: {
-      id: { not: user.id },
-      sellerProfile: {
-        isActive: true,
-      },
-    },
-    include: {
-      sellerProfile: {
-        select: {
-          id: true,
-          hourlyRate: true,
-          bio: true,
-          tagline: true,
-          averageRating: true,
-          totalSessionsCompleted: true,
-          isVerified: true,
-          isActive: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  // Fetch all users with active seller profiles (excluding current user)
+  const allUsers = await db.user.findActiveSellersExcept(user.id);
 
   // Map to the format expected by the browse component
   const sellers = allUsers
-    .filter((u: typeof allUsers[number]) => u.sellerProfile) // Only users with active seller profiles
-    .map((u: typeof allUsers[number]) => ({
+    .filter((u) => u.sellerProfile) // Only users with active seller profiles
+    .map((u) => ({
       id: u.sellerProfile!.id,
       userId: u.id,
       hourlyRate: u.sellerProfile!.hourlyRate,

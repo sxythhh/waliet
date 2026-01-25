@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?
+  avatar        String?
+  username      String?
+  bio           String?
+  whopUserId    String?   @unique
+  supabaseUserId String?  @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  sellerProfile   SellerProfile?
+  purchasesAsBuyer Purchase[]     @relation("BuyerPurchases")
+  sessionsAsBuyer  Session[]      @relation("BuyerSessions")
+  sessionsAsSeller Session[]      @relation("SellerSessions")
+  reviewsAsAuthor  Review[]       @relation("AuthorReviews")
+  reviewsAsSubject Review[]       @relation("SubjectReviews")
+  payouts          Payout[]
+  walletBalancesAsHolder WalletBalance[] @relation("HolderBalances")
+  walletBalancesAsSeller WalletBalance[] @relation("SellerBalances")
+
+  @@index([email])
+  @@index([whopUserId])
+  @@index([supabaseUserId])
+}
+
+model SellerProfile {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  hourlyRate             Int      @default(0) // in cents
+  bio                    String?
+  tagline                String?
+  timezone               String?
+  averageRating          Float?
+  totalSessionsCompleted Int      @default(0)
+  totalHoursDelivered    Float    @default(0)
+  totalReviews           Int      @default(0)
+  isVerified             Boolean  @default(false)
+  isActive               Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WalletBalance {
+  id            String   @id @default(cuid())
+  holderId      String
+  sellerId      String
+  balanceUnits  Int      @default(0) // time units remaining
+  reservedUnits Int      @default(0) // units reserved for pending sessions
+  totalPaid     Int      @default(0) // total amount paid in cents
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  holder User @relation("HolderBalances", fields: [holderId], references: [id], onDelete: Cascade)
+  seller User @relation("SellerBalances", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([holderId, sellerId])
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  buyerId     String
+  amount      Int      // in cents
+  units       Int      // time units purchased
+  status      String   @default("COMPLETED")
+  createdAt   DateTime @default(now())
+
+  buyer User @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  buyerId     String
+  sellerId    String
+  status      String    @default("PENDING") // PENDING, SCHEDULED, COMPLETED, CANCELLED, PAID_OUT, RATED
+  duration    Int       // in minutes
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  buyer  User @relation("BuyerSessions", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller User @relation("SellerSessions", fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  authorId  String
+  subjectId String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  author  User @relation("AuthorReviews", fields: [authorId], references: [id], onDelete: Cascade)
+  subject User @relation("SubjectReviews", fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model Payout {
+  id        String   @id @default(cuid())
+  sellerId  String
+  amount    Int      // in cents
+  status    String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  createdAt DateTime @default(now())
+
+  seller User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}

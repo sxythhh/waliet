@@ -36,6 +36,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { CreateWorkspaceDialog } from "@/components/dashboard-new/CreateWorkspaceDialog";
+import { FullPageOnboarding } from "@/components/onboarding/FullPageOnboarding";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -723,10 +724,59 @@ function DashboardSidebar() {
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || "home";
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Check if user needs onboarding
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      // Check localStorage first
+      const onboardingData = localStorage.getItem("onboarding_completed");
+      if (onboardingData === "true") {
+        setShowOnboarding(false);
+        setOnboardingChecked(true);
+        return;
+      }
+
+      // Check from API if user has completed onboarding
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.dbUser?.onboardingCompleted) {
+          localStorage.setItem("onboarding_completed", "true");
+          setShowOnboarding(false);
+        } else {
+          setShowOnboarding(true);
+        }
+      } catch {
+        // If API fails, show onboarding to be safe
+        setShowOnboarding(true);
+      }
+      setOnboardingChecked(true);
+    };
+
+    checkOnboarding();
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    // Data is saved directly to Supabase in the component
+    localStorage.setItem("onboarding_completed", "true");
+    setShowOnboarding(false);
+  };
 
   // Tabs that should have no padding (full-bleed layout)
   const fullBleedTabs = ["creators"];
   const isFullBleed = fullBleedTabs.includes(currentTab);
+
+  // Show loading state while checking onboarding
+  if (!onboardingChecked) {
+    return <DashboardLayoutSkeleton />;
+  }
+
+  // Show full-page onboarding if needed
+  if (showOnboarding) {
+    return <FullPageOnboarding onComplete={handleOnboardingComplete} />;
+  }
 
   return (
     <div className="flex h-screen w-full bg-background">
