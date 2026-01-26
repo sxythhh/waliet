@@ -184,8 +184,8 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
 
       {/* Main content - centered */}
       <div className="py-12 px-4 sm:px-6 lg:px-8 w-full max-w-2xl">
-        {/* Header - centered */}
-        <div className="mb-8 text-center">
+        {/* Header */}
+        <div className="mb-8">
           <h1 className={`text-3xl font-bold ${theme.text} mb-2`} style={{ letterSpacing: '-0.4px' }}>
             Welcome{user.name ? `, ${user.name}` : ""}!
           </h1>
@@ -349,7 +349,7 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
                               }),
                             }}
                           >
-                            Mark completed
+                            Get Started
                           </a>
                         ) : null
                       )}
