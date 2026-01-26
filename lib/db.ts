@@ -262,26 +262,39 @@ export const db = {
 
   onboarding: {
     async getProgress(userId: string): Promise<string[]> {
+      console.log("[Onboarding] Getting progress for user:", userId);
       const { data, error } = await supabaseAdmin
         .from("OnboardingProgress")
         .select("completedTasks")
         .eq("userId", userId)
         .single();
 
-      if (error || !data) return [];
-      return data.completedTasks || [];
+      if (error) {
+        console.log("[Onboarding] No existing progress found:", error.message);
+        return [];
+      }
+      console.log("[Onboarding] Found progress:", data?.completedTasks);
+      return data?.completedTasks || [];
     },
 
     async saveProgress(userId: string, completedTasks: string[]): Promise<void> {
+      console.log("[Onboarding] Saving progress for user:", userId, "tasks:", completedTasks);
       const { error } = await supabaseAdmin
         .from("OnboardingProgress")
-        .upsert({
-          userId,
-          completedTasks,
-          lastUpdated: new Date().toISOString(),
-        });
+        .upsert(
+          {
+            userId,
+            completedTasks,
+            lastUpdated: new Date().toISOString(),
+          },
+          { onConflict: "userId" }
+        );
 
-      if (error) throw new Error(`Failed to save progress: ${error.message}`);
+      if (error) {
+        console.error("[Onboarding] Failed to save progress:", error);
+        throw new Error(`Failed to save progress: ${error.message}`);
+      }
+      console.log("[Onboarding] Progress saved successfully");
     },
 
     async toggleTask(userId: string, taskId: string): Promise<string[]> {
