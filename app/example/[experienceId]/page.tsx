@@ -12,7 +12,15 @@ async function getWhopTheme(): Promise<"light" | "dark"> {
   return theme === "light" ? "light" : "dark";
 }
 
-export default async function ExamplePage() {
+// Brand-only experience ID
+const BRAND_EXPERIENCE_ID = "exp_irZwTMlJHNMjiH";
+
+export default async function ExamplePage({
+  params,
+}: {
+  params: Promise<{ experienceId: string }>;
+}) {
+  const { experienceId } = await params;
   const [auth, initialTheme] = await Promise.all([
     getDualAuthUser(),
     getWhopTheme(),
@@ -32,6 +40,11 @@ export default async function ExamplePage() {
 
   const { user, dbUser } = auth;
 
+  // Force brand onboarding for specific experience ID
+  const accountType = experienceId === BRAND_EXPERIENCE_ID
+    ? "brand"
+    : (dbUser.accountType as "creator" | "brand" | null);
+
   return (
     <OnboardingClient
       user={{
@@ -42,7 +55,7 @@ export default async function ExamplePage() {
         bio: dbUser.bio,
       }}
       initialTheme={initialTheme}
-      accountType={dbUser.accountType as "creator" | "brand" | null}
+      accountType={accountType}
     />
   );
 }
