@@ -258,15 +258,27 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
                       </div>
 
                       {/* Button - same row */}
-                      {!isCompleted && task.link && (
-                        <a
-                          href={task.link}
-                          target="_parent"
-                          className="flex-shrink-0 px-4 py-2 bg-[#FF6207] text-white text-sm font-semibold rounded-lg hover:bg-[#FF6207]/90 transition-colors"
-                          style={{ letterSpacing: '-0.3px' }}
-                        >
-                          Get started
-                        </a>
+                      {!isCompleted && (
+                        accountType === "creator" ? (
+                          // Creator: clicking marks task as complete
+                          <button
+                            onClick={() => handleToggleTask(task.id)}
+                            className="flex-shrink-0 px-4 py-2 bg-[#FF6207] text-white text-sm font-semibold rounded-lg hover:bg-[#FF6207]/90 transition-colors"
+                            style={{ letterSpacing: '-0.3px' }}
+                          >
+                            Get started
+                          </button>
+                        ) : task.link ? (
+                          // Brand: navigate to link
+                          <a
+                            href={task.link}
+                            target="_parent"
+                            className="flex-shrink-0 px-4 py-2 bg-[#FF6207] text-white text-sm font-semibold rounded-lg hover:bg-[#FF6207]/90 transition-colors"
+                            style={{ letterSpacing: '-0.3px' }}
+                          >
+                            Get started
+                          </a>
+                        ) : null
                       )}
                     </div>
                   );
