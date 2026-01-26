@@ -106,25 +106,33 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
     loadData();
   }, []);
 
-  const handleToggleTask = async (taskId: string) => {
-    try {
-      // Optimistic update
-      const newSet = new Set(completedTasks);
-      if (newSet.has(taskId)) {
-        newSet.delete(taskId);
-      } else {
-        newSet.add(taskId);
-      }
-      setCompletedTasks(newSet);
+  const [togglingTask, setTogglingTask] = useState<string | null>(null);
 
-      // Save to server
-      const updated = await toggleTask(taskId);
-      setCompletedTasks(new Set(updated));
+  const handleToggleTask = async (taskId: string) => {
+    // Prevent double-clicks
+    if (togglingTask) return;
+
+    setTogglingTask(taskId);
+
+    // Optimistic update
+    const previousTasks = new Set(completedTasks);
+    const newSet = new Set(completedTasks);
+    if (newSet.has(taskId)) {
+      newSet.delete(taskId);
+    } else {
+      newSet.add(taskId);
+    }
+    setCompletedTasks(newSet);
+
+    try {
+      // Save to server (don't overwrite local state with response)
+      await toggleTask(taskId);
     } catch (error) {
       console.error("Failed to toggle task:", error);
       // Revert on error
-      const progress = await loadProgress();
-      setCompletedTasks(new Set(progress));
+      setCompletedTasks(previousTasks);
+    } finally {
+      setTogglingTask(null);
     }
   };
 
@@ -133,12 +141,19 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
 
   // Theme-based styles
   const theme = {
-    bg: isDark ? "bg-[#111111]" : "bg-[#f7f7f8]",
+    bg: isDark ? "" : "bg-[#f7f7f8]",
+    bgStyle: isDark ? {
+      background: 'radial-gradient(89.14% 100% at 50% 0%, rgba(251, 191, 36, 0.04) 0%, rgba(251, 191, 36, 0) 100%), #090A0C'
+    } : {},
     text: isDark ? "text-white" : "text-[#1a1a1a]",
     textMuted: isDark ? "text-gray-400" : "text-gray-500",
     textSecondary: isDark ? "text-gray-300" : "text-gray-600",
-    border: isDark ? "border-[#252525]" : "border-[#e5e5e5]",
-    cardBg: isDark ? "bg-[#191919]" : "bg-white",
+    border: isDark ? "" : "border-[#e5e5e5]",
+    cardBg: isDark ? "" : "bg-white",
+    cardStyle: isDark ? {
+      background: 'radial-gradient(50% 100% at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), rgba(251, 191, 36, 0.02)',
+      border: '1px solid rgba(251, 191, 36, 0.12)',
+    } : {},
     progressBg: isDark ? "bg-[#252525]" : "bg-gray-200",
     avatarBg: isDark ? "bg-[#252525]" : "bg-gray-200",
     checkboxBorder: isDark ? "border-[#252525]" : "border-gray-300",
@@ -147,14 +162,14 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${theme.bg} flex items-center justify-center`} style={{ scrollbarWidth: 'none' }}>
+      <div className={`min-h-screen ${theme.bg} flex items-center justify-center`} style={{ scrollbarWidth: 'none', ...theme.bgStyle }}>
         <Loader2 className={`h-8 w-8 animate-spin ${theme.textMuted}`} />
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col items-center`} style={{ scrollbarWidth: 'none' }}>
+    <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col items-center`} style={{ scrollbarWidth: 'none', ...theme.bgStyle }}>
       <style jsx global>{`
         ::-webkit-scrollbar {
           display: none;
@@ -174,109 +189,167 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
           <h1 className={`text-3xl font-bold ${theme.text} mb-2`} style={{ letterSpacing: '-0.4px' }}>
             Welcome{user.name ? `, ${user.name}` : ""}!
           </h1>
-          <p className={theme.textSecondary}>
+          <p style={{ color: '#8e8e8c' }}>
             {accountType === "brand"
               ? "Complete the following steps to launch your first campaign and start working with creators."
               : "Go through the following steps to get started with Content Rewards."}
           </p>
         </div>
 
-        {/* Progress bar - centered */}
-        <div className="mb-8 space-y-1.5 mx-auto max-w-md">
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-medium ${theme.textSecondary}`}>
+        {/* Progress bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-sm font-semibold ${theme.text}`}>
               Checklist ({progress.completed} of {progress.total} Completed)
             </span>
-            <span className={`text-xs ${theme.textMuted}`}>{progress.percentage}%</span>
+            <span style={{ color: '#8e8e8c' }} className="text-sm">
+              {progress.percentage}%
+            </span>
           </div>
-          <div className={`w-full ${theme.progressBg} rounded-full h-1.5 overflow-hidden`}>
+          <div
+            className="h-1.5 w-full rounded-full overflow-hidden"
+            style={{ background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
+          >
             <div
-              className="bg-[#FF6207] h-full transition-all duration-500 ease-out rounded-full"
-              style={{ width: `${progress.percentage}%` }}
+              className="h-full rounded-full"
+              style={{
+                width: `${progress.percentage}%`,
+                background: '#FF6207',
+                transition: 'width 0.5s ease-out',
+              }}
             />
           </div>
         </div>
 
         {/* Completion banner - centered */}
         {isComplete && (
-          <div className={`mb-8 p-3 ${theme.cardBg} border border-[#FF6207]/30 rounded-lg flex items-center justify-center gap-3`}>
-            <CheckCircle2 className="w-5 h-5 text-[#FF6207] flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-orange-500 text-sm">
+          <div className="mb-8 flex items-center justify-center gap-2">
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%)'
+                  : 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%)',
+              }}
+            >
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              <span className={`text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                 All caught up
-              </p>
-              <p className={`text-xs ${isDark ? 'text-orange-300' : 'text-orange-600'}`}>
-                You&apos;ve completed all onboarding steps!
-              </p>
+              </span>
             </div>
           </div>
         )}
 
         {/* Tasks - single column, centered */}
         <div className="space-y-6">
-          {onboardingSections.map((section) => (
+          {onboardingSections.map((section, sectionIndex) => {
+            // Find the first incomplete task for "Take me to..." link
+            const firstIncompleteTask = section.tasks.find(task => !completedTasks.has(task.id));
+
+            return (
             <div key={section.id}>
-              <h2 className={`text-lg font-bold ${theme.text} mb-4 text-center`} style={{ letterSpacing: '-0.4px' }}>
-                {section.title}
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-lg font-bold ${theme.text}`} style={{ letterSpacing: '-0.4px' }}>
+                  {section.title}
+                </h2>
+                {firstIncompleteTask?.link && (
+                  <a
+                    href={firstIncompleteTask.link}
+                    target="_parent"
+                    className="text-sm text-[#8e8e8c] transition-colors hover:text-[#FF6207]"
+                  >
+                    {firstIncompleteTask.linkText || `Take me to ${firstIncompleteTask.shortTitle || firstIncompleteTask.title}`} →
+                  </a>
+                )}
+              </div>
               <div className="space-y-3">
                 {section.tasks.map((task) => {
                   const isCompleted = completedTasks.has(task.id);
                   return (
                     <div
                       key={task.id}
-                      className={`flex items-center gap-4 p-4 rounded-xl ${theme.cardBg} border ${theme.border}`}
+                      className={`flex items-center justify-between rounded-xl ${theme.cardBg} ${theme.border ? `border ${theme.border}` : ''}`}
+                      style={{
+                        padding: '16px 16px 16px 24px',
+                        gap: '16px',
+                        ...theme.cardStyle,
+                      }}
                     >
-                      {/* Checkbox */}
-                      <button
-                        onClick={() => handleToggleTask(task.id)}
-                        className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                          isCompleted
-                            ? "bg-[#FF6207] border-[#FF6207]"
-                            : `${theme.checkboxBorder} hover:border-[#FF6207]/50`
-                        }`}
-                        aria-label={
-                          isCompleted ? `Mark "${task.title}" as incomplete` : `Mark "${task.title}" as complete`
-                        }
-                      >
-                        {isCompleted && <Check className="w-4 h-4 text-white" />}
-                      </button>
-
-                      {/* Title & Description */}
-                      <div className="flex-1 min-w-0">
-                        <h4
-                          className={`font-semibold ${theme.text} ${
-                            isCompleted ? "line-through opacity-50" : ""
+                      {/* Left side: Checkbox + Title & Description */}
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        {/* Checkbox */}
+                        <button
+                          onClick={() => handleToggleTask(task.id)}
+                          className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isCompleted
+                              ? "bg-[#FF6207] border-[#FF6207]"
+                              : `${theme.checkboxBorder} hover:border-[#FF6207]/50`
                           }`}
-                          style={{ letterSpacing: '-0.3px' }}
+                          aria-label={
+                            isCompleted ? `Mark "${task.title}" as incomplete` : `Mark "${task.title}" as complete`
+                          }
                         >
-                          {task.title}
-                        </h4>
-                        <p className={`text-sm ${theme.textSecondary} ${isCompleted ? "opacity-50" : ""}`}>
-                          {task.description}
-                        </p>
+                          {isCompleted && <Check className="w-4 h-4 text-white" />}
+                        </button>
+
+                        {/* Title & Description */}
+                        <div className="flex-1 min-w-0">
+                          <h4
+                            className={`font-semibold ${theme.text} ${
+                              isCompleted ? "line-through opacity-50" : ""
+                            }`}
+                            style={{ letterSpacing: '-0.3px' }}
+                          >
+                            {task.title}
+                          </h4>
+                          <p className={`text-sm ${theme.textSecondary} ${isCompleted ? "opacity-50" : ""}`}>
+                            {task.description}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Button - same row */}
+                      {/* Button - right side */}
                       {!isCompleted && (
                         accountType === "creator" ? (
                           // Creator: clicking marks task as complete
                           <button
                             onClick={() => handleToggleTask(task.id)}
-                            className="flex-shrink-0 px-4 py-2 bg-[#FF6207] text-white text-sm font-semibold rounded-lg hover:bg-[#FF6207]/90 transition-colors"
-                            style={{ letterSpacing: '-0.3px' }}
+                            className="flex-shrink-0 flex items-center justify-center text-white text-sm font-medium rounded-lg transition-colors hover:opacity-90"
+                            style={{
+                              height: '32px',
+                              padding: '0 12px',
+                              letterSpacing: '-0.3px',
+                              ...(isDark ? {
+                                background: 'radial-gradient(50% 100% at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), rgba(251, 191, 36, 0.24)',
+                                border: '1px solid rgba(251, 191, 36, 0.8)',
+                              } : {
+                                background: '#FF6207',
+                                borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+                              }),
+                            }}
                           >
-                            Get started
+                            Mark completed
                           </button>
                         ) : task.link ? (
                           // Brand: navigate to link
                           <a
                             href={task.link}
                             target="_parent"
-                            className="flex-shrink-0 px-4 py-2 bg-[#FF6207] text-white text-sm font-semibold rounded-lg hover:bg-[#FF6207]/90 transition-colors"
-                            style={{ letterSpacing: '-0.3px' }}
+                            className="flex-shrink-0 flex items-center justify-center text-white text-sm font-medium rounded-lg transition-colors hover:opacity-90"
+                            style={{
+                              height: '32px',
+                              padding: '0 12px',
+                              letterSpacing: '-0.3px',
+                              ...(isDark ? {
+                                background: 'radial-gradient(50% 100% at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), rgba(251, 191, 36, 0.24)',
+                                border: '1px solid rgba(251, 191, 36, 0.8)',
+                              } : {
+                                background: '#FF6207',
+                                borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+                              }),
+                            }}
                           >
-                            Get started
+                            Mark completed
                           </a>
                         ) : null
                       )}
@@ -285,9 +358,11 @@ export function OnboardingClient({ user, initialTheme = "dark", accountType = "c
                 })}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
+
     </div>
   );
 }

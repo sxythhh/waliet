@@ -28,7 +28,12 @@ export default async function ExamplePage({
 
   if (!auth) {
     return (
-      <div className={`min-h-screen ${initialTheme === 'dark' ? 'bg-[#111111]' : 'bg-[#f7f7f8]'} p-4 sm:p-6 md:p-8 flex items-center justify-center`}>
+      <div
+        className={`min-h-screen ${initialTheme === 'dark' ? '' : 'bg-[#f7f7f8]'} p-4 sm:p-6 md:p-8 flex items-center justify-center`}
+        style={initialTheme === 'dark' ? {
+          background: 'radial-gradient(89.14% 100% at 50% 0%, rgba(251, 191, 36, 0.04) 0%, rgba(251, 191, 36, 0) 100%), #090A0C'
+        } : {}}
+      >
         <EmptyState
           icon={AlertCircle}
           title="Authentication Required"
